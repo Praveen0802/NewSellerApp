@@ -1,286 +1,41 @@
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import FormFields from "../formFieldsComponent";
+import Button from "../commonComponents/button";
 import { useDispatch } from "react-redux";
+import { updateWalletPopupFlag } from "@/utils/redux/common/action";
+import blueLocation from "../../../public/blue-location.svg";
+import Image from "next/image";
+import blueCalendar from "../../../public/blue-calendar.svg";
+import blueTicket from "../../../public/blue-ticket.svg";
+import hamburger from "../../../public/hamburger.svg";
+import blueClock from "../../../public/blue-clock.svg";
+import beforeFaviurates from "../../../public/before-favourates.svg";
+import attachmentPin from "../../../public/attachment-pin.svg";
+import attachment6 from "../../../public/attachment-6.svg";
+import attachment3 from "../../../public/attachment-3.svg";
+import attachment1 from "../../../public/attachment-1.svg";
+import crossHand from "../../../public/cross-hand.svg";
+import oneHand from "../../../public/One-hand.svg";
+import star from "../../../public/Star.svg";
+import FloatingLabelInput from "../floatinginputFields";
+import FloatingSelect from "../floatinginputFields/floatingSelect";
+import documentText from "../../../public/document-text.svg";
+import FloatingDateRange from "../commonComponents/dateRangeInput";
+import ScrollableAccordionTable from "./scrollableTable";
+import { dateFormat } from "@/utils/helperFunctions";
+import {
+  ChevronUp,
+  ChevronDown,
+  Copy,
+  Edit,
+  Trash2,
+  Download,
+} from "lucide-react";
 
-// Individual listing row component
-const ListingRow = ({ listing, isExpanded, onToggle }) => {
-  const [hoveredTicketIndex, setHoveredTicketIndex] = useState(null);
-
-  const handleTicketMouseEnter = (index) => {
-    setHoveredTicketIndex(index);
-  };
-
-  const handleTicketMouseLeave = () => {
-    setHoveredTicketIndex(null);
-  };
-
-  return (
-    <div className="border-b border-gray-200">
-      {/* Main listing header - Dark purple background like in image */}
-      <div 
-        className="bg-[#2D1B69] text-white p-4 cursor-pointer hover:bg-[#3D2B79] transition-colors"
-        onClick={onToggle}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 flex-1">
-            {/* Event name and date */}
-            <div className="flex-1">
-              <div className="text-sm font-medium">
-                {listing.eventName}
-              </div>
-              <div className="flex items-center gap-4 text-xs text-gray-300 mt-1">
-                <span>📅 {listing.eventDate}</span>
-                <span>⏰ {listing.time}</span>
-                <span>📍 {listing.venue}</span>
-              </div>
-            </div>
-
-            {/* Stats section */}
-            <div className="flex items-center gap-6 text-xs">
-              <div className="flex items-center gap-1">
-                <span className="text-blue-300">{listing.totalListings}</span>
-                <span>📊</span>
-                <span className="text-blue-300">{listing.soldTickets}</span>
-                <span>🎫</span>
-                <span className="text-orange-300">{listing.availableTickets}</span>
-              </div>
-              <button className="text-blue-300 hover:text-blue-200 underline">
-                Market Insights
-              </button>
-              {isExpanded ? (
-                <ChevronUp className="w-4 h-4" />
-              ) : (
-                <ChevronDown className="w-4 h-4" />
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Expanded content */}
-      {isExpanded && (
-        <div className="bg-white">
-          {/* Table headers */}
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-            <div className="grid grid-cols-12 gap-2 text-xs font-medium text-gray-600">
-              <div className="col-span-1 flex items-center">
-                <input type="checkbox" className="rounded" />
-              </div>
-              <div className="col-span-1">Listing ID</div>
-              <div className="col-span-1">Ticket type</div>
-              <div className="col-span-1">Quantity</div>
-              <div className="col-span-1">Sold</div>
-              <div className="col-span-1">Split type</div>
-              <div className="col-span-1">Category</div>
-              <div className="col-span-1">Section/block</div>
-              <div className="col-span-1">Row</div>
-              <div className="col-span-3 text-center">Actions</div>
-            </div>
-          </div>
-
-          {/* Table rows */}
-          <div className="max-h-80 overflow-y-auto">
-            {listing.tickets?.map((ticket, index) => {
-              const isHovered = hoveredTicketIndex === index;
-              
-              return (
-                <div
-                  key={ticket.id || index}
-                  className="px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                  onMouseEnter={() => handleTicketMouseEnter(index)}
-                  onMouseLeave={handleTicketMouseLeave}
-                >
-                  <div className="grid grid-cols-12 gap-2 items-center text-xs">
-                    {/* Checkbox */}
-                    <div className="col-span-1">
-                      <input type="checkbox" className="rounded" />
-                    </div>
-                    
-                    {/* Listing ID */}
-                    <div className="col-span-1 text-gray-900 font-medium">
-                      {ticket.listingId}
-                    </div>
-                    
-                    {/* Ticket Type */}
-                    <div className="col-span-1">
-                      {isHovered ? (
-                        <select className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
-                          <option value="external_transfer">External Transfer</option>
-                          <option value="mobile_transfer">Mobile Transfer</option>
-                          <option value="paper_ticket">Paper Ticket</option>
-                        </select>
-                      ) : (
-                        <span className="text-gray-600">{ticket.ticketType}</span>
-                      )}
-                    </div>
-                    
-                    {/* Quantity */}
-                    <div className="col-span-1 text-gray-900 font-medium">
-                      {ticket.quantity}
-                    </div>
-                    
-                    {/* Sold */}
-                    <div className="col-span-1 text-gray-600">
-                      {ticket.sold}
-                    </div>
-                    
-                    {/* Split Type */}
-                    <div className="col-span-1">
-                      {isHovered ? (
-                        <select className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
-                          <option value="none">None</option>
-                          <option value="split">Split</option>
-                        </select>
-                      ) : (
-                        <span className="text-gray-600">{ticket.splitType}</span>
-                      )}
-                    </div>
-                    
-                    {/* Category */}
-                    <div className="col-span-1">
-                      {isHovered ? (
-                        <select className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
-                          <option value="category1">Category 1</option>
-                          <option value="category2">Category 2</option>
-                          <option value="category3">Category 3</option>
-                        </select>
-                      ) : (
-                        <span className="text-gray-600">{ticket.category}</span>
-                      )}
-                    </div>
-                    
-                    {/* Section/Block */}
-                    <div className="col-span-1">
-                      {isHovered ? (
-                        <select className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
-                          <option value={ticket.section}>{ticket.section}</option>
-                        </select>
-                      ) : (
-                        <span className="text-gray-600">{ticket.section}</span>
-                      )}
-                    </div>
-                    
-                    {/* Row */}
-                    <div className="col-span-1">
-                      {isHovered ? (
-                        <input 
-                          type="text" 
-                          value={ticket.row}
-                          className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      ) : (
-                        <span className="text-gray-600">{ticket.row}</span>
-                      )}
-                    </div>
-                    
-                    {/* Actions */}
-                    <div className="col-span-3">
-                      <div className="flex items-center justify-center gap-1">
-                        <button className="w-6 h-6 flex items-center justify-center hover:bg-blue-100 rounded transition-colors" title="View">
-                          <span className="text-blue-600">👁️</span>
-                        </button>
-                        <button className="w-6 h-6 flex items-center justify-center hover:bg-purple-100 rounded transition-colors" title="Mobile">
-                          <span className="text-purple-600">📱</span>
-                        </button>
-                        <button className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 rounded transition-colors" title="Document">
-                          <span className="text-gray-600">📄</span>
-                        </button>
-                        <button className="w-6 h-6 flex items-center justify-center hover:bg-pink-100 rounded transition-colors" title="Design">
-                          <span className="text-pink-600">🎨</span>
-                        </button>
-                        <button className="w-6 h-6 flex items-center justify-center hover:bg-green-100 rounded transition-colors" title="Analytics">
-                          <span className="text-green-600">📊</span>
-                        </button>
-                        <button className="w-6 h-6 flex items-center justify-center hover:bg-green-100 rounded transition-colors" title="Approve">
-                          <span className="text-green-600">✅</span>
-                        </button>
-                        <button className="w-6 h-6 flex items-center justify-center hover:bg-blue-100 rounded transition-colors" title="Refresh">
-                          <span className="text-blue-600">🔄</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Main BulkTicketsListing component
-const BulkTicketsListing = ({ events }) => {
-  const [expandedListings, setExpandedListings] = useState(new Set());
-
-  // Transform the flat events data into grouped listings with tickets
-  const transformedListings = events.reduce((acc, event, index) => {
-    const key = `${event.event_name}-${event.event_date_time}-${event.venue_name}`;
-    
-    if (!acc[key]) {
-      acc[key] = {
-        id: key,
-        eventName: event.event_name,
-        eventDate: event.event_date_time?.split(',')[0], // Extract date part
-        time: event.event_date_time?.split(',')[2]?.trim(), // Extract time part
-        venue: event.venue_name,
-        tournament: event.tournament,
-        priceRange: event.price_range,
-        ticketsAvailable: event.ticket_available,
-        totalListings: 8,
-        soldTickets: 8,
-        availableTickets: 40,
-        tickets: []
-      };
-    }
-
-    // Add ticket data (mock data for demonstration)
-    acc[key].tickets.push({
-      id: `ticket-${index}`,
-      listingId: `${3014729873 + index}`,
-      ticketType: "External Transfer",
-      quantity: 5,
-      sold: 0,
-      splitType: "None",
-      category: `Category ${Math.floor(Math.random() * 3) + 1}`,
-      section: `Category ${Math.floor(Math.random() * 3) + 1}`,
-      row: `R${Math.floor(Math.random() * 20) + 1}`
-    });
-
-    return acc;
-  }, {});
-
-  const listings = Object.values(transformedListings);
-
-  const toggleExpanded = (listingId) => {
-    const newExpanded = new Set(expandedListings);
-    if (newExpanded.has(listingId)) {
-      newExpanded.delete(listingId);
-    } else {
-      newExpanded.add(listingId);
-    }
-    setExpandedListings(newExpanded);
-  };
-
-  return (
-    <div className="bg-white rounded">
-      {listings.map((listing, index) => (
-        <ListingRow
-          key={listing.id}
-          listing={listing}
-          isExpanded={expandedListings.has(listing.id)}
-          onToggle={() => toggleExpanded(listing.id)}
-        />
-      ))}
-    </div>
-  );
-};
-
-// Updated TicketsPage component
 const TicketsPage = () => {
   const dispatch = useDispatch();
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [isStickyExpanded, setIsStickyExpanded] = useState(false);
+
   const handleOpenAddWalletPopup = () => {
     dispatch(
       updateWalletPopupFlag({
@@ -289,163 +44,993 @@ const TicketsPage = () => {
     );
   };
 
-  // Filter form fields using your existing FormFields structure
-  const filterFields = [
+  // Headers for the accordion table
+  const headers = [
+    { key: "listingId", label: "Listing ID", sortable: true },
     {
-      type: "text",
-      name: "searchMatch",
-      label: "Search event or listing ID",
-      className: "!py-[7px] !px-[12px] !text-[#323A70] !text-sm",
-      parentClassName: "flex-1"
-    },
-    {
+      key: "ticketType",
+      label: "Ticket Type",
+      editable: true,
       type: "select",
-      name: "ticketType",
-      label: "Ticket type",
       options: [
-        { value: "", label: "Ticket type" },
-        { value: "external_transfer", label: "External Transfer" },
-        { value: "mobile_transfer", label: "Mobile Transfer" }
+        { value: "External Transfer", label: "External Transfer" },
+        { value: "Internal Transfer", label: "Internal Transfer" },
+        { value: "Direct Sale", label: "Direct Sale" },
       ],
-      className: "!py-[7px] !px-[12px] !text-sm w-full"
     },
+    { key: "quantity", label: "Quantity", editable: true, type: "number" },
+    { key: "sold", label: "Sold" },
     {
-      type: "date",
-      name: "eventDate",
-      label: "Event date",
-      className: "!py-[7px] !px-[12px] !text-sm",
-      singleDateMode: true
-    },
-    {
+      key: "splitType",
+      label: "Split Type",
+      editable: true,
       type: "select",
-      name: "ticketStatus",
-      label: "Ticket status",
       options: [
-        { value: "", label: "1 selected" },
-        { value: "available", label: "Available" },
-        { value: "sold", label: "Sold" }
+        { value: "None", label: "None" },
+        { value: "Split", label: "Split" },
+        { value: "Bundle", label: "Bundle" },
       ],
-      className: "!py-[7px] !px-[12px] !text-sm w-full"
+    },
+    { key: "category", label: "Category", editable: true },
+    { key: "section", label: "Section/Block", editable: true },
+    { key: "row", label: "Row", editable: true },
+    {
+      key: "pricePerTicket",
+      label: "Price per Ticket",
+      editable: true,
+      type: "number",
+    },
+    { key: "totalPrice", label: "Total Price", editable: true, type: "number" },
+    {
+      key: "deliveryMethod",
+      label: "Delivery Method",
+      editable: true,
+      type: "select",
+      options: [
+        { value: "Email", label: "Email" },
+        { value: "Mobile", label: "Mobile" },
+        { value: "Postal", label: "Postal" },
+        { value: "Collection", label: "Collection" },
+      ],
+    },
+    { key: "saleDate", label: "Sale Date", editable: true, type: "date" },
+    { key: "eventDate", label: "Event Date", editable: true, type: "date" },
+    {
+      key: "status",
+      label: "Status",
+      editable: true,
+      type: "select",
+      options: [
+        { value: "Active", label: "Active" },
+        { value: "Sold", label: "Sold" },
+        { value: "Pending", label: "Pending" },
+        { value: "Cancelled", label: "Cancelled" },
+      ],
     },
     {
-      type: "select",
-      name: "listingStatus",
-      label: "Listing status",
-      options: [
-        { value: "", label: "Listing status" }
-      ],
-      className: "!py-[7px] !px-[12px] !text-sm w-full"
+      key: "commission",
+      label: "Commission (%)",
+      editable: true,
+      type: "number",
     },
-    {
-      type: "select",
-      name: "listingQuality",
-      label: "Listing quality",
-      options: [
-        { value: "", label: "Listing quality" }
-      ],
-      className: "!py-[7px] !px-[12px] !text-sm w-full"
-    }
+    { key: "notes", label: "Notes", editable: true },
   ];
 
-  // Sample event data that matches the UI
-  const eventListViews = [
-    {
-      event_name: "Formula 1 Abu Dhabi Grand Prix 2025 - 3-Day Pass",
-      event_date_time: "Fri, 05 Dec 2025, 09:59",
-      tournament: "Formula 1",
-      venue_name: "Yas Marina Circuit, Abu Dhabi, United Arab Emirates",
-      price_range: "$200-$800",
-      ticket_available: "290",
-    },
-    {
-      event_name: "Fifa World Cup Match 1 - Group A Mexico",
-      event_date_time: "Thu, 11 Jun 2026, 14:00",
-      tournament: "FIFA World Cup",
-      venue_name: "Estadio Azteca, Ciudad de México, Mexico",
-      price_range: "$150-$600",
-      ticket_available: "40",
-    },
-    {
-      event_name: "Fifa World Cup Match 2 - Group A",
-      event_date_time: "Thu, 11 Jun 2026, 15:00",
-      tournament: "FIFA World Cup",
-      venue_name: "Estadio Guadalajara, Zapopan, Mexico",
-      price_range: "$120-$500",
-      ticket_available: "4",
-    },
-    {
-      event_name: "Fifa World Cup Match 3 - Group B Toronto Stadium",
-      event_date_time: "Fri, 12 Jun 2026, 15:00",
-      tournament: "FIFA World Cup",
-      venue_name: "Toronto Stadium, Toronto, Canada",
-      price_range: "$180-$700",
-      ticket_available: "4",
-    },
-    {
-      event_name: "Fifa World Cup Match 5 - Group C Boston Stadium",
-      event_date_time: "Sat, 13 Jun 2026, 15:00",
-      tournament: "FIFA World Cup",
-      venue_name: "Boston Stadium, Massachusetts, United States",
-      price_range: "$160-$650",
-      ticket_available: "4",
-    }
+  const stickyColumns = [
+    [
+      {
+        icon: <p className="text-xs font-medium">£165</p>,
+        className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
+      },
+      {
+        icon: <Image width={14} height={14} src={attachmentPin} alt="attach" />,
+        className: "cursor-pointer pl-2",
+        tooltipComponent: <p className="text-center">External Transfer</p>,
+        key: "attach",
+      },
+      {
+        icon: <Image width={16} height={16} src={crossHand} alt="hand" />,
+        className: "cursor-pointer px-2",
+        key: "oneHand",
+        tooltipComponent: (
+          <p className="text-center">
+            Expected Delivery Date:
+            <br />
+            {dateFormat("2024-11-24")}
+          </p>
+        ),
+        tooltipPosition: "top",
+      },
+      {
+        icon: (
+          <Image width={20} height={20} src={documentText} alt="document" />
+        ),
+        className: "cursor-pointer pr-2",
+        key: "document",
+        tooltipComponent: (
+          <div>
+            <p className="text-left">Benefits/Restrictions</p>
+            <ul className="list-disc ml-[20px]">
+              <li>Behind the goal view</li>
+              <li>Atmosphere section</li>
+            </ul>
+          </div>
+        ),
+        tooltipPosition: "top",
+      },
+      {
+        icon: (
+          <Image width={20} height={20} src={beforeFaviurates} alt="star" />
+        ),
+        tooltipComponent: <p className="text-center">Track this ticket</p>,
+        className: "border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer",
+        key: "star",
+      },
+    ],
+    [
+      {
+        icon: <p className="text-xs font-medium">£155</p>,
+        className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
+      },
+      {
+        icon: <Image width={14} height={14} src={attachment3} alt="attach" />,
+        className: "cursor-pointer pl-2",
+        tooltipComponent: <p className="text-center">Internal Transfer</p>,
+        key: "attach",
+      },
+      {
+        icon: <Image width={16} height={16} src={crossHand} alt="hand" />,
+        className: "cursor-pointer px-2",
+        key: "oneHand",
+        tooltipComponent: (
+          <p className="text-center">
+            Expected Delivery Date:
+            <br />
+            {dateFormat("2024-11-25")}
+          </p>
+        ),
+        tooltipPosition: "top",
+      },
+      {
+        icon: null,
+        className: "cursor-pointer pr-2",
+        key: "document",
+      },
+      {
+        icon: <Image width={20} height={20} src={star} alt="star" />,
+        tooltipComponent: <p className="text-center">Track this ticket</p>,
+        className: "border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer",
+        key: "star",
+      },
+    ],
+    [
+      {
+        icon: <p className="text-xs font-medium">£295</p>,
+        className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
+      },
+      {
+        icon: <Image width={14} height={14} src={attachment6} alt="attach" />,
+        className: "cursor-pointer pl-2",
+        tooltipComponent: <p className="text-center">Direct Sale</p>,
+        key: "attach",
+      },
+      {
+        icon: <Image width={16} height={16} src={crossHand} alt="hand" />,
+        className: "cursor-pointer px-2",
+        key: "oneHand",
+        tooltipComponent: (
+          <p className="text-center">
+            Expected Delivery Date:
+            <br />
+            {dateFormat("2024-11-26")}
+          </p>
+        ),
+        tooltipPosition: "top",
+      },
+      {
+        icon: (
+          <Image width={20} height={20} src={documentText} alt="document" />
+        ),
+        className: "cursor-pointer pr-2",
+        key: "document",
+        tooltipComponent: (
+          <div>
+            <p className="text-left">Benefits/Restrictions</p>
+            <ul className="list-disc ml-[20px] grid grid-cols-2 gap-1">
+              <li>Executive lounge access</li>
+              <li>Premium dining</li>
+              <li>Complimentary drinks</li>
+              <li>Best seats in stadium</li>
+            </ul>
+          </div>
+        ),
+        tooltipPosition: "top",
+      },
+      {
+        icon: (
+          <Image width={20} height={20} src={beforeFaviurates} alt="star" />
+        ),
+        tooltipComponent: <p className="text-center">Track this ticket</p>,
+        className: "border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer",
+        key: "star",
+      },
+    ],
+    [
+      {
+        icon: <p className="text-xs font-medium">£165</p>,
+        className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
+      },
+      {
+        icon: <Image width={14} height={14} src={attachmentPin} alt="attach" />,
+        className: "cursor-pointer pl-2",
+        tooltipComponent: <p className="text-center">External Transfer</p>,
+        key: "attach",
+      },
+      {
+        icon: <Image width={16} height={16} src={crossHand} alt="hand" />,
+        className: "cursor-pointer px-2",
+        key: "oneHand",
+        tooltipComponent: (
+          <p className="text-center">
+            Expected Delivery Date:
+            <br />
+            {dateFormat("2024-11-24")}
+          </p>
+        ),
+        tooltipPosition: "top",
+      },
+      {
+        icon: (
+          <Image width={20} height={20} src={documentText} alt="document" />
+        ),
+        className: "cursor-pointer pr-2",
+        key: "document",
+        tooltipComponent: (
+          <div>
+            <p className="text-left">Benefits/Restrictions</p>
+            <ul className="list-disc ml-[20px]">
+              <li>Behind the goal view</li>
+              <li>Atmosphere section</li>
+            </ul>
+          </div>
+        ),
+        tooltipPosition: "top",
+      },
+      {
+        icon: (
+          <Image width={20} height={20} src={beforeFaviurates} alt="star" />
+        ),
+        tooltipComponent: <p className="text-center">Track this ticket</p>,
+        className: "border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer",
+        key: "star",
+      },
+    ],
+    [
+      {
+        icon: <p className="text-xs font-medium">£155</p>,
+        className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
+      },
+      {
+        icon: <Image width={14} height={14} src={attachment3} alt="attach" />,
+        className: "cursor-pointer pl-2",
+        tooltipComponent: <p className="text-center">Internal Transfer</p>,
+        key: "attach",
+      },
+      {
+        icon: <Image width={16} height={16} src={crossHand} alt="hand" />,
+        className: "cursor-pointer px-2",
+        key: "oneHand",
+        tooltipComponent: (
+          <p className="text-center">
+            Expected Delivery Date:
+            <br />
+            {dateFormat("2024-11-25")}
+          </p>
+        ),
+        tooltipPosition: "top",
+      },
+      {
+        icon: null,
+        className: "cursor-pointer pr-2",
+        key: "document",
+      },
+      {
+        icon: <Image width={20} height={20} src={star} alt="star" />,
+        tooltipComponent: <p className="text-center">Track this ticket</p>,
+        className: "border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer",
+        key: "star",
+      },
+    ],
+    [
+      {
+        icon: <p className="text-xs font-medium">£295</p>,
+        className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
+      },
+      {
+        icon: <Image width={14} height={14} src={attachment6} alt="attach" />,
+        className: "cursor-pointer pl-2",
+        tooltipComponent: <p className="text-center">Direct Sale</p>,
+        key: "attach",
+      },
+      {
+        icon: <Image width={16} height={16} src={crossHand} alt="hand" />,
+        className: "cursor-pointer px-2",
+        key: "oneHand",
+        tooltipComponent: (
+          <p className="text-center">
+            Expected Delivery Date:
+            <br />
+            {dateFormat("2024-11-26")}
+          </p>
+        ),
+        tooltipPosition: "top",
+      },
+      {
+        icon: (
+          <Image width={20} height={20} src={documentText} alt="document" />
+        ),
+        className: "cursor-pointer pr-2",
+        key: "document",
+        tooltipComponent: (
+          <div>
+            <p className="text-left">Benefits/Restrictions</p>
+            <ul className="list-disc ml-[20px] grid grid-cols-2 gap-1">
+              <li>Executive lounge access</li>
+              <li>Premium dining</li>
+              <li>Complimentary drinks</li>
+              <li>Best seats in stadium</li>
+            </ul>
+          </div>
+        ),
+        tooltipPosition: "top",
+      },
+      {
+        icon: (
+          <Image width={20} height={20} src={beforeFaviurates} alt="star" />
+        ),
+        tooltipComponent: <p className="text-center">Track this ticket</p>,
+        className: "border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer",
+        key: "star",
+      },
+    ],
+    [
+      {
+        icon: <p className="text-xs font-medium">£165</p>,
+        className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
+      },
+      {
+        icon: <Image width={14} height={14} src={attachmentPin} alt="attach" />,
+        className: "cursor-pointer pl-2",
+        tooltipComponent: <p className="text-center">External Transfer</p>,
+        key: "attach",
+      },
+      {
+        icon: <Image width={16} height={16} src={crossHand} alt="hand" />,
+        className: "cursor-pointer px-2",
+        key: "oneHand",
+        tooltipComponent: (
+          <p className="text-center">
+            Expected Delivery Date:
+            <br />
+            {dateFormat("2024-11-24")}
+          </p>
+        ),
+        tooltipPosition: "top",
+      },
+      {
+        icon: (
+          <Image width={20} height={20} src={documentText} alt="document" />
+        ),
+        className: "cursor-pointer pr-2",
+        key: "document",
+        tooltipComponent: (
+          <div>
+            <p className="text-left">Benefits/Restrictions</p>
+            <ul className="list-disc ml-[20px]">
+              <li>Behind the goal view</li>
+              <li>Atmosphere section</li>
+            </ul>
+          </div>
+        ),
+        tooltipPosition: "top",
+      },
+      {
+        icon: (
+          <Image width={20} height={20} src={beforeFaviurates} alt="star" />
+        ),
+        tooltipComponent: <p className="text-center">Track this ticket</p>,
+        className: "border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer",
+        key: "star",
+      },
+    ],
   ];
+
+  const rightStickyHeaders = ["", "", "", "", "", ""];
+
+  // Convert your event data into accordion items - using the same data structure as your original
+  const accordionItems = [
+    {
+      id: 1,
+      title: "Nottingham Forest vs Aston Villa",
+      date: "Sat, 23 Nov 2024",
+      time: "08:00 AM",
+      venue: "City Ground",
+      available: "15",
+      sold: "8",
+      views: "120",
+      data: [
+        {
+          id: "2059648309",
+          listingId: "2059648309",
+          ticketType: "External Transfer",
+          quantity: 40,
+          sold: 0,
+          splitType: "None",
+          category: "Main Stand",
+          section: "Main Stand",
+          row: "PREMIUM",
+          pricePerTicket: 165,
+          totalPrice: 6600,
+          deliveryMethod: "Email",
+          saleDate: "2024-11-20",
+          eventDate: "2024-11-23",
+          status: "Active",
+          commission: 10,
+          notes: "Premium seats with excellent view",
+        },
+        {
+          id: "1933901370",
+          listingId: "1933901370",
+          ticketType: "External Transfer",
+          quantity: 40,
+          sold: 0,
+          splitType: "None",
+          category: "Main Stand",
+          section: "Main Stand",
+          row: "PREMIUM",
+          pricePerTicket: 155,
+          totalPrice: 6200,
+          deliveryMethod: "Mobile",
+          saleDate: "2024-11-19",
+          eventDate: "2024-11-23",
+          status: "Active",
+          commission: 8,
+          notes: "Last minute availability",
+        },
+        {
+          id: "2330843130",
+          listingId: "2330843130",
+          ticketType: "External Transfer",
+          quantity: 10,
+          sold: 0,
+          splitType: "None",
+          category: "Main Stand",
+          section: "Main Stand",
+          row: "M01",
+          pricePerTicket: 295,
+          totalPrice: 2950,
+          deliveryMethod: "Collection",
+          saleDate: "2024-11-18",
+          eventDate: "2024-11-23",
+          status: "Pending",
+          commission: 12,
+          notes: "VIP package included",
+        },
+        {
+          id: "5172790641",
+          listingId: "5172790641",
+          ticketType: "Direct Sale",
+          quantity: 20,
+          sold: 5,
+          splitType: "Split",
+          category: "Family Stand",
+          section: "Family Stand",
+          row: "F12",
+          pricePerTicket: 85,
+          totalPrice: 1700,
+          deliveryMethod: "Email",
+          saleDate: "2024-11-17",
+          eventDate: "2024-11-23",
+          status: "Active",
+          commission: 5,
+          notes: "Family friendly section",
+        },
+        {
+          id: "1480917639",
+          listingId: "1480917639",
+          ticketType: "External Transfer",
+          quantity: 10,
+          sold: 0,
+          splitType: "None",
+          category: "Away End",
+          section: "Away End",
+          row: "Row",
+          pricePerTicket: 45,
+          totalPrice: 450,
+          deliveryMethod: "Postal",
+          saleDate: "2024-11-16",
+          eventDate: "2024-11-23",
+          status: "Active",
+          commission: 3,
+          notes: "Away supporters section",
+        },
+        {
+          id: "123825011",
+          listingId: "123825011",
+          ticketType: "External Transfer",
+          quantity: 10,
+          sold: 0,
+          splitType: "None",
+          category: "Main Stand",
+          section: "Main Stand",
+          row: "Row",
+          pricePerTicket: 125,
+          totalPrice: 1250,
+          deliveryMethod: "Email",
+          saleDate: "2024-11-15",
+          eventDate: "2024-11-23",
+          status: "Cancelled",
+          commission: 7,
+          notes: "Cancelled due to seller request",
+        },
+        {
+          id: "4082813833",
+          listingId: "4082813833",
+          ticketType: "External Transfer",
+          quantity: 10,
+          sold: 0,
+          splitType: "None",
+          category: "Main Stand",
+          section: "Main Stand",
+          row: "D",
+          pricePerTicket: 175,
+          totalPrice: 1750,
+          deliveryMethod: "Mobile",
+          saleDate: "2024-11-14",
+          eventDate: "2024-11-23",
+          status: "Active",
+          commission: 9,
+          notes: "Lower tier seats",
+        },
+        {
+          id: "2267793173",
+          listingId: "2267793173",
+          ticketType: "External Transfer",
+          quantity: 10,
+          sold: 0,
+          splitType: "None",
+          category: "Main Stand",
+          section: "Main Stand",
+          row: "D",
+          pricePerTicket: 165,
+          totalPrice: 1650,
+          deliveryMethod: "Collection",
+          saleDate: "2024-11-13",
+          eventDate: "2024-11-23",
+          status: "Sold",
+          commission: 8,
+          notes: "Sold to season ticket holder",
+        },
+      ],
+      rightStickyColumns: stickyColumns,
+    },
+    {
+      id: 2,
+      title: "Chelsea vs Manchester United",
+      date: "Sun, 24 Nov 2024",
+      time: "14:30",
+      venue: "Stamford Bridge",
+      available: "22",
+      sold: "15",
+      views: "350",
+      data: [
+        {
+          id: "3059648309",
+          listingId: "3059648309",
+          ticketType: "External Transfer",
+          quantity: 30,
+          sold: 5,
+          splitType: "None",
+          category: "West Stand",
+          section: "West Stand Upper",
+          row: "PREMIUM",
+          pricePerTicket: 225,
+          totalPrice: 6750,
+          deliveryMethod: "Email",
+          saleDate: "2024-11-21",
+          eventDate: "2024-11-24",
+          status: "Active",
+          commission: 15,
+          notes: "Premium view of the pitch",
+        },
+        {
+          id: "4933901370",
+          listingId: "4933901370",
+          ticketType: "Direct Sale",
+          quantity: 25,
+          sold: 10,
+          splitType: "Split",
+          category: "East Stand",
+          section: "East Stand Lower",
+          row: "A15",
+          pricePerTicket: 185,
+          totalPrice: 4625,
+          deliveryMethod: "Mobile",
+          saleDate: "2024-11-20",
+          eventDate: "2024-11-24",
+          status: "Active",
+          commission: 12,
+          notes: "Close to player tunnel",
+        },
+      ],
+      rightStickyColumns: stickyColumns.slice(0, 2),
+    },
+    {
+      id: 3,
+      title: "Arsenal vs Liverpool",
+      date: "Mon, 25 Nov 2024",
+      time: "20:00",
+      venue: "Emirates Stadium",
+      available: "8",
+      sold: "25",
+      views: "580",
+      data: [
+        {
+          id: "5059648309",
+          listingId: "5059648309",
+          ticketType: "External Transfer",
+          quantity: 15,
+          sold: 8,
+          splitType: "Bundle",
+          category: "North Bank",
+          section: "North Bank Upper",
+          row: "C22",
+          pricePerTicket: 195,
+          totalPrice: 2925,
+          deliveryMethod: "Collection",
+          saleDate: "2024-11-22",
+          eventDate: "2024-11-25",
+          status: "Active",
+          commission: 13,
+          notes: "Behind the goal atmosphere",
+        },
+        {
+          id: "6933901370",
+          listingId: "6933901370",
+          ticketType: "Internal Transfer",
+          quantity: 20,
+          sold: 17,
+          splitType: "None",
+          category: "Clock End",
+          section: "Clock End Lower",
+          row: "G8",
+          pricePerTicket: 145,
+          totalPrice: 2900,
+          deliveryMethod: "Email",
+          saleDate: "2024-11-21",
+          eventDate: "2024-11-25",
+          status: "Active",
+          commission: 8,
+          notes: "Good value seats",
+        },
+        {
+          id: "7330843130",
+          listingId: "7330843130",
+          ticketType: "Direct Sale",
+          quantity: 12,
+          sold: 0,
+          splitType: "Split",
+          category: "Executive",
+          section: "Diamond Club",
+          row: "EXECUTIVE",
+          pricePerTicket: 450,
+          totalPrice: 5400,
+          deliveryMethod: "Collection",
+          saleDate: "2024-11-23",
+          eventDate: "2024-11-25",
+          status: "Pending",
+          commission: 20,
+          notes: "VIP experience with hospitality",
+        },
+      ],
+      rightStickyColumns: stickyColumns.slice(0, 3),
+    },
+  ];
+
+  const handleCellEdit = (itemIndex, rowIndex, columnKey, value) => {
+    console.log("Cell edited:", { itemIndex, rowIndex, columnKey, value });
+    // Here you would typically update your data state or make an API call
+    // You can access the specific accordion item and row to update:
+    // accordionItems[itemIndex].data[rowIndex][columnKey] = value;
+  };
+
+  const handleRowSelectionChange = (newSelectedRows) => {
+    setSelectedRows(newSelectedRows);
+  };
+
+  const handleSelectAll = () => {
+    // Logic to select all rows across all items
+    const allRowIds = [];
+    accordionItems.forEach((item) => {
+      if (item.data) {
+        item.data.forEach((row) => {
+          allRowIds.push(`${item.id}-${row.id}`);
+        });
+      }
+    });
+    setSelectedRows(allRowIds);
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedRows([]);
+  };
+
+  const handleClone = () => {
+    console.log("Cloning selected rows:", selectedRows);
+    // Implement clone functionality
+  };
+
+  const handleEdit = () => {
+    console.log("Editing selected rows:", selectedRows);
+    // Implement edit functionality
+  };
+
+  const handleDelete = () => {
+    console.log("Deleting selected rows:", selectedRows);
+    // Implement delete functionality
+  };
+
+  const handleExportCSV = () => {
+    console.log("Exporting selected rows to CSV:", selectedRows);
+    // Implement CSV export functionality
+  };
+
+  const handleCollapseAll = () => {
+    console.log("Collapsing all accordion items");
+    // Implement collapse all functionality
+  };
+
+  // Calculate total events count from accordion items
+  const totalEvents = accordionItems.length;
+  const selectedCount = selectedRows.length;
+  const selectedEventsCount = accordionItems.filter((item) =>
+    selectedRows.some((id) => id.startsWith(`${item.id}-`))
+  ).length;
 
   return (
-    <div className="bg-[#F5F7FA] w-full h-full">
-      {/* Top bar with filter and add deposit button */}
+    <div className="bg-[#F5F7FA] w-full h-full relative">
+      {/* Header with Filter and Add Deposit button */}
       <div className="flex bg-white items-center py-2 md:py-2 justify-between px-4 md:px-6 border-b border-[#eaeaf1]">
-        <p className="text-sm text-gray-600">Filter</p>
-        <button
-          className="px-3 py-2 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 transition-colors"
+        <p>Filter</p>
+        <Button
+          type="blueType"
+          classNames={{
+            root: "px-2 md:px-3 py-1.5 md:py-2",
+            label_: "text-xs md:text-sm font-medium",
+          }}
           onClick={() => {
             handleOpenAddWalletPopup();
           }}
-        >
-          + Add Deposit
-        </button>
+          label="+ Add Deposit"
+        />
       </div>
-      
-      {/* Filter section */}
-      <div className="bg-white border-b border-[#DADBE5] p-4">
-        <div className="flex gap-3 items-center">
-          <FormFields formFields={filterFields} />
-        </div>
-        
-        {/* Clear filters section */}
-        <div className="flex items-center gap-2 mt-3">
-          <button className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800">
-            <span className="w-4 h-4 bg-purple-600 text-white rounded-full flex items-center justify-center text-xs">×</span>
-            Clear filters
-          </button>
-          <span className="text-xs text-gray-500">Amir Khan</span>
-          <button className="text-xs text-gray-400 hover:text-gray-600">×</button>
+
+      {/* Filter Section */}
+      <div className="border-b-[1px] bg-white border-[#DADBE5] p-4">
+        <div className="flex gap-4 items-center w-[80%]">
+          <FloatingLabelInput
+            id="selectedMatch"
+            name="selectedMatch"
+            keyValue={"selectedMatch"}
+            type="text"
+            label="Search Match Event"
+            className={"!py-[7px] !px-[12px] !text-[#323A70] !text-[14px] "}
+            paddingClassName=""
+            autoComplete="off"
+          />
+          <FloatingSelect
+            label={"Ticket Status"}
+            options={[
+              { value: "fulfilled", label: "Fulfilled" },
+              { value: "incomplete", label: "Incomplete" },
+            ]}
+            keyValue="ticket_status"
+            className=""
+            paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
+          />
+          <FloatingSelect
+            label={"Booking Status"}
+            keyValue="booking_status"
+            className=""
+            paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
+          />
+          <FloatingDateRange
+            id="eventDate"
+            name="eventDate"
+            keyValue="eventDate"
+            parentClassName=""
+            label="Event Date"
+            subParentClassName=""
+            className="!py-[8px] !px-[16px] mobile:text-xs"
+          />
         </div>
       </div>
-      
-      {/* Events count and view controls */}
-      <div className="bg-white border-b border-[#DADBE5] flex items-center justify-between px-4 py-3">
-        <p className="text-sm text-[#323A70] font-medium">
-          {eventListViews.length} Events
+
+      {/* Events Count Section */}
+      <div className="border-b-[1px] bg-white border-[#DADBE5] flex items-center">
+        <p className="text-[14px] p-4 text-[#323A70] font-medium border-r-[1px] border-[#DADBE5] w-fit">
+          {totalEvents} Events
         </p>
-        <div className="flex items-center gap-4 text-xs text-gray-600">
-          <div className="flex items-center gap-2">
-            <span>View</span>
-            <select className="border border-gray-300 rounded px-2 py-1 text-xs">
-              <option>50</option>
-              <option>100</option>
-            </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <span>Page 1 of 1</span>
-          </div>
+      </div>
+
+      {/* Main Content Area with Accordion Table */}
+      <div className="m-6 bg-white rounded max-h-[calc(100vh-300px)] overflow-auto">
+        <ScrollableAccordionTable
+          items={accordionItems}
+          headers={headers}
+          rightStickyHeaders={rightStickyHeaders}
+          loading={false}
+          onCellEdit={handleCellEdit}
+          selectedRows={selectedRows}
+          onRowSelectionChange={handleRowSelectionChange}
+        />
+      </div>
+
+      {/* Sticky Bottom Container */}
+      {selectedRows.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+          {/* Collapsed State */}
+          {!isStickyExpanded && (
+            <div className="flex items-center justify-between px-6 py-3">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedCount > 0}
+                    onChange={
+                      selectedCount > 0 ? handleDeselectAll : handleSelectAll
+                    }
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Select all
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600">
+                  <span className="font-medium">{selectedCount}</span> selected
+                  in <span className="font-medium">{selectedEventsCount}</span>{" "}
+                  event
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={handleDeselectAll}
+                  className="text-sm text-gray-600 hover:text-gray-800 px-3 py-1 hover:bg-gray-100 rounded"
+                >
+                  Deselect
+                </button>
+                <button
+                  onClick={handleClone}
+                  className="flex items-center space-x-1 text-sm text-gray-700 hover:text-gray-900 px-3 py-1 hover:bg-gray-100 rounded"
+                >
+                  <Copy size={16} />
+                  <span>Clone</span>
+                </button>
+                <button
+                  onClick={handleEdit}
+                  className="flex items-center space-x-1 text-sm text-gray-700 hover:text-gray-900 px-3 py-1 hover:bg-gray-100 rounded"
+                >
+                  <Edit size={16} />
+                  <span>Edit</span>
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="flex items-center space-x-1 text-sm text-gray-700 hover:text-gray-900 px-3 py-1 hover:bg-gray-100 rounded"
+                >
+                  <Trash2 size={16} />
+                  <span>Delete</span>
+                </button>
+                <button
+                  onClick={handleExportCSV}
+                  className="flex items-center space-x-1 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded text-sm font-medium"
+                >
+                  <Download size={16} />
+                  <span>Export CSV</span>
+                </button>
+                <button
+                  onClick={() => setIsStickyExpanded(true)}
+                  className="flex items-center space-x-1 text-gray-600 hover:text-gray-800 px-2 py-1 hover:bg-gray-100 rounded"
+                >
+                  <ChevronUp size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Expanded State */}
+          {isStickyExpanded && (
+            <div className="px-6 py-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedCount > 0}
+                      onChange={
+                        selectedCount > 0 ? handleDeselectAll : handleSelectAll
+                      }
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Select all
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <span className="font-medium">{selectedCount}</span>{" "}
+                    selected in{" "}
+                    <span className="font-medium">{selectedEventsCount}</span>{" "}
+                    event
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsStickyExpanded(false)}
+                  className="flex items-center space-x-1 text-gray-600 hover:text-gray-800 px-2 py-1 hover:bg-gray-100 rounded"
+                >
+                  <ChevronDown size={16} />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={handleDeselectAll}
+                    className="text-sm text-gray-600 hover:text-gray-800 px-3 py-2 hover:bg-gray-100 rounded border border-gray-300"
+                  >
+                    Deselect
+                  </button>
+                  <button
+                    onClick={handleClone}
+                    className="flex items-center space-x-2 text-sm text-gray-700 hover:text-gray-900 px-3 py-2 hover:bg-gray-100 rounded border border-gray-300"
+                  >
+                    <Copy size={16} />
+                    <span>Clone</span>
+                  </button>
+                  <button
+                    onClick={handleEdit}
+                    className="flex items-center space-x-2 text-sm text-gray-700 hover:text-gray-900 px-3 py-2 hover:bg-gray-100 rounded border border-gray-300"
+                  >
+                    <Edit size={16} />
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="flex items-center space-x-2 text-sm text-gray-700 hover:text-gray-900 px-3 py-2 hover:bg-gray-100 rounded border border-gray-300"
+                  >
+                    <Trash2 size={16} />
+                    <span>Delete</span>
+                  </button>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={handleExportCSV}
+                    className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm font-medium"
+                  >
+                    <Download size={16} />
+                    <span>Export CSV</span>
+                  </button>
+                  <button
+                    onClick={handleCollapseAll}
+                    className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 px-3 py-2 hover:bg-gray-100 rounded border border-gray-300"
+                  >
+                    <ChevronDown size={16} />
+                    <span>Collapse all</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
-      
-      {/* Main content area */}
-      <div className="p-6">
-        <BulkTicketsListing events={eventListViews} />
-      </div>
+      )}
     </div>
   );
 };
