@@ -37,6 +37,29 @@ export const IconStore = {
       />
     </svg>
   )),
+  glitter: withMerger((props) => (
+    <svg
+      id=""
+      data-name="Group 21081"
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      {...props}
+      class="w-6 h-6 group-hover:[&amp;>path]:stroke-indigo-500 false"
+    >
+      <path
+        id="Path_49200"
+        data-name="Path 49200"
+        d="M12,1.75v6.5m0,7.5v6.5M8.25,12H1.75m14,0h6.5M8,8,6,6M16,8l2-2M16,16l2,2M8,16,6,18"
+        fill="none"
+        stroke="#41007f"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+      ></path>
+    </svg>
+  )),
   tickets: withMerger((props) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"

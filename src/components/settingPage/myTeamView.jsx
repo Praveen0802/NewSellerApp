@@ -235,7 +235,7 @@ const MyTeamView = (props) => {
           </div>
         </div>
         <div className="flex flex-col gap-3 sm:gap-4 flex-grow max-md:pb-10 overflow-auto">
-          <div className="min-h-0 flex-grow overflow-auto">
+          <div className="min-h-0 overflow-auto">
             <TableView
               headerClassName={headerClassName}
               rowClassName={rowClassName}

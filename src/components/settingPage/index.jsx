@@ -12,11 +12,14 @@ import BankAccounts from "./bankAccounts";
 import LinkedCards from "./linkedCards";
 import TicketDelivery from "./ticketDelivery";
 import MyRefferal from "./myRefferal";
+import SubjectDescriptionPopup from "./subjectDescriptionPopup";
 
 const SettingsPage = (props) => {
   const { profile, apiData } = props;
   const [activeTab, setActiveTab] = useState(profile);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showSubjectDescriptionPopup, setShowSubjectDescriptionPopup] =
+    useState(false);
 
   const router = useRouter();
 
@@ -55,7 +58,6 @@ const SettingsPage = (props) => {
       title: "My Referral",
       key: "myRefferal",
     },
-   
 
     {
       icon: <IconStore.profile className={IconclassName} />,
@@ -72,9 +74,19 @@ const SettingsPage = (props) => {
       title: "Linked Cards",
       key: "linkedCards",
     },
+    {
+      icon: <IconStore.glitter className={IconclassName} />,
+      title: "Request a Feature",
+      key: "featureRequest",
+    },
   ];
 
   const handleTabClick = (tab) => {
+   
+    if (tab === "featureRequest") {
+      setShowSubjectDescriptionPopup(true);
+      return;
+    }
     setActiveTab(tab);
     router?.push(`/settings/${tab}`);
 
@@ -199,6 +211,10 @@ const SettingsPage = (props) => {
           </div>
         </div>
       )}
+      <SubjectDescriptionPopup
+        show={showSubjectDescriptionPopup}
+        onClose={() => setShowSubjectDescriptionPopup(false)}
+      />
     </div>
   );
 };

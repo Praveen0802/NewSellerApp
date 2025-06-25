@@ -100,7 +100,7 @@ const MyRefferal = () => {
           <p className="p-4 border-r-[1px] border-[#DADBE5] w-fit">0 Result</p>
         </div>
       </div>
-      {/* <SubjectDescriptionPopup /> */}
+      
     </div>
   );
 };

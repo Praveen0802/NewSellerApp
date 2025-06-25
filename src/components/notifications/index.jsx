@@ -159,12 +159,12 @@ const NotificationPopup = ({ item, onClose, isVisible }) => {
   if (!isVisible || !item) return null;
 
   return (
-    <div className="fixed inset-0  bg-black/20 bg-opacity-50 flex justify-end z-50">
-      <div className="bg-white h-full w-[600px] shadow-xl overflow-y-auto">
+    <RightViewModal show={isVisible} onClose={onClose}>
+      <div className="bg-white h-full  shadow-xl overflow-y-auto">
         {/* Close button - positioned at top right of panel */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl font-bold z-10"
+          className="absolute cursor-pointer top-3 right-3 text-gray-400 hover:text-gray-600 text-2xl font-bold z-10"
         >
           ×
         </button>
@@ -231,13 +231,16 @@ const NotificationPopup = ({ item, onClose, isVisible }) => {
           </button>
         </div>
       </div>
-    </div>
+    </RightViewModal>
   );
 };
 
 import { useState } from "react";
 // Import your existing TabbedLayout component
 import TabbedLayout from "../tabbedLayout";
+import RightViewModal from "../commonComponents/rightViewModal";
+import { IconStore } from "@/utils/helperFunctions/iconStore";
+import FloatingCheckbox from "../floatinginputFields/floatingCheckBox";
 
 // NotificationPage component
 const NotificationPage = (props) => {
@@ -252,6 +255,72 @@ const NotificationPage = (props) => {
   const [selectedItems, setSelectedItems] = useState([]);
   const [popupItem, setPopupItem] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
+
+  const [actionBarStates, setActionBarStates] = useState({
+    selectAll: false,
+    markAsViewed: false,
+    markAsPinned: false,
+    markAsUnpinned: false,
+  });
+
+  // Add these arrays to track item states
+  const [pinnedItems, setPinnedItems] = useState([]); // Track pinned items
+  const [viewedItems, setViewedItems] = useState([]); // Track viewed items
+
+  // Updated handler functions
+  const handleActionBarChange = (e, keyValue) => {
+    const { checked } = e.target;
+
+    if (keyValue === "selectAll") {
+      // Handle select all logic
+      if (checked) {
+        const currentData = getCurrentData();
+        setSelectedItems(currentData.map((item) => item.id));
+      } else {
+        setSelectedItems([]);
+      }
+    }
+
+    setActionBarStates((prev) => ({
+      ...prev,
+      [keyValue]: checked,
+    }));
+
+    // Handle the respective actions
+    if (checked) {
+      switch (keyValue) {
+        case "markAsViewed":
+          console.log("Marking as viewed:", selectedItems);
+          // Add selected items to viewed items
+          setViewedItems((prev) => [...new Set([...prev, ...selectedItems])]);
+          // Reset the checkbox after action
+          setTimeout(() => {
+            setActionBarStates((prev) => ({ ...prev, markAsViewed: false }));
+          }, 1000);
+          break;
+        case "markAsPinned":
+          console.log("Marking as pinned:", selectedItems);
+          // Add selected items to pinned items
+          setPinnedItems((prev) => [...new Set([...prev, ...selectedItems])]);
+          // Reset the checkbox after action
+          setTimeout(() => {
+            setActionBarStates((prev) => ({ ...prev, markAsPinned: false }));
+          }, 1000);
+          break;
+        case "markAsUnpinned":
+          console.log("Marking as unpinned:", selectedItems);
+          // Remove selected items from pinned items
+          setPinnedItems((prev) =>
+            prev.filter((id) => !selectedItems.includes(id))
+          );
+          // Reset the checkbox after action
+          setTimeout(() => {
+            setActionBarStates((prev) => ({ ...prev, markAsUnpinned: false }));
+          }, 1000);
+          break;
+      }
+    }
+  };
 
   // Configuration for tabs
   const tabsConfig = [
@@ -416,15 +485,6 @@ const NotificationPage = (props) => {
     });
   };
 
-  const handleSelectAll = () => {
-    const currentData = getCurrentData();
-    if (selectedItems.length === currentData.length) {
-      setSelectedItems([]);
-    } else {
-      setSelectedItems(currentData.map((item) => item.id));
-    }
-  };
-
   const handleMarkAsViewed = () => {
     console.log("Marking as viewed:", selectedItems);
     // Add your mark as viewed logic here
@@ -457,25 +517,67 @@ const NotificationPage = (props) => {
     return activeTab === "home" ? staticNotificationsData : staticActivityData;
   };
 
+  const handleSelectAll = () => {
+    const currentData = getCurrentData();
+    const newSelection =
+      selectedItems.length === currentData.length
+        ? []
+        : currentData.map((item) => item.id);
+    setSelectedItems(newSelection);
+
+    setActionBarStates((prev) => ({
+      ...prev,
+      selectAll: newSelection.length === currentData.length,
+    }));
+  };
+
   // Render list item
   const renderListItem = (item, index) => {
     const isSelected = selectedItems.includes(item.id);
+    const isPinned = pinnedItems.includes(item.id);
+    const isViewed = viewedItems.includes(item.id);
 
     return (
       <div
         key={item.id}
-        className="flex items-start gap-3 p-4 border-b border-gray-100 hover:bg-gray-50"
+        className={`flex items-start gap-3 hover:bg-gray-50 transition-all duration-200 ${
+          isPinned
+            ? "border-l-4 border-l-blue-500 bg-blue-50/30"
+            : "border-b border-gray-100"
+        }`}
       >
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={() => handleItemSelect(item.id)}
-          className="mt-1 rounded border-gray-300"
-        />
+        <div className="pl-4 pr-0 pt-4">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => handleItemSelect(item.id)}
+            className="mt-1 rounded border-gray-300"
+          />
+        </div>
         <div className="flex-1">
           <div className="flex items-start justify-between">
-            <div className="flex-1">
+            <div
+              className={`flex-1 border-x-[1px] px-4 py-2 transition-all duration-200 ${
+                isPinned
+                  ? "border-blue-200 bg-gradient-to-r from-blue-50/50 to-transparent"
+                  : "border-gray-200"
+              }`}
+            >
               <div className="flex items-center gap-2 mb-1">
+                {/* Pin indicator */}
+                {isPinned && (
+                  <svg
+                    className="w-3 h-3 text-blue-500"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
                 <span
                   className={`inline-block w-2 h-2 rounded-full ${
                     item.status === "new" ? "bg-green-500" : "bg-blue-500"
@@ -489,34 +591,29 @@ const NotificationPage = (props) => {
                     : "Activity"}
                 </span>
                 <span className="text-xs text-gray-400">{item.date}</span>
+                {isPinned && (
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                    Pinned
+                  </span>
+                )}
               </div>
-              <p className="text-sm text-gray-800 leading-relaxed">
+              <p
+                className={`text-sm leading-relaxed transition-colors duration-200 ${
+                  isViewed
+                    ? "text-gray-500"
+                    : isPinned
+                    ? "text-gray-900 font-medium"
+                    : "text-gray-800"
+                }`}
+              >
                 {item.title}
               </p>
             </div>
             <button
               onClick={() => handleViewItem(item)}
-              className="ml-4 p-1 hover:bg-gray-100 rounded text-blue-600 hover:text-blue-800"
+              className="hover:bg-gray-100 py-4 px-2 rounded cursor-pointer transition-colors"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                />
-              </svg>
+              <IconStore.eye className="size-5" />
             </button>
           </div>
         </div>
@@ -555,93 +652,90 @@ const NotificationPage = (props) => {
       {/* Bottom Action Bar - Fixed */}
       <div className="fixed bottom-0 w-full left-20 right-0 bg-white border-t border-gray-200 p-4 z-30">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-6">
-            <button
-              onClick={handleSelectAll}
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-2"
-            >
-              <div className="w-4 h-4 border border-blue-600 rounded flex items-center justify-center">
-                {selectedItems.length === getCurrentData().length && (
-                  <svg
-                    className="w-3 h-3 text-blue-600"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                )}
-              </div>
-              {selectedItems.length === getCurrentData().length
-                ? "Select all"
-                : "Select all"}
-            </button>
+          <div className="flex items-center gap-4">
+            {/* Select All Checkbox */}
+            <div className="w-[140px]">
+              <FloatingCheckbox
+                id="selectAll"
+                name="selectAll"
+                keyValue="selectAll"
+                label="Select all"
+                checked={
+                  selectedItems.length === getCurrentData().length &&
+                  getCurrentData().length > 0
+                }
+                onChange={handleActionBarChange}
+                className=""
+                labelClassName=""
+              />
+            </div>
 
+            {/* Conditional Action Checkboxes - only show when items are selected */}
             {selectedItems.length > 0 && (
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={handleMarkAsViewed}
-                  className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-2"
-                >
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  Mark as viewed
-                </button>
-                <button
-                  onClick={handleMarkAsPinned}
-                  className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-2"
-                >
-                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                  Mark as pinned
-                </button>
-                <button
-                  onClick={handleMarkAsUnpinned}
-                  className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-2"
-                >
-                  <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                  Mark as unpinned
-                </button>
-              </div>
+              <>
+                <div className="">
+                  <FloatingCheckbox
+                    id="markAsViewed"
+                    name="markAsViewed"
+                    keyValue="markAsViewed"
+                    label="Mark as viewed"
+                    checked={actionBarStates.markAsViewed}
+                    onChange={handleActionBarChange}
+                    className=""
+                    labelClassName="!text-gray-700"
+                    beforeIcon={
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    }
+                  />
+                </div>
+
+                <div className="">
+                  <FloatingCheckbox
+                    id="markAsPinned"
+                    name="markAsPinned"
+                    keyValue="markAsPinned"
+                    label="Mark as pinned"
+                    checked={actionBarStates.markAsPinned}
+                    onChange={handleActionBarChange}
+                    className=""
+                    labelClassName="!text-gray-700"
+                    beforeIcon={
+                      <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    }
+                  />
+                </div>
+
+                <div className="">
+                  <FloatingCheckbox
+                    id="markAsUnpinned"
+                    name="markAsUnpinned"
+                    keyValue="markAsUnpinned"
+                    label="Mark as unpinned"
+                    checked={actionBarStates.markAsUnpinned}
+                    onChange={handleActionBarChange}
+                    className=""
+                    labelClassName="!text-gray-700"
+                    beforeIcon={
+                      <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                    }
+                  />
+                </div>
+              </>
             )}
           </div>
 
+          {/* Right side info and navigation */}
           {selectedItems.length > 0 && (
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-500">
                 {selectedItems.length} selected
               </span>
               <div className="flex gap-2">
-                <button className="p-1 hover:bg-gray-100 rounded">
-                  <svg
-                    className="w-4 h-4 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
+                <button className=" hover:bg-gray-100 cursor-pointer p-1 rounded border border-gray-300">
+                  <IconStore.chevronLeft className="size-4 text-gray-400" />
                 </button>
-                <button className="p-1 hover:bg-gray-100 rounded">
-                  <svg
-                    className="w-4 h-4 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
+                <button className="cursor-pointer hover:bg-gray-100  p-1 rounded border border-gray-300">
+                  <IconStore.chevronRight className="size-4 text-gray-400" />
                 </button>
               </div>
             </div>

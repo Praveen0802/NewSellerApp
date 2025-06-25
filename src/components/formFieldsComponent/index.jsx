@@ -82,10 +82,16 @@ const FormFields = ({ formFields }) => {
                 onChange={onChange}
                 className={className}
                 labelClassName={labelClassName}
+                parentClassName={parentClassName}
                 disabled={disabled}
                 beforeIcon={beforeIcon}
                 afterIcon={afterIcon}
                 count={count}
+                options={options || []}
+                multiselect={multiselect}
+                value={value}
+                error={error}
+                mandatory={mandatory}
               />
             ) : type === "text" || type === "password" || type === "email" ? (
               <FloatingLabelInput

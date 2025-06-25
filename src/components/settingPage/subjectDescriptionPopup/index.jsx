@@ -5,13 +5,13 @@ import FooterButton from "@/components/footerButton";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import React from "react";
 
-const SubjectDescriptionPopup = () => {
+const SubjectDescriptionPopup = ({show, onClose}) => {
   const [description, setDescription] = React.useState("");
   const handleChange = (e) => {
     setDescription(e.target.value);
   };
   return (
-    <RightViewModal show={true} onClose={() => {}} outSideClickClose={false}>
+    <RightViewModal show={show} onClose={onClose} outSideClickClose={false}>
       <div className="w-full max-w-3xl flex flex-col gap-2 h-full mx-auto rounded-lg relative bg-white shadow-lg">
         <div>
           <div className="flex px-4 py-2 border-b border-gray-200 justify-between items-center">

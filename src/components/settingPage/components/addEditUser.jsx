@@ -9,6 +9,7 @@ import {
 } from "@/utils/apiHandler/request";
 import { toast } from "react-toastify";
 import FooterButton from "@/components/footerButton";
+import { InfoIcon } from "lucide-react";
 
 const AddEditUser = ({
   onClose,
@@ -27,6 +28,7 @@ const AddEditUser = ({
     city_id = "",
     zip_code = "",
     country_id = "",
+    user_roles = [],
   } = userDetails;
 
   const editType = type === "edit";
@@ -44,6 +46,7 @@ const AddEditUser = ({
     country: country_id,
     city: city_id,
     zipCode: zip_code,
+    userRoles: user_roles,
   });
 
   const handleChange = (e, key, type) => {
@@ -309,6 +312,66 @@ const AddEditUser = ({
           : null,
       },
     ],
+    [
+      {
+        type: "checkbox",
+        name: "userRoles",
+        label: "Select the roles you wish to be granted to the user",
+        multiselect: true,
+        value: formFieldValues?.userRoles,
+        mandatory: true,
+        options: [
+          {
+            value: "admin_users",
+            label: "Administrate users",
+          },
+          {
+            value: "admin_inventory",
+            label: "Administrate inventory",
+          },
+          {
+            value: "admin_sales",
+            label: "Administrate sales",
+          },
+          {
+            value: "view_reports",
+            label: "View reports",
+          },
+          {
+            value: "admin_tx_pay",
+            label: "Administrate tx pay",
+          },
+          {
+            value: "admin_tx_trade",
+            label: "Administrate tx trade",
+          },
+          {
+            value: "admin_settings",
+            label: "Administrate settings",
+          },
+          {
+            value: "order_email",
+            label: "Order email",
+          },
+          {
+            value: "user_specific_data",
+            label: "User specific data",
+          },
+          {
+            value: "virtual_cards",
+            label: "Virtual cards",
+          },
+        ],
+        onChange: (e, keyValue) => {
+          // Fix: Use e.target.value which contains the updated array
+          console.log("Multi checkbox changed:", e.target.value, keyValue);
+          setFormFieldValues({
+            ...formFieldValues,
+            userRoles: e.target.value, // Use e.target.value instead of keyValue
+          });
+        },
+      },
+    ],
   ];
 
   const handleSubmit = async () => {
@@ -381,6 +444,9 @@ const AddEditUser = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormFields formFields={[userFormFields[6][0]]} />
           <FormFields formFields={[userFormFields[6][1]]} />
+        </div>
+        <div className="grid grid-cols-1  gap-4">
+          <FormFields formFields={[userFormFields[7][0]]} />
         </div>
       </div>
 

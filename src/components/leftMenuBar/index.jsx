@@ -256,7 +256,7 @@ const LeftMenuBar = () => {
     },
     {
       image: listing,
-      name: "My Listings",
+      name: "Bulk Listings",
       key: "my-listings",
       route: "my-listings",
     },
