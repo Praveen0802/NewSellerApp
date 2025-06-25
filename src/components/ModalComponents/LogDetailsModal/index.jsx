@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import CustomModal from "../../commonComponents/customModal";
+import RightViewModal from "@/components/commonComponents/rightViewModal";
 
 const IconStore = {
   close: () => <X className="w-5 h-5 cursor-pointer" />,
@@ -8,8 +9,7 @@ const IconStore = {
   chevronUp: () => <ChevronUp className="w-5 h-5" />,
 };
 
-const LogDetailsModal = () => {
-  const [showModal, setShowModal] = useState(true);
+const LogDetailsModal = ({ show, onClose }) => {
   const [expandedSections, setExpandedSections] = useState([0]);
 
   const toggleSection = (index) => {
@@ -71,16 +71,16 @@ const LogDetailsModal = () => {
   ];
 
   return (
-    <CustomModal show={showModal} onClose={() => setShowModal(false)}>
+    <RightViewModal className={"!w-[670px]"} show={show} onClose={onClose}>
       <div className="w-2xl bg-white rounded-lg">
         <div className="flex justify-between items-center p-4 border-b border-gray-200">
           <p className="text-lg font-medium text-gray-800">Log Details</p>
-          <div onClick={() => setShowModal(false)} className="cursor-pointer">
+          <div onClick={() => onClose()} className="cursor-pointer">
             <IconStore.close />
           </div>
         </div>
 
-        <div className="max-h-[70vh] overflow-y-auto p-4">
+        <div className=" overflow-y-auto p-4">
           {logEntries.map((entry, index) => (
             <div
               key={index}
@@ -141,7 +141,7 @@ const LogDetailsModal = () => {
           ))}
         </div>
       </div>
-    </CustomModal>
+    </RightViewModal>
   );
 };
 

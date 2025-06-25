@@ -23,8 +23,8 @@ const TabbedLayout = ({
   // Initialize checkbox values from config - Fixed to run only once per config change
   useEffect(() => {
     const initialCheckboxes = {};
-    Object.keys(listItemsConfig).forEach(tabKey => {
-      listItemsConfig[tabKey].forEach(item => {
+    Object.keys(listItemsConfig).forEach((tabKey) => {
+      listItemsConfig[tabKey].forEach((item) => {
         if (item.key) {
           initialCheckboxes[item.key] = item.isChecked || false;
         }
@@ -36,9 +36,11 @@ const TabbedLayout = ({
   // Get current tab's list items - Fixed to properly merge state
   const getCurrentListItems = () => {
     const baseItems = listItemsConfig[selectedTab] || [];
-    return baseItems.map(item => ({
+    return baseItems.map((item) => ({
       ...item,
-      isChecked: item.key ? (checkboxValues[item.key] ?? item.isChecked ?? false) : false,
+      isChecked: item.key
+        ? checkboxValues[item.key] ?? item.isChecked ?? false
+        : false,
     }));
   };
 
@@ -54,8 +56,8 @@ const TabbedLayout = ({
   const handleCheckboxToggle = (itemKey, currentValue) => {
     // Handle both index-based and key-based calls
     let key, newValue;
-    
-    if (typeof itemKey === 'number') {
+
+    if (typeof itemKey === "number") {
       // If called with index (legacy support)
       const currentItems = getCurrentListItems();
       const item = currentItems[itemKey];
@@ -65,16 +67,19 @@ const TabbedLayout = ({
     } else {
       // If called with key directly (recommended)
       key = itemKey;
-      newValue = typeof currentValue === 'boolean' ? !currentValue : !checkboxValues[key];
+      newValue =
+        typeof currentValue === "boolean"
+          ? !currentValue
+          : !checkboxValues[key];
     }
 
     const updatedCheckboxValues = {
       ...checkboxValues,
       [key]: newValue,
     };
-    
+
     setCheckboxValues(updatedCheckboxValues);
-    
+
     // Call parent callback with proper parameters
     onCheckboxToggle?.(key, newValue, updatedCheckboxValues);
   };
@@ -86,19 +91,21 @@ const TabbedLayout = ({
   return (
     <div className={className}>
       {/* Desktop tabs */}
-      <div className="hidden md:flex gap-[4px] w-[70%] px-[24px] pt-[24px]">
-        {tabs?.map((tab, index) => {
-          const selectedIndex = tab?.key === selectedTab;
-          return (
-            <SelectListItem
-              key={index}
-              item={tab}
-              selectedIndex={selectedIndex}
-              handleSelectItemClick={handleTabChange}
-            />
-          );
-        })}
-      </div>
+      {tabs?.length > 0 && (
+        <div className="hidden md:flex gap-[4px] w-[70%] px-[24px] pt-[24px]">
+          {tabs?.map((tab, index) => {
+            const selectedIndex = tab?.key === selectedTab;
+            return (
+              <SelectListItem
+                key={index}
+                item={tab}
+                selectedIndex={selectedIndex}
+                handleSelectItemClick={handleTabChange}
+              />
+            );
+          })}
+        </div>
+      )}
 
       <div className={containerClassName}>
         <div className="bg-white">
@@ -114,12 +121,14 @@ const TabbedLayout = ({
                     showCheckbox: item?.showCheckbox,
                     isChecked: item?.isChecked,
                     // Fixed: Pass the item key and current checked state
-                    onCheckChange: item?.showCheckbox && item?.key
-                      ? () => handleCheckboxToggle(item.key, item.isChecked)
-                      : undefined,
-                    onClick: item?.showCheckbox && item?.key
-                      ? () => handleCheckboxToggle(item.key, item.isChecked)
-                      : undefined,
+                    onCheckChange:
+                      item?.showCheckbox && item?.key
+                        ? () => handleCheckboxToggle(item.key, item.isChecked)
+                        : undefined,
+                    onClick:
+                      item?.showCheckbox && item?.key
+                        ? () => handleCheckboxToggle(item.key, item.isChecked)
+                        : undefined,
                   }}
                 />
               ))}

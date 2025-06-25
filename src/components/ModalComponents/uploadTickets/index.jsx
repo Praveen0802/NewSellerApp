@@ -12,11 +12,12 @@ import CustomModal from "@/components/commonComponents/customModal";
 import uploadImage from "../../../../public/uploadView.svg";
 import Image from "next/image";
 import Button from "@/components/commonComponents/button";
+import RightViewContainer from "@/components/dashboardPage/reportViewContainer/rightViewContainer";
+import RightViewModal from "@/components/commonComponents/rightViewModal";
 
 // Mock CustomModal component
 
-const UploadTickets = ({ showInstruction = true }) => {
-  const [showModal, setShowModal] = useState(true);
+const UploadTickets = ({ show, onClose,showInstruction=true }) => {
   const [showAssigned, setShowAssigned] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([
     { id: 1, name: "SN_077.pdf", assigned: false },
@@ -113,17 +114,14 @@ const UploadTickets = ({ showInstruction = true }) => {
 
   return (
     <div>
-      <CustomModal show={showModal} onClose={() => setShowModal(false)}>
-        <div className="w-full max-w-5xl border bg-white border-[#E0E1EA] rounded-lg overflow-hidden">
+      <RightViewModal className="!w-[70vw]" show={show} onClose={() => onClose()}>
+        <div className="w-full max-w-5xl border bg-white border-[#E0E1EA] rounded-lg ">
           {/* Header */}
           <div className="flex justify-between items-center p-4 border-b border-[#E0E1EA]">
             <h2 className="text-lg font-medium text-[#323A70]">
               Upload Tickets
             </h2>
-            <button
-              onClick={() => setShowModal(false)}
-              className="text-gray-500"
-            >
+            <button onClick={() => onClose()} className="text-gray-500">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -163,7 +161,9 @@ const UploadTickets = ({ showInstruction = true }) => {
                   </p>
                   <ul className="p-[10px] list-decimal pl-[30px] flex flex-col gap-1">
                     {instructions?.map((item, index) => (
-                      <li className="text-[12px] text-[#323A70]" key={index}>{item}</li>
+                      <li className="text-[12px] text-[#323A70]" key={index}>
+                        {item}
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -277,7 +277,7 @@ const UploadTickets = ({ showInstruction = true }) => {
                 </div>
 
                 {/* Ticket assignment rows */}
-                <div className="overflow-y-auto hideScrollbar max-h-96">
+                <div className="overflow-y-auto hideScrollbar ">
                   {renderTicketRows()}
                 </div>
               </div>
@@ -285,7 +285,7 @@ const UploadTickets = ({ showInstruction = true }) => {
           </div>
 
           {/* Footer */}
-          <div className="flex justify-between items-center p-3 bg-gray-50 border-t border-gray-200">
+          <div className="flex absolute bottom-0 w-full justify-between items-center p-3 bg-gray-50 border-t border-gray-200">
             <div className="flex gap-4 justify-end">
               <button
                 onClick={() => setShowModal(false)}
@@ -299,7 +299,7 @@ const UploadTickets = ({ showInstruction = true }) => {
             </div>
           </div>
         </div>
-      </CustomModal>
+      </RightViewModal>
     </div>
   );
 };

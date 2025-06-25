@@ -8,7 +8,7 @@ const index = () => {
     <>
       {/* <LogDetailsModal /> */}
       {/* <ListSalesModal /> */}
-      <UploadTickets />
+      {/* <UploadTickets /> */}
     </>
   );
 };

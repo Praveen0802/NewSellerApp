@@ -6,7 +6,7 @@ import category from "../../../public/category.svg";
 import addSquare from "../../../public/add-square.svg";
 import diagram from "../../../public/diagram.svg";
 import ticket from "../../../public/ticket.svg";
-import documentupload from "../../../public/document-upload.svg";
+import leftMenuTicket from "../../../public/leftMenuTicket.svg";
 import listing from "../../../public/listing.svg";
 import shopping from "../../../public/shopping-cart-02.svg";
 import logout from "../../../public/logout.svg";
@@ -215,11 +215,36 @@ const LeftMenuBar = () => {
   // Updated sales sub items to match your requirements with counts
   const salesSubItems = [
     { name: "Pending", route: "sales/pending", key: "sales-pending", count: 0 },
-    { name: "Awaiting Delivery", route: "sales/awaiting-delivery", key: "sales-awaiting-delivery", count: 0 },
-    { name: "Delivered", route: "sales/delivered", key: "sales-delivered", count: 0 },
-    { name: "Completed", route: "sales/completed", key: "sales-completed", count: 19 },
-    { name: "Cancelled", route: "sales/cancelled", key: "sales-cancelled", count: 2 },
-    { name: "Replaced", route: "sales/replaced", key: "sales-replaced", count: 0 },
+    {
+      name: "Awaiting Delivery",
+      route: "sales/awaiting-delivery",
+      key: "sales-awaiting-delivery",
+      count: 0,
+    },
+    {
+      name: "Delivered",
+      route: "sales/delivered",
+      key: "sales-delivered",
+      count: 0,
+    },
+    {
+      name: "Completed",
+      route: "sales/completed",
+      key: "sales-completed",
+      count: 19,
+    },
+    {
+      name: "Cancelled",
+      route: "sales/cancelled",
+      key: "sales-cancelled",
+      count: 2,
+    },
+    {
+      name: "Replaced",
+      route: "sales/replaced",
+      key: "sales-replaced",
+      count: 0,
+    },
   ];
 
   const leftPaneValues = [
@@ -229,12 +254,11 @@ const LeftMenuBar = () => {
       name: "Minimise",
     },
     {
-      text: userName,
-      name: userName,
+      text: "US", //userName,
+      name: "User", //userName,
       key: "name",
       route: "settings/myAccount",
     },
-    { text: name, name: name, key: "userName", route: "settings/myAccount" },
     {
       image: category,
       name: "Dashboard",
@@ -268,12 +292,18 @@ const LeftMenuBar = () => {
       subItems: salesSubItems,
     },
     {
-      image: diagram,
+      image: leftMenuTicket,
       name: "Reports",
+      key: "report-history",
+      route: "report-history",
+    },
+    {
+      image: diagram,
+      name: "Wallet",
       key: "reports",
       route: "reports",
     },
-    
+   
     {
       image: Bulkticket,
       name: "TX Trade",
@@ -289,8 +319,8 @@ const LeftMenuBar = () => {
   // Helper function to determine if a sales sub-item should be active
   const getSalesActiveState = () => {
     const currentPath = router?.pathname;
-    if (currentPath.startsWith('/sales/')) {
-      const salesPage = currentPath.replace('/sales/', '');
+    if (currentPath.startsWith("/sales/")) {
+      const salesPage = currentPath.replace("/sales/", "");
       return `sales-${salesPage}`;
     }
     return null;
@@ -299,7 +329,7 @@ const LeftMenuBar = () => {
   // Update active state when route changes for sales pages
   useEffect(() => {
     const currentPath = router?.pathname?.replace("/", "");
-    if (currentPath.startsWith('sales/')) {
+    if (currentPath.startsWith("sales/")) {
       const salesActiveKey = getSalesActiveState();
       if (salesActiveKey) {
         setActive(salesActiveKey);
@@ -441,7 +471,8 @@ const LeftMenuBar = () => {
                     <div
                       onClick={() => handleSelectedClick(index, item)}
                       className={`cursor-pointer flex gap-3 items-center p-3 transition-colors duration-200 ${
-                        item?.key === active || (item?.key === 'sales' && active?.startsWith('sales-'))
+                        item?.key === active ||
+                        (item?.key === "sales" && active?.startsWith("sales-"))
                           ? "bg-[#64EAA5] rounded-md"
                           : "hover:bg-[#5f6365] rounded-md"
                       }`}
@@ -469,10 +500,10 @@ const LeftMenuBar = () => {
                         </span>
                       )}
                       {item?.hasSubItems && (
-                        <ChevronRight 
+                        <ChevronRight
                           className={`size-4 text-white transition-transform duration-200 ${
-                            salesExpanded ? 'rotate-90' : ''
-                          }`} 
+                            salesExpanded ? "rotate-90" : ""
+                          }`}
                         />
                       )}
                     </div>
@@ -492,19 +523,19 @@ const LeftMenuBar = () => {
                           >
                             {/* Left border line */}
                             <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-400"></div>
-                            
+
                             {/* Horizontal connecting line */}
                             <div className="absolute left-0 top-1/2 w-4 h-0.5 bg-gray-400 -translate-y-1/2"></div>
-                            
+
                             {/* Vertical connecting lines between items */}
                             {subIndex < item?.subItems?.length - 1 && (
                               <div className="absolute left-0 top-1/2 bottom-0 w-0.5 bg-gray-400"></div>
                             )}
-                            
+
                             <div className="flex items-center gap-2 ml-4">
                               <span>{subItem.name}</span>
                             </div>
-                            
+
                             {subItem.count !== undefined && (
                               <span className="bg-gray-600 text-white text-xs px-2 py-0.5 rounded-full ml-auto">
                                 {subItem.count}
@@ -664,7 +695,8 @@ const LeftMenuBar = () => {
                 <div
                   onClick={() => handleSelectedClick(index, item)}
                   className={`cursor-pointer flex gap-3 items-center p-[6px] transition-colors duration-200 relative ${
-                    item?.key === active || (item?.key === 'sales' && active?.startsWith('sales-'))
+                    item?.key === active ||
+                    (item?.key === "sales" && active?.startsWith("sales-"))
                       ? "bg-[#64EAA5] rounded-md"
                       : "hover:bg-[#5f6365] rounded-md"
                   }`}
@@ -727,19 +759,19 @@ const LeftMenuBar = () => {
                       >
                         {/* Left border line */}
                         <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-400"></div>
-                        
+
                         {/* Horizontal connecting line */}
                         <div className="absolute left-0 top-1/2 w-4 h-0.5 bg-gray-400 -translate-y-1/2"></div>
-                        
+
                         {/* Vertical connecting lines between items */}
                         {subIndex < item?.subItems?.length - 1 && (
                           <div className="absolute left-0 top-1/2 bottom-0 w-0.5 bg-gray-400"></div>
                         )}
-                        
+
                         <div className="flex items-center gap-2 ml-4">
                           <span>{subItem.name}</span>
                         </div>
-                        
+
                         {subItem.count !== undefined && (
                           <span className="bg-gray-600 text-white text-xs px-2 py-0.5 rounded-full ml-auto">
                             {subItem.count}

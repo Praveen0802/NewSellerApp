@@ -1,3 +1,4 @@
+// TicketsPage.jsx - Updated with higher z-index and better state management
 import React, { useState } from "react";
 import Button from "../commonComponents/button";
 import { useDispatch } from "react-redux";
@@ -30,11 +31,14 @@ import {
   Trash2,
   Download,
 } from "lucide-react";
+import { IconStore } from "@/utils/helperFunctions/iconStore";
+import UploadTickets from "../ModalComponents/uploadTickets";
 
 const TicketsPage = () => {
   const dispatch = useDispatch();
   const [selectedRows, setSelectedRows] = useState([]);
   const [isStickyExpanded, setIsStickyExpanded] = useState(false);
+  const [showUploadPopup, setShowUploadPopup] = useState(false);
 
   const handleOpenAddWalletPopup = () => {
     dispatch(
@@ -42,6 +46,10 @@ const TicketsPage = () => {
         flag: true,
       })
     );
+  };
+
+  const openUploadPopup = () => {
+    setShowUploadPopup(true);
   };
 
   // Headers for the accordion table
@@ -143,7 +151,11 @@ const TicketsPage = () => {
       },
       {
         icon: (
-          <Image width={20} height={20} src={documentText} alt="document" />
+          <IconStore.upload
+            onClick={() => openUploadPopup()}
+            className="size-5 font-[500]"
+            alt="document"
+          />
         ),
         className: "cursor-pointer pr-2",
         key: "document",
@@ -192,7 +204,13 @@ const TicketsPage = () => {
         tooltipPosition: "top",
       },
       {
-        icon: null,
+        icon: (
+          <IconStore.upload
+            onClick={() => openUploadPopup()}
+            className="size-5 font-[500]"
+            alt="document"
+          />
+        ),
         className: "cursor-pointer pr-2",
         key: "document",
       },
@@ -229,7 +247,11 @@ const TicketsPage = () => {
       },
       {
         icon: (
-          <Image width={20} height={20} src={documentText} alt="document" />
+          <IconStore.upload
+            onClick={() => openUploadPopup()}
+            className="size-5 font-[500]"
+            alt="document"
+          />
         ),
         className: "cursor-pointer pr-2",
         key: "document",
@@ -281,7 +303,11 @@ const TicketsPage = () => {
       },
       {
         icon: (
-          <Image width={20} height={20} src={documentText} alt="document" />
+          <IconStore.upload
+            onClick={() => openUploadPopup()}
+            className="size-5 font-[500]"
+            alt="document"
+          />
         ),
         className: "cursor-pointer pr-2",
         key: "document",
@@ -330,7 +356,13 @@ const TicketsPage = () => {
         tooltipPosition: "top",
       },
       {
-        icon: null,
+        icon: (
+          <IconStore.upload
+            onClick={() => openUploadPopup()}
+            className="size-5 font-[500]"
+            alt="document"
+          />
+        ),
         className: "cursor-pointer pr-2",
         key: "document",
       },
@@ -367,7 +399,11 @@ const TicketsPage = () => {
       },
       {
         icon: (
-          <Image width={20} height={20} src={documentText} alt="document" />
+          <IconStore.upload
+            onClick={() => openUploadPopup()}
+            className="size-5 font-[500]"
+            alt="document"
+          />
         ),
         className: "cursor-pointer pr-2",
         key: "document",
@@ -419,7 +455,11 @@ const TicketsPage = () => {
       },
       {
         icon: (
-          <Image width={20} height={20} src={documentText} alt="document" />
+          <IconStore.upload
+            onClick={() => openUploadPopup()}
+            className="size-5 font-[500]"
+            alt="document"
+          />
         ),
         className: "cursor-pointer pr-2",
         key: "document",
@@ -740,11 +780,10 @@ const TicketsPage = () => {
   const handleCellEdit = (itemIndex, rowIndex, columnKey, value) => {
     console.log("Cell edited:", { itemIndex, rowIndex, columnKey, value });
     // Here you would typically update your data state or make an API call
-    // You can access the specific accordion item and row to update:
-    // accordionItems[itemIndex].data[rowIndex][columnKey] = value;
   };
 
   const handleRowSelectionChange = (newSelectedRows) => {
+    console.log("Row selection changed:", newSelectedRows);
     setSelectedRows(newSelectedRows);
   };
 
@@ -864,7 +903,12 @@ const TicketsPage = () => {
       </div>
 
       {/* Main Content Area with Accordion Table */}
-      <div className="m-6 bg-white rounded max-h-[calc(100vh-300px)] overflow-auto">
+      <div
+        className="m-6 bg-white rounded max-h-[calc(100vh-300px)] overflow-auto"
+        style={{
+          paddingBottom: selectedRows.length > 0 ? "120px" : "0", // Add padding when sticky bar is visible
+        }}
+      >
         <ScrollableAccordionTable
           items={accordionItems}
           headers={headers}
@@ -876,9 +920,19 @@ const TicketsPage = () => {
         />
       </div>
 
-      {/* Sticky Bottom Container */}
+      <UploadTickets
+        show={showUploadPopup}
+        onClose={() => {
+          setShowUploadPopup(false);
+        }}
+      />
+
+      {/* Sticky Bottom Container - FIXED z-index and positioning */}
       {selectedRows.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+        <div
+          className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg"
+          style={{ zIndex: 9999 }} // Much higher z-index
+        >
           {/* Collapsed State */}
           {!isStickyExpanded && (
             <div className="flex items-center justify-between px-6 py-3">
@@ -899,7 +953,7 @@ const TicketsPage = () => {
                 <div className="text-sm text-gray-600">
                   <span className="font-medium">{selectedCount}</span> selected
                   in <span className="font-medium">{selectedEventsCount}</span>{" "}
-                  event
+                  event{selectedEventsCount !== 1 ? "s" : ""}
                 </div>
               </div>
               <div className="flex items-center space-x-3">
@@ -969,7 +1023,7 @@ const TicketsPage = () => {
                     <span className="font-medium">{selectedCount}</span>{" "}
                     selected in{" "}
                     <span className="font-medium">{selectedEventsCount}</span>{" "}
-                    event
+                    event{selectedEventsCount !== 1 ? "s" : ""}
                   </div>
                 </div>
                 <button

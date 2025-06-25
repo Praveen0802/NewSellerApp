@@ -2,191 +2,193 @@ import { useState } from "react";
 import TabbedLayout from "../tabbedLayout";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import StickyDataTable from "../tradePage/components/stickyDataTable";
+import OrderInfo from "../orderInfoPopup";
+import LogDetailsModal from "../ModalComponents/LogDetailsModal";
 
 // Static data for different order statuses
 const staticPendingData = [
-  { 
-    id: 1, 
-    status: "pending", 
-    amount: 50.00, 
-    customer: "John Doe", 
-    date: "2024-06-20", 
+  {
+    id: 1,
+    status: "pending",
+    amount: 50.0,
+    customer: "John Doe",
+    date: "2024-06-20",
     event: "Chelsea vs Arsenal",
     bookingNo: "BK001",
     venue: "Stamford Bridge",
     category: "VIP",
     ticketType: "Adult",
     qty: 2,
-    deliveryMethod: "Email"
+    deliveryMethod: "Email",
   },
-  { 
-    id: 2, 
-    status: "pending", 
-    amount: 125.50, 
-    customer: "Sarah Wilson", 
-    date: "2024-06-21", 
+  {
+    id: 2,
+    status: "pending",
+    amount: 125.5,
+    customer: "Sarah Wilson",
+    date: "2024-06-21",
     event: "Liverpool vs City",
     bookingNo: "BK002",
     venue: "Anfield",
     category: "Premium",
     ticketType: "Adult",
     qty: 1,
-    deliveryMethod: "Mobile"
+    deliveryMethod: "Mobile",
   },
 ];
 
 const staticAwaitingDeliveryData = [
-  { 
-    id: 3, 
-    status: "awaiting_delivery", 
-    amount: 75.00, 
-    customer: "Jane Smith", 
-    date: "2024-06-19", 
+  {
+    id: 3,
+    status: "awaiting_delivery",
+    amount: 75.0,
+    customer: "Jane Smith",
+    date: "2024-06-19",
     event: "Liverpool vs City",
     bookingNo: "BK003",
     venue: "Etihad Stadium",
     category: "Standard",
     ticketType: "Adult",
     qty: 3,
-    deliveryMethod: "Postal"
+    deliveryMethod: "Postal",
   },
-  { 
-    id: 4, 
-    status: "awaiting_delivery", 
-    amount: 200.00, 
-    customer: "Mike Johnson", 
-    date: "2024-06-18", 
+  {
+    id: 4,
+    status: "awaiting_delivery",
+    amount: 200.0,
+    customer: "Mike Johnson",
+    date: "2024-06-18",
     event: "United vs Spurs",
     bookingNo: "BK004",
     venue: "Old Trafford",
     category: "VIP",
     ticketType: "Adult",
     qty: 2,
-    deliveryMethod: "Email"
+    deliveryMethod: "Email",
   },
 ];
 
 const staticDeliveredData = [
-  { 
-    id: 5, 
-    status: "delivered", 
-    amount: 1850.00, 
-    customer: "Bob Johnson", 
-    date: "2024-06-18", 
+  {
+    id: 5,
+    status: "delivered",
+    amount: 1850.0,
+    customer: "Bob Johnson",
+    date: "2024-06-18",
     event: "United vs Spurs",
     bookingNo: "BK005",
     venue: "Wembley Stadium",
     category: "Premium",
     ticketType: "Adult",
     qty: 4,
-    deliveryMethod: "Mobile"
+    deliveryMethod: "Mobile",
   },
-  { 
-    id: 6, 
-    status: "delivered", 
-    amount: 950.00, 
-    customer: "Emma Davis", 
-    date: "2024-06-17", 
+  {
+    id: 6,
+    status: "delivered",
+    amount: 950.0,
+    customer: "Emma Davis",
+    date: "2024-06-17",
     event: "Arsenal vs City",
     bookingNo: "BK006",
     venue: "Emirates Stadium",
     category: "Standard",
     ticketType: "Adult",
     qty: 2,
-    deliveryMethod: "Email"
+    deliveryMethod: "Email",
   },
 ];
 
 const staticCompletedData = [
-  { 
-    id: 7, 
-    status: "completed", 
-    amount: 9792.50, 
-    customer: "Alice Brown", 
-    date: "2024-06-17", 
+  {
+    id: 7,
+    status: "completed",
+    amount: 9792.5,
+    customer: "Alice Brown",
+    date: "2024-06-17",
     event: "Arsenal vs City",
     bookingNo: "BK007",
     venue: "Emirates Stadium",
     category: "VIP",
     ticketType: "Adult",
     qty: 8,
-    deliveryMethod: "Postal"
+    deliveryMethod: "Postal",
   },
-  { 
-    id: 8, 
-    status: "completed", 
-    amount: 5500.00, 
-    customer: "Charlie Wilson", 
-    date: "2024-06-16", 
+  {
+    id: 8,
+    status: "completed",
+    amount: 5500.0,
+    customer: "Charlie Wilson",
+    date: "2024-06-16",
     event: "Chelsea vs United",
     bookingNo: "BK008",
     venue: "Stamford Bridge",
     category: "Premium",
     ticketType: "Adult",
     qty: 6,
-    deliveryMethod: "Mobile"
+    deliveryMethod: "Mobile",
   },
 ];
 
 const staticCancelledData = [
-  { 
-    id: 9, 
-    status: "cancelled", 
-    amount: 7000.00, 
-    customer: "David Lee", 
-    date: "2024-06-15", 
+  {
+    id: 9,
+    status: "cancelled",
+    amount: 7000.0,
+    customer: "David Lee",
+    date: "2024-06-15",
     event: "Spurs vs Liverpool",
     bookingNo: "BK009",
     venue: "Tottenham Stadium",
     category: "VIP",
     ticketType: "Adult",
     qty: 4,
-    deliveryMethod: "Email"
+    deliveryMethod: "Email",
   },
-  { 
-    id: 10, 
-    status: "cancelled", 
-    amount: 3200.00, 
-    customer: "Eva Garcia", 
-    date: "2024-06-14", 
+  {
+    id: 10,
+    status: "cancelled",
+    amount: 3200.0,
+    customer: "Eva Garcia",
+    date: "2024-06-14",
     event: "City vs Arsenal",
     bookingNo: "BK010",
     venue: "Etihad Stadium",
     category: "Standard",
     ticketType: "Adult",
     qty: 8,
-    deliveryMethod: "Postal"
+    deliveryMethod: "Postal",
   },
 ];
 
 const staticReplacedData = [
-  { 
-    id: 11, 
-    status: "replaced", 
-    amount: 4500.00, 
-    customer: "Frank Miller", 
-    date: "2024-06-13", 
+  {
+    id: 11,
+    status: "replaced",
+    amount: 4500.0,
+    customer: "Frank Miller",
+    date: "2024-06-13",
     event: "United vs Chelsea",
     bookingNo: "BK011",
     venue: "Old Trafford",
     category: "Premium",
     ticketType: "Adult",
     qty: 3,
-    deliveryMethod: "Mobile"
+    deliveryMethod: "Mobile",
   },
-  { 
-    id: 12, 
-    status: "replaced", 
-    amount: 2800.00, 
-    customer: "Grace Taylor", 
-    date: "2024-06-12", 
+  {
+    id: 12,
+    status: "replaced",
+    amount: 2800.0,
+    customer: "Grace Taylor",
+    date: "2024-06-12",
     event: "Liverpool vs Spurs",
     bookingNo: "BK012",
     venue: "Anfield",
     category: "Standard",
     ticketType: "Adult",
     qty: 4,
-    deliveryMethod: "Email"
+    deliveryMethod: "Email",
   },
 ];
 
@@ -212,16 +214,22 @@ const SalesPage = (props) => {
   });
 
   const [activeTab, setActiveTab] = useState(profile || "pending");
-  const [selectedOrderDetails, setSelectedOrderDetails] = useState({ flag: false, data: {} });
-
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState({
+    flag: false,
+    data: {},
+  });
+  const [showInfoPopup, setShowInfoPopup] = useState(false);
   // Helper function to safely format tab name
   const formatTabName = (tabKey) => {
-    if (!tabKey || typeof tabKey !== 'string') {
-      return 'Pending';
+    if (!tabKey || typeof tabKey !== "string") {
+      return "Pending";
     }
-    return tabKey.charAt(0).toUpperCase() + tabKey.slice(1).replace(/[-_]/g, ' ');
+    return (
+      tabKey.charAt(0).toUpperCase() + tabKey.slice(1).replace(/[-_]/g, " ")
+    );
   };
   const [selectedItems, setSelectedItems] = useState([]);
+  const [showLogDetailsModal, setShowLogDetailsModal] = useState(false);
 
   // Configuration for tabs - matching your screenshot
   const tabsConfig = [
@@ -236,7 +244,10 @@ const SalesPage = (props) => {
       name: "Awaiting Delivery",
       key: "awaiting-delivery",
       count: staticAwaitingDeliveryData.length,
-      amount: staticAwaitingDeliveryData.reduce((sum, item) => sum + item.amount, 0),
+      amount: staticAwaitingDeliveryData.reduce(
+        (sum, item) => sum + item.amount,
+        0
+      ),
       route: "/sales/awaiting-delivery",
     },
     {
@@ -331,7 +342,7 @@ const SalesPage = (props) => {
   // Transform data for the table
   const transformedData = getCurrentData().map((item) => ({
     ...item,
-    status: item.status.replace(/_/g, ' '),
+    status: item.status.replace(/_/g, " "),
     amount: `£${item.amount.toFixed(2)}`,
   }));
 
@@ -339,50 +350,34 @@ const SalesPage = (props) => {
   const rightStickyColumns = getCurrentData().map((item) => [
     {
       icon: (
+        <IconStore.clock
+          onClick={() => setShowLogDetailsModal(true)}
+          className="size-5"
+        />
+      ),
+      className: " cursor-pointer",
+    },
+    {
+      icon: (
         <IconStore.eye
-          onClick={() => handleViewDetails(item)}
-          className="size-4 text-blue-600 hover:text-blue-800"
+          onClick={() => setShowInfoPopup(true)}
+          className="size-5"
         />
       ),
-      className: "cursor-pointer",
-      key: "view"
+      className: " cursor-pointer",
     },
-    {
-      icon: (
-        <IconStore.exclamatory
-          onClick={() => handleEdit(item)}
-          className="size-4 text-green-600 hover:text-green-800"
-        />
-      ),
-      className: "cursor-pointer",
-      key: "edit"
-    },
-    {
-      icon: (
-        <IconStore.expand
-          onClick={() => handlePrint(item)}
-          className="size-4 text-purple-600 hover:text-purple-800"
-        />
-      ),
-      className: "cursor-pointer",
-      key: "print"
-    },
-    {
-      icon: (
-        <IconStore.trash
-          onClick={() => handleDelete(item)}
-          className="size-4 text-red-600 hover:text-red-800"
-        />
-      ),
-      className: "cursor-pointer",
-      key: "delete"
-    },
+    
   ]);
 
   // Configuration for list items per tab (stats cards below tabs)
   const listItemsConfig = {
     pending: [
-      { name: "Pending Revenue", value: `£${staticPendingData.reduce((sum, item) => sum + item.amount, 0).toFixed(2)}` },
+      {
+        name: "Pending Revenue",
+        value: `£${staticPendingData
+          .reduce((sum, item) => sum + item.amount, 0)
+          .toFixed(2)}`,
+      },
       { name: "Orders", value: staticOrdersData.length },
       { name: "E-ticket", value: staticETicketData.length },
       { name: "External Transfer", value: staticExternalTransferData.length },
@@ -390,7 +385,12 @@ const SalesPage = (props) => {
       { name: "Mobile Screenshot", value: staticMobileScreenshotData.length },
     ],
     "awaiting-delivery": [
-      { name: "Awaiting Revenue", value: `£${staticAwaitingDeliveryData.reduce((sum, item) => sum + item.amount, 0).toFixed(2)}` },
+      {
+        name: "Awaiting Revenue",
+        value: `£${staticAwaitingDeliveryData
+          .reduce((sum, item) => sum + item.amount, 0)
+          .toFixed(2)}`,
+      },
       { name: "Orders", value: staticOrdersData.length },
       { name: "E-ticket", value: staticETicketData.length },
       { name: "External Transfer", value: staticExternalTransferData.length },
@@ -398,7 +398,12 @@ const SalesPage = (props) => {
       { name: "Mobile Screenshot", value: staticMobileScreenshotData.length },
     ],
     delivered: [
-      { name: "Delivered Revenue", value: `£${staticDeliveredData.reduce((sum, item) => sum + item.amount, 0).toFixed(2)}` },
+      {
+        name: "Delivered Revenue",
+        value: `£${staticDeliveredData
+          .reduce((sum, item) => sum + item.amount, 0)
+          .toFixed(2)}`,
+      },
       { name: "Orders", value: staticOrdersData.length },
       { name: "E-ticket", value: staticETicketData.length },
       { name: "External Transfer", value: staticExternalTransferData.length },
@@ -406,7 +411,12 @@ const SalesPage = (props) => {
       { name: "Mobile Screenshot", value: staticMobileScreenshotData.length },
     ],
     completed: [
-      { name: "Completed Revenue", value: `£${staticCompletedData.reduce((sum, item) => sum + item.amount, 0).toFixed(2)}` },
+      {
+        name: "Completed Revenue",
+        value: `£${staticCompletedData
+          .reduce((sum, item) => sum + item.amount, 0)
+          .toFixed(2)}`,
+      },
       { name: "Orders", value: staticOrdersData.length },
       { name: "E-ticket", value: staticETicketData.length },
       { name: "External Transfer", value: staticExternalTransferData.length },
@@ -414,7 +424,12 @@ const SalesPage = (props) => {
       { name: "Mobile Screenshot", value: staticMobileScreenshotData.length },
     ],
     cancelled: [
-      { name: "Cancelled Amount", value: `£${staticCancelledData.reduce((sum, item) => sum + item.amount, 0).toFixed(2)}` },
+      {
+        name: "Cancelled Amount",
+        value: `£${staticCancelledData
+          .reduce((sum, item) => sum + item.amount, 0)
+          .toFixed(2)}`,
+      },
       { name: "Orders", value: staticOrdersData.length },
       { name: "E-ticket", value: staticETicketData.length },
       { name: "External Transfer", value: staticExternalTransferData.length },
@@ -422,7 +437,12 @@ const SalesPage = (props) => {
       { name: "Mobile Screenshot", value: staticMobileScreenshotData.length },
     ],
     replaced: [
-      { name: "Replaced Amount", value: `£${staticReplacedData.reduce((sum, item) => sum + item.amount, 0).toFixed(2)}` },
+      {
+        name: "Replaced Amount",
+        value: `£${staticReplacedData
+          .reduce((sum, item) => sum + item.amount, 0)
+          .toFixed(2)}`,
+      },
       { name: "Orders", value: staticOrdersData.length },
       { name: "E-ticket", value: staticETicketData.length },
       { name: "External Transfer", value: staticExternalTransferData.length },
@@ -710,7 +730,8 @@ const SalesPage = (props) => {
         onFilterChange={handleFilterChange}
         onCheckboxToggle={handleCheckboxToggle}
       />
-      
+      <LogDetailsModal show={showLogDetailsModal} onClose={() => setShowLogDetailsModal(false)} />
+      <OrderInfo show={showInfoPopup} onClose={() => setShowInfoPopup(false)} />
       {/* StickyDataTable section */}
       <div className="p-4">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -719,7 +740,7 @@ const SalesPage = (props) => {
               {formatTabName(activeTab)} Orders ({getCurrentData().length})
             </h2>
           </div>
-          
+
           {/* StickyDataTable */}
           <div className="max-h-[500px] overflow-auto">
             <StickyDataTable
@@ -741,11 +762,22 @@ const SalesPage = (props) => {
           <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold mb-4">Order Details</h3>
             <div className="space-y-2">
-              <p><strong>Booking No:</strong> {selectedOrderDetails.data.bookingNo}</p>
-              <p><strong>Customer:</strong> {selectedOrderDetails.data.customer}</p>
-              <p><strong>Event:</strong> {selectedOrderDetails.data.event}</p>
-              <p><strong>Amount:</strong> £{selectedOrderDetails.data.amount}</p>
-              <p><strong>Status:</strong> {selectedOrderDetails.data.status}</p>
+              <p>
+                <strong>Booking No:</strong>{" "}
+                {selectedOrderDetails.data.bookingNo}
+              </p>
+              <p>
+                <strong>Customer:</strong> {selectedOrderDetails.data.customer}
+              </p>
+              <p>
+                <strong>Event:</strong> {selectedOrderDetails.data.event}
+              </p>
+              <p>
+                <strong>Amount:</strong> £{selectedOrderDetails.data.amount}
+              </p>
+              <p>
+                <strong>Status:</strong> {selectedOrderDetails.data.status}
+              </p>
             </div>
             <button
               onClick={() => setSelectedOrderDetails({ flag: false, data: {} })}

@@ -622,7 +622,7 @@ const NotificationPage = (props) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
       <TabbedLayout
         tabs={tabsConfig}
         initialTab={notify || "home"}
