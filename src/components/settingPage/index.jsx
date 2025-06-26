@@ -13,6 +13,7 @@ import LinkedCards from "./linkedCards";
 import TicketDelivery from "./ticketDelivery";
 import MyRefferal from "./myRefferal";
 import SubjectDescriptionPopup from "./subjectDescriptionPopup";
+import KYCPopup from "../KYCPopup";
 
 const SettingsPage = (props) => {
   const { profile, apiData } = props;
@@ -76,9 +77,15 @@ const SettingsPage = (props) => {
     },
     {
       icon: <IconStore.glitter className={IconclassName} />,
+      title: "KYC",
+      key: "kyc",
+    },
+    {
+      icon: <IconStore.glitter className={IconclassName} />,
       title: "Request a Feature",
       key: "featureRequest",
     },
+    
   ];
 
   const handleTabClick = (tab) => {
@@ -100,6 +107,7 @@ const SettingsPage = (props) => {
     overview: <Overview />,
     myRefferal: <MyRefferal />,
     myAccount: <MyAccountTeam {...apiData} />,
+    kyc:<KYCPopup {...apiData} />,
     // UpdateAccount: <MyAccountTeam {...apiData} />,
     changepassword: <ChangePassword {...apiData} />,
     addressBook: <AddressBook {...apiData} />,

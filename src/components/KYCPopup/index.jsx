@@ -5,16 +5,8 @@ const KYCPopup = () => {
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [documents, setDocuments] = useState({
     seller: { uploaded: false, file: null, preview: null },
-    photoId: {
-      uploaded: true,
-      file: { name: "code_snippet.png" },
-      preview: "/api/placeholder/300/200",
-    },
-    proofAddress: {
-      uploaded: true,
-      file: { name: "ticket_image.png" },
-      preview: "/api/placeholder/200/250",
-    },
+    photoId: { uploaded: false, file: null, preview: null },
+    proofAddress: { uploaded: false, file: null, preview: null },
   });
 
   const toggleDropdown = (docType) => {
@@ -40,12 +32,34 @@ const KYCPopup = () => {
   };
 
   const handleView = (docType) => {
-    console.log(`Viewing ${docType} document`);
+    const doc = documents[docType];
+    if (doc.preview) {
+      // Open preview in a new window/tab
+      const newWindow = window.open();
+      newWindow.document.write(`
+        <html>
+          <head><title>Document Preview - ${doc.file.name}</title></head>
+          <body style="margin:0; display:flex; justify-content:center; align-items:center; min-height:100vh; background:#f3f4f6;">
+            <img src="${doc.preview}" style="max-width:90%; max-height:90%; object-fit:contain;" alt="Document preview" />
+          </body>
+        </html>
+      `);
+      newWindow.document.close();
+    }
     setDropdownOpen(null);
   };
 
   const handleDownload = (docType) => {
-    console.log(`Downloading ${docType} document`);
+    const doc = documents[docType];
+    if (doc.preview && doc.file) {
+      // Create download link
+      const link = document.createElement('a');
+      link.href = doc.preview;
+      link.download = doc.file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
     setDropdownOpen(null);
   };
 
@@ -84,11 +98,89 @@ const KYCPopup = () => {
         )}
       </div>
 
-      <div className="text-sm text-blue-600 mb-4">Pending</div>
+      <div className={`text-sm mb-4 ${documents[docType].uploaded ? 'text-green-600' : 'text-blue-600'}`}>
+        {documents[docType].uploaded ? 'Uploaded' : 'Pending'}
+      </div>
 
       {children}
     </div>
   );
+
+  const renderDocumentContent = (docType) => {
+    const doc = documents[docType];
+    
+    if (doc.uploaded && doc.preview) {
+      const isImage = doc.file.name.match(/\.(jpg|jpeg|png|gif|bmp|svg)$/i);
+      
+      return (
+        <div className="flex flex-col items-center">
+          <div className="w-full mb-4">
+            <div className="border rounded-lg overflow-hidden bg-gray-50">
+              {isImage ? (
+                <img 
+                  src={doc.preview} 
+                  alt={`${docType} preview`}
+                  className="w-full h-40 object-cover"
+                />
+              ) : (
+                <div className="w-full h-40 flex flex-col items-center justify-center bg-gray-100">
+                  <FileText className="w-12 h-12 text-gray-500 mb-2" />
+                  <span className="text-sm text-gray-600 text-center px-2">
+                    {doc.file.name.split('.').pop().toUpperCase()} Document
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="mt-2 text-sm text-gray-600 text-center">
+              <FileText className="w-4 h-4 inline mr-1" />
+              {doc.file.name}
+            </div>
+          </div>
+          <label className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded cursor-pointer text-sm">
+            Replace File
+            <input
+              type="file"
+              className="hidden"
+              onChange={(e) => handleFileUpload(docType, e)}
+              accept="image/*,.pdf,.doc,.docx"
+            />
+          </label>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col items-center">
+        {docType === 'seller' ? (
+          <label className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded cursor-pointer">
+            Upload
+            <input
+              type="file"
+              className="hidden"
+              onChange={(e) => handleFileUpload(docType, e)}
+              accept="image/*,.pdf,.doc,.docx"
+            />
+          </label>
+        ) : (
+          <label className="w-full h-40 border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50">
+            <Upload className="w-8 h-8 text-gray-400 mb-2" />
+            <span className="text-gray-600">
+              Upload {docType === 'photoId' ? 'Photo ID' : 'Proof of Address'}
+            </span>
+            <span className="text-xs text-gray-500 mt-1">
+              Images, PDF, Word documents
+            </span>
+            <input
+              type="file"
+              className="hidden"
+              onChange={(e) => handleFileUpload(docType, e)}
+              accept="image/*,.pdf,.doc,.docx"
+            />
+          </label>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -111,51 +203,17 @@ const KYCPopup = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Sellers Contract */}
           <DocumentCard title="Sellers Contract" docType="seller">
-            <div className="flex flex-col items-center">
-              <>
-                <label className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded cursor-pointer">
-                  Upload
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => handleFileUpload("seller", e)}
-                    accept="image/*,.pdf,.doc,.docx"
-                  />
-                </label>
-              </>
-            </div>
+            {renderDocumentContent('seller')}
           </DocumentCard>
 
           {/* Photo ID */}
           <DocumentCard title="Photo ID" docType="photoId">
-            <div className="flex flex-col items-center">
-              <label className="w-full h-40 border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50">
-                <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                <span className="text-gray-600">Upload Photo ID</span>
-                <input
-                  type="file"
-                  className="hidden"
-                  onChange={(e) => handleFileUpload("photoId", e)}
-                  accept="image/*"
-                />
-              </label>
-            </div>
+            {renderDocumentContent('photoId')}
           </DocumentCard>
 
           {/* Proof of Address */}
           <DocumentCard title="Proof of address" docType="proofAddress">
-            <div className="flex flex-col items-center">
-              <label className="w-full h-40 border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50">
-                <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                <span className="text-gray-600">Upload Proof of Address</span>
-                <input
-                  type="file"
-                  className="hidden"
-                  onChange={(e) => handleFileUpload("proofAddress", e)}
-                  accept="image/*,.pdf"
-                />
-              </label>
-            </div>
+            {renderDocumentContent('proofAddress')}
           </DocumentCard>
         </div>
       </div>

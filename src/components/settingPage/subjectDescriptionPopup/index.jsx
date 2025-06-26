@@ -54,7 +54,7 @@ const SubjectDescriptionPopup = ({show, onClose}) => {
         </div>
         <FooterButton
           isFormValid={() => true}
-          onClose={() => ({})}
+          onClose={() => {onClose()}}
           handleSubmit={() => ({})}
           loader={false}
         />
