@@ -219,6 +219,24 @@ const SalesPage = (props) => {
     data: {},
   });
   const [showInfoPopup, setShowInfoPopup] = useState(false);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [showLogDetailsModal, setShowLogDetailsModal] = useState(false);
+
+  // New state for column visibility
+  const [visibleColumns, setVisibleColumns] = useState({
+    status: true,
+    bookingNo: true,
+    customer: true,
+    date: true,
+    event: true,
+    venue: true,
+    category: true,
+    ticketType: true,
+    qty: true,
+    amount: true,
+    deliveryMethod: true,
+  });
+
   // Helper function to safely format tab name
   const formatTabName = (tabKey) => {
     if (!tabKey || typeof tabKey !== "string") {
@@ -228,8 +246,6 @@ const SalesPage = (props) => {
       tabKey.charAt(0).toUpperCase() + tabKey.slice(1).replace(/[-_]/g, " ")
     );
   };
-  const [selectedItems, setSelectedItems] = useState([]);
-  const [showLogDetailsModal, setShowLogDetailsModal] = useState(false);
 
   // Configuration for tabs - matching your screenshot
   const tabsConfig = [
@@ -300,8 +316,8 @@ const SalesPage = (props) => {
     }
   };
 
-  // Define table headers
-  const headers = [
+  // Define table headers - filter based on visible columns
+  const allHeaders = [
     { key: "status", label: "Status" },
     { key: "bookingNo", label: "Booking No" },
     { key: "customer", label: "Customer" },
@@ -315,6 +331,9 @@ const SalesPage = (props) => {
     { key: "deliveryMethod", label: "Delivery Method" },
   ];
 
+  // Filter headers based on visibility
+  const headers = allHeaders.filter(header => visibleColumns[header.key]);
+
   // Handle action clicks
   const handleViewDetails = (item) => {
     setSelectedOrderDetails({
@@ -326,25 +345,34 @@ const SalesPage = (props) => {
 
   const handleEdit = (item) => {
     console.log("Edit item:", item);
-    // Add your edit logic here
   };
 
   const handleDelete = (item) => {
     console.log("Delete item:", item);
-    // Add your delete logic here
   };
 
   const handlePrint = (item) => {
     console.log("Print item:", item);
-    // Add your print logic here
   };
 
-  // Transform data for the table
-  const transformedData = getCurrentData().map((item) => ({
-    ...item,
-    status: item.status.replace(/_/g, " "),
-    amount: `£${item.amount.toFixed(2)}`,
-  }));
+  // Transform data for the table - only include visible columns
+  const transformedData = getCurrentData().map((item) => {
+    const transformedItem = {
+      ...item,
+      status: item.status.replace(/_/g, " "),
+      amount: `£${item.amount.toFixed(2)}`,
+    };
+    
+    // Filter out non-visible columns
+    const filteredItem = {};
+    Object.keys(transformedItem).forEach(key => {
+      if (visibleColumns[key] !== false) {
+        filteredItem[key] = transformedItem[key];
+      }
+    });
+    
+    return filteredItem;
+  });
 
   // Create right sticky columns with action buttons
   const rightStickyColumns = getCurrentData().map((item) => [
@@ -366,7 +394,6 @@ const SalesPage = (props) => {
       ),
       className: " cursor-pointer",
     },
-    
   ]);
 
   // Configuration for list items per tab (stats cards below tabs)
@@ -719,6 +746,14 @@ const SalesPage = (props) => {
     setFiltersApplied(params);
   };
 
+  // Handle column toggle
+  const handleColumnToggle = (columnKey) => {
+    setVisibleColumns(prev => ({
+      ...prev,
+      [columnKey]: !prev[columnKey]
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <TabbedLayout
@@ -729,9 +764,12 @@ const SalesPage = (props) => {
         onTabChange={handleTabChange}
         onFilterChange={handleFilterChange}
         onCheckboxToggle={handleCheckboxToggle}
+        onColumnToggle={handleColumnToggle}
+        visibleColumns={visibleColumns}
       />
       <LogDetailsModal show={showLogDetailsModal} onClose={() => setShowLogDetailsModal(false)} />
       <OrderInfo show={showInfoPopup} onClose={() => setShowInfoPopup(false)} />
+      
       {/* StickyDataTable section */}
       <div className="p-4">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -756,7 +794,7 @@ const SalesPage = (props) => {
         </div>
       </div>
 
-      {/* Order Details Modal/Popup (you can add this component) */}
+      {/* Order Details Modal/Popup */}
       {selectedOrderDetails.flag && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">

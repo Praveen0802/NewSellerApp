@@ -1,5 +1,4 @@
-// AddInventoryPage.jsx - Single accordion with add listing functionality
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Button from "../commonComponents/button";
 import { useDispatch } from "react-redux";
 import { updateWalletPopupFlag } from "@/utils/redux/common/action";
@@ -24,12 +23,128 @@ import {
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import UploadTickets from "../ModalComponents/uploadTickets";
 import ScrollableAccordionTable from "../TicketsPage/scrollableTable";
+import ViewMapPopup from "./ViewMapPopup";
+
+// Filter Dropdown Component
+const FilterDropdown = ({ isOpen, onClose, filterConfig, activeFilters, onFilterToggle }) => {
+  if (!isOpen) return null;
+
+  return (
+    <>
+      <div className="fixed inset-0 z-40" onClick={onClose} />
+      <div className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 w-80 max-h-96 overflow-y-auto z-50">
+        <div className="p-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold">Search filters</h3>
+        </div>
+        
+        <div className="p-4">
+          {filterConfig?.map((filter, index) => (
+            <div key={index} className="flex items-center justify-between py-2">
+              <span className="text-sm text-gray-700">{filter.label}</span>
+              <input
+                type="checkbox"
+                checked={activeFilters.includes(filter.name)}
+                onChange={() => onFilterToggle(filter.name)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+              />
+            </div>
+          ))}
+        </div>
+        
+        <div className="p-4 border-t border-gray-200">
+          <button
+            onClick={() => {
+              const allFilterNames = filterConfig?.map(filter => filter.name) || [];
+              allFilterNames.forEach(filterName => {
+                if (!activeFilters.includes(filterName)) {
+                  onFilterToggle(filterName);
+                }
+              });
+            }}
+            className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+          >
+            🔄 Restore defaults
+          </button>
+        </div>
+      </div>
+    </>
+  );
+};
+
+// Column Dropdown Component
+const ColumnDropdown = ({ isOpen, onClose, headers, visibleColumns, onColumnToggle }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  if (!isOpen) return null;
+
+  const filteredHeaders = headers?.filter(header => 
+    header.label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <>
+      <div className="fixed inset-0 z-40" onClick={onClose} />
+      <div className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 w-80 max-h-96 overflow-y-auto z-50">
+        <div className="p-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold">Search columns</h3>
+        </div>
+        
+        <div className="p-4">
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Search columns"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            />
+          </div>
+          
+          {filteredHeaders?.map((header, index) => (
+            <div key={index} className="flex items-center justify-between py-2">
+              <span className="text-sm text-gray-700">{header.label}</span>
+              <input
+                type="checkbox"
+                checked={visibleColumns.includes(header.key)}
+                onChange={() => onColumnToggle(header.key)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+              />
+            </div>
+          ))}
+        </div>
+        
+        <div className="p-4 border-t border-gray-200">
+          <button
+            onClick={() => {
+              headers?.forEach(header => {
+                if (!visibleColumns.includes(header.key)) {
+                  onColumnToggle(header.key);
+                }
+              });
+            }}
+            className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+          >
+            🔄 Restore defaults
+          </button>
+        </div>
+      </div>
+    </>
+  );
+};
 
 const AddInventoryPage = () => {
   const dispatch = useDispatch();
   const [selectedRows, setSelectedRows] = useState([]);
   const [isStickyExpanded, setIsStickyExpanded] = useState(false);
   const [showUploadPopup, setShowUploadPopup] = useState(false);
+  const [showViewPopup, setShowViewPopup] = useState(false);
+  
+  // Filter and column control states
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [showColumnDropdown, setShowColumnDropdown] = useState(false);
+  const filterButtonRef = useRef(null);
+  const columnButtonRef = useRef(null);
+
   const [inventoryData, setInventoryData] = useState([
     {
       id: "initial-1",
@@ -93,29 +208,8 @@ const AddInventoryPage = () => {
     },
   ];
 
-  const renderListValue = (icon, text) => {
-    return (
-      <div className="flex gap-[8px] items-center">
-        {icon}
-        <p className="text-[12px] font-normal text-[#323A70] truncate">{text}</p>
-      </div>
-    );
-  };
-
-  const handleOpenAddWalletPopup = () => {
-    dispatch(
-      updateWalletPopupFlag({
-        flag: true,
-      })
-    );
-  };
-
-  const openUploadPopup = () => {
-    setShowUploadPopup(true);
-  };
-
-  // Headers for the table
-  const headers = [
+  // All available headers
+  const allHeaders = [
     {
       key: "ticketType",
       label: "Ticket Type",
@@ -173,6 +267,89 @@ const AddInventoryPage = () => {
     },
     { key: "uploadTickets", label: "Upload Tickets", editable: false },
   ];
+
+  // Filter configuration
+  const filterConfig = [
+    {
+      name: "selectedMatch",
+      label: "Search Inventory",
+      type: "text",
+    },
+    {
+      name: "ticket_type",
+      label: "Ticket Type",
+      type: "select",
+    },
+    {
+      name: "inventory_status",
+      label: "Status",
+      type: "select",
+    },
+    {
+      name: "eventDate",
+      label: "Event Date",
+      type: "date",
+    },
+  ];
+
+  // Helper functions for default states
+  const getAllFilterNames = () => filterConfig.map(f => f.name);
+  const getAllColumnKeys = () => allHeaders.map(h => h.key);
+
+  // State for active filters and visible columns - all enabled by default
+  const [activeFilters, setActiveFilters] = useState(getAllFilterNames());
+  const [visibleColumns, setVisibleColumns] = useState(getAllColumnKeys());
+
+  // Filter headers based on visible columns
+  const headers = allHeaders.filter(header => visibleColumns.includes(header.key));
+
+  // Get filtered filter config based on active filters
+  const getActiveFilterConfig = () => {
+    return filterConfig.filter(filter => activeFilters.includes(filter.name));
+  };
+
+  const renderListValue = (icon, text) => {
+    return (
+      <div className="flex gap-[8px] items-center">
+        {icon}
+        <p className="text-[12px] font-normal text-[#323A70] truncate">{text}</p>
+      </div>
+    );
+  };
+
+  const handleOpenAddWalletPopup = () => {
+    dispatch(
+      updateWalletPopupFlag({
+        flag: true,
+      })
+    );
+  };
+
+  const openUploadPopup = () => {
+    setShowUploadPopup(true);
+  };
+
+  // Handle filter toggle from dropdown
+  const handleFilterToggle = (filterName) => {
+    setActiveFilters(prev => {
+      if (prev.includes(filterName)) {
+        return prev.filter(f => f !== filterName);
+      } else {
+        return [...prev, filterName];
+      }
+    });
+  };
+
+  // Handle column toggle from dropdown
+  const handleColumnToggle = (columnKey) => {
+    setVisibleColumns(prev => {
+      if (prev.includes(columnKey)) {
+        return prev.filter(c => c !== columnKey);
+      } else {
+        return [...prev, columnKey];
+      }
+    });
+  };
 
   // Create right sticky columns for upload functionality
   const stickyColumns = inventoryData.map((_, index) => [
@@ -317,13 +494,10 @@ const AddInventoryPage = () => {
 
   const selectedCount = selectedRows.length;
 
-  // Debug: Log selection state
-  console.log("Selected rows:", selectedRows);
-  console.log("Selected count:", selectedCount);
-
   return (
     <div className="bg-[#F5F7FA] w-full h-full relative">
       {/* Header with selected match info */}
+      <ViewMapPopup onClose={() => setShowViewPopup(false)} show={showViewPopup}/>
       <div className="bg-white">
         <div className="border-b-[1px] p-4 border-[#E0E1EA] flex flex-col gap-2">
           <div className="w-full md:w-auto flex items-center justify-between">
@@ -336,7 +510,7 @@ const AddInventoryPage = () => {
               />,
               "Old Trafford, Manchester, United Kingdom"
             )}
-            <p className="text-[12px] font-semibold text-[#0137D5] cursor-pointer hover:underline">
+            <p onClick={() => setShowViewPopup(true)} className="text-[12px] font-semibold text-[#0137D5] cursor-pointer hover:underline">
               View Map
             </p>
           </div>
@@ -373,50 +547,141 @@ const AddInventoryPage = () => {
           </div>
         </div>
 
-        {/* Filter Section */}
+        {/* Filter Section with Control Icons */}
         <div className="border-b-[1px] border-[#DADBE5] p-4">
-          <div className="flex gap-4 items-center w-[80%]">
-            <FloatingLabelInput
-              id="selectedMatch"
-              name="selectedMatch"
-              keyValue={"selectedMatch"}
-              type="text"
-              label="Search Inventory"
-              className={"!py-[7px] !px-[12px] !text-[#323A70] !text-[14px] "}
-              paddingClassName=""
-              autoComplete="off"
-            />
-            <FloatingSelect
-              label={"Ticket Type"}
-              options={[
-                { value: "e-ticket", label: "E-ticket" },
-                { value: "physical", label: "Physical" },
-                { value: "mobile", label: "Mobile" },
-              ]}
-              keyValue="ticket_type"
-              className=""
-              paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
-            />
-            <FloatingSelect
-              label={"Status"}
-              keyValue="inventory_status"
-              className=""
-              paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
-              options={[
-                { value: "active", label: "Active" },
-                { value: "pending", label: "Pending" },
-                { value: "sold", label: "Sold" },
-              ]}
-            />
-            <FloatingDateRange
-              id="eventDate"
-              name="eventDate"
-              keyValue="eventDate"
-              parentClassName=""
-              label="Event Date"
-              subParentClassName=""
-              className="!py-[8px] !px-[16px] mobile:text-xs"
-            />
+          <div className="flex items-center justify-between">
+            <div className="flex gap-4 items-center w-[80%]">
+              {getActiveFilterConfig().map((filter) => {
+                switch (filter.name) {
+                  case "selectedMatch":
+                    return (
+                      <FloatingLabelInput
+                        key={filter.name}
+                        id="selectedMatch"
+                        name="selectedMatch"
+                        keyValue={"selectedMatch"}
+                        type="text"
+                        label="Search Inventory"
+                        className={"!py-[7px] !px-[12px] !text-[#323A70] !text-[14px] "}
+                        paddingClassName=""
+                        autoComplete="off"
+                      />
+                    );
+                  case "ticket_type":
+                    return (
+                      <FloatingSelect
+                        key={filter.name}
+                        label={"Ticket Type"}
+                        options={[
+                          { value: "e-ticket", label: "E-ticket" },
+                          { value: "physical", label: "Physical" },
+                          { value: "mobile", label: "Mobile" },
+                        ]}
+                        keyValue="ticket_type"
+                        className=""
+                        paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
+                      />
+                    );
+                  case "inventory_status":
+                    return (
+                      <FloatingSelect
+                        key={filter.name}
+                        label={"Status"}
+                        keyValue="inventory_status"
+                        className=""
+                        paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
+                        options={[
+                          { value: "active", label: "Active" },
+                          { value: "pending", label: "Pending" },
+                          { value: "sold", label: "Sold" },
+                        ]}
+                      />
+                    );
+                  case "eventDate":
+                    return (
+                      <FloatingDateRange
+                        key={filter.name}
+                        id="eventDate"
+                        name="eventDate"
+                        keyValue="eventDate"
+                        parentClassName=""
+                        label="Event Date"
+                        subParentClassName=""
+                        className="!py-[8px] !px-[16px] mobile:text-xs"
+                      />
+                    );
+                  default:
+                    return null;
+                }
+              })}
+            </div>
+
+            {/* Control Icons */}
+            <div className="flex gap-2 ml-4 relative">
+              {/* Filter Icon */}
+              <button
+                ref={filterButtonRef}
+                onClick={() => {
+                  setShowFilterDropdown(!showFilterDropdown);
+                  setShowColumnDropdown(false);
+                }}
+                className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                title="Filter options"
+              >
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2"
+                >
+                  <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46 22,3"/>
+                </svg>
+              </button>
+              
+              {/* Column Icon */}
+              <button
+                ref={columnButtonRef}
+                onClick={() => {
+                  setShowColumnDropdown(!showColumnDropdown);
+                  setShowFilterDropdown(false);
+                }}
+                className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                title="Column options"
+              >
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2"
+                >
+                  <rect x="3" y="3" width="6" height="18"/>
+                  <rect x="11" y="3" width="6" height="18"/>
+                  <rect x="19" y="3" width="2" height="18"/>
+                </svg>
+              </button>
+              
+              {/* Filter Dropdown */}
+              <FilterDropdown
+                isOpen={showFilterDropdown}
+                onClose={() => setShowFilterDropdown(false)}
+                filterConfig={filterConfig}
+                activeFilters={activeFilters}
+                onFilterToggle={handleFilterToggle}
+              />
+
+              {/* Column Dropdown */}
+              <ColumnDropdown
+                isOpen={showColumnDropdown}
+                onClose={() => setShowColumnDropdown(false)}
+                headers={allHeaders}
+                visibleColumns={visibleColumns}
+                onColumnToggle={handleColumnToggle}
+              />
+            </div>
           </div>
         </div>
 
@@ -445,7 +710,6 @@ const AddInventoryPage = () => {
       <div
         className="m-6 bg-white rounded max-h-[calc(100vh-400px)] overflow-auto"
         style={{
-          paddingBottom: "120px", // Always add padding for sticky bar
           marginBottom: "80px", // Add margin to ensure content is not hidden
         }}
       >
@@ -469,10 +733,10 @@ const AddInventoryPage = () => {
 
       {/* Sticky Bottom Container - Always visible for testing */}
       <div
-  className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg"
-  style={{ zIndex: 9999 }}
->
-        <div className="flex  items-center justify-between px-6 py-3">
+        className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg"
+        style={{ zIndex: 9999 }}
+      >
+        <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <input

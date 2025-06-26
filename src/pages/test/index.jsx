@@ -1,3 +1,4 @@
+import KYCPopup from "@/components/KYCPopup";
 import ListSalesModal from "@/components/ModalComponents/listSalesModal";
 import LogDetailsModal from "@/components/ModalComponents/LogDetailsModal";
 import UploadTickets from "@/components/ModalComponents/uploadTickets";
@@ -9,6 +10,7 @@ const index = () => {
       {/* <LogDetailsModal /> */}
       {/* <ListSalesModal /> */}
       {/* <UploadTickets /> */}
+      <KYCPopup />
     </>
   );
 };
