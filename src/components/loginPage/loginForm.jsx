@@ -80,7 +80,7 @@ const LoginForm = () => {
       } else {
         // Handle normal login
         const body = {
-          user_name: formData.email,
+          email: formData.email,
           password: formData.password,
         };
         try {

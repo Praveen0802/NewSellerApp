@@ -12,7 +12,7 @@ const MyAccountTeam = (props) => {
     firstName: profileDetails?.first_name,
     lastName: profileDetails?.last_name,
     email: profileDetails?.email,
-    phoneNumber: profileDetails?.mobile_number,
+    phoneNumber: profileDetails?.phone_number,
   };
 
   const countryCodeValues = props?.dialingCode?.data?.map((item) => {
@@ -35,7 +35,7 @@ const MyAccountTeam = (props) => {
   };
 
   const [countryCode, setCountryCode] = useState(
-    `+${profileDetails?.phone_code}`
+    `${profileDetails?.country_code}`
   );
 
   const handleCountryCodeChange = (code) => {
@@ -52,7 +52,8 @@ const MyAccountTeam = (props) => {
       phone_code: countryCode?.replace("+", ""),
     };
     try {
-      const response = await fetchProfileDetails(null, "PUT", payload);
+      
+      const response = await updateProfileDetails(null, "PUT", payload);
       toast.success("Profile Details Updated Successfully");
       setEdit(false); // Close edit mode after successful update
     } catch (error) {

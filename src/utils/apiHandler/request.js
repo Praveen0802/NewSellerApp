@@ -94,6 +94,21 @@ export const fetchProfileDetails = async (token, method, data) => {
   }
 };
 
+export const updateProfileDetails = async (token, method, data) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.UPDATE_PROFILE_DETAILS,
+      method: method ?? "PUT",
+      ...(token && { token: token }),
+      ...(data && { data: data }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in updatingProfileDetails", error);
+    throw error;
+  }
+};
+
 export const fetchAddressBookDetails = async (
   token,
   id,

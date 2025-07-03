@@ -28,14 +28,12 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
   const validProfiles = ["myAccount", "changepassword"];
   try {
     if (validProfiles?.includes(profile)) {
-      const [addressDetails, profileDetails, fetchCountries] =
-        await Promise.all([
-          fetchAddressBookDetails(token),
-          fetchProfileDetails(token, "GET"),
-          fetchCountrieList(token),
-        ]);
-      const dialingCode = await getDialingCode();
-      return { addressDetails, profileDetails, fetchCountries, dialingCode };
+      const [profileDetails] = await Promise.all([
+        fetchProfileDetails(token, "GET"),
+      ]);
+      // const dialingCode = await getDialingCode();
+      return {profileDetails}
+      // return { addressDetails, profileDetails, fetchCountries, dialingCode };
     } else if (profile === "addressBook") {
       const [primaryAddress, defaultAddress, profileDetails, fetchCountries] =
         await Promise.all([
@@ -59,11 +57,11 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
         fetchCountries,
       };
     } else if (profile == "myCustomers") {
-      const [userDetails, fetchCountries] = await Promise.all([
+      const [userDetails] = await Promise.all([
         fetchUserDetails(token),
-        fetchCountrieList(token),
+        // fetchCountrieList(token),
       ]);
-      return { userDetails, fetchCountries };
+      return { userDetails };
     } else if (profile == "linkedCards") {
       const shopperRefernce = ctx?.req?.cookies?.user_token;
 
