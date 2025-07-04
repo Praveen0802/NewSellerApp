@@ -23,6 +23,7 @@ import { updateWalletPopupFlag } from "@/utils/redux/common/action";
 import Button from "../commonComponents/button";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import FloatingDateRange from "../commonComponents/dateRangeInput";
+import { getAuthToken } from "@/utils/helperFunctions";
 
 const ReportsPage = (props) => {
   const { apiData } = props;
@@ -110,8 +111,8 @@ const ReportsPage = (props) => {
     const payload = { id: item?.id };
     const response =
       transactionType == "transaction"
-        ? await getTransactionDetails("", payload)
-        : await getDepositDetails("", payload);
+        ? await getTransactionDetails(getAuthToken(), payload)
+        : await getDepositDetails(getAuthToken(), payload);
     setEyeViewPopup({
       flag: true,
       data: { ...response, transactionType: transactionType },

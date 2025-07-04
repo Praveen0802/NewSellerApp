@@ -2,14 +2,48 @@ import RightViewModal from "@/components/commonComponents/rightViewModal";
 import FloatingLabelInput from "@/components/floatinginputFields";
 import FloatingLabelTextarea from "@/components/floatinginputFields/floatingTextArea";
 import FooterButton from "@/components/footerButton";
+import { requestFeature } from "@/utils/apiHandler/request";
+import { getAuthToken } from "@/utils/helperFunctions";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import React from "react";
+import { toast } from "react-toastify";
 
-const SubjectDescriptionPopup = ({show, onClose}) => {
+const SubjectDescriptionPopup = ({ show, onClose }) => {
   const [description, setDescription] = React.useState("");
+  const [subject, setSubject] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+
   const handleChange = (e) => {
     setDescription(e.target.value);
   };
+  const handleMatchSearch = (e) => {
+    setSubject(e.target.value);
+  };
+
+  const clearAllFields = () => {
+    setDescription("");
+    setSubject("");
+  };
+
+  const handleSubmit = async () => {
+    const payload = {
+      subject,
+      description,
+    };
+    setLoading(true);
+    const response = await requestFeature(getAuthToken(), payload);
+    if (response?.success === true) {
+      toast.success("Feature request submitted successfully");
+      clearAllFields();
+      onClose({ submit: true });
+    } else {
+      toast.error("Failed to submit feature request", {
+        position: "top-center",
+      });
+    }
+    setLoading(false);
+  };
+
   return (
     <RightViewModal show={show} onClose={onClose} outSideClickClose={false}>
       <div className="w-full max-w-3xl flex flex-col gap-2 h-full mx-auto rounded-lg relative bg-white shadow-lg">
@@ -28,16 +62,17 @@ const SubjectDescriptionPopup = ({show, onClose}) => {
           </div>
           <div className="p-4 flex flex-col gap-4">
             <FloatingLabelInput
-              id="selectedMatch"
-              name="selectedMatch"
-              keyValue={"selectedMatch"}
+              id="subject"
+              name="subject"
+              keyValue={"subject"}
               type="text"
               label="Subject"
-              //   value={selectedMatch}
+              value={subject}
               className={"!py-[7px] !px-[12px] !text-[#323A70] !text-[14px] "}
-              //   onChange={handleMatchSearch}
+              onChange={handleMatchSearch}
               paddingClassName=""
               autoComplete="off"
+              placeholder="Enter the subject of your feature request"
             />
             <FloatingLabelTextarea
               id="description"
@@ -49,14 +84,17 @@ const SubjectDescriptionPopup = ({show, onClose}) => {
               className="!py-[7px] !px-[12px] !text-[#323A70] !text-[14px]"
               rows={5}
               maxLength={500}
+              placeholder="Describe the feature you would like to request"
             />
           </div>
         </div>
         <FooterButton
           isFormValid={() => true}
-          onClose={() => {onClose()}}
-          handleSubmit={() => ({})}
-          loader={false}
+          onClose={() => {
+            onClose();
+          }}
+          handleSubmit={handleSubmit}
+          loader={loading}
         />
       </div>
     </RightViewModal>
