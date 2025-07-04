@@ -21,7 +21,6 @@ export async function getServerSideProps(ctx) {
     return nextRedirect("login");
   }
   const response = await fetchSettingsPageDetails(profile, authToken, ctx);
-  console.log(response,'responseresponse')
   return {
     props: { profile, apiData: response ?? {} },
   };

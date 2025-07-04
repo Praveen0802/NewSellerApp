@@ -6,6 +6,7 @@ import {
   fetchAddressBookDetails,
   fetchCityBasedonCountry,
   getDialingCode,
+  saveAddressBookDetails,
 } from "@/utils/apiHandler/request";
 import { toast } from "react-toastify";
 import FooterButton from "@/components/footerButton";
@@ -31,7 +32,7 @@ const AddEditAddress = ({
     address_line3 = "",
     last_name = "",
     mobile_number = "",
-    address_line1 = "",
+    // address_line1 = "",
     company_name = "",
     email = "",
     phone_code = "",
@@ -49,7 +50,7 @@ const AddEditAddress = ({
     email: email,
     mobile_number: mobile_number,
     phone_code: phone_code,
-    address_line_1: address_line1,
+    address: address,
     address_line_2: address_line2,
     address_line_3: address_line3,
     country: country_id,
@@ -110,8 +111,8 @@ const AddEditAddress = ({
     const requiredFields = [
       "first_name",
       "last_name",
-      "address_line_1",
-      "email",
+      "address",
+      // "email",
       "address_type",
       "mobile_number",
       "phone_code",
@@ -194,7 +195,7 @@ const AddEditAddress = ({
         label: "Email",
         type: "email",
         id: "email",
-        mandatory: true,
+        // mandatory: true,
         name: "email",
         value: formFieldValues?.email,
         onChange: (e) => handleChange(e, "email"),
@@ -230,6 +231,7 @@ const AddEditAddress = ({
                     className: `!py-2 !px-4 ${fieldStyle}`,
                     searchable: true,
                     options: phoneCodeOptions,
+                    mandatory: true,
                   },
                 ]}
               />
@@ -246,6 +248,7 @@ const AddEditAddress = ({
                     onChange: (e) => handleChange(e, "mobile_number"),
                     className: `!py-2 !px-4 ${fieldStyle}`,
                     placeholder: "Enter mobile number",
+                    mandatory: true,
                     rightIcon: formFieldValues?.mobile_number
                       ? () => (
                           <span className="text-green-500">
@@ -285,15 +288,15 @@ const AddEditAddress = ({
       {
         label: "Address Line 1",
         type: "text",
-        id: "address_line_1",
+        id: "address",
         mandatory: true,
-        name: "address_line_1",
-        value: formFieldValues?.address_line_1,
-        onChange: (e) => handleChange(e, "address_line_1"),
+        name: "address",
+        value: formFieldValues?.address,
+        onChange: (e) => handleChange(e, "address"),
         className: `!py-2 !px-4 ${fieldStyle}`,
         labelClassName: "text-sm text-gray-600 mb-1 block",
         placeholder: "Downtown Dubai",
-        rightIcon: formFieldValues?.address_line_1
+        rightIcon: formFieldValues?.address
           ? () => (
               <span className="text-green-500">
                 <IconStore.circleTick className="size-5" />
@@ -410,7 +413,7 @@ const AddEditAddress = ({
       last_name: formFieldValues.last_name,
       email: formFieldValues?.email,
       company_name: formFieldValues.company_name,
-      address_line1: formFieldValues?.address_line_1,
+      address: formFieldValues?.address,
       address_line2: formFieldValues?.address_line_2,
       address_line3: formFieldValues?.address_line_3,
       mobile_number: formFieldValues?.mobile_number,
@@ -421,11 +424,11 @@ const AddEditAddress = ({
       country: formFieldValues?.country,
       is_default: formFieldValues?.is_default,
       address_type: formFieldValues?.address_type || "",
-      ...(formFieldValues?.is_default && { primary_address: 1 }),
+      primary_address: formFieldValues?.is_default ? 1 : 0,
     };
 
     try {
-      const response = await fetchAddressBookDetails(
+      const response = await saveAddressBookDetails(
         "",
         editType ? addressDetails?.id : "",
         editType ? "PUT" : "POST",

@@ -3,6 +3,7 @@ import Button from "../commonComponents/button";
 import { changePasswordRequest } from "@/utils/apiHandler/request";
 import FormFields from "../formFieldsComponent";
 import { toast } from "react-toastify";
+import { getAuthToken } from "@/utils/helperFunctions";
 
 const ChangePassword = (props) => {
   const { profileDetails } = props;
@@ -27,11 +28,11 @@ const ChangePassword = (props) => {
     setError("");
     setIsSubmitting(true);
     const payload = {
-      email: profileDetails?.email,
+      // email: profileDetails?.email,
       password: passwordData?.newPassword,
       confirm_password: passwordData?.confirmPassword,
     };
-    await changePasswordRequest("", payload);
+    await changePasswordRequest(getAuthToken(), payload);
     toast.success("Password Changed Successfully");
     setPasswordData({ newPassword: "", confirmPassword: "" });
   };

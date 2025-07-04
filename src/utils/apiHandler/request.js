@@ -1,6 +1,7 @@
 import axios from "axios";
 import AJAX, { fetchAuthorizationKey } from ".";
 import { API_ROUTES } from "./apiRoutes";
+import { allCountryCodes } from "../constants/allContryCodes";
 
 const isClient = typeof window !== "undefined";
 
@@ -111,14 +112,46 @@ export const updateProfileDetails = async (token, method, data) => {
 
 export const fetchAddressBookDetails = async (
   token,
-  id,
   method = "GET",
   data,
   params
 ) => {
   try {
+    const id = "";
+    const apiUrl = `${API_ROUTES.FETCH_ADDRESS_BOOK_DETAILS}${
+      id ? `/${id}` : ""
+    }`;
+
     const response = await makeRequest({
-      url: `${API_ROUTES.FETCH_ADDRESS_BOOK_DETAILS}${id ? `/${id}` : ""}`,
+      url: apiUrl,
+      method: method,
+      ...(token && { token: token }),
+      ...(data && { data: data }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchingAddressBookDetails", error);
+    throw error;
+  }
+};
+
+export const saveAddressBookDetails = async (
+  token,
+  id = "",
+  method = "GET",
+  data,
+  params
+) => {
+  try {
+    const selectedApi =
+      method?.toLowerCase() === "post"
+        ? API_ROUTES.SAVE_ADDRESS_BOOK_DETAILS
+        : API_ROUTES.UPDATE_ADDRESS_BOOK_DETAILS;
+    const apiUrl = `${selectedApi}${id ? `/${id}` : ""}`;
+
+    const response = await makeRequest({
+      url: apiUrl,
       method: method,
       ...(token && { token: token }),
       ...(data && { data: data }),
@@ -337,7 +370,7 @@ export const fetchCountrieList = async (token) => {
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
-    console.log("ERROR in getDepositDetails", error);
+    console.log("ERROR in fetchCountrieList", error);
     throw error;
   }
 };
@@ -464,8 +497,9 @@ export const getDialingCode = async (token, params) => {
     });
     return response?.data;
   } catch (error) {
-    console.log("ERROR in getDialingCode", error);
-    return error;
+    return { data: allCountryCodes?.data };
+    // console.log("ERROR in getDialingCode", error);
+    // return error;
   }
 };
 
@@ -1042,6 +1076,21 @@ export const updateNominee = async (token, data) => {
   try {
     const response = await makeRequest({
       url: `${API_ROUTES.UPDATE_NOMINEE}`,
+      method: "POST",
+      ...(token && { token: token }),
+      data: data,
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getWalletBalance", error);
+    return error?.response?.data;
+  }
+};
+
+export const requestFeature = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.REQUEST_FEATURE}`,
       method: "POST",
       ...(token && { token: token }),
       data: data,

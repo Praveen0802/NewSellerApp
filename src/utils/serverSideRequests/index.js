@@ -32,20 +32,25 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
         fetchProfileDetails(token, "GET"),
       ]);
       // const dialingCode = await getDialingCode();
-      return {profileDetails}
+      return { profileDetails };
       // return { addressDetails, profileDetails, fetchCountries, dialingCode };
     } else if (profile === "addressBook") {
+      const results = await Promise.allSettled([
+        fetchAddressBookDetails(token, "", "GET", "", {
+          is_primary_address: 1,
+        }),
+        fetchAddressBookDetails(token, "", "GET", "", {
+          is_primary_address: 0,
+        }),
+        fetchProfileDetails(token, "GET"),
+        fetchCountrieList(token),
+      ]);
+
       const [primaryAddress, defaultAddress, profileDetails, fetchCountries] =
-        await Promise.all([
-          fetchAddressBookDetails(token, "", "GET", "", {
-            is_primary_address: 1,
-          }),
-          fetchAddressBookDetails(token, "", "GET", "", {
-            is_primary_address: 0,
-          }),
-          fetchProfileDetails(token, "GET"),
-          fetchCountrieList(token),
-        ]);
+        results.map((result) =>
+          result.status === "fulfilled" ? result.value : null
+        );
+      console.log(primaryAddress, "primaryAddressprimaryAddressprimaryAddress");
       return { primaryAddress, defaultAddress, profileDetails, fetchCountries };
     } else if (profile === "bankAccounts") {
       const [bankDetails, fetchCountries] = await Promise.all([
