@@ -4,8 +4,19 @@ import LeftViewContainer from "./leftViewContainer";
 import RightViewContainer from "./rightViewContainer";
 
 const ReportViewContainer = ({ reportValues }) => {
-  const { title, options, selectedOption, onChange, reports, tableView } =
-    reportValues;
+  const { 
+    title, 
+    options, 
+    selectedOption, 
+    onChange, 
+    reports, 
+    tableView, 
+    handleScrollEnd, 
+    keyValue, 
+    meta, 
+    loader 
+  } = reportValues;
+
   return (
     <div className="bg-white border border-[#eaeaf1] p-3 md:p-5 rounded-md flex flex-col gap-3 md:gap-4 h-full">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -21,7 +32,13 @@ const ReportViewContainer = ({ reportValues }) => {
       </div>
       <div className="flex flex-col md:flex-row gap-4 md:gap-5 flex-1">
         <LeftViewContainer reports={reports} />
-        <RightViewContainer tableView={tableView} />
+        <RightViewContainer 
+          tableView={tableView} 
+          handleScrollEnd={handleScrollEnd}
+          keyValue={keyValue}
+          meta={meta}
+          loader={loader}
+        />
       </div>
     </div>
   );

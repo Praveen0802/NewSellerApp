@@ -33,7 +33,7 @@ const TopSellingEvents = (props) => {
       </div>
 
       <div className="flex flex-col">
-        <div className="overflow-x-auto">
+        <div className="max-h-[300px] overflow-auto overflow-x-auto">
           <table className="min-w-full">
             <thead>
               <tr className="border-b border-gray-200">

@@ -48,7 +48,6 @@ export const nextRedirect = (pathName = "login") => {
   };
 };
 
-
 export const getAuthToken = (context = null, token) => {
   const isClient = typeof window !== "undefined";
   const authToken = token
@@ -148,9 +147,29 @@ export const desiredFormatDate = (dateString) => {
 
 export const dateFormat = (dateString) => {
   // Parse the input date string (YYYY-MM-DD)
-  if(!dateString) return "";
+  if (!dateString) return "";
   const parts = dateString?.split("-");
 
   // Rearrange to DD/MM/YYYY format
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
+};
+
+export const formatDateValue = (timestamp) => {
+  const date = new Date(timestamp * 1000); // Convert to milliseconds
+
+  const options = {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  };
+
+  const formattedDate = date
+    .toLocaleDateString("en-GB", options)
+    .replace(/(\w+), (\d+) (\w+) (\d+), (\d+:\d+)/, "$1, $2 $3 $4, $5");
+
+  return formattedDate;
 };

@@ -65,12 +65,13 @@ export const loginUser = async (token, data) => {
   }
 };
 
-export const fetchDashboardData = async (token) => {
+export const fetchSalesOverview = async (token, params = {}) => {
   try {
     const response = await makeRequest({
-      url: API_ROUTES.DASHBOARD,
+      url: API_ROUTES.SALES_OVERVIEW,
       method: "GET",
       ...(token && { token: token }),
+      ...(params && { params: params }),
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
@@ -224,6 +225,99 @@ export const sendResetRequest = async (data) => {
     throw error;
   }
 };
+
+export const dashboardAwaitingDelivery = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.AWAITING_DELIVERY,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchOrderHistory", error);
+    throw error;
+  }
+};
+
+export const dashboardActivity = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.DASHBOARD_ACTIVITY,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in dashboardActivity", error);
+    throw error;
+  }
+};
+
+export const dashboardNotifications = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.DASHBOARD_NOTIFICATIONS,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in DASHBOARD_NOTIFICATIONS", error);
+    throw error;
+  }
+};
+
+export const topSellingEvents = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.TOP_SELLING_EVENTS,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in TOP_SELLING_EVENTS", error);
+    throw error;
+  }
+};
+
+
+export const dashbordTrade = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.DASHBOARD_LMT_TRADE,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in DASHBOARD_LMT_TRADE", error);
+    throw error;
+  }
+};
+
+
+export const dashbordReports = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.DASHBOARD_REPORTS,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in DASHBOARD_REPORTS", error);
+    throw error;
+  }
+};
+
 
 export const fetchOrderHistory = async (token, params) => {
   try {

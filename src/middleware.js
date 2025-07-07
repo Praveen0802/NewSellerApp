@@ -51,9 +51,8 @@ export async function middleware(request) {
           console.log("enteringHereeeee");
           response.cookies.set("auth_token", decodeURIComponent(validateAuthToken?.token), {
             httpOnly: true,
-            // secure: process.env.NODE_ENV === 'production',
             sameSite: "strict",
-            // maxAge: 3600 // Optional: set expiration
+          
           });
           response.cookies.set(
             "auth_token_validity",

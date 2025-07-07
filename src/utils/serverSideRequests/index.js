@@ -1,4 +1,9 @@
 import {
+  dashboardActivity,
+  dashboardAwaitingDelivery,
+  dashboardNotifications,
+  dashbordReports,
+  dashbordTrade,
   fetchAddressBookDetails,
   FetchAllCategories,
   fetchBankAccountDetails,
@@ -10,6 +15,7 @@ import {
   fetchOrderHistory,
   fetchProfileDetails,
   fetchRecentlyViewedList,
+  fetchSalesOverview,
   fetchTransactionHistory,
   fetchTransactionHistoryMonthly,
   fetchUserDetails,
@@ -22,6 +28,7 @@ import {
   purchaseFavouratesTracking,
   purchaseHistory,
   purchaseTracking,
+  topSellingEvents,
 } from "../apiHandler/request";
 
 export const fetchSettingsPageDetails = async (profile, token, ctx) => {
@@ -32,7 +39,7 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
         fetchProfileDetails(token, "GET"),
       ]);
       // const dialingCode = await getDialingCode();
-      return {profileDetails}
+      return { profileDetails };
       // return { addressDetails, profileDetails, fetchCountries, dialingCode };
     } else if (profile === "addressBook") {
       const [primaryAddress, defaultAddress, profileDetails, fetchCountries] =
@@ -95,15 +102,33 @@ export const fetchWalletPageDetails = async (token) => {
 
 export const fetchDashboardPageDetails = async (token) => {
   try {
-    const [dashboardData, orderHistory, transactionHistory] = await Promise.all(
-      [
-        fetchDashboardData(token),
-        fetchOrderHistory(token),
-        fetchTransactionHistory(token),
-      ]
-    );
-    return { dashboardData, orderHistory, transactionHistory };
-  } catch {}
+    const [
+      salesOverView,
+      awaitingDelivery,
+      activity,
+      notifications,
+      topSelling,
+      reports,
+    ] = await Promise.all([
+      fetchSalesOverview(token, { date_format: "last_180days" }),
+      dashboardAwaitingDelivery(token, { date_format: "today" }),
+      dashboardActivity(token),
+      dashboardNotifications(token),
+      topSellingEvents(token),
+      // dashbordTrade(token),
+      dashbordReports(token),
+    ]);
+    return {
+      salesOverView,
+      awaitingDelivery,
+      activity,
+      notifications,
+      topSelling,
+      reports,
+    };
+  } catch {
+    return [];
+  }
 };
 
 export const fetchTradePageData = async (tradeType, token, matchId) => {
