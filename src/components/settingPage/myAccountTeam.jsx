@@ -1,9 +1,13 @@
-import { fetchProfileDetails } from "@/utils/apiHandler/request";
+import {
+  fetchProfileDetails,
+  updateProfileDetails,
+} from "@/utils/apiHandler/request";
 import { useState, useCallback } from "react";
 import Button from "../commonComponents/button";
 import AccounInfoForm from "./components/accounInfoForm";
 import { toast } from "react-toastify";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
+import { getAuthToken } from "@/utils/helperFunctions";
 
 const MyAccountTeam = (props) => {
   const { profileDetails } = props;
@@ -42,22 +46,25 @@ const MyAccountTeam = (props) => {
     setCountryCode(code);
   };
 
-  const updateProfileDetails = async () => {
+  const updateProfileDetailsSubmit = async () => {
     setSubmitLoader(true);
     const payload = {
       first_name: formData?.firstName,
       last_name: formData?.lastName,
       email: formData?.email,
-      mobile_number: formData?.phoneNumber,
-      phone_code: countryCode?.replace("+", ""),
+      phone_number: formData?.phoneNumber,
+      country_code: countryCode?.replace("+", ""),
     };
     try {
-      
-      const response = await updateProfileDetails(null, "PUT", payload);
-      toast.success("Profile Details Updated Successfully");
+      const response = await updateProfileDetails(
+        getAuthToken(),
+        "PUT",
+        payload
+      );
+      toast.success("Account information updated successfully.");
       setEdit(false); // Close edit mode after successful update
     } catch (error) {
-      toast.error("Failed to update profile details");
+      toast.error("Failed to update account information");
     } finally {
       setSubmitLoader(false);
     }
@@ -103,7 +110,7 @@ const MyAccountTeam = (props) => {
                   />
                   <Button
                     label="Submit"
-                    onClick={updateProfileDetails}
+                    onClick={updateProfileDetailsSubmit}
                     loading={submitLoader}
                     classNames={{
                       root: "w-full sm:w-auto bg-[#343432] justify-center py-1 px-3 md:px-[14px] sm:mt-0",

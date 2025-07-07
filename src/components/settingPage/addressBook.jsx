@@ -112,6 +112,7 @@ const AddressBook = (props) => {
       item.zip_code || "N/A"
     }`;
     const address = [
+      item?.address || "N/A",
       item?.address_line1 || "N/A",
       item?.address_line2 || "N/A",
       item?.address_line3 || "N/A",
@@ -125,7 +126,7 @@ const AddressBook = (props) => {
 
     const phoneNumber =
       item?.phone_code && item?.mobile_number
-        ? `+${item?.phone_code} ${item?.mobile_number}`
+        ? `+${item?.phone_code?.replace("+", "")} ${item?.mobile_number}`
         : "N/A";
 
     return {

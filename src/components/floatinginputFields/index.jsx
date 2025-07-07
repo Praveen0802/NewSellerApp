@@ -5,7 +5,7 @@ const FloatingLabelInput = ({
   label,
   type = "text",
   value = "",
-  onChange,
+  onChange = () => {},
   onBlur = null,
   onKeyDown = null,
   id,
