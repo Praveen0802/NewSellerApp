@@ -16,10 +16,12 @@ import ticketStar from "../../../public/ticket-star.svg";
 import { Menu, Bell, ChevronDown, ChevronRight } from "lucide-react";
 import useIsMobile from "@/utils/helperFunctions/useIsmobile";
 import { useRouter } from "next/router";
-import { setCookie } from "@/utils/helperFunctions/cookie";
-// Fix: Check if IconStore export exists, if not, create a fallback
-// import { IconStore } from "@/utils/helperFunctions/iconStore";
+import { setCookie, getCookie } from "@/utils/helperFunctions/cookie";
 import { useSelector } from "react-redux";
+import {
+  fetchNotificationHistory,
+  fetchActivityHistory,
+} from "@/utils/apiHandler/request";
 
 // Temporary fallback for IconStore.leftArrow if import fails
 const LeftArrowIcon = ({ className }) => (
@@ -38,70 +40,469 @@ const LeftArrowIcon = ({ className }) => (
   </svg>
 );
 
+// Fixed Shimmer effect component
+const ShimmerEffect = ({ className = "" }) => (
+  <div className={`animate-pulse bg-gray-200 rounded ${className}`}></div>
+);
+
+// Fixed Notification item shimmer
+const NotificationShimmer = () => (
+  <div className="flex items-start gap-3 p-3 border-b border-gray-200">
+    <ShimmerEffect className="w-2 h-2 mt-2 rounded-full" />
+    <div className="flex-1 space-y-2">
+      <div className="flex items-center gap-2 mb-1">
+        <ShimmerEffect className="w-8 h-3" />
+        <ShimmerEffect className="w-12 h-3" />
+      </div>
+      <ShimmerEffect className="w-full h-4" />
+      <ShimmerEffect className="w-3/4 h-3" />
+    </div>
+  </div>
+);
+
+// Fixed Activity item shimmer
+const ActivityShimmer = () => (
+  <div className="flex items-start gap-3 p-3 border-b border-gray-200">
+    <div className="flex-1 space-y-2">
+      <div className="flex items-center gap-2 mb-1">
+        <ShimmerEffect className="w-12 h-3" />
+        <ShimmerEffect className="w-16 h-3" />
+      </div>
+      <ShimmerEffect className="w-full h-4" />
+    </div>
+  </div>
+);
+
+// Helper function to format timestamp
+const formatDate = (timestamp) => {
+  const date = new Date(timestamp * 1000);
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+  });
+};
+
+// Helper function to format activity timestamp
+const formatActivityDate = (timestamp) => {
+  const date = new Date(timestamp * 1000);
+  return (
+    date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }) +
+    " " +
+    date.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  );
+};
+
 // Notifications Popup Component
-const NotificationsPopup = ({ isOpen, onClose, showFullDisplay }) => {
+const NotificationsPopup = ({
+  isOpen = false,
+  onClose,
+  showFullDisplay,
+} = {}) => {
   const [activeTab, setActiveTab] = useState("notifications");
+  const [notifications, setNotifications] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState(null);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [activityCount, setActivityCount] = useState(0);
+
+  // Pagination states
+  const [notificationMeta, setNotificationMeta] = useState({});
+  const [activityMeta, setActivityMeta] = useState({});
+  const [notificationPage, setNotificationPage] = useState(1);
+  const [activityPage, setActivityPage] = useState(1);
+
   const router = useRouter();
-  const notificationRedict = (notification) => {
+  const isMobile = useIsMobile();
+  const { currentUser } = useSelector((state) => state.currentUser);
+
+  // API functions using your actual API calls
+  const fetchNotificationHistoryData = async (page = 1, append = false) => {
+    try {
+      if (page === 1) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+      setError(null);
+
+      // Get token from cookie or Redux store
+      const token = getCookie("auth_token") || currentUser?.token;
+
+      // Call your actual API function
+      const { data } = await fetchNotificationHistory(token, {
+        page: page,
+      });
+
+      if (data && data.notification_list) {
+        const newNotifications = data.notification_list || [];
+
+        if (append) {
+          setNotifications((prev) => [...prev, ...newNotifications]);
+        } else {
+          setNotifications(newNotifications);
+        }
+
+        setNotificationCount(data.unread_count || 0);
+        setNotificationMeta(data.meta || {});
+        setNotificationPage(page);
+      } else {
+        throw new Error("Failed to fetch notifications");
+      }
+    } catch (err) {
+      setError("Failed to load notifications");
+      console.error("Error fetching notifications:", err);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const fetchActivityHistoryData = async (page = 1, append = false) => {
+    try {
+      if (page === 1) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+      setError(null);
+
+      // Get token from cookie or Redux store
+      const token = getCookie("auth_token") || currentUser?.token;
+
+      // Call your actual API function with POST data
+      const data = await fetchActivityHistory(token, { page: page });
+
+      if (data && data.data && data.data.activity_list) {
+        const newActivities = data.data.activity_list || [];
+
+        if (append) {
+          setActivities((prev) => [...prev, ...newActivities]);
+        } else {
+          setActivities(newActivities);
+        }
+
+        setActivityCount(data.data.activity_count || 0);
+        setActivityMeta(data.data.meta || {});
+        setActivityPage(page);
+      } else {
+        throw new Error("Failed to fetch activity");
+      }
+    } catch (err) {
+      setError("Failed to load activity");
+      console.error("Error fetching activity:", err);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  // Load more functions
+  const loadMoreNotifications = () => {
+    const meta = notificationMeta;
+    if (meta.current_page < meta.last_page) {
+      fetchNotificationHistoryData(notificationPage + 1, true);
+    }
+  };
+
+  const loadMoreActivities = () => {
+    const meta = activityMeta;
+    if (meta.current_page < meta.last_page) {
+      fetchActivityHistoryData(activityPage + 1, true);
+    }
+  };
+
+  // Check if we can load more
+  const canLoadMoreNotifications = () => {
+    const meta = notificationMeta;
+    return (
+      meta.current_page && meta.last_page && meta.current_page < meta.last_page
+    );
+  };
+
+  const canLoadMoreActivities = () => {
+    const meta = activityMeta;
+    return (
+      meta.current_page && meta.last_page && meta.current_page < meta.last_page
+    );
+  };
+
+  // Fetch data when popup opens and tab changes
+  useEffect(() => {
+    if (isOpen) {
+      if (activeTab === "notifications") {
+        // Reset pagination and fetch first page
+        setNotificationPage(1);
+        fetchNotificationHistoryData(1, false);
+      } else if (activeTab === "activity") {
+        // Reset pagination and fetch first page
+        setActivityPage(1);
+        fetchActivityHistoryData(1, false);
+      }
+    }
+  }, [isOpen, activeTab]);
+
+  const notificationRedict = () => {
     router.push(`/notifications/home`);
     onClose();
   };
-  // Static notification data for mobile
-  const notifications = [
-    {
-      id: 1,
-      type: "new",
-      date: "10 Jun",
-      title: "There is a new open order for 2 ticket(s) for Chris Brown",
-      subtitle:
-        "Cardiff on 19-06-2025 at 16:00. See dashboard if you want to submit an offer.",
-      isNew: true,
-    },
-    {
-      id: 2,
-      type: "new",
-      date: "09 Jun",
-      title:
-        "There is a new open order for 1 ticket(s) for Billie Eilish Paris",
-      subtitle:
-        "on 10-06-2025 at 20:30. See dashboard if you want to submit an offer.",
-      isNew: true,
-    },
-    {
-      id: 3,
-      type: "new",
-      date: "26 May",
-      title: "There is a new open order for 2 ticket(s) for Tate McRae",
-      subtitle:
-        "London on 24-06-2025 at 19:30. See dashboard if you want to submit an offer.",
-      isNew: true,
-    },
-    {
-      id: 4,
-      type: "new",
-      date: "23 May",
-      title: "There is a new open order for 3 ticket(s) for Billie Eilish",
-      subtitle:
-        "London on 14-07-2025 at 20:00. See dashboard if you want to submit an offer.",
-      isNew: true,
-    },
-    {
-      id: 5,
-      type: "new",
-      date: "23 May",
-      title: "There is a new open order for 2 ticket(s) for Billie Eilish",
-      subtitle:
-        "London on 14-07-2025 at 20:00. See dashboard if you want to submit an offer.",
-      isNew: true,
-    },
-  ];
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setError(null); // Clear any previous errors
+  };
+
+  const renderNotificationItem = (notification) => (
+    <div
+      key={notification.id}
+      className="flex items-start gap-3 p-3 hover:bg-gray-50 border-b-1 border-gray-200 rounded-lg mb-4"
+    >
+      <div
+        className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 ${
+          notification.viewed === 0 ? "bg-green-500" : "bg-gray-300"
+        }`}
+      ></div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          {notification.viewed === 0 && (
+            <span className="text-xs text-green-600 font-medium">New</span>
+          )}
+          <span className="text-xs text-gray-500">
+            {formatDate(notification.created_at)}
+          </span>
+        </div>
+        <p className="text-sm text-gray-900 font-medium mb-1">
+          {notification.name
+            ?.replace(/_/g, " ")
+            .replace(/\b\w/g, (l) => l.toUpperCase())}
+        </p>
+        <p className="text-xs text-gray-600 leading-relaxed">
+          {notification.description}
+        </p>
+      </div>
+    </div>
+  );
+
+  const renderActivityItem = (activity) => (
+    <div
+      key={activity.id}
+      className="flex items-start gap-3 p-3 hover:bg-gray-50 border-b-1 border-gray-200 rounded-lg"
+    >
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <span
+            className={`text-xs font-medium px-2 py-1 rounded-full ${
+              activity.type === "logged_in"
+                ? "bg-green-100 text-green-600"
+                : activity.type === "logged_out"
+                ? "bg-red-100 text-red-600"
+                : "bg-gray-100 text-gray-600"
+            }`}
+          >
+            {activity.type
+              ?.replace(/_/g, " ")
+              .replace(/\b\w/g, (l) => l.toUpperCase())}
+          </span>
+          <span className="text-xs text-gray-500">
+            {formatActivityDate(activity.created_at)}
+          </span>
+        </div>
+        <p className="text-sm text-gray-900 leading-relaxed">
+          {activity.description}
+        </p>
+      </div>
+    </div>
+  );
 
   if (!isOpen) return null;
 
   const sidebarWidth = showFullDisplay ? 200 : 60;
 
+  // Mobile layout
+  if (isMobile) {
+    return (
+      <div className="fixed inset-0 z-50">
+        {/* Overlay */}
+        <div
+          className="absolute inset-0 bg-black bg-opacity-50"
+          onClick={onClose}
+        />
+
+        {/* Popup positioned from left */}
+        <div className="absolute top-20 left-4 right-4 bg-white rounded-lg shadow-xl max-h-[80vh] overflow-hidden z-10">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Notifications
+            </h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={notificationRedict}
+                className="px-3 py-1 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700"
+              >
+                View all
+              </button>
+              <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <span className="text-2xl">&times;</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex border-b">
+            <button
+              onClick={() => handleTabChange("notifications")}
+              className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 ${
+                activeTab === "notifications"
+                  ? "border-purple-600 text-purple-600 bg-purple-50"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Notifications
+              <span className="ml-2 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                {notificationCount}
+              </span>
+            </button>
+            <button
+              onClick={() => handleTabChange("activity")}
+              className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 ${
+                activeTab === "activity"
+                  ? "border-purple-600 text-purple-600 bg-purple-50"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Activity log
+              <span className="ml-2 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                {activityCount}
+              </span>
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="max-h-96 overflow-y-auto">
+            {error && (
+              <div className="p-4 text-center">
+                <p className="text-red-500 text-sm mb-2">{error}</p>
+                <button
+                  onClick={() =>
+                    activeTab === "notifications"
+                      ? fetchNotificationHistoryData(1, false)
+                      : fetchActivityHistoryData(1, false)
+                  }
+                  className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {loading && (
+              <div className="p-2">
+                {Array.from({ length: 5 }).map((_, index) =>
+                  activeTab === "notifications" ? (
+                    <NotificationShimmer key={index} />
+                  ) : (
+                    <ActivityShimmer key={index} />
+                  )
+                )}
+              </div>
+            )}
+
+            {!loading && !error && (
+              <>
+                {activeTab === "notifications" && (
+                  <div className="p-2">
+                    {notifications.length > 0 ? (
+                      <>
+                        {notifications.map(renderNotificationItem)}
+
+                        {/* Load More Button for Notifications */}
+                        {canLoadMoreNotifications() && (
+                          <div className="p-4 text-center">
+                            <button
+                              onClick={loadMoreNotifications}
+                              disabled={loadingMore}
+                              className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {loadingMore ? "Loading..." : "Load More"}
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Loading More Shimmer */}
+                        {loadingMore && (
+                          <div className="p-2">
+                            {Array.from({ length: 3 }).map((_, index) => (
+                              <NotificationShimmer key={`loading-${index}`} />
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="p-4 text-center text-gray-500">
+                        <p>No notifications found</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === "activity" && (
+                  <>
+                    {activities.length > 0 ? (
+                      <>
+                        {activities.map(renderActivityItem)}
+
+                        {/* Load More Button for Activities */}
+                        {canLoadMoreActivities() && (
+                          <div className="p-4 text-center">
+                            <button
+                              onClick={loadMoreActivities}
+                              disabled={loadingMore}
+                              className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {loadingMore ? "Loading..." : "Load More"}
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Loading More Shimmer */}
+                        {loadingMore && (
+                          <div className="p-2">
+                            {Array.from({ length: 3 }).map((_, index) => (
+                              <ActivityShimmer key={`loading-${index}`} />
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="p-4 text-center text-gray-500">
+                        <p>No recent activity</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop layout
   return (
-    <div className="fixed inset-0 z-50 ">
+    <div className="fixed inset-0 z-50">
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/40 bg-opacity-50"
@@ -110,10 +511,10 @@ const NotificationsPopup = ({ isOpen, onClose, showFullDisplay }) => {
 
       {/* Popup positioned to span from sidebar to right edge */}
       <div
-        className="absolute top-0 bottom-0 w-[300px] bg-white shadow-xl  z-10"
+        className="absolute top-0 bottom-0 w-[300px] bg-white shadow-xl z-10"
         style={{
           left: `${sidebarWidth}px`,
-          right: "20px", // This makes it span to the right edge with 20px margin
+          right: "20px",
         }}
       >
         {/* Header */}
@@ -121,7 +522,7 @@ const NotificationsPopup = ({ isOpen, onClose, showFullDisplay }) => {
           <h2 className="text-ld font-semibold text-gray-900">Notifications</h2>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => notificationRedict()}
+              onClick={notificationRedict}
               className="px-3 py-1 cursor-pointer bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700"
             >
               View all
@@ -132,68 +533,137 @@ const NotificationsPopup = ({ isOpen, onClose, showFullDisplay }) => {
         {/* Tabs */}
         <div className="flex flex-col gap-2 p-4">
           <button
-            onClick={() => setActiveTab("notifications")}
+            onClick={() => handleTabChange("notifications")}
             className={`flex-1 px-4 py-3 text-sm font-medium border-1 cursor-pointer rounded-sm ${
               activeTab === "notifications"
-                ? "border-purple-600 text-purple-600 "
+                ? "border-purple-600 text-purple-600"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
             Notifications
             <span className="ml-2 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-              122
+              {notificationCount}
             </span>
           </button>
           <button
-            onClick={() => setActiveTab("activity")}
+            onClick={() => handleTabChange("activity")}
             className={`flex-1 px-4 py-3 text-sm font-medium cursor-pointer border-1 ${
               activeTab === "activity"
-                ? "border-purple-600 text-purple-600 "
+                ? "border-purple-600 text-purple-600"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
             Activity log
             <span className="ml-2 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-              1
+              {activityCount}
             </span>
           </button>
         </div>
 
-        {/* Content - Remove max-height restriction to fill available space */}
+        {/* Content */}
         <div className="flex-1 overflow-y-auto h-[calc(100vh-200px)]">
-          {activeTab === "notifications" && (
-            <>
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className="flex items-start gap-3 p-3 hover:bg-gray-50 border-b-1 border-gray-200 rounded-lg"
-                >
-                  <div className="flex-shrink-0 w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs text-green-600 font-medium">
-                        New
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {notification.date}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-900 font-medium mb-1">
-                      {notification.title}
-                    </p>
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      {notification.subtitle}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </>
+          {error && (
+            <div className="p-4 text-center">
+              <p className="text-red-500 text-sm mb-2">{error}</p>
+              <button
+                onClick={() =>
+                  activeTab === "notifications"
+                    ? fetchNotificationHistoryData(1, false)
+                    : fetchActivityHistoryData(1, false)
+                }
+                className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+              >
+                Retry
+              </button>
+            </div>
           )}
 
-          {activeTab === "activity" && (
-            <div className="p-4 text-center text-gray-500">
-              <p>No recent activity</p>
+          {loading && (
+            <div className="p-2">
+              {Array.from({ length: 5 }).map((_, index) =>
+                activeTab === "notifications" ? (
+                  <NotificationShimmer key={index} />
+                ) : (
+                  <ActivityShimmer key={index} />
+                )
+              )}
             </div>
+          )}
+
+          {!loading && !error && (
+            <>
+              {activeTab === "notifications" && (
+                <>
+                  {notifications.length > 0 ? (
+                    <>
+                      {notifications.map(renderNotificationItem)}
+
+                      {/* Load More Button for Notifications */}
+                      {canLoadMoreNotifications() && (
+                        <div className="p-4 text-center">
+                          <button
+                            onClick={loadMoreNotifications}
+                            disabled={loadingMore}
+                            className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {loadingMore ? "Loading..." : "Load More"}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Loading More Shimmer */}
+                      {loadingMore && (
+                        <div className="p-2">
+                          {Array.from({ length: 3 }).map((_, index) => (
+                            <NotificationShimmer key={`loading-${index}`} />
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="p-4 text-center text-gray-500">
+                      <p>No notifications found</p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {activeTab === "activity" && (
+                <>
+                  {activities.length > 0 ? (
+                    <>
+                      {activities.map(renderActivityItem)}
+
+                      {/* Load More Button for Activities */}
+                      {canLoadMoreActivities() && (
+                        <div className="p-4 text-center">
+                          <button
+                            onClick={loadMoreActivities}
+                            disabled={loadingMore}
+                            className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {loadingMore ? "Loading..." : "Load More"}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Loading More Shimmer */}
+                      {loadingMore && (
+                        <div className="p-2">
+                          {Array.from({ length: 3 }).map((_, index) => (
+                            <ActivityShimmer key={`loading-${index}`} />
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="p-4 text-center text-gray-500">
+                      <p>No recent activity</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -206,11 +676,29 @@ const LeftMenuBar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [salesExpanded, setSalesExpanded] = useState(false);
-  const [activeTab, setActiveTab] = useState("notifications"); // Add this line
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const { currentUser } = useSelector((state) => state.currentUser);
   const name = currentUser?.first_name?.slice(0, 2).toUpperCase();
   const userName = currentUser?.first_name;
+
+  // Fetch notification count for badge
+  const fetchNotificationCountForBadge = async () => {
+    try {
+      const token = getCookie("auth_token") || currentUser?.token;
+      const data = await fetchNotificationHistory(token, { page: 1 });
+      if (data && data.unread_count !== undefined) {
+        setNotificationCount(data.unread_count || 0);
+      }
+    } catch (err) {
+      console.error("Error fetching notification count:", err);
+    }
+  };
+
+  // Fetch notification count on component mount
+  useEffect(() => {
+    fetchNotificationCountForBadge();
+  }, []);
 
   // Updated sales sub items to match your requirements with counts
   const salesSubItems = [
@@ -250,12 +738,12 @@ const LeftMenuBar = () => {
   const leftPaneValues = [
     {
       image: showFullDisplay ? "" : arrowRight,
-      icon: <LeftArrowIcon className="size-4 stroke-white" />, // Use fallback icon
+      icon: <LeftArrowIcon className="size-4 stroke-white" />,
       name: "Minimise",
     },
     {
-      text: "US", //userName,
-      name: "User", //userName,
+      text: "US",
+      name: "User",
       key: "name",
       route: "settings/myAccount",
     },
@@ -270,7 +758,7 @@ const LeftMenuBar = () => {
       name: "Notifications",
       key: "notifications",
       isNotification: true,
-      badge: 122,
+      badge: notificationCount,
     },
     {
       image: addSquare,
@@ -303,7 +791,6 @@ const LeftMenuBar = () => {
       key: "reports",
       route: "reports",
     },
-   
     {
       image: Bulkticket,
       name: "TX Trade",
@@ -333,7 +820,7 @@ const LeftMenuBar = () => {
       const salesActiveKey = getSalesActiveState();
       if (salesActiveKey) {
         setActive(salesActiveKey);
-        setSalesExpanded(true); // Auto-expand sales menu if on a sales page
+        setSalesExpanded(true);
       }
     } else {
       setActive(currentPath);
@@ -387,56 +874,7 @@ const LeftMenuBar = () => {
     router.push("/login");
   };
 
-  // Static notification data for mobile
-  const notifications = [
-    {
-      id: 1,
-      type: "new",
-      date: "10 Jun",
-      title: "There is a new open order for 2 ticket(s) for Chris Brown",
-      subtitle:
-        "Cardiff on 19-06-2025 at 16:00. See dashboard if you want to submit an offer.",
-      isNew: true,
-    },
-    {
-      id: 2,
-      type: "new",
-      date: "09 Jun",
-      title:
-        "There is a new open order for 1 ticket(s) for Billie Eilish Paris",
-      subtitle:
-        "on 10-06-2025 at 20:30. See dashboard if you want to submit an offer.",
-      isNew: true,
-    },
-    {
-      id: 3,
-      type: "new",
-      date: "26 May",
-      title: "There is a new open order for 2 ticket(s) for Tate McRae",
-      subtitle:
-        "London on 24-06-2025 at 19:30. See dashboard if you want to submit an offer.",
-      isNew: true,
-    },
-    {
-      id: 4,
-      type: "new",
-      date: "23 May",
-      title: "There is a new open order for 3 ticket(s) for Billie Eilish",
-      subtitle:
-        "London on 14-07-2025 at 20:00. See dashboard if you want to submit an offer.",
-      isNew: true,
-    },
-    {
-      id: 5,
-      type: "new",
-      date: "23 May",
-      title: "There is a new open order for 2 ticket(s) for Billie Eilish",
-      subtitle:
-        "London on 14-07-2025 at 20:00. See dashboard if you want to submit an offer.",
-      isNew: true,
-    },
-  ];
-
+  // Mobile view with updated notification handling
   if (isMobile) {
     return (
       <>
@@ -521,13 +959,8 @@ const LeftMenuBar = () => {
                                 : "text-gray-300 hover:bg-[#5f6365] rounded-md"
                             }`}
                           >
-                            {/* Left border line */}
                             <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-400"></div>
-
-                            {/* Horizontal connecting line */}
                             <div className="absolute left-0 top-1/2 w-4 h-0.5 bg-gray-400 -translate-y-1/2"></div>
-
-                            {/* Vertical connecting lines between items */}
                             {subIndex < item?.subItems?.length - 1 && (
                               <div className="absolute left-0 top-1/2 bottom-0 w-0.5 bg-gray-400"></div>
                             )}
@@ -562,104 +995,11 @@ const LeftMenuBar = () => {
         </div>
 
         {/* Notifications Popup for Mobile */}
-        <div className={`${notificationsOpen ? "block" : "hidden"}`}>
-          <div className="fixed inset-0 z-50">
-            {/* Overlay */}
-            <div
-              className="absolute inset-0 bg-black bg-opacity-50"
-              onClick={() => setNotificationsOpen(false)}
-            />
-
-            {/* Popup positioned from left */}
-            <div className="absolute top-20 left-4 right-4 bg-white rounded-lg shadow-xl max-h-[80vh] overflow-hidden z-10">
-              {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Notifications
-                </h2>
-                <div className="flex items-center gap-2">
-                  <button className="px-3 py-1 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700">
-                    View all
-                  </button>
-                  <button
-                    onClick={() => setNotificationsOpen(false)}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    <span className="text-2xl">&times;</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Tabs */}
-              <div className="flex border-b">
-                <button
-                  onClick={() => setActiveTab("notifications")}
-                  className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 ${
-                    activeTab === "notifications"
-                      ? "border-purple-600 text-purple-600 bg-purple-50"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  Notifications
-                  <span className="ml-2 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                    122
-                  </span>
-                </button>
-                <button
-                  onClick={() => setActiveTab("activity")}
-                  className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 ${
-                    activeTab === "activity"
-                      ? "border-purple-600 text-purple-600 bg-purple-50"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  Activity log
-                  <span className="ml-2 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                    1
-                  </span>
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="max-h-96 overflow-y-auto">
-                {activeTab === "notifications" && (
-                  <div className="p-2">
-                    {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg"
-                      >
-                        <div className="flex-shrink-0 w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs text-green-600 font-medium">
-                              New
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {notification.date}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-900 font-medium mb-1">
-                            {notification.title}
-                          </p>
-                          <p className="text-xs text-gray-600 leading-relaxed">
-                            {notification.subtitle}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {activeTab === "activity" && (
-                  <div className="p-4 text-center text-gray-500">
-                    <p>No recent activity</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        <NotificationsPopup
+          isOpen={notificationsOpen}
+          onClose={() => setNotificationsOpen(false)}
+          showFullDisplay={false} // Mobile always uses compact layout
+        />
 
         {/* Overlay when menu is open */}
         {(mobileMenuOpen || notificationsOpen) && (
@@ -726,7 +1066,7 @@ const LeftMenuBar = () => {
                       {item?.name}
                     </div>
                   )}
-                  {item?.badge && showFullDisplay && (
+                  {item?.badge && item?.badge > 0 && showFullDisplay && (
                     <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
                       {item?.badge}
                     </span>
@@ -757,13 +1097,8 @@ const LeftMenuBar = () => {
                             : "text-gray-300 hover:bg-[#5f6365]"
                         }`}
                       >
-                        {/* Left border line */}
                         <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-400"></div>
-
-                        {/* Horizontal connecting line */}
                         <div className="absolute left-0 top-1/2 w-4 h-0.5 bg-gray-400 -translate-y-1/2"></div>
-
-                        {/* Vertical connecting lines between items */}
                         {subIndex < item?.subItems?.length - 1 && (
                           <div className="absolute left-0 top-1/2 bottom-0 w-0.5 bg-gray-400"></div>
                         )}

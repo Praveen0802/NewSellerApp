@@ -30,10 +30,16 @@ const SubjectDescriptionPopup = ({ show, onClose }) => {
       subject,
       description,
     };
+    if (!subject || !description) {
+      toast.error(`Please fill in  ${!subject ? "subject" : "description"}`, {
+        position: "top-center",
+      });
+      return;
+    }
     setLoading(true);
     const response = await requestFeature(getAuthToken(), payload);
     if (response?.success === true) {
-      toast.success("Feature request submitted successfully");
+      toast.success("Feature request submitted successfully!");
       clearAllFields();
       onClose({ submit: true });
     } else {
@@ -73,6 +79,7 @@ const SubjectDescriptionPopup = ({ show, onClose }) => {
               paddingClassName=""
               autoComplete="off"
               placeholder="Enter the subject of your feature request"
+              mandatory={true}
             />
             <FloatingLabelTextarea
               id="description"
@@ -85,11 +92,15 @@ const SubjectDescriptionPopup = ({ show, onClose }) => {
               rows={5}
               maxLength={500}
               placeholder="Describe the feature you would like to request"
+              mandatory={true}
+              autoComplete="off"
             />
           </div>
         </div>
         <FooterButton
-          isFormValid={() => true}
+          isFormValid={() => {
+            return subject && description;
+          }}
           onClose={() => {
             onClose();
           }}

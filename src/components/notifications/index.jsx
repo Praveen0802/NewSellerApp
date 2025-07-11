@@ -1,158 +1,83 @@
-// Static JSON data - moved outside component
-const staticNotificationsData = [
-  {
-    id: 1,
-    type: "new_order",
-    title:
-      "There is a new open order for 2 ticket(s) for Chris Brown Cardiff on 19-06-2025 at 18:00. See dashboard if you want to submit an offer.",
-    date: "Tue 10 Jun 2025 11:41",
-    status: "new",
-    isRead: false,
-    category: "order",
-    ticketCount: 2,
-    artist: "Chris Brown",
-    venue: "Cardiff",
-  },
-  {
-    id: 2,
-    type: "new_order",
-    title:
-      "There is a new open order for 1 ticket(s) for Billie Eilish Paris on 10-06-2025 at 20:30. See dashboard if you want to submit an offer.",
-    date: "Sat 7 Jun 2025 10:16",
-    status: "new",
-    isRead: false,
-    category: "order",
-    ticketCount: 1,
-    artist: "Billie Eilish",
-    venue: "Paris",
-  },
-  {
-    id: 3,
-    type: "new_order",
-    title:
-      "There is a new open order for 2 ticket(s) for Tate McRae London on 24-06-2025 at 19:30. See dashboard if you want to submit an offer.",
-    date: "Wed 28 May 2025 23:25",
-    status: "new",
-    isRead: false,
-    category: "order",
-    ticketCount: 2,
-    artist: "Tate McRae",
-    venue: "London",
-  },
-  {
-    id: 4,
-    type: "new_order",
-    title:
-      "There is a new open order for 3 ticket(s) for Billie Eilish London on 14-07-2025 at 20:00. See dashboard if you want to submit an offer.",
-    date: "Fri 23 May 2025 16:40",
-    status: "new",
-    isRead: false,
-    category: "order",
-    ticketCount: 3,
-    artist: "Billie Eilish",
-    venue: "London",
-  },
-  {
-    id: 5,
-    type: "new_order",
-    title:
-      "There is a new open order for 2 ticket(s) for Billie Eilish London on 14-07-2025 at 20:00. See dashboard if you want to submit an offer.",
-    date: "Fri 23 May 2025 16:49",
-    status: "new",
-    isRead: false,
-    category: "order",
-    ticketCount: 2,
-    artist: "Billie Eilish",
-    venue: "London",
-  },
-  {
-    id: 6,
-    type: "new_order",
-    title:
-      "There is a new open order for 2 ticket(s) for Billie Eilish London on 14-07-2025 at 20:00. See dashboard if you want to submit an offer.",
-    date: "Fri 23 May 2025 16:38",
-    status: "new",
-    isRead: false,
-    category: "order",
-    ticketCount: 2,
-    artist: "Billie Eilish",
-    venue: "London",
-  },
-];
+// Helper function to transform API notification data to component format
+const transformNotificationData = (apiData) => {
+  if (!apiData?.data?.notification_list) return [];
 
-const staticActivityData = [
-  {
-    id: 1,
-    type: "login",
-    title: "Amir Khan (283) has logged in on 21-06-2025 at 10:51.",
-    date: "Sat 21 Jun 2025 10:51",
+  return apiData.data.notification_list.map((item) => ({
+    id: item.id,
+    type: "seller_notification",
+    title: item.description,
+    date: new Date(item.created_at * 1000).toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    status: item.viewed ? "read" : "new",
+    isRead: item.viewed === 1,
+    category: "order",
+    isPinned: item.pinned === 1,
+    // Extract ticket info from description if available
+    ticketCount: extractTicketCount(item.description),
+    artist: extractEventName(item.description),
+    venue: extractVenue(item.description),
+    rawTimestamp: item.created_at,
+  }));
+};
+
+// Helper function to transform API activity data to component format
+const transformActivityData = (apiData) => {
+  if (!apiData?.data?.activity_list) return [];
+
+  return apiData.data.activity_list.map((item) => ({
+    id: item.id,
+    type: item.type,
+    title: item.description,
+    date: new Date(item.created_at * 1000).toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
     status: "completed",
     category: "authentication",
-    userId: 283,
-    userName: "Amir Khan",
-  },
-  {
-    id: 2,
-    type: "login",
-    title: "Ajith 1Box (4068) has logged in on 19-06-2025 at 07:55.",
-    date: "Thu 19 Jun 2025 07:55",
-    status: "completed",
-    category: "authentication",
-    userId: 4068,
-    userName: "Ajith 1Box",
-  },
-  {
-    id: 3,
-    type: "login",
-    title: "Ajith 1Box (4068) has logged in on 16-06-2025 at 08:06.",
-    date: "Mon 16 Jun 2025 08:06",
-    status: "completed",
-    category: "authentication",
-    userId: 4068,
-    userName: "Ajith 1Box",
-  },
-  {
-    id: 4,
-    type: "login",
-    title: "Ajith 1Box (4068) has logged in on 16-06-2025 at 06:40.",
-    date: "Mon 16 Jun 2025 06:40",
-    status: "completed",
-    category: "authentication",
-    userId: 4068,
-    userName: "Ajith 1Box",
-  },
-  {
-    id: 5,
-    type: "login",
-    title: "Ajith 1Box (4068) has logged in on 13-06-2025 at 11:06.",
-    date: "Fri 13 Jun 2025 11:06",
-    status: "completed",
-    category: "authentication",
-    userId: 4068,
-    userName: "Ajith 1Box",
-  },
-  {
-    id: 6,
-    type: "login",
-    title: "Ajith 1Box (4068) has logged in on 12-06-2025 at 08:16.",
-    date: "Thu 12 Jun 2025 08:16",
-    status: "completed",
-    category: "authentication",
-    userId: 4068,
-    userName: "Ajith 1Box",
-  },
-  {
-    id: 7,
-    type: "listing",
-    title:
-      "Ajith 1Box (4068) has published a listing Main Grandstand Row PREMIUM for Formula 1 Abu Dhabi Grand Prix 2025 - 3-Day Pass on 05-12-2025 at 09:59.",
-    date: "Wed 11 Jun 2025 11:22",
-    status: "completed",
-    category: "listing",
-    userId: 4068,
-    userName: "Ajith 1Box",
-  },
-];
+    userId: extractUserId(item.description),
+    userName: extractUserName(item.description),
+    activityType: item.type,
+    rawTimestamp: item.created_at,
+  }));
+};
+
+// Helper functions to extract information from descriptions
+const extractTicketCount = (description) => {
+  const match = description.match(/(\d+)\s+ticket\(s\)/);
+  return match ? parseInt(match[1]) : 1;
+};
+
+const extractEventName = (description) => {
+  // Extract event name from order descriptions
+  const match = description.match(/for\s+(.+?)\s+on\s+\d{4}-\d{2}-\d{2}/);
+  return match ? match[1] : "Event";
+};
+
+const extractVenue = (description) => {
+  // For this API, venue info might not be directly available
+  // You may need to extract it differently based on your data structure
+  return "Venue";
+};
+
+const extractUserId = (description) => {
+  const match = description.match(/#(\d+)/);
+  return match ? parseInt(match[1]) : null;
+};
+
+const extractUserName = (description) => {
+  const match = description.match(/\(([^)]+)\)/);
+  return match ? match[1] : "User";
+};
 
 // Updated Popup component - positioned on the right side
 const NotificationPopup = ({ item, onClose, isVisible }) => {
@@ -160,7 +85,7 @@ const NotificationPopup = ({ item, onClose, isVisible }) => {
 
   return (
     <RightViewModal show={isVisible} onClose={onClose}>
-      <div className="bg-white h-full  shadow-xl overflow-y-auto">
+      <div className="bg-white h-full shadow-xl overflow-y-auto">
         {/* Close button - positioned at top right of panel */}
         <button
           onClick={onClose}
@@ -175,9 +100,9 @@ const NotificationPopup = ({ item, onClose, isVisible }) => {
             <span className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded">
               {item.status === "new"
                 ? "New"
-                : item.type === "login"
-                ? "Login"
-                : "Activity"}
+                : item.type === "logged_in" || item.type === "logged_out"
+                ? "Activity"
+                : "Notification"}
             </span>
           </div>
           <h3 className="text-sm font-medium text-gray-900 pr-8">
@@ -191,30 +116,43 @@ const NotificationPopup = ({ item, onClose, isVisible }) => {
             {item.title}
           </p>
 
-          {item.type === "new_order" && (
+          {item.type === "seller_notification" && (
             <div className="bg-gray-50 p-3 rounded-lg">
               <div className="text-xs text-gray-600 space-y-1">
-                <div>
-                  <strong>Artist:</strong> {item.artist}
-                </div>
-                <div>
-                  <strong>Venue:</strong> {item.venue}
-                </div>
-                <div>
-                  <strong>Tickets:</strong> {item.ticketCount}
-                </div>
+                {item.artist && (
+                  <div>
+                    <strong>Event:</strong> {item.artist}
+                  </div>
+                )}
+                {item.venue && (
+                  <div>
+                    <strong>Venue:</strong> {item.venue}
+                  </div>
+                )}
+                {item.ticketCount && (
+                  <div>
+                    <strong>Tickets:</strong> {item.ticketCount}
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {item.type === "login" && (
+          {(item.type === "logged_in" || item.type === "logged_out") && (
             <div className="bg-gray-50 p-3 rounded-lg">
               <div className="text-xs text-gray-600 space-y-1">
+                {item.userName && (
+                  <div>
+                    <strong>User:</strong> {item.userName}
+                  </div>
+                )}
+                {item.userId && (
+                  <div>
+                    <strong>User ID:</strong> {item.userId}
+                  </div>
+                )}
                 <div>
-                  <strong>User:</strong> {item.userName}
-                </div>
-                <div>
-                  <strong>User ID:</strong> {item.userId}
+                  <strong>Activity:</strong> {item.type.replace("_", " ")}
                 </div>
               </div>
             </div>
@@ -235,7 +173,7 @@ const NotificationPopup = ({ item, onClose, isVisible }) => {
   );
 };
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 // Import your existing TabbedLayout component
 import TabbedLayout from "../tabbedLayout";
 import RightViewModal from "../commonComponents/rightViewModal";
@@ -244,7 +182,9 @@ import FloatingCheckbox from "../floatinginputFields/floatingCheckBox";
 
 // NotificationPage component
 const NotificationPage = (props) => {
-  const { notify } = props;
+  const { notify, notifyData } = props;
+  console.log("NotificationPage props:", props);
+
   const [filtersApplied, setFiltersApplied] = useState({
     upcomming: 0,
     expired: 0,
@@ -256,6 +196,21 @@ const NotificationPage = (props) => {
   const [popupItem, setPopupItem] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
 
+  // Transform API data to component format
+  const [notificationData, setNotificationData] = useState([]);
+  const [activityData, setActivityData] = useState([]);
+
+  useEffect(() => {
+    // Transform the API data when component mounts or data changes
+    if (notifyData) {
+      if (notify === "home") {
+        setNotificationData(transformNotificationData(notifyData));
+      } else if (notify === "activity") {
+        setActivityData(transformActivityData(notifyData));
+      }
+    }
+  }, [notifyData, notify]);
+
   const [actionBarStates, setActionBarStates] = useState({
     selectAll: false,
     markAsViewed: false,
@@ -266,6 +221,18 @@ const NotificationPage = (props) => {
   // Add these arrays to track item states
   const [pinnedItems, setPinnedItems] = useState([]); // Track pinned items
   const [viewedItems, setViewedItems] = useState([]); // Track viewed items
+
+  // Initialize pinned and viewed items from API data
+  useEffect(() => {
+    if (notificationData.length > 0) {
+      setPinnedItems(
+        notificationData.filter((item) => item.isPinned).map((item) => item.id)
+      );
+      setViewedItems(
+        notificationData.filter((item) => item.isRead).map((item) => item.id)
+      );
+    }
+  }, [notificationData]);
 
   // Updated handler functions
   const handleActionBarChange = (e, keyValue) => {
@@ -293,6 +260,8 @@ const NotificationPage = (props) => {
           console.log("Marking as viewed:", selectedItems);
           // Add selected items to viewed items
           setViewedItems((prev) => [...new Set([...prev, ...selectedItems])]);
+          // TODO: Call API to mark as viewed
+          // markNotificationsAsViewed(selectedItems);
           // Reset the checkbox after action
           setTimeout(() => {
             setActionBarStates((prev) => ({ ...prev, markAsViewed: false }));
@@ -302,6 +271,8 @@ const NotificationPage = (props) => {
           console.log("Marking as pinned:", selectedItems);
           // Add selected items to pinned items
           setPinnedItems((prev) => [...new Set([...prev, ...selectedItems])]);
+          // TODO: Call API to mark as pinned
+          // markNotificationsAsPinned(selectedItems);
           // Reset the checkbox after action
           setTimeout(() => {
             setActionBarStates((prev) => ({ ...prev, markAsPinned: false }));
@@ -313,6 +284,8 @@ const NotificationPage = (props) => {
           setPinnedItems((prev) =>
             prev.filter((id) => !selectedItems.includes(id))
           );
+          // TODO: Call API to mark as unpinned
+          // markNotificationsAsUnpinned(selectedItems);
           // Reset the checkbox after action
           setTimeout(() => {
             setActionBarStates((prev) => ({ ...prev, markAsUnpinned: false }));
@@ -322,18 +295,36 @@ const NotificationPage = (props) => {
     }
   };
 
+  // Get counts from API data
+  const getNotificationCounts = () => {
+    const total = notifyData?.data?.notification_count || 0;
+    const unread = notifyData?.data?.unread_count || 0;
+    return { total, unread };
+  };
+
+  const getActivityCounts = () => {
+    const total = notifyData?.data?.activity_count || 0;
+    const recent = activityData.filter((item) => {
+      const itemDate = new Date(item.rawTimestamp * 1000);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return itemDate > weekAgo;
+    }).length;
+    return { total, recent };
+  };
+
   // Configuration for tabs
   const tabsConfig = [
     {
       name: "Notifications",
       key: "home",
-      count: staticNotificationsData.length,
+      count: getNotificationCounts().total,
       route: "/notifications/home",
     },
     {
       name: "Activity",
       key: "activity",
-      count: staticActivityData.length,
+      count: getActivityCounts().total,
       route: "/notifications/activity",
     },
   ];
@@ -341,25 +332,20 @@ const NotificationPage = (props) => {
   // Configuration for list items per tab
   const listItemsConfig = {
     home: [
-      { name: "Notifications", value: staticNotificationsData.length },
+      { name: "Notifications", value: getNotificationCounts().total },
       {
         name: "New Notifications",
-        value: staticNotificationsData.filter((n) => !n.isRead).length,
+        value: getNotificationCounts().unread,
         showCheckbox: true,
         key: "upcomming",
         isChecked: false,
       },
     ],
     activity: [
-      { name: "Activity Logs", value: staticActivityData.length },
+      { name: "Activity Logs", value: getActivityCounts().total },
       {
         name: "Recent Activity",
-        value: staticActivityData.filter((a) => {
-          const activityDate = new Date(a.date);
-          const weekAgo = new Date();
-          weekAgo.setDate(weekAgo.getDate() - 7);
-          return activityDate > weekAgo;
-        }).length,
+        value: getActivityCounts().recent,
         showCheckbox: true,
         key: "expired",
         isChecked: false,
@@ -410,8 +396,10 @@ const NotificationPage = (props) => {
         label: "Team members",
         options: [
           { value: "none", label: "None" },
-          { value: "283", label: "Amir Khan" },
-          { value: "4068", label: "Ajith 1Box" },
+          // Generate options from unique users in activity data
+          ...Array.from(new Set(activityData.map((item) => item.userName)))
+            .filter(Boolean)
+            .map((userName) => ({ value: userName, label: userName })),
         ],
         parentClassName: "!w-[30%]",
         className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
@@ -423,9 +411,11 @@ const NotificationPage = (props) => {
         label: "Activity type",
         options: [
           { value: "none", label: "None" },
-          { value: "login", label: "Login" },
-          { value: "order", label: "Order" },
-          { value: "listing", label: "Listing" },
+          // Generate options from activity types in API data
+          ...(notifyData?.data?.activity_types || []).map((type) => ({
+            value: type.type,
+            label: type.name,
+          })),
         ],
         parentClassName: "!w-[30%]",
         className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
@@ -455,6 +445,7 @@ const NotificationPage = (props) => {
       allFilters,
       currentTab,
     });
+    // TODO: Implement API call to filter data
   };
 
   const handleCheckboxToggle = (checkboxKey, isChecked, allCheckboxValues) => {
@@ -472,6 +463,7 @@ const NotificationPage = (props) => {
     };
 
     setFiltersApplied(params);
+    // TODO: Implement API call to fetch filtered data
   };
 
   // Handle item selection
@@ -483,22 +475,6 @@ const NotificationPage = (props) => {
         return [...prev, itemId];
       }
     });
-  };
-
-  const handleMarkAsViewed = () => {
-    console.log("Marking as viewed:", selectedItems);
-    // Add your mark as viewed logic here
-    setSelectedItems([]);
-  };
-
-  const handleMarkAsPinned = () => {
-    console.log("Marking as pinned:", selectedItems);
-    // Add your mark as pinned logic here
-  };
-
-  const handleMarkAsUnpinned = () => {
-    console.log("Marking as unpinned:", selectedItems);
-    // Add your mark as unpinned logic here
   };
 
   // Handle popup
@@ -514,7 +490,7 @@ const NotificationPage = (props) => {
 
   // Get current data based on active tab
   const getCurrentData = () => {
-    return activeTab === "home" ? staticNotificationsData : staticActivityData;
+    return activeTab === "home" ? notificationData : activityData;
   };
 
   const handleSelectAll = () => {
@@ -586,9 +562,9 @@ const NotificationPage = (props) => {
                 <span className="text-xs text-gray-500 font-medium">
                   {item.status === "new"
                     ? "New"
-                    : item.type === "login"
-                    ? "Login"
-                    : "Activity"}
+                    : item.type === "logged_in" || item.type === "logged_out"
+                    ? "Activity"
+                    : "Notification"}
                 </span>
                 <span className="text-xs text-gray-400">{item.date}</span>
                 {isPinned && (
@@ -621,6 +597,31 @@ const NotificationPage = (props) => {
     );
   };
 
+  // Loading state
+  if (!notifyData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading notifications...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (notifyData && !notifyData.success) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-2">Error loading notifications</p>
+        </div>
+      </div>
+    );
+  }
+
+  const currentData = getCurrentData();
+
   return (
     <div className="min-h-screen bg-gray-50 relative">
       <TabbedLayout
@@ -638,15 +639,24 @@ const NotificationPage = (props) => {
         {/* List Header */}
         <div className="px-4 py-3 border-b border-gray-200">
           <h3 className="text-sm font-medium text-gray-900">
-            {getCurrentData().length}{" "}
-            {activeTab === "home" ? "Notifications" : "Logs"}
+            {currentData.length}{" "}
+            {activeTab === "home" ? "Notifications" : "Activity Logs"}
           </h3>
         </div>
 
         {/* List Items */}
-        <div className="divide-y divide-gray-100">
-          {getCurrentData().map((item, index) => renderListItem(item, index))}
-        </div>
+        {currentData.length > 0 ? (
+          <div className="divide-y divide-gray-100">
+            {currentData.map((item, index) => renderListItem(item, index))}
+          </div>
+        ) : (
+          <div className="p-8 text-center text-gray-500">
+            <p>
+              No {activeTab === "home" ? "notifications" : "activity logs"}{" "}
+              found
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Bottom Action Bar - Fixed */}
@@ -661,8 +671,8 @@ const NotificationPage = (props) => {
                 keyValue="selectAll"
                 label="Select all"
                 checked={
-                  selectedItems.length === getCurrentData().length &&
-                  getCurrentData().length > 0
+                  selectedItems.length === currentData.length &&
+                  currentData.length > 0
                 }
                 onChange={handleActionBarChange}
                 className=""
