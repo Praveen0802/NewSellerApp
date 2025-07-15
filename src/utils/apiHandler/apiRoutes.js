@@ -72,4 +72,6 @@ export const API_ROUTES = {
   REQUEST_FEATURE: "/settings/request-feature",
   NOTIFICATION_HISTORY: "/notification/notification-history",
   NOTIFICATION_ACTIVITY_HISTORY: "/notification/activity-history",
+  NOTIFICATION_UPDATE: "/notification/update-notification",
+  GET_NOTIFICATION_COUNT: "/ui-settings/menu-notification",
 };

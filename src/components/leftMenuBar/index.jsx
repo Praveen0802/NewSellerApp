@@ -17,11 +17,13 @@ import { Menu, Bell, ChevronDown, ChevronRight } from "lucide-react";
 import useIsMobile from "@/utils/helperFunctions/useIsmobile";
 import { useRouter } from "next/router";
 import { setCookie, getCookie } from "@/utils/helperFunctions/cookie";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   fetchNotificationHistory,
   fetchActivityHistory,
+  fetchNotificationCount,
 } from "@/utils/apiHandler/request";
+import { updateNotificationCount } from "@/utils/redux/common/action";
 
 // Temporary fallback for IconStore.leftArrow if import fails
 const LeftArrowIcon = ({ className }) => (
@@ -111,8 +113,6 @@ const NotificationsPopup = ({
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
-  const [notificationCount, setNotificationCount] = useState(0);
-  const [activityCount, setActivityCount] = useState(0);
 
   // Pagination states
   const [notificationMeta, setNotificationMeta] = useState({});
@@ -123,6 +123,8 @@ const NotificationsPopup = ({
   const router = useRouter();
   const isMobile = useIsMobile();
   const { currentUser } = useSelector((state) => state.currentUser);
+  const { notificationCountData } = useSelector((state) => state.common);
+  const dispatch = useDispatch();
 
   // API functions using your actual API calls
   const fetchNotificationHistoryData = async (page = 1, append = false) => {
@@ -151,7 +153,12 @@ const NotificationsPopup = ({
           setNotifications(newNotifications);
         }
 
-        setNotificationCount(data.unread_count || 0);
+        dispatch(
+          updateNotificationCount({
+            ...notificationCountData,
+            notification: data.unread_count,
+          })
+        );
         setNotificationMeta(data.meta || {});
         setNotificationPage(page);
       } else {
@@ -190,7 +197,12 @@ const NotificationsPopup = ({
           setActivities(newActivities);
         }
 
-        setActivityCount(data.data.activity_count || 0);
+        dispatch(
+          updateNotificationCount({
+            ...notificationCountData,
+            activity: data.data.unread_count || data.data.activity_count,
+          })
+        );
         setActivityMeta(data.data.meta || {});
         setActivityPage(page);
       } else {
@@ -371,7 +383,7 @@ const NotificationsPopup = ({
             >
               Notifications
               <span className="ml-2 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                {notificationCount}
+                {notificationCountData?.notification}
               </span>
             </button>
             <button
@@ -384,7 +396,7 @@ const NotificationsPopup = ({
             >
               Activity log
               <span className="ml-2 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                {activityCount}
+                {notificationCountData?.activity}
               </span>
             </button>
           </div>
@@ -542,7 +554,7 @@ const NotificationsPopup = ({
           >
             Notifications
             <span className="ml-2 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-              {notificationCount}
+              {notificationCountData?.notification}
             </span>
           </button>
           <button
@@ -555,7 +567,7 @@ const NotificationsPopup = ({
           >
             Activity log
             <span className="ml-2 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-              {activityCount}
+              {notificationCountData?.activity}
             </span>
           </button>
         </div>
@@ -676,20 +688,24 @@ const LeftMenuBar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [salesExpanded, setSalesExpanded] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(0);
 
   const { currentUser } = useSelector((state) => state.currentUser);
+  const { notificationCountData } = useSelector((state) => state.common);
+
   const name = currentUser?.first_name?.slice(0, 2).toUpperCase();
   const userName = currentUser?.first_name;
+
+  const dispatch = useDispatch();
 
   // Fetch notification count for badge
   const fetchNotificationCountForBadge = async () => {
     try {
       const token = getCookie("auth_token") || currentUser?.token;
-      const data = await fetchNotificationHistory(token, { page: 1 });
-      if (data && data.unread_count !== undefined) {
-        setNotificationCount(data.unread_count || 0);
-      }
+      const { data } = (await fetchNotificationCount()) ?? {};
+      const { unread_count } = data;
+
+      // Update Redux store with notification count
+      dispatch(updateNotificationCount(unread_count));
     } catch (err) {
       console.error("Error fetching notification count:", err);
     }
@@ -697,8 +713,20 @@ const LeftMenuBar = () => {
 
   // Fetch notification count on component mount
   useEffect(() => {
-    fetchNotificationCountForBadge();
+    if (!notificationCountData.isLoaded) {
+      fetchNotificationCountForBadge();
+    }
   }, []);
+
+  function getUnReadNotificationCount(notificationCountData) {
+    if (notificationCountData?.isLoaded) {
+      const notification = Number(notificationCountData?.notification) || 0;
+      const activity = Number(notificationCountData?.activity) || 0;
+
+      return notification + activity;
+    }
+    return 0;
+  }
 
   // Updated sales sub items to match your requirements with counts
   const salesSubItems = [
@@ -758,7 +786,7 @@ const LeftMenuBar = () => {
       name: "Notifications",
       key: "notifications",
       isNotification: true,
-      badge: notificationCount,
+      badge: getUnReadNotificationCount(notificationCountData),
     },
     {
       image: addSquare,

@@ -1222,3 +1222,32 @@ export const fetchActivityHistory = async (token, params = {}) => {
     return error?.response?.data;
   }
 };
+
+export const updateNotification = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.NOTIFICATION_UPDATE}`,
+      method: "POST",
+      ...(token && { token: token }),
+      data: data,
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in updateNotification", error);
+    return error?.response?.data;
+  }
+};
+
+export const fetchNotificationCount = async (token) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.GET_NOTIFICATION_COUNT}`,
+      method: "GET",
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchNotificationCount", error);
+    return error?.response?.data;
+  }
+};
