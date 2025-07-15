@@ -213,11 +213,11 @@ const useNotification = ({
         },
         {
           type: "select",
-          name: "ticket_status",
-          label: "Ticket status",
+          name: "team_member",
+          label: "Team Member",
           options: [
-            { value: "fulfilled", label: "Fulfilled" },
-            { value: "incomplete", label: "Incomplete" },
+            // { value: "fulfilled", label: "Fulfilled" },
+            // { value: "incomplete", label: "Incomplete" },
           ],
           parentClassName: "!w-[30%]",
           className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
