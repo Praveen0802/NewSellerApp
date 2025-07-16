@@ -37,8 +37,10 @@ import {
 
 export const fetchSettingsPageDetails = async (profile, token, ctx) => {
   const validProfiles = ["myAccount", "changepassword"];
+  console.log(profile,'profileprofile')
   try {
     if (validProfiles?.includes(profile)) {
+      console.log("fetchSettingsPageDetails", profile);
       const [profileDetails] = await Promise.all([
         fetchProfileDetails(token, "GET"),
       ]);
@@ -47,12 +49,8 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
       // return { addressDetails, profileDetails, fetchCountries, dialingCode };
     } else if (profile === "addressBook") {
       const results = await Promise.allSettled([
-        fetchAddressBookDetails(token, "", "GET", "", {
-          is_primary_address: 1,
-        }),
-        fetchAddressBookDetails(token, "", "GET", "", {
-          is_primary_address: 0,
-        }),
+        fetchAddressBookDetails(token, "", "GET", "", ),
+        fetchAddressBookDetails(token, "", "GET", "", ),
         fetchProfileDetails(token, "GET"),
         fetchCountrieList(token),
       ]);
@@ -88,7 +86,9 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
       const partnerDetails = await getPartnerSetting(token);
       return { partnerDetails };
     }
-  } catch {}
+  } catch(err) {
+    console.log("ERROR in fetchSettingsPageDetails", err);
+  }
 };
 
 export const fetchSalesPageDetails = async (profile, token, ctx) => {

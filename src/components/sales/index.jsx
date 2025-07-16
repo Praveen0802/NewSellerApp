@@ -416,7 +416,7 @@ const SalesPage = (props) => {
       if (response ) {
         // Create a blob from the response data
         const blob = new Blob([response], { 
-          type: 'text/csv;charset=utf-8;' 
+          type: 'application/csv;charset=utf-8;' 
         });
         
         // Create a temporary URL for the blob

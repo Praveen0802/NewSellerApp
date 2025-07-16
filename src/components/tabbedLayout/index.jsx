@@ -1,19 +1,42 @@
+// Add this to your TabbedLayout component
+
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import SelectListItem from "../tradePage/components/selectListItem";
 import AvailableList from "../tradePage/components/availableList";
 import { FilterSection } from "./filterSection";
+import ActiveFiltersBox from "./ActiveFilterBoxs";
 
 // Mock icons - replace with your actual icons
 const FilterIcon = ({ className }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"
+    />
   </svg>
 );
 
 const ColumnsIcon = ({ className }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 002-2M9 7a2 2 0 012 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 002-2" />
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 002-2M9 7a2 2 0 012 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 002-2"
+    />
   </svg>
 );
 
@@ -30,27 +53,30 @@ const TabbedLayout = ({
   className = "bg-[#ECEDF2] w-full h-full relative",
   containerClassName = "flex flex-col gap-[24px]",
   showFilters = true,
+  currentFilterValues = {},
+  onClearAllFilters,
+  showSelectedFilterPills = false,
 }) => {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState(initialTab || tabs[0]?.key);
   const [checkboxValues, setCheckboxValues] = useState({});
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
-  
+
   // Initialize activeFilters with all filters checked by default
   const [activeFilters, setActiveFilters] = useState(() => {
     const initialActiveFilters = new Set();
-    
+
     // Get all filter names for the initial tab and add them to the set
     if (filterConfig && filterConfig[initialTab || tabs[0]?.key]) {
-      filterConfig[initialTab || tabs[0]?.key].forEach(filter => {
+      filterConfig[initialTab || tabs[0]?.key].forEach((filter) => {
         initialActiveFilters.add(filter.name);
       });
     }
-    
+
     return initialActiveFilters;
   });
-  
+
   const filterDropdownRef = useRef(null);
   const columnDropdownRef = useRef(null);
 
@@ -71,7 +97,7 @@ const TabbedLayout = ({
   useEffect(() => {
     if (filterConfig && filterConfig[selectedTab]) {
       const newActiveFilters = new Set();
-      filterConfig[selectedTab].forEach(filter => {
+      filterConfig[selectedTab].forEach((filter) => {
         newActiveFilters.add(filter.name);
       });
       setActiveFilters(newActiveFilters);
@@ -81,16 +107,22 @@ const TabbedLayout = ({
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target)) {
+      if (
+        filterDropdownRef.current &&
+        !filterDropdownRef.current.contains(event.target)
+      ) {
         setShowFilterDropdown(false);
       }
-      if (columnDropdownRef.current && !columnDropdownRef.current.contains(event.target)) {
+      if (
+        columnDropdownRef.current &&
+        !columnDropdownRef.current.contains(event.target)
+      ) {
         setShowColumnDropdown(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Get current tab's list items
@@ -107,12 +139,12 @@ const TabbedLayout = ({
   // Get all available filters for current tab
   const getAvailableFilters = () => {
     if (!filterConfig || !filterConfig[selectedTab]) return [];
-    
-    return filterConfig[selectedTab].map(filter => ({
+
+    return filterConfig[selectedTab].map((filter) => ({
       key: filter.name,
       label: filter.label,
       type: filter.type,
-      isActive: activeFilters.has(filter.name)
+      isActive: activeFilters.has(filter.name),
     }));
   };
 
@@ -157,13 +189,13 @@ const TabbedLayout = ({
   // Handle filter toggle from dropdown
   const handleFilterToggle = (filterKey) => {
     const newActiveFilters = new Set(activeFilters);
-    
+
     if (activeFilters.has(filterKey)) {
       newActiveFilters.delete(filterKey);
     } else {
       newActiveFilters.add(filterKey);
     }
-    
+
     setActiveFilters(newActiveFilters);
   };
 
@@ -175,10 +207,31 @@ const TabbedLayout = ({
   // Get visible filters based on activeFilters
   const getVisibleFilters = () => {
     if (!filterConfig || !filterConfig[selectedTab]) return [];
-    
-    return filterConfig[selectedTab].filter(filter => 
+    return filterConfig[selectedTab].filter((filter) =>
       activeFilters.has(filter.name)
     );
+  };
+
+  // Handle clearing all filters
+  const handleClearAllFilters = () => {
+    if (onClearAllFilters) {
+      onClearAllFilters?.();
+    } else if (onFilterChange) {
+      // Fallback: clear each filter individually
+      const clearedFilters = {};
+      Object.keys(currentFilterValues).forEach((key) => {
+        if (typeof currentFilterValues[key] === "object") {
+          clearedFilters[key] = {};
+        } else {
+          clearedFilters[key] = "";
+        }
+      });
+
+      // Call onFilterChange with cleared filters
+      Object.keys(currentFilterValues).forEach((key) => {
+        onFilterChange(key, clearedFilters[key], clearedFilters, selectedTab);
+      });
+    }
   };
 
   return (
@@ -197,7 +250,7 @@ const TabbedLayout = ({
           >
             <FilterIcon className="w-5 h-5 text-gray-600" />
           </button>
-          
+
           {showFilterDropdown && (
             <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
               <div className="p-3 border-b border-gray-200">
@@ -215,7 +268,9 @@ const TabbedLayout = ({
                       onChange={() => handleFilterToggle(filter.key)}
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
-                    <span className="ml-2 text-sm text-gray-700">{filter.label}</span>
+                    <span className="ml-2 text-sm text-gray-700">
+                      {filter.label}
+                    </span>
                   </label>
                 ))}
               </div>
@@ -240,31 +295,37 @@ const TabbedLayout = ({
           >
             <ColumnsIcon className="w-5 h-5 text-gray-600" />
           </button>
-          
+
           {showColumnDropdown && (
             <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
               <div className="p-3 border-b border-gray-200">
                 <h3 className="text-sm font-medium text-gray-900">Columns</h3>
               </div>
               <div className="max-h-64 overflow-y-auto">
-                {visibleColumns && Object.entries(visibleColumns).map(([columnKey, isVisible]) => (
-                  <label
-                    key={columnKey}
-                    className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isVisible}
-                      onChange={() => handleColumnToggle(columnKey)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700 capitalize">
-                      {columnKey.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                    </span>
-                  </label>
-                ))}
+                {visibleColumns &&
+                  Object.entries(visibleColumns).map(
+                    ([columnKey, isVisible]) => (
+                      <label
+                        key={columnKey}
+                        className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isVisible}
+                          onChange={() => handleColumnToggle(columnKey)}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <span className="ml-2 text-sm text-gray-700 capitalize">
+                          {columnKey
+                            .replace(/([A-Z])/g, " $1")
+                            .replace(/^./, (str) => str.toUpperCase())}
+                        </span>
+                      </label>
+                    )
+                  )}
               </div>
-              {(!visibleColumns || Object.keys(visibleColumns).length === 0) && (
+              {(!visibleColumns ||
+                Object.keys(visibleColumns).length === 0) && (
                 <div className="px-3 py-4 text-sm text-gray-500 text-center">
                   No columns available
                 </div>
@@ -327,7 +388,19 @@ const TabbedLayout = ({
               currentTab={selectedTab}
               onFilterChange={handleFilterChange}
               containerClassName="md:flex flex-wrap gap-4 items-center  p-4"
+              initialValues={currentFilterValues}
             />
+          )}
+
+          {showSelectedFilterPills && (
+            <div className="px-[24px] pt-[20px]">
+              <ActiveFiltersBox
+                activeFilters={currentFilterValues}
+                onFilterChange={onFilterChange}
+                onClearAllFilters={handleClearAllFilters}
+                currentTab={selectedTab}
+              />
+            </div>
           )}
         </div>
       </div>

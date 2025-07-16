@@ -1,11 +1,11 @@
 import { formatDate, formatDateValue } from "@/utils/helperFunctions";
 import React, { useState, useEffect } from "react";
 
-const NotificationActivityList = ({ 
-  notificationsList, 
-  activities, 
-  handleScrollEnd, 
-  loader 
+const NotificationActivityList = ({
+  notificationsList,
+  activities,
+  handleScrollEnd,
+  loader,
 }) => {
   const heading = [
     { name: "Notifications", key: "notifications" },
@@ -30,7 +30,7 @@ const NotificationActivityList = ({
   // Handle scroll to detect when user reaches bottom
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
-    
+
     // Check if user has scrolled to the bottom (with some tolerance)
     if (scrollTop + clientHeight >= scrollHeight - 5) {
       // Call handleScrollEnd for the active tab
@@ -61,10 +61,7 @@ const NotificationActivityList = ({
           </p>
         ))}
       </div>
-      <div 
-        className="max-h-[300px] overflow-auto"
-        onScroll={handleScroll}
-      >
+      <div className="max-h-[300px] overflow-auto" onScroll={handleScroll}>
         {displayedValues?.map((item, index) => (
           <div
             key={index}
@@ -78,31 +75,36 @@ const NotificationActivityList = ({
             </p>
           </div>
         ))}
-        
+
         {/* Loading indicator for pagination */}
-        {(loader?.notifications && activeTab === "notifications") || 
-         (loader?.activity && activeTab === "activity") ? (
+        {(loader?.notifications && activeTab === "notifications") ||
+        (loader?.activity && activeTab === "activity") ? (
           <div className="flex justify-center py-4">
             <div className="text-[#7D82A4] text-[13px]">Loading...</div>
           </div>
         ) : null}
-        
+
         {/* No more data indicator */}
-        {activeTab === "notifications" && 
-         notificationsList?.meta?.current_page === notificationsList?.meta?.last_page && 
-         notificationsList?.meta?.last_page > 1 && (
-          <div className="flex justify-center py-4">
-            <div className="text-[#7D82A4] text-[13px]">No more notifications</div>
-          </div>
-        )}
-        
-        {activeTab === "activity" && 
-         activities?.meta?.current_page === activities?.meta?.last_page && 
-         activities?.meta?.last_page > 1 && (
-          <div className="flex justify-center py-4">
-            <div className="text-[#7D82A4] text-[13px]">No more activities</div>
-          </div>
-        )}
+        {activeTab === "notifications" &&
+          notificationsList?.meta?.current_page ===
+            notificationsList?.meta?.last_page &&
+          notificationsList?.meta?.last_page > 1 && (
+            <div className="flex justify-center py-4">
+              <div className="text-[#7D82A4] text-[13px]">
+                No more notifications
+              </div>
+            </div>
+          )}
+
+        {activeTab === "activity" &&
+          activities?.meta?.current_page === activities?.meta?.last_page &&
+          activities?.meta?.last_page > 1 && (
+            <div className="flex justify-center py-4">
+              <div className="text-[#7D82A4] text-[13px]">
+                No more activities
+              </div>
+            </div>
+          )}
       </div>
     </div>
   );

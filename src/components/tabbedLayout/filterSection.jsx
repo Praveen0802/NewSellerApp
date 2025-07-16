@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import FormFields from "../formFieldsComponent";
 
 const FilterSection = ({
@@ -9,6 +9,11 @@ const FilterSection = ({
   initialValues = {},
 }) => {
   const [filterValues, setFilterValues] = useState(initialValues);
+
+  // Update internal state when initialValues change (from ActiveFiltersBox clearing)
+  useEffect(() => {
+    setFilterValues(initialValues);
+  }, [initialValues]);
 
   const handleFilterChange = (filterKey, value, additionalData = {}) => {
     const updatedFilters = {
