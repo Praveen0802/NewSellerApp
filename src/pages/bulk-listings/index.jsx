@@ -1,17 +1,17 @@
-import ReportHistory from "@/components/reportHistoryPage";
+import BulkListings from "@/components/TicketsPage/bulkListing";
 import {
   checkValidAuthToken,
   getAuthToken,
   nextRedirect,
 } from "@/utils/helperFunctions";
-import { reportHistoryData } from "@/utils/serverSideRequests";
+import { fetchBulkListingData } from "@/utils/serverSideRequests";
 import React from "react";
 
-const reportHistoryPage = (props) => {
-  return <ReportHistory {...props} />;
+const Tickets = (props) => {
+  return <BulkListings {...props}/>;
 };
 
-export default reportHistoryPage;
+export default Tickets;
 
 export async function getServerSideProps(ctx) {
   const validToken = checkValidAuthToken(ctx);
@@ -19,7 +19,7 @@ export async function getServerSideProps(ctx) {
   if (!validToken) {
     return nextRedirect("login");
   }
-  const response = await reportHistoryData( authToken);
+  const response = await fetchBulkListingData(authToken);
   return {
     props: { response },
   };

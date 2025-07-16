@@ -16,10 +16,11 @@ import {
   fetchProfileDetails,
   fetchRecentlyViewedList,
   fetchSalesOverview,
+  fetchSalesPageData,
   fetchTransactionHistory,
   fetchTransactionHistoryMonthly,
   fetchUserDetails,
-  fetchWalletBalance,
+  fetchLMTOverview,
   getDialingCode,
   getLinkedCards,
   getPartnerSetting,
@@ -28,13 +29,18 @@ import {
   purchaseFavouratesTracking,
   purchaseHistory,
   purchaseTracking,
+  reportHistory,
+  reportsOverview,
   topSellingEvents,
+  fetchBulkListing,
 } from "../apiHandler/request";
 
 export const fetchSettingsPageDetails = async (profile, token, ctx) => {
   const validProfiles = ["myAccount", "changepassword"];
+  console.log(profile,'profileprofile')
   try {
     if (validProfiles?.includes(profile)) {
+      console.log("fetchSettingsPageDetails", profile);
       const [profileDetails] = await Promise.all([
         fetchProfileDetails(token, "GET"),
       ]);
@@ -43,12 +49,8 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
       // return { addressDetails, profileDetails, fetchCountries, dialingCode };
     } else if (profile === "addressBook") {
       const results = await Promise.allSettled([
-        fetchAddressBookDetails(token, "", "GET", "", {
-          is_primary_address: 1,
-        }),
-        fetchAddressBookDetails(token, "", "GET", "", {
-          is_primary_address: 0,
-        }),
+        fetchAddressBookDetails(token, "", "GET", "", ),
+        fetchAddressBookDetails(token, "", "GET", "", ),
         fetchProfileDetails(token, "GET"),
         fetchCountrieList(token),
       ]);
@@ -84,23 +86,30 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
       const partnerDetails = await getPartnerSetting(token);
       return { partnerDetails };
     }
-  } catch {}
+  } catch(err) {
+    console.log("ERROR in fetchSettingsPageDetails", err);
+  }
+};
+
+export const fetchSalesPageDetails = async (profile, token, ctx) => {
+  const [salesPage] = await Promise.allSettled([
+    fetchSalesPageData(token, { order_status: profile }),
+  ]);
+  return salesPage?.status === "fulfilled" ? salesPage.value : null;
 };
 
 export const fetchWalletPageDetails = async (token) => {
   try {
-    const [walletBalance, depositHistory, transactionHistory, countriesList] =
+    const [  transactionHistory] =
       await Promise.all([
-        fetchWalletBalance(token),
-        fetchDepositHistoryMonthly(token),
+        // fetchLMTOverview(token),
+        // fetchDepositHistoryMonthly(token),
         fetchTransactionHistoryMonthly(token),
-        fetchCountrieList(token),
       ]);
     return {
       ...transactionHistory,
-      ...depositHistory,
-      ...walletBalance,
-      countriesList,
+      // ...depositHistory,
+      // ...walletBalance,
     };
   } catch {}
 };
@@ -160,3 +169,18 @@ export const fetchTradePageData = async (tradeType, token, matchId) => {
     return {};
   }
 };
+
+export const reportHistoryData = async (token) => {
+  const [reportsOverviewData, reportHistoryData] = await Promise.allSettled([
+    reportsOverview(token),
+    reportHistory(token),
+  ]);
+  return { reportsOverviewData, reportHistoryData };
+};
+
+export const fetchBulkListingData = async(token) => {
+  const [bulkListingData] = await Promise.allSettled([
+    fetchBulkListing(token),
+  ]);
+  return bulkListingData;
+}

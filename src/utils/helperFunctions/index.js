@@ -173,3 +173,29 @@ export const formatDateValue = (timestamp) => {
 
   return formattedDate;
 };
+
+export function convertKeyToDisplayName(key) {
+  return (
+    key
+      // First handle camelCase by inserting spaces before uppercase letters
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      // Then handle underscores
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ")
+  );
+}
+// If you want the currency code to be fully uppercase:
+function convertKeyToDisplayNameWithUpperCurrency(key) {
+  const words = key.split("_");
+  const lastWord = words[words.length - 1];
+
+  // Check if last word is a currency code (3 letters)
+  if (lastWord.length === 3) {
+    words[words.length - 1] = lastWord.toUpperCase();
+  }
+
+  return words
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}

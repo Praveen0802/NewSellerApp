@@ -40,6 +40,7 @@ export async function getServerSideProps(ctx) {
       console.error("Error fetching notification data:", error);
     }
   };
+  
   const notifyData = await getSSRData();
 
   return {
