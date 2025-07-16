@@ -363,6 +363,7 @@ const NotificationPage = (props) => {
           handleClearFilters();
         }}
         showSelectedFilterPills={true}
+        hideVisibleColumns={true}
       />
 
       {/* List View Section */}

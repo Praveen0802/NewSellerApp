@@ -56,6 +56,7 @@ const TabbedLayout = ({
   currentFilterValues = {},
   onClearAllFilters,
   showSelectedFilterPills = false,
+  hideVisibleColumns = false,
 }) => {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState(initialTab || tabs[0]?.key);
@@ -245,7 +246,7 @@ const TabbedLayout = ({
               setShowFilterDropdown(!showFilterDropdown);
               setShowColumnDropdown(false);
             }}
-            className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
+            className="p-2 bg-white border cursor-pointer border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
             title="Filters"
           >
             <FilterIcon className="w-5 h-5 text-gray-600" />
@@ -284,55 +285,57 @@ const TabbedLayout = ({
         </div>
 
         {/* Column Control */}
-        <div className="relative" ref={columnDropdownRef}>
-          <button
-            onClick={() => {
-              setShowColumnDropdown(!showColumnDropdown);
-              setShowFilterDropdown(false);
-            }}
-            className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
-            title="Columns"
-          >
-            <ColumnsIcon className="w-5 h-5 text-gray-600" />
-          </button>
+        {!hideVisibleColumns && (
+          <div className="relative" ref={columnDropdownRef}>
+            <button
+              onClick={() => {
+                setShowColumnDropdown(!showColumnDropdown);
+                setShowFilterDropdown(false);
+              }}
+              className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
+              title="Columns"
+            >
+              <ColumnsIcon className="w-5 h-5 text-gray-600" />
+            </button>
 
-          {showColumnDropdown && (
-            <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-              <div className="p-3 border-b border-gray-200">
-                <h3 className="text-sm font-medium text-gray-900">Columns</h3>
-              </div>
-              <div className="max-h-64 overflow-y-auto">
-                {visibleColumns &&
-                  Object.entries(visibleColumns).map(
-                    ([columnKey, isVisible]) => (
-                      <label
-                        key={columnKey}
-                        className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isVisible}
-                          onChange={() => handleColumnToggle(columnKey)}
-                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                        <span className="ml-2 text-sm text-gray-700 capitalize">
-                          {columnKey
-                            .replace(/([A-Z])/g, " $1")
-                            .replace(/^./, (str) => str.toUpperCase())}
-                        </span>
-                      </label>
-                    )
-                  )}
-              </div>
-              {(!visibleColumns ||
-                Object.keys(visibleColumns).length === 0) && (
-                <div className="px-3 py-4 text-sm text-gray-500 text-center">
-                  No columns available
+            {showColumnDropdown && (
+              <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <div className="p-3 border-b border-gray-200">
+                  <h3 className="text-sm font-medium text-gray-900">Columns</h3>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {visibleColumns &&
+                    Object.entries(visibleColumns).map(
+                      ([columnKey, isVisible]) => (
+                        <label
+                          key={columnKey}
+                          className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isVisible}
+                            onChange={() => handleColumnToggle(columnKey)}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <span className="ml-2 text-sm text-gray-700 capitalize">
+                            {columnKey
+                              .replace(/([A-Z])/g, " $1")
+                              .replace(/^./, (str) => str.toUpperCase())}
+                          </span>
+                        </label>
+                      )
+                    )}
+                </div>
+                {(!visibleColumns ||
+                  Object.keys(visibleColumns).length === 0) && (
+                  <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                    No columns available
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Desktop tabs */}
