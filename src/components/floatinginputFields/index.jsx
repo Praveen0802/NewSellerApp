@@ -16,6 +16,7 @@ const FloatingLabelInput = ({
   autoComplete = "on",
   mandatory = false,
   labelClassName = "",
+  parentClassName='',
   dropDownComponent,
   readOnly,
   className = "",
@@ -24,6 +25,7 @@ const FloatingLabelInput = ({
   error = "",
   rightIcon = null,
 }) => {
+  console.log(parentClassName,'parentClassNameparentClassName')
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   // Update focus state when value changes
@@ -66,7 +68,7 @@ const FloatingLabelInput = ({
   }`;
 
   return (
-    <div className="relative w-full">
+    <div className={`relative w-full ${parentClassName}`}>
       {!hideLabel && (
         <FloatingPlaceholder
           className={`${labelClassName} `}

@@ -51,6 +51,97 @@ const makeRequest = async ({
   }
 };
 
+export const reportsOverview = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.REPORTS_OVERVIEW,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in FetchHotEvent", error);
+    return {};
+  }
+};
+
+export const fetchBulkListing = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.FETCH_BULK_LISTING,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchBulkListing", error);
+    return {};
+  }
+};
+
+export const reportHistory = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.REPORT_HISTORY,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in reportHistory", error);
+    return {};
+  }
+};
+
+export const reportEventSearch = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.REPORTS_EVENT_SEARCH,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in reportEventSearch", error);
+    return {};
+  }
+};
+
+export const downloadReports = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.EXPORT_REPORTS,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in reportEventSearch", error);
+    return {};
+  }
+};
+
+
+export const downloadSalesCSVReport = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.EXPORT_SALES,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in reportEventSearch", error);
+    return {};
+  }
+};
+
 export const loginUser = async (token, data) => {
   try {
     const response = await makeRequest({
@@ -180,16 +271,17 @@ export const changePasswordRequest = async (token, data) => {
   }
 };
 
-export const fetchWalletBalance = async (token) => {
+export const fetchLMTOverview = async (token) => {
   try {
+    console.log(API_ROUTES.LMT_OVERVIEW,'API_ROUTES.LMT_OVERVIEW')
     const response = await makeRequest({
-      url: API_ROUTES.WALLET_BALANCE,
+      url: API_ROUTES.LMT_OVERVIEW,
       method: "GET",
       ...(token && { token: token }),
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
-    console.log("ERROR in fetchWalletBalance", error);
+    console.log("ERROR in fetchLMTOverview", error);
     throw error;
   }
 };
@@ -319,7 +411,6 @@ export const topSellingEvents = async (token, params) => {
   }
 };
 
-
 export const dashbordTrade = async (token, params) => {
   try {
     const response = await makeRequest({
@@ -335,7 +426,6 @@ export const dashbordTrade = async (token, params) => {
   }
 };
 
-
 export const dashbordReports = async (token, params) => {
   try {
     const response = await makeRequest({
@@ -350,7 +440,6 @@ export const dashbordReports = async (token, params) => {
     throw error;
   }
 };
-
 
 export const fetchOrderHistory = async (token, params) => {
   try {
@@ -670,6 +759,21 @@ export const ResendVerificationRequest = async (token, data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in ResendVerificationRequest", error);
+    throw error;
+  }
+};
+
+export const fetchSalesPageData = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.SALES_PAGE,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchSalesPageData", error);
     throw error;
   }
 };

@@ -7,6 +7,7 @@ import FloatingCheckbox from "../floatinginputFields/floatingCheckBox";
 import SearchableDropdown from "../floatinginputFields/searchableDropdown";
 
 const FormFields = ({ formFields }) => {
+  console.log("formFields", formFields);
   return (
     <>
       {formFields?.map((field, index) => {
@@ -101,6 +102,7 @@ const FormFields = ({ formFields }) => {
                 type={type}
                 onBlur={onBlur}
                 label={label}
+                parentClassName={parentClassName}
                 showDropdown={showDropdown}
                 labelClassName={labelClassName}
                 hideLabel={hideLabel}

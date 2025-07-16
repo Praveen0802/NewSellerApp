@@ -16,10 +16,11 @@ import {
   fetchProfileDetails,
   fetchRecentlyViewedList,
   fetchSalesOverview,
+  fetchSalesPageData,
   fetchTransactionHistory,
   fetchTransactionHistoryMonthly,
   fetchUserDetails,
-  fetchWalletBalance,
+  fetchLMTOverview,
   getDialingCode,
   getLinkedCards,
   getPartnerSetting,
@@ -28,7 +29,10 @@ import {
   purchaseFavouratesTracking,
   purchaseHistory,
   purchaseTracking,
+  reportHistory,
+  reportsOverview,
   topSellingEvents,
+  fetchBulkListing,
 } from "../apiHandler/request";
 
 export const fetchSettingsPageDetails = async (profile, token, ctx) => {
@@ -87,20 +91,25 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
   } catch {}
 };
 
+export const fetchSalesPageDetails = async (profile, token, ctx) => {
+  const [salesPage] = await Promise.allSettled([
+    fetchSalesPageData(token, { order_status: profile }),
+  ]);
+  return salesPage?.status === "fulfilled" ? salesPage.value : null;
+};
+
 export const fetchWalletPageDetails = async (token) => {
   try {
-    const [walletBalance, depositHistory, transactionHistory, countriesList] =
+    const [  transactionHistory] =
       await Promise.all([
-        fetchWalletBalance(token),
-        fetchDepositHistoryMonthly(token),
+        // fetchLMTOverview(token),
+        // fetchDepositHistoryMonthly(token),
         fetchTransactionHistoryMonthly(token),
-        fetchCountrieList(token),
       ]);
     return {
       ...transactionHistory,
-      ...depositHistory,
-      ...walletBalance,
-      countriesList,
+      // ...depositHistory,
+      // ...walletBalance,
     };
   } catch {}
 };
@@ -160,3 +169,18 @@ export const fetchTradePageData = async (tradeType, token, matchId) => {
     return {};
   }
 };
+
+export const reportHistoryData = async (token) => {
+  const [reportsOverviewData, reportHistoryData] = await Promise.allSettled([
+    reportsOverview(token),
+    reportHistory(token),
+  ]);
+  return { reportsOverviewData, reportHistoryData };
+};
+
+export const fetchBulkListingData = async(token) => {
+  const [bulkListingData] = await Promise.allSettled([
+    fetchBulkListing(token),
+  ]);
+  return bulkListingData;
+}

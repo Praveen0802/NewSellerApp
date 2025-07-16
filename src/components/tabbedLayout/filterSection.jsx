@@ -5,7 +5,7 @@ const FilterSection = ({
   filterConfig,
   currentTab,
   onFilterChange,
-  containerClassName = "md:flex gap-4 items-center md:w-[90%] p-4",
+  containerClassName = "md:flex gap-4 items-center  p-4",
   initialValues = {},
 }) => {
   const [filterValues, setFilterValues] = useState(initialValues);

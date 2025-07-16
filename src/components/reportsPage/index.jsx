@@ -27,6 +27,7 @@ import { getAuthToken } from "@/utils/helperFunctions";
 
 const ReportsPage = (props) => {
   const { apiData } = props;
+  console.log(apiData,'apiDataapiData')
   const { account_data, deposit_history, transaction_history, countriesList } =
     apiData;
   const flagMap = {
@@ -115,7 +116,7 @@ const ReportsPage = (props) => {
         : await getDepositDetails(getAuthToken(), payload);
     setEyeViewPopup({
       flag: true,
-      data: { ...response, transactionType: transactionType },
+      data: { ...item, transactionType: transactionType },
     });
   };
 

@@ -2,15 +2,46 @@ import React, { Fragment } from "react";
 import DisplayValues from "./displayValues";
 
 const OrderedTickets = ({ ticket_details }) => {
+  if (!ticket_details) {
+    return (
+      <div className="border-[1px] border-[#E0E1EA] rounded-md">
+        <p className="px-[16px] py-[12px] text-[16px] font-semibold text-[#343432] border-b-[1px] border-[#E0E1EA]">
+          Tickets Ordered
+        </p>
+        <div className="p-4 text-center text-gray-500">
+          No ticket details available
+        </div>
+      </div>
+    );
+  }
+
   const listingObject = [
-    { name: "Event Name", text: ticket_details?.match_name },
-    { name: "Event Venue", text: ticket_details?.venue_name },
-    { name: "Event Date", text: ticket_details?.match_datetime },
-    { name: "Seat Details", text: ticket_details?.seat_category },
+    { 
+      name: "Event Venue", 
+      text: ticket_details?.venue || "Not specified" 
+    },
+    { 
+      name: "Event Date", 
+      text: ticket_details?.match_date || "Not specified" 
+    },
+    { 
+      name: "Event Time", 
+      text: ticket_details?.match_time || "Not specified" 
+    },
+    { 
+      name: "Seat Details", 
+      text: ticket_details?.seat_category || "Not specified" 
+    },
     {
       values: [
-        { name: "Ticket Type", text: ticket_details?.ticket_type },
-        { name: "Quantity", text: ticket_details?.quantity },
+        { 
+          name: "Ticket Type", 
+          text: ticket_details?.ticket_types || "Not specified" 
+        },
+        { 
+          name: "Quantity", 
+          text: ticket_details?.quantity?.toString() || "0" 
+        },
       ],
       twoKeys: true,
     },
@@ -18,11 +49,11 @@ const OrderedTickets = ({ ticket_details }) => {
       values: [
         {
           name: "Ticket Price",
-          text: `${ticket_details?.sub_total_converted}`,
+          text: `${ticket_details?.currency_type || "GBP"} ${ticket_details?.ticket_price || "0"}`,
         },
         {
           name: "Order Value",
-          text: `${ticket_details?.total_paid_converted}`,
+          text: `${ticket_details?.currency_type || "GBP"} ${ticket_details?.order_value || "0"}`,
         },
       ],
       twoKeys: true,
