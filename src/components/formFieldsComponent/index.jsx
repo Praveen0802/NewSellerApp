@@ -46,6 +46,7 @@ const FormFields = ({ formFields }) => {
           icon,
           count,
           multiselect = false,
+          onKeyDown = () => {},
         } = field;
 
         const keyValue = field?.name || field?.key || id;
@@ -115,6 +116,7 @@ const FormFields = ({ formFields }) => {
                 placeholder={placeholder}
                 error={error}
                 rightIcon={rightIcon}
+                onKeyDown={onKeyDown}
               />
             ) : type === "file" ? (
               <FloatingFileUpload

@@ -319,7 +319,6 @@ export const topSellingEvents = async (token, params) => {
   }
 };
 
-
 export const dashbordTrade = async (token, params) => {
   try {
     const response = await makeRequest({
@@ -335,7 +334,6 @@ export const dashbordTrade = async (token, params) => {
   }
 };
 
-
 export const dashbordReports = async (token, params) => {
   try {
     const response = await makeRequest({
@@ -350,7 +348,6 @@ export const dashbordReports = async (token, params) => {
     throw error;
   }
 };
-
 
 export const fetchOrderHistory = async (token, params) => {
   try {
@@ -1189,9 +1186,68 @@ export const requestFeature = async (token, data) => {
       ...(token && { token: token }),
       data: data,
     });
-    return response?.data?.success ? response?.data?.data : {};
+    return response?.data?.success ? response?.data : {};
   } catch (error) {
     console.log("ERROR in getWalletBalance", error);
+    return error?.response?.data;
+  }
+};
+
+export const fetchNotificationHistory = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.NOTIFICATION_HISTORY,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchNotificationHistory", error);
+    throw error;
+  }
+};
+
+export const fetchActivityHistory = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.NOTIFICATION_ACTIVITY_HISTORY}`,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchActivityHistory", error);
+    return error?.response?.data;
+  }
+};
+
+export const updateNotification = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.NOTIFICATION_UPDATE}`,
+      method: "POST",
+      ...(token && { token: token }),
+      data: data,
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in updateNotification", error);
+    return error?.response?.data;
+  }
+};
+
+export const fetchNotificationCount = async (token) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.GET_NOTIFICATION_COUNT}`,
+      method: "GET",
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchNotificationCount", error);
     return error?.response?.data;
   }
 };
