@@ -2,7 +2,15 @@ const ROOT_URL = process.env.API_BASE_URL;
 
 export const API_ROUTES = {
   REPORTS_OVERVIEW: `/reports/overview`,
+  GET_TEAM_MEMBERS: `/settings/my-teams`,
+  SALES_ORDER_DETAILS: `/sales/order-details`,
+  REPORTS_ORDER_DETAILS: `/reports/order-details`,
+  REPORTS_ORDER_LOG: `/reports/order-logs`,
+  REPORTS_INVENTORY_LOGS: `/reports/inventory-logs`,
+  SALES_ORDER_LOG: `/sales/order-logs`,
+  SALES_INVENTORY_LOG: `/sales/inventory-logs`,
   FETCH_BULK_LISTING: `/events/search-events`,
+  TOURNAMENTS_LIST: `/events/tournament-list`,
   REPORTS_EVENT_SEARCH: `/reports/events-search`,
   REPORT_HISTORY: `/reports/history`,
   LOGIN: `/auth/login`,
