@@ -331,7 +331,7 @@ const RportHistory = (props) => {
       },
     ],
   };
-
+console.log(filtersApplied,"filtersApplied")
   const handleScrollEnd = async () => {
     if (filtersApplied.page >= staticReportsData.meta.total_pages) return;
     setIsLoading(true);

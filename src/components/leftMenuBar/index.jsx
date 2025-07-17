@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import logo from "../../../public//template-logo.png";
 import arrowRight from "../../../public/arrow-right.svg";
@@ -13,7 +13,7 @@ import logout from "../../../public/logout.svg";
 import Bulkticket from "../../../public/Bulkticket.svg";
 import leftArrow from "../../../public/leftArrow.jpg";
 import ticketStar from "../../../public/ticket-star.svg";
-import { Menu, Bell, ChevronDown, ChevronRight } from "lucide-react";
+import { Menu, Bell, ChevronDown, ChevronRight, Check } from "lucide-react";
 import useIsMobile from "@/utils/helperFunctions/useIsmobile";
 import { useRouter } from "next/router";
 import { setCookie, getCookie } from "@/utils/helperFunctions/cookie";
@@ -75,6 +75,14 @@ const ActivityShimmer = () => (
   </div>
 );
 
+// Completion message component
+const CompletionMessage = ({ type }) => (
+  <div className="flex items-center justify-center gap-2 p-4 text-green-600 text-sm">
+    <Check className="w-4 h-4" />
+    <span>All {type} loaded</span>
+  </div>
+);
+
 // Helper function to format timestamp
 const formatDate = (timestamp) => {
   const date = new Date(timestamp * 1000);
@@ -119,6 +127,12 @@ const NotificationsPopup = ({
   const [activityMeta, setActivityMeta] = useState({});
   const [notificationPage, setNotificationPage] = useState(1);
   const [activityPage, setActivityPage] = useState(1);
+  const [allNotificationsLoaded, setAllNotificationsLoaded] = useState(false);
+  const [allActivitiesLoaded, setAllActivitiesLoaded] = useState(false);
+
+  // Refs for scroll containers
+  const notificationScrollRef = useRef(null);
+  const activityScrollRef = useRef(null);
 
   const router = useRouter();
   const isMobile = useIsMobile();
@@ -131,6 +145,7 @@ const NotificationsPopup = ({
     try {
       if (page === 1) {
         setLoading(true);
+        setAllNotificationsLoaded(false);
       } else {
         setLoadingMore(true);
       }
@@ -161,6 +176,12 @@ const NotificationsPopup = ({
         );
         setNotificationMeta(data.meta || {});
         setNotificationPage(page);
+
+        // Check if all data is loaded
+        const meta = data.meta || {};
+        if (meta.current_page >= meta.last_page) {
+          setAllNotificationsLoaded(true);
+        }
       } else {
         throw new Error("Failed to fetch notifications");
       }
@@ -177,6 +198,7 @@ const NotificationsPopup = ({
     try {
       if (page === 1) {
         setLoading(true);
+        setAllActivitiesLoaded(false);
       } else {
         setLoadingMore(true);
       }
@@ -205,6 +227,12 @@ const NotificationsPopup = ({
         );
         setActivityMeta(data.data.meta || {});
         setActivityPage(page);
+
+        // Check if all data is loaded
+        const meta = data.data.meta || {};
+        if (meta.current_page >= meta.last_page) {
+          setAllActivitiesLoaded(true);
+        }
       } else {
         throw new Error("Failed to fetch activity");
       }
@@ -214,21 +242,6 @@ const NotificationsPopup = ({
     } finally {
       setLoading(false);
       setLoadingMore(false);
-    }
-  };
-
-  // Load more functions
-  const loadMoreNotifications = () => {
-    const meta = notificationMeta;
-    if (meta.current_page < meta.last_page) {
-      fetchNotificationHistoryData(notificationPage + 1, true);
-    }
-  };
-
-  const loadMoreActivities = () => {
-    const meta = activityMeta;
-    if (meta.current_page < meta.last_page) {
-      fetchActivityHistoryData(activityPage + 1, true);
     }
   };
 
@@ -247,20 +260,111 @@ const NotificationsPopup = ({
     );
   };
 
+  // Infinite scroll handler with improved detection
+  const handleScroll = useCallback(
+    (e) => {
+      const { scrollTop, scrollHeight, clientHeight } = e.target;
+
+      // More generous threshold for better detection (50px from bottom)
+      const threshold = 50;
+      const isNearBottom = scrollTop + clientHeight >= scrollHeight - threshold;
+
+      // Additional check for when content is shorter than container
+      const isContentShort = scrollHeight <= clientHeight;
+
+      if ((isNearBottom || isContentShort) && !loadingMore && !loading) {
+        if (
+          activeTab === "notifications" &&
+          canLoadMoreNotifications() &&
+          !allNotificationsLoaded
+        ) {
+          fetchNotificationHistoryData(notificationPage + 1, true);
+        } else if (
+          activeTab === "activity" &&
+          canLoadMoreActivities() &&
+          !allActivitiesLoaded
+        ) {
+          fetchActivityHistoryData(activityPage + 1, true);
+        }
+      }
+    },
+    [
+      activeTab,
+      loadingMore,
+      loading,
+      notificationPage,
+      activityPage,
+      allNotificationsLoaded,
+      allActivitiesLoaded,
+    ]
+  );
+
+  // Throttled scroll handler to prevent excessive calls
+  const throttledHandleScroll = useCallback(
+    (e) => {
+      clearTimeout(throttledHandleScroll.timeoutId);
+      throttledHandleScroll.timeoutId = setTimeout(() => handleScroll(e), 100);
+    },
+    [handleScroll]
+  );
+
   // Fetch data when popup opens and tab changes
   useEffect(() => {
     if (isOpen) {
       if (activeTab === "notifications") {
         // Reset pagination and fetch first page
         setNotificationPage(1);
+        setAllNotificationsLoaded(false);
         fetchNotificationHistoryData(1, false);
       } else if (activeTab === "activity") {
         // Reset pagination and fetch first page
         setActivityPage(1);
+        setAllActivitiesLoaded(false);
         fetchActivityHistoryData(1, false);
       }
     }
   }, [isOpen, activeTab]);
+
+  // Check if initial load should trigger more data fetching
+  useEffect(() => {
+    if (isOpen && !loading && !loadingMore) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        const container =
+          activeTab === "notifications"
+            ? notificationScrollRef.current
+            : activityScrollRef.current;
+        if (container) {
+          const { scrollHeight, clientHeight } = container;
+          // If content doesn't fill the container and we have more data, load it
+          if (scrollHeight <= clientHeight) {
+            if (
+              activeTab === "notifications" &&
+              canLoadMoreNotifications() &&
+              !allNotificationsLoaded
+            ) {
+              fetchNotificationHistoryData(notificationPage + 1, true);
+            } else if (
+              activeTab === "activity" &&
+              canLoadMoreActivities() &&
+              !allActivitiesLoaded
+            ) {
+              fetchActivityHistoryData(activityPage + 1, true);
+            }
+          }
+        }
+      }, 200);
+    }
+  }, [notifications, activities, activeTab, loading, loadingMore, isOpen]);
+
+  // Cleanup throttle timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (throttledHandleScroll.timeoutId) {
+        clearTimeout(throttledHandleScroll.timeoutId);
+      }
+    };
+  }, []);
 
   const notificationRedict = () => {
     router.push(`/notifications/home`);
@@ -341,7 +445,7 @@ const NotificationsPopup = ({
   // Mobile layout
   if (isMobile) {
     return (
-      <div className="fixed inset-0 z-50">
+      <div className="fixed inset-0 z-[9999]">
         {/* Overlay */}
         <div
           className="absolute inset-0 bg-black bg-opacity-50"
@@ -349,7 +453,7 @@ const NotificationsPopup = ({
         />
 
         {/* Popup positioned from left */}
-        <div className="absolute top-20 left-4 right-4 bg-white rounded-lg shadow-xl max-h-[80vh] overflow-hidden z-10">
+        <div className="absolute top-20 left-4 right-4 bg-white rounded-lg shadow-xl max-h-[80vh] overflow-hidden z-[10000]">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b">
             <h2 className="text-xl font-semibold text-gray-900">
@@ -402,7 +506,15 @@ const NotificationsPopup = ({
           </div>
 
           {/* Content */}
-          <div className="max-h-96 overflow-y-auto">
+          <div
+            className="max-h-96 overflow-y-auto pb-20"
+            onScroll={throttledHandleScroll}
+            style={{
+              overflowY: "auto",
+              maxHeight: "24rem",
+              paddingBottom: "80px",
+            }}
+          >
             {error && (
               <div className="p-4 text-center">
                 <p className="text-red-500 text-sm mb-2">{error}</p>
@@ -439,19 +551,6 @@ const NotificationsPopup = ({
                       <>
                         {notifications.map(renderNotificationItem)}
 
-                        {/* Load More Button for Notifications */}
-                        {canLoadMoreNotifications() && (
-                          <div className="p-4 text-center">
-                            <button
-                              onClick={loadMoreNotifications}
-                              disabled={loadingMore}
-                              className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {loadingMore ? "Loading..." : "Load More"}
-                            </button>
-                          </div>
-                        )}
-
                         {/* Loading More Shimmer */}
                         {loadingMore && (
                           <div className="p-2">
@@ -459,6 +558,11 @@ const NotificationsPopup = ({
                               <NotificationShimmer key={`loading-${index}`} />
                             ))}
                           </div>
+                        )}
+
+                        {/* Completion Message */}
+                        {allNotificationsLoaded && (
+                          <CompletionMessage type="notifications" />
                         )}
                       </>
                     ) : (
@@ -475,19 +579,6 @@ const NotificationsPopup = ({
                       <>
                         {activities.map(renderActivityItem)}
 
-                        {/* Load More Button for Activities */}
-                        {canLoadMoreActivities() && (
-                          <div className="p-4 text-center">
-                            <button
-                              onClick={loadMoreActivities}
-                              disabled={loadingMore}
-                              className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {loadingMore ? "Loading..." : "Load More"}
-                            </button>
-                          </div>
-                        )}
-
                         {/* Loading More Shimmer */}
                         {loadingMore && (
                           <div className="p-2">
@@ -495,6 +586,11 @@ const NotificationsPopup = ({
                               <ActivityShimmer key={`loading-${index}`} />
                             ))}
                           </div>
+                        )}
+
+                        {/* Completion Message */}
+                        {allActivitiesLoaded && (
+                          <CompletionMessage type="activities" />
                         )}
                       </>
                     ) : (
@@ -514,7 +610,7 @@ const NotificationsPopup = ({
 
   // Desktop layout
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="fixed inset-0 z-[9999]">
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/40 bg-opacity-50"
@@ -523,7 +619,7 @@ const NotificationsPopup = ({
 
       {/* Popup positioned to span from sidebar to right edge */}
       <div
-        className="absolute top-0 bottom-0 w-[300px] bg-white shadow-xl z-10"
+        className="absolute top-0 bottom-0 w-[300px] bg-white shadow-xl z-[10000]"
         style={{
           left: `${sidebarWidth}px`,
           right: "20px",
@@ -573,7 +669,16 @@ const NotificationsPopup = ({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto h-[calc(100vh-200px)]">
+        <div
+          className="flex-1 overflow-y-auto h-[calc(100vh-200px)] pb-20"
+          onScroll={throttledHandleScroll}
+          ref={
+            activeTab === "notifications"
+              ? notificationScrollRef
+              : activityScrollRef
+          }
+          style={{ overflowY: "auto", paddingBottom: "80px" }}
+        >
           {error && (
             <div className="p-4 text-center">
               <p className="text-red-500 text-sm mb-2">{error}</p>
@@ -610,19 +715,6 @@ const NotificationsPopup = ({
                     <>
                       {notifications.map(renderNotificationItem)}
 
-                      {/* Load More Button for Notifications */}
-                      {canLoadMoreNotifications() && (
-                        <div className="p-4 text-center">
-                          <button
-                            onClick={loadMoreNotifications}
-                            disabled={loadingMore}
-                            className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {loadingMore ? "Loading..." : "Load More"}
-                          </button>
-                        </div>
-                      )}
-
                       {/* Loading More Shimmer */}
                       {loadingMore && (
                         <div className="p-2">
@@ -630,6 +722,11 @@ const NotificationsPopup = ({
                             <NotificationShimmer key={`loading-${index}`} />
                           ))}
                         </div>
+                      )}
+
+                      {/* Completion Message */}
+                      {allNotificationsLoaded && (
+                        <CompletionMessage type="notifications" />
                       )}
                     </>
                   ) : (
@@ -646,19 +743,6 @@ const NotificationsPopup = ({
                     <>
                       {activities.map(renderActivityItem)}
 
-                      {/* Load More Button for Activities */}
-                      {canLoadMoreActivities() && (
-                        <div className="p-4 text-center">
-                          <button
-                            onClick={loadMoreActivities}
-                            disabled={loadingMore}
-                            className="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {loadingMore ? "Loading..." : "Load More"}
-                          </button>
-                        </div>
-                      )}
-
                       {/* Loading More Shimmer */}
                       {loadingMore && (
                         <div className="p-2">
@@ -666,6 +750,11 @@ const NotificationsPopup = ({
                             <ActivityShimmer key={`loading-${index}`} />
                           ))}
                         </div>
+                      )}
+
+                      {/* Completion Message */}
+                      {allActivitiesLoaded && (
+                        <CompletionMessage type="activities" />
                       )}
                     </>
                   ) : (
@@ -1021,7 +1110,7 @@ const LeftMenuBar = () => {
         {/* Overlay when menu is open */}
         {(mobileMenuOpen || notificationsOpen) && (
           <div
-            className="fixed inset-0 bg-gray-200 bg-opacity-50 z-10"
+            className="fixed inset-0 bg-gray-200 bg-opacity-50 z-[9998]"
             onClick={() => {
               setMobileMenuOpen(false);
               setNotificationsOpen(false);
