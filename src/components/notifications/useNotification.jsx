@@ -12,6 +12,7 @@ const useNotification = ({
   state,
   setState,
   setActionBarStates,
+  setActionLoadingStates, // New prop for loading states
   filtersApplied,
   filtersRef,
   setSelectedFilterData,
@@ -188,13 +189,13 @@ const useNotification = ({
       ],
       activity: [
         { name: "Activity Logs", value: getActivityCounts.total },
-        {
-          name: "Recent Activity",
-          value: getActivityCounts.recent,
-          showCheckbox: false,
-          key: "expired",
-          isChecked: false,
-        },
+        // {
+        //   name: "Recent Activity",
+        //   value: getActivityCounts.recent,
+        //   showCheckbox: false,
+        //   key: "expired",
+        //   isChecked: false,
+        // },
       ],
     }),
     [getNotificationCounts, getActivityCounts]
@@ -208,7 +209,7 @@ const useNotification = ({
           name: "keyword",
           label: "Search Match event or Booking number",
           className: "!py-[7px] !px-[12px] !text-[#343432] !text-[14px]",
-          placeholder: "Press Enter to search...",
+          placeholder: "Search Match event or Booking number",
           // onKeyDown: (e) => handleFilterChange(),
         },
         {
@@ -237,11 +238,11 @@ const useNotification = ({
       activity: [
         {
           type: "text",
-          name: "selectedActivity",
+          name: "keyword",
           label: "Search Activity",
           className: "!py-[7px] !px-[12px] !text-[#343432] !text-[14px]",
           onEnter: true,
-          placeholder: "Press Enter to search...",
+          placeholder: "Search Activity",
         },
         {
           type: "select",
@@ -289,24 +290,27 @@ const useNotification = ({
     [state.activityData, state.notifyData]
   );
 
-  // Optimized API functions
+  // Updated API actions for batch operations
   const apiActions = useMemo(
     () => ({
-      markNotificationAsViewed: async (id) => {
+      markNotificationsAsViewed: async (ids) => {
+        const idsString = Array.isArray(ids) ? ids.join(",") : ids;
         return updateNotification("", {
-          notificationId: id,
+          notificationId: idsString, // Changed to support multiple IDs
           is_viewed: 1,
         });
       },
-      markNotificationAsPinned: async (id) => {
+      markNotificationsAsPinned: async (ids) => {
+        const idsString = Array.isArray(ids) ? ids.join(",") : ids;
         return updateNotification("", {
-          notificationId: id,
+          notificationId: idsString, // Changed to support multiple IDs
           is_pinned: 1,
         });
       },
-      markNotificationAsUnpinned: async (id) => {
+      markNotificationsAsUnpinned: async (ids) => {
+        const idsString = Array.isArray(ids) ? ids.join(",") : ids;
         return updateNotification("", {
-          notificationId: id,
+          notificationId: idsString, // Changed to support multiple IDs
           is_pinned: 0,
         });
       },
@@ -314,65 +318,72 @@ const useNotification = ({
     []
   );
 
-  // Event handlers
+  // Updated event handlers for multi-select
   const handleActionBarChange = useCallback(
     async (e, keyValue) => {
       const { checked } = e.target;
 
       setActionBarStates((prev) => ({ ...prev, [keyValue]: checked }));
 
-      if (checked && state.selectedItem) {
+      if (checked && state.selectedItems.length > 0) {
+        // Set loading state
+        setActionLoadingStates((prev) => ({ ...prev, [keyValue]: true }));
+
         const actions = {
           markAsViewed: () => {
             setState((prev) => ({
               ...prev,
               viewedItems: [
-                ...new Set([...prev.viewedItems, state.selectedItem]),
+                ...new Set([...prev.viewedItems, ...state.selectedItems]),
               ],
             }));
-            return apiActions.markNotificationAsViewed(state.selectedItem);
+            return apiActions.markNotificationsAsViewed(state.selectedItems);
           },
           markAsPinned: () => {
             setState((prev) => ({
               ...prev,
               pinnedItems: [
-                ...new Set([...prev.pinnedItems, state.selectedItem]),
+                ...new Set([...prev.pinnedItems, ...state.selectedItems]),
               ],
             }));
-            return apiActions.markNotificationAsPinned(state.selectedItem);
+            return apiActions.markNotificationsAsPinned(state.selectedItems);
           },
           markAsUnpinned: () => {
             setState((prev) => ({
               ...prev,
               pinnedItems: prev.pinnedItems.filter(
-                (id) => id !== state.selectedItem
+                (id) => !state.selectedItems.includes(id)
               ),
             }));
-            return apiActions.markNotificationAsUnpinned(state.selectedItem);
+            return apiActions.markNotificationsAsUnpinned(state.selectedItems);
           },
         };
 
         try {
           await actions[keyValue]?.();
+          const itemCount = state.selectedItems.length;
+          const actionText = keyValue.replace(/([A-Z])/g, " $1").toLowerCase();
+
           toast.success(
-            `Successfully ${keyValue.replace(/([A-Z])/g, " $1").toLowerCase()}`,
-            {
-              position: "top-center",
-            }
+            `Successfully ${actionText} ${itemCount} notification${
+              itemCount > 1 ? "s" : ""
+            }`
           );
+          // Don't clear selections - let user continue with other actions
+          // setState((prev) => ({ ...prev, selectedItems: [] }));
         } catch (e) {
           toast.error(
-            `Failed to ${keyValue.replace(/([A-Z])/g, " $1").toLowerCase()}`,
-            {
-              position: "top-center",
-            }
+            `Failed to ${keyValue.replace(/([A-Z])/g, " $1").toLowerCase()}`
           );
         } finally {
+          // Clear loading state but keep checkbox checked and selections intact
+          setActionLoadingStates((prev) => ({ ...prev, [keyValue]: false }));
+          // Don't clear checkbox state - let user uncheck manually if needed
           setActionBarStates((prev) => ({ ...prev, [keyValue]: false }));
         }
       }
     },
-    [state.selectedItem, apiActions]
+    [state.selectedItems, apiActions]
   );
 
   const loadMoreData = useCallback(
@@ -536,7 +547,7 @@ const useNotification = ({
         ...prev,
         currentPage: 1,
         hasMore: true,
-        selectedItem: null,
+        selectedItems: [], // Clear selections when filtering
         isLoading: false,
         [state.activeTab === "home" ? "notificationData" : "activityData"]: [],
       }));
@@ -577,7 +588,7 @@ const useNotification = ({
         ...prev,
         currentPage: 1,
         hasMore: true,
-        selectedItem: null,
+        selectedItems: [], // Clear selections when filtering
         isLoading: false,
         [state.activeTab === "home" ? "notificationData" : "activityData"]: [],
       }));
@@ -604,7 +615,9 @@ const useNotification = ({
   const handleItemSelect = useCallback((itemId) => {
     setState((prev) => ({
       ...prev,
-      selectedItem: prev.selectedItem === itemId ? null : itemId,
+      selectedItems: prev.selectedItems.includes(itemId)
+        ? prev.selectedItems.filter((id) => id !== itemId)
+        : [...prev.selectedItems, itemId],
     }));
   }, []);
 
@@ -636,7 +649,7 @@ const useNotification = ({
       ...prev,
       currentPage: 1,
       hasMore: true,
-      selectedItem: null,
+      selectedItems: [], // Clear selections when clearing filters
       isLoading: false,
       [state.activeTab === "home" ? "notificationData" : "activityData"]: [],
     }));

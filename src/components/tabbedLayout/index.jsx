@@ -362,23 +362,23 @@ const TabbedLayout = ({
             <div className="flex gap-4 flex-nowrap min-w-min md:min-w-0">
               {getCurrentListItems()?.map((item, index) => (
                 <div key={index} className="min-w-[200px]">
-                <AvailableList
-                  key={item.key || index}
-                  list={{
-                    name: item?.name,
-                    value: item?.value,
-                    showCheckbox: item?.showCheckbox,
-                    isChecked: item?.isChecked,
-                    onCheckChange:
-                      item?.showCheckbox && item?.key
-                        ? () => handleCheckboxToggle(item.key, item.isChecked)
-                        : undefined,
-                    onClick:
-                      item?.showCheckbox && item?.key
-                        ? () => handleCheckboxToggle(item.key, item.isChecked)
-                        : undefined,
-                  }}
-                />
+                  <AvailableList
+                    key={item.key || index}
+                    list={{
+                      name: item?.name,
+                      value: item?.value,
+                      showCheckbox: item?.showCheckbox,
+                      isChecked: item?.isChecked,
+                      onCheckChange:
+                        item?.showCheckbox && item?.key
+                          ? () => handleCheckboxToggle(item.key, item.isChecked)
+                          : undefined,
+                      onClick:
+                        item?.showCheckbox && item?.key
+                          ? () => handleCheckboxToggle(item.key, item.isChecked)
+                          : undefined,
+                    }}
+                  />
                 </div>
               ))}
             </div>
@@ -396,7 +396,7 @@ const TabbedLayout = ({
           )}
 
           {showSelectedFilterPills && (
-            <div className="px-[24px] pt-[20px]">
+            <div className="px-[20px]">
               <ActiveFiltersBox
                 activeFilters={currentFilterValues}
                 onFilterChange={onFilterChange}

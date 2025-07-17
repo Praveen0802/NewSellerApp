@@ -112,59 +112,51 @@ const ActiveFiltersBox = ({
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-gray-700">Active Filters</h3>
+    <div className="bg-white border border-gray-200 rounded p-1.5 mb-2 shadow-sm">
+      <div className="flex items-center justify-between gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs font-medium text-gray-700 hover:text-gray-900 whitespace-nowrap transition-colors cursor-default">
+            Active Filters
+          </span>
+          <span className="text-gray-400">|</span>
+
+          {activeFilterEntries.map(([key, value]) => (
+            <div
+              key={key}
+              className="inline-flex items-center gap-1 bg-white border border-gray-300 px-2 py-0.5 rounded-full text-xs"
+            >
+              <span className="text-gray-700">
+                {formatFilterValue(key, value)}
+              </span>
+              <button
+                onClick={() => handleClearFilter(key)}
+                className="text-red-500 hover:text-red-700 rounded-full p-0.5 cursor-pointer transition-colors"
+                title={`Clear ${getFilterDisplayName(key)} filter`}
+              >
+                <svg
+                  className="w-2.5 h-2.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+
         <button
           onClick={handleClearAllFilters}
-          className="text-xs text-purple-600 hover:text-purple-800 font-medium flex items-center gap-1 cursor-pointer"
+          className="text-xs text-purple-600 hover:text-purple-800 hover:bg-purple-50 font-medium cursor-pointer whitespace-nowrap px-2 py-0.5 rounded border border-purple-200 hover:border-purple-300 transition-colors"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-          Clear all filters
+          Clear all
         </button>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {activeFilterEntries.map(([key, value]) => (
-          <div
-            key={key}
-            className="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
-          >
-            <span className="font-medium">{getFilterDisplayName(key)}:</span>
-            <span>{formatFilterValue(key, value)}</span>
-            <button
-              onClick={() => handleClearFilter(key)}
-              className="text-gray-500 hover:text-gray-700 ml-1 cursor-pointer"
-              title={`Clear ${getFilterDisplayName(key)} filter`}
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-        ))}
       </div>
     </div>
   );
