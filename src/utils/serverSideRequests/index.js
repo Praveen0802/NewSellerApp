@@ -88,8 +88,6 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
       return { partnerDetails };
     } else if (profile === "txPay") {
       const txPay = await fetchSettingsTxPay(token);
-      console.log(txPay, "txPaytxPaytxPay");
-
       return { txPay };
     }
   } catch (err) {

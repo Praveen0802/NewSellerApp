@@ -8,6 +8,7 @@ import FloatingCheckbox from "../floatinginputFields/floatingCheckBox";
 
 import useNotification from "./useNotification";
 import NotificationPopup from "./NotificationPopup";
+import { Pin } from "lucide-react";
 
 // Main NotificationPage component
 const NotificationPage = (props) => {
@@ -299,18 +300,7 @@ const NotificationPage = (props) => {
               >
                 <div className="flex items-center gap-2 mb-1">
                   {isPinned && (
-                    <svg
-                      className="w-3 h-3 text-blue-500"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    <Pin className="w-3 h-3 text-blue-500" />
                   )}
                   <span
                     className={`inline-block w-2 h-2 rounded-full ${

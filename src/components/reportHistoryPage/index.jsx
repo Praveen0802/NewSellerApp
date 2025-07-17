@@ -5,7 +5,7 @@ import StickyDataTable from "../tradePage/components/stickyDataTable";
 import Button from "../commonComponents/button";
 import OrderInfo from "../orderInfoPopup";
 import LogDetailsModal from "../ModalComponents/LogDetailsModal";
-import { constructTeamMembersDetails, convertKeyToDisplayName } from "@/utils/helperFunctions";
+import { convertKeyToDisplayName } from "@/utils/helperFunctions";
 import {
   downloadReports,
   fetchReportsInventoryLogs,
@@ -15,6 +15,7 @@ import {
   reportHistory,
   reportsOverview,
 } from "@/utils/apiHandler/request";
+import useTeamMembersDetails from "@/Hooks/useTeamMembersDetails";
 
 const RportHistory = (props) => {
   const [filtersApplied, setFiltersApplied] = useState({
@@ -36,17 +37,7 @@ const RportHistory = (props) => {
     props?.response?.reportHistoryData?.value
   );
 
-  const [teamMembers, setTeamMembers] = useState([]);
-
-  const constructTeamMembersData = async() => {
-    const response = await constructTeamMembersDetails();
-    setTeamMembers(response);
-  }
-
-
-  useEffect(()=>{
-    constructTeamMembersData();
-  },[])
+  const { teamMembers } = useTeamMembersDetails();
 
   // Debounce timer ref
   const debounceTimer = useRef(null);
@@ -277,7 +268,7 @@ const RportHistory = (props) => {
         name: "team_members",
         label: "Team Members",
         value: filtersApplied?.team_members,
-        multiselect:true,
+        multiselect: true,
         options: teamMembers,
         parentClassName: "!w-[15%]",
         className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
@@ -331,7 +322,7 @@ const RportHistory = (props) => {
       },
     ],
   };
-console.log(filtersApplied,"filtersApplied")
+  console.log(filtersApplied, "filtersApplied");
   const handleScrollEnd = async () => {
     if (filtersApplied.page >= staticReportsData.meta.total_pages) return;
     setIsLoading(true);
