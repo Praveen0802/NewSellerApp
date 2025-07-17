@@ -6,6 +6,7 @@ import {
   fetchNotificationHistory,
   updateNotification,
 } from "@/utils/apiHandler/request";
+import useTeamMembersDetails from "@/Hooks/useTeamMembersDetails";
 
 const useNotification = ({
   notificationCountData,
@@ -28,6 +29,8 @@ const useNotification = ({
   const loadingRef = useRef(false);
   const hasMoreRef = useRef(true);
   const currentPageRef = useRef(1);
+
+  const { teamMembers } = useTeamMembersDetails();
 
   // Optimized Shimmer component (memoized to prevent unnecessary re-renders)
   const ShimmerItem = () => (
@@ -210,17 +213,15 @@ const useNotification = ({
           label: "Search Match event or Booking number",
           className: "!py-[7px] !px-[12px] !text-[#343432] !text-[14px]",
           placeholder: "Search Match event or Booking number",
+          parentClassName: "!w-[300px]",
           // onKeyDown: (e) => handleFilterChange(),
         },
         {
           type: "select",
           name: "team_member",
           label: "Team Member",
-          options: [
-            // { value: "fulfilled", label: "Fulfilled" },
-            // { value: "incomplete", label: "Incomplete" },
-          ],
-          parentClassName: "!w-[30%]",
+          options: teamMembers,
+          parentClassName: "!w-[10%]",
           className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
           labelClassName: "!text-[11px]",
         },
@@ -243,20 +244,14 @@ const useNotification = ({
           className: "!py-[7px] !px-[12px] !text-[#343432] !text-[14px]",
           onEnter: true,
           placeholder: "Search Activity",
+          parentClassName: "!w-[300px]",
         },
         {
           type: "select",
           name: "team_member",
           label: "Team members",
-          options: [
-            { value: "none", label: "None" },
-            ...Array.from(
-              new Set(state.activityData.map((item) => item.userName))
-            )
-              .filter(Boolean)
-              .map((userName) => ({ value: userName, label: userName })),
-          ],
-          parentClassName: "!w-[30%]",
+          options: teamMembers,
+          parentClassName: "!w-[15%]",
           className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
           labelClassName: "!text-[11px]",
         },
@@ -271,7 +266,7 @@ const useNotification = ({
               label: type.name,
             })),
           ],
-          parentClassName: "!w-[30%]",
+          parentClassName: "!w-[15%]",
           className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
           labelClassName: "!text-[11px]",
         },
@@ -287,7 +282,7 @@ const useNotification = ({
         },
       ],
     }),
-    [state.activityData, state.notifyData]
+    [state.activityData, state.notifyData, teamMembers]
   );
 
   // Updated API actions for batch operations

@@ -4,7 +4,10 @@ import { IconStore } from "@/utils/helperFunctions/iconStore";
 import StickyDataTable from "../tradePage/components/stickyDataTable";
 import OrderInfo from "../orderInfoPopup";
 import LogDetailsModal from "../ModalComponents/LogDetailsModal";
-import { constructTeamMembersDetails, convertKeyToDisplayName } from "@/utils/helperFunctions";
+import {
+  constructTeamMembersDetails,
+  convertKeyToDisplayName,
+} from "@/utils/helperFunctions";
 import Button from "../commonComponents/button";
 import {
   downloadSalesCSVReport,
@@ -15,6 +18,7 @@ import {
 } from "@/utils/apiHandler/request";
 import { Clock, Eye } from "lucide-react";
 import { inventoryLog } from "@/data/testOrderDetails";
+import useTeamMembersDetails from "@/Hooks/useTeamMembersDetails";
 
 const SalesPage = (props) => {
   const { profile, response = {} } = props;
@@ -28,18 +32,8 @@ const SalesPage = (props) => {
   const [filtersApplied, setFiltersApplied] = useState({
     order_status: profile,
   });
-  const [teamMembers, setTeamMembers] = useState([]);
 
-  const constructTeamMembersData = async() => {
-    const response = await constructTeamMembersDetails();
-    setTeamMembers(response);
-  }
-
-
-  useEffect(()=>{
-    constructTeamMembersData();
-  },[])
-
+  const { teamMembers } = useTeamMembersDetails();
 
   const [activeTab, setActiveTab] = useState(profile || "pending");
 
@@ -198,7 +192,7 @@ const SalesPage = (props) => {
         name: "team_members",
         label: "Team Members",
         value: filtersApplied?.team_members,
-        multiselect:true,
+        multiselect: true,
         options: teamMembers,
         parentClassName: "!w-[15%]",
         className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
@@ -284,7 +278,6 @@ const SalesPage = (props) => {
       [columnKey]: !prev[columnKey],
     }));
   };
-  
 
   // Configuration for tabs - matching your screenshot
   const tabsConfig = [
