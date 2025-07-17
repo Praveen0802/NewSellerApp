@@ -33,11 +33,12 @@ import {
   reportsOverview,
   topSellingEvents,
   fetchBulkListing,
+  fetchSettingsTxPay,
 } from "../apiHandler/request";
 
 export const fetchSettingsPageDetails = async (profile, token, ctx) => {
   const validProfiles = ["myAccount", "changepassword"];
-  console.log(profile,'profileprofile')
+  console.log(profile, "profileprofile");
   try {
     if (validProfiles?.includes(profile)) {
       console.log("fetchSettingsPageDetails", profile);
@@ -49,8 +50,8 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
       // return { addressDetails, profileDetails, fetchCountries, dialingCode };
     } else if (profile === "addressBook") {
       const results = await Promise.allSettled([
-        fetchAddressBookDetails(token, "", "GET", "", ),
-        fetchAddressBookDetails(token, "", "GET", "", ),
+        fetchAddressBookDetails(token, "", "GET", ""),
+        fetchAddressBookDetails(token, "", "GET", ""),
         fetchProfileDetails(token, "GET"),
         fetchCountrieList(token),
       ]);
@@ -85,8 +86,13 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
     } else if (profile == "ticketDelivery") {
       const partnerDetails = await getPartnerSetting(token);
       return { partnerDetails };
+    } else if (profile === "txPay") {
+      const txPay = await fetchSettingsTxPay(token);
+      console.log(txPay, "txPaytxPaytxPay");
+
+      return { txPay };
     }
-  } catch(err) {
+  } catch (err) {
     console.log("ERROR in fetchSettingsPageDetails", err);
   }
 };
@@ -100,12 +106,11 @@ export const fetchSalesPageDetails = async (profile, token, ctx) => {
 
 export const fetchWalletPageDetails = async (token) => {
   try {
-    const [  transactionHistory] =
-      await Promise.all([
-        // fetchLMTOverview(token),
-        // fetchDepositHistoryMonthly(token),
-        fetchTransactionHistoryMonthly(token),
-      ]);
+    const [transactionHistory] = await Promise.all([
+      // fetchLMTOverview(token),
+      // fetchDepositHistoryMonthly(token),
+      fetchTransactionHistoryMonthly(token),
+    ]);
     return {
       ...transactionHistory,
       // ...depositHistory,
@@ -178,9 +183,7 @@ export const reportHistoryData = async (token) => {
   return { reportsOverviewData, reportHistoryData };
 };
 
-export const fetchBulkListingData = async(token) => {
-  const [bulkListingData] = await Promise.allSettled([
-    fetchBulkListing(token),
-  ]);
+export const fetchBulkListingData = async (token) => {
+  const [bulkListingData] = await Promise.allSettled([fetchBulkListing(token)]);
   return bulkListingData;
-}
+};

@@ -172,7 +172,7 @@ export const fetchSalesOverview = async (token, params = {}) => {
 };
 
 export const fetchProfileDetails = async (token, method, data) => {
-  console.log(token, method, data,'oooooooooooooo');
+  console.log(token, method, data, "oooooooooooooo");
   try {
     const response = await makeRequest({
       url: API_ROUTES.PROFILE_DETAILS,
@@ -1358,6 +1358,20 @@ export const fetchNotificationCount = async (token) => {
   try {
     const response = await makeRequest({
       url: `${API_ROUTES.GET_NOTIFICATION_COUNT}`,
+      method: "GET",
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchNotificationCount", error);
+    return error?.response?.data;
+  }
+};
+
+export const fetchSettingsTxPay = async (token) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.GET_TX_PAY}`,
       method: "GET",
       ...(token && { token: token }),
     });

@@ -2,14 +2,14 @@ const ROOT_URL = process.env.API_BASE_URL;
 
 export const API_ROUTES = {
   REPORTS_OVERVIEW: `/reports/overview`,
-  FETCH_BULK_LISTING:`/events/search-events`,
+  FETCH_BULK_LISTING: `/events/search-events`,
   REPORTS_EVENT_SEARCH: `/reports/events-search`,
   REPORT_HISTORY: `/reports/history`,
   LOGIN: `/auth/login`,
   REGISTER_USER: "/auth/register",
   VERIFY_EMAIL: "/auth/verify-email",
   RESEND_VERIFICATION_REQUEST: "/auth/resend-verify-email",
-  SALES_PAGE:`/sales/overview`,
+  SALES_PAGE: `/sales/overview`,
   SALES_OVERVIEW: `/dashboard/sales-overview`,
   AWAITING_DELIVERY: `/dashboard/awaiting-delivery`,
   DASHBOARD_NOTIFICATIONS: `/dashboard/notifications`,
@@ -19,8 +19,8 @@ export const API_ROUTES = {
   DASHBOARD_ACTIVITY: `/dashboard/activity`,
   PROFILE_DETAILS: `/settings/my-account`,
   UPDATE_PROFILE_DETAILS: `/settings/update-my-account`,
-  EXPORT_REPORTS:`/reports/export`,
-  EXPORT_SALES:`/sales/export-reports`,
+  EXPORT_REPORTS: `/reports/export`,
+  EXPORT_SALES: `/sales/export-reports`,
   GET_ORDER_HISTORY: `/wallet/get-order-history`,
   SEND_RESET_REQUEST: `/auth/password/reset-request`,
   FETCH_ADDRESS_BOOK_DETAILS: `/settings/get-address-book`,
@@ -81,4 +81,5 @@ export const API_ROUTES = {
   NOTIFICATION_ACTIVITY_HISTORY: "/notification/activity-history",
   NOTIFICATION_UPDATE: "/notification/update-notification",
   GET_NOTIFICATION_COUNT: "/ui-settings/menu-notification",
+  GET_TX_PAY: "/settings/lmt-pay",
 };
