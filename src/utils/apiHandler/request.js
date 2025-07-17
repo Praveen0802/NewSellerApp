@@ -1516,3 +1516,17 @@ export const fetchNotificationCount = async (token) => {
     return error?.response?.data;
   }
 };
+
+export const fetchSettingsTxPay = async (token) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.GET_TX_PAY}`,
+      method: "GET",
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchNotificationCount", error);
+    return error?.response?.data;
+  }
+};
