@@ -93,7 +93,7 @@ const TableView = (props) => {
                 <div className="flex justify-between">
                   <span className="text-gray-500">Phone:</span>
                   <span>
-                    +{user.phone_code} {user.mobile_number}
+                    {user.country_code} {user.mobile_number}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -144,7 +144,7 @@ const TableView = (props) => {
                   </td>
                   <td className={rowClassName}>{user.email}</td>
                   <td className={rowClassName}>
-                    +{user.phone_code} {user.mobile_number}
+                    {user.country_code} {user.mobile_number}
                   </td>
                   <td className={rowClassName}>{user.country}</td>
                   <td className={rowClassName}>

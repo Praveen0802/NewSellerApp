@@ -582,17 +582,75 @@ export const fetchUserDetails = async (
   params
 ) => {
   try {
-    console.log(
-      `${API_ROUTES.FETCH_USER_DETAILS}${id ? `/${id}` : ""}`,
-      "fetchUserDetails",
-      token,
-      id,
-      method,
-      data,
-      params
-    );
     const response = await makeRequest({
-      url: `${API_ROUTES.FETCH_USER_DETAILS}${id ? `/${id}` : ""}`,
+      url: `${API_ROUTES.GET_TEAM_MEMBERS}${id ? `/${id}` : ""}`,
+      method: method,
+      ...(token && { token: token }),
+      ...(data && { data: data }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchUserDetails", error);
+    throw error;
+  }
+};
+
+export const DeleteUserDetails = async (
+  token,
+  id,
+  method = "GET",
+  data,
+  params
+) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.DELETE_TEAM_MEMBERS}${id ? `/${id}` : ""}`,
+      method: method,
+      ...(token && { token: token }),
+      ...(data && { data: data }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchUserDetails", error);
+    throw error;
+  }
+};
+
+
+export const addTeamMembers = async (
+  token,
+  id,
+  method = "GET",
+  data,
+  params
+) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.ADD_TEAM_MEMBERS}${id ? `/${id}` : ""}`,
+      method: method,
+      ...(token && { token: token }),
+      ...(data && { data: data }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchUserDetails", error);
+    throw error;
+  }
+};
+
+export const updateTeamMembers = async (
+  token,
+  id,
+  method = "GET",
+  data,
+  params
+) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.UPDATE_TEAM_MEMBERS}${id ? `/${id}` : ""}`,
       method: method,
       ...(token && { token: token }),
       ...(data && { data: data }),

@@ -5,17 +5,17 @@ import Button from "../commonComponents/button";
 import TableView from "./components/tableView";
 import RightViewModal from "../commonComponents/rightViewModal";
 import AddEditUser from "./components/addEditUser";
-import { fetchUserDetails } from "@/utils/apiHandler/request";
+import { DeleteUserDetails, fetchUserDetails } from "@/utils/apiHandler/request";
 import DeleteConfirmation from "../commonComponents/deleteConfirmation";
 import { toast } from "react-toastify";
 
 const MyTeamView = (props) => {
   const { userDetails, fetchCountries } = props;
-  const { travel_Customers = [], meta = {} } = userDetails || {};
+  const { my_teams = [], meta = {} } = userDetails || {};
   const [metaDetails, setMetaDetails] = useState(meta);
-
+  console.log(props,"my_teams", my_teams, fetchCountries);
   const [travelCustomerValues, setTravelCustomerValues] =
-    useState(travel_Customers);
+    useState(my_teams);
   const [deleteLoader, setDeleteLoader] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -48,7 +48,7 @@ const MyTeamView = (props) => {
   const handleApiCAll = async (params) => {
     setIsLoading(true);
     const response = await fetchUserDetails("", "", "GET", "", params);
-    setTravelCustomerValues(response?.travel_Customers);
+    setTravelCustomerValues(response?.my_teams);
     setMetaDetails(response?.meta);
     setIsLoading(false);
   };
@@ -113,7 +113,7 @@ const MyTeamView = (props) => {
     const response = await fetchUserDetails("", "", "GET", "", {
       id: item?.id,
     });
-    setEditUserValues({ id: item?.id, ...response?.travel_Customers[0] });
+    setEditUserValues({ id: item?.id, ...response?.my_teams[0] });
     setUserViewPopup({
       show: true,
       type: "edit",
@@ -135,7 +135,7 @@ const MyTeamView = (props) => {
 
   const handleDeleteCall = async () => {
     setDeleteLoader(true);
-    await fetchUserDetails("", deleteId, "DELETE");
+    await DeleteUserDetails("", deleteId, "DELETE");
     toast.success("User deleted successfully");
     handleApiCAll({
       page: currentPage,

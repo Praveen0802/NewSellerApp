@@ -58,7 +58,7 @@ const AddEditAddress = ({
     zipCode: zip_code,
     is_default: primary_address == 1 ? true : false,
   });
-
+console.log(formFieldValues?.country,'iiiiiiii')
   const fetchCityDetails = async (id) => {
     if (!id) return;
     try {
@@ -126,7 +126,7 @@ const AddEditAddress = ({
   const countryList = fetchCountries?.map((list) => {
     return { value: list?.id, label: list?.name };
   });
-
+  
   const fieldStyle =
     "w-full rounded-md border border-gray-300 p-3 text-gray-700 focus:border-indigo-300 focus:ring-1 focus:ring-indigo-300 focus:outline-none transition-all duration-200";
 

@@ -40,7 +40,6 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
   const validProfiles = ["myAccount", "changepassword"];
   try {
     if (validProfiles?.includes(profile)) {
-      console.log("fetchSettingsPageDetails", profile);
       const [profileDetails] = await Promise.all([
         fetchProfileDetails(token, "GET"),
       ]);
@@ -49,7 +48,7 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
       // return { addressDetails, profileDetails, fetchCountries, dialingCode };
     } else if (profile === "addressBook") {
       const results = await Promise.allSettled([
-        fetchAddressBookDetails(token, "", "GET", ""),
+        fetchAddressBookDetails(token, "", "GET", "",{primary_address: 1}),
         fetchAddressBookDetails(token, "", "GET", ""),
         fetchProfileDetails(token, "GET"),
         fetchCountrieList(token),
@@ -59,7 +58,6 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
         results.map((result) =>
           result.status === "fulfilled" ? result.value : null
         );
-      console.log(primaryAddress, "primaryAddressprimaryAddressprimaryAddress");
       return { primaryAddress, defaultAddress, profileDetails, fetchCountries };
     } else if (profile === "bankAccounts") {
       const [bankDetails, fetchCountries] = await Promise.all([
@@ -70,12 +68,13 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
         bankDetails,
         fetchCountries,
       };
-    } else if (profile == "myCustomers") {
-      const [userDetails] = await Promise.all([
+    } else if (profile == "myTeam") {
+      const [userDetails,fetchCountries] = await Promise.all([
         fetchUserDetails(token),
-        // fetchCountrieList(token),
+        fetchCountrieList(token),
       ]);
-      return { userDetails };
+      console.log(userDetails,'userDetailsuserDetails')
+      return { userDetails,fetchCountries };
     } else if (profile == "linkedCards") {
       const shopperRefernce = ctx?.req?.cookies?.user_token;
 

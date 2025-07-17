@@ -3,6 +3,9 @@ const ROOT_URL = process.env.API_BASE_URL;
 export const API_ROUTES = {
   REPORTS_OVERVIEW: `/reports/overview`,
   GET_TEAM_MEMBERS:`/settings/my-teams`,
+  DELETE_TEAM_MEMBERS:`/settings/delete-my-team`,
+  ADD_TEAM_MEMBERS:`/settings/add-my-team`,
+  UPDATE_TEAM_MEMBERS:`/settings/update-my-team`,
   SALES_ORDER_DETAILS: `/sales/order-details`,
   REPORTS_ORDER_DETAILS: `/reports/order-details`,
   REPORTS_ORDER_LOG:  `/reports/order-logs`,
@@ -47,7 +50,6 @@ export const API_ROUTES = {
   REFRESH_AUTH_TOKEN: `/auth/refresh-token`,
   FETCH_COUNTRIES: `/countries`,
   FETCH_CITIES: `/cities`,
-  FETCH_USER_DETAILS: `/settings/my-teams`,
   RESET_PASSWORD: `/settings/reset-password`,
   GET_PAYMENT_CONFIG: "/get-payment-config",
   STORE_PAYMENT_METHOD: "/store-payment-method",
