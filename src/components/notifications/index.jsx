@@ -20,7 +20,7 @@ const NotificationPage = (props) => {
   const [state, setState] = useState({
     notifyData: initialApiData || {},
     activeTab: notify || "home",
-    selectedItem: null,
+    selectedItems: [], // Changed from selectedItem to selectedItems array
     popupItem: null,
     showPopup: false,
     isLoading: false,
@@ -50,6 +50,13 @@ const NotificationPage = (props) => {
   const [selectedFilterData, setSelectedFilterData] = useState({});
 
   const [actionBarStates, setActionBarStates] = useState({
+    markAsViewed: false,
+    markAsPinned: false,
+    markAsUnpinned: false,
+  });
+
+  // Add loading states for each action
+  const [actionLoadingStates, setActionLoadingStates] = useState({
     markAsViewed: false,
     markAsPinned: false,
     markAsUnpinned: false,
@@ -86,6 +93,7 @@ const NotificationPage = (props) => {
     setState,
     notificationCountData,
     setActionBarStates,
+    setActionLoadingStates,
     filtersApplied,
     filtersRef,
     setSelectedFilterData,
@@ -183,7 +191,7 @@ const NotificationPage = (props) => {
       currentPage: 1,
       hasMore: true,
       isLoading: false,
-      selectedItem: null,
+      selectedItems: [], // Reset selected items when changing tabs
     }));
 
     // Update refs
@@ -215,10 +223,44 @@ const NotificationPage = (props) => {
     }
   }, [state.activeTab]);
 
+  // Auto-hide action bar when no items selected
+  useEffect(() => {
+    if (state.selectedItems.length === 0) {
+      setActionBarStates({
+        markAsViewed: false,
+        markAsPinned: false,
+        markAsUnpinned: false,
+      });
+    }
+  }, [state.selectedItems.length]);
+
+  // Updated handleItemSelect for multi-select
+  const handleMultiItemSelect = useCallback((itemId) => {
+    setState((prev) => {
+      const isSelected = prev.selectedItems.includes(itemId);
+      return {
+        ...prev,
+        selectedItems: isSelected
+          ? prev.selectedItems.filter((id) => id !== itemId)
+          : [...prev.selectedItems, itemId],
+      };
+    });
+  }, []);
+
+  // Clear all selections
+  const handleClearSelection = useCallback(() => {
+    setState((prev) => ({ ...prev, selectedItems: [] }));
+    setActionBarStates({
+      markAsViewed: false,
+      markAsPinned: false,
+      markAsUnpinned: false,
+    });
+  }, []);
+
   // Memoized list item renderer
   const renderListItem = useCallback(
     (item, index) => {
-      const isSelected = state.selectedItem === item.id;
+      const isSelected = state.selectedItems.includes(item.id);
       const isPinned = state.pinnedItems.includes(item.id);
       const isViewed = state.viewedItems.includes(item.id);
 
@@ -237,7 +279,7 @@ const NotificationPage = (props) => {
               <input
                 type="checkbox"
                 checked={isSelected}
-                onChange={() => handleItemSelect(item.id)}
+                onChange={() => handleMultiItemSelect(item.id)}
                 className="mt-1 rounded border-gray-300"
                 aria-label={`Select ${item.title}`}
               />
@@ -314,11 +356,11 @@ const NotificationPage = (props) => {
       );
     },
     [
-      state.selectedItem,
+      state.selectedItems,
       state.pinnedItems,
       state.viewedItems,
       state.activeTab,
-      handleItemSelect,
+      handleMultiItemSelect,
       handleViewItem,
     ]
   );
@@ -373,11 +415,11 @@ const NotificationPage = (props) => {
           <h3 className="text-sm font-medium text-gray-900">
             {currentData.length}{" "}
             {state.activeTab === "home" ? "Notifications" : "Activity Logs"}
-            {state.hasMore && (
+            {/* {state.hasMore && (
               <span className="text-xs text-gray-500 ml-2">
                 (Scroll down for more)
               </span>
-            )}
+            )} */}
           </h3>
         </div>
 
@@ -447,11 +489,11 @@ const NotificationPage = (props) => {
           {/* End of List Indicator */}
           {!state.hasMore && currentData.length > 0 && !state.isLoading && (
             <div className="p-4 text-center text-gray-500 text-sm border-t border-gray-100">
-              <p>✅ You've reached the end of the list</p>
-              <p className="text-xs mt-1">
-                All{" "}
+              <p>✅ You've reached the end</p>
+              <p className="text-xs mt-1 text-gray-400">
+                {currentData.length}{" "}
                 {state.activeTab === "home" ? "notifications" : "activity logs"}{" "}
-                loaded ({currentData.length} total)
+                loaded
               </p>
             </div>
           )}
@@ -468,10 +510,10 @@ const NotificationPage = (props) => {
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50 shadow-lg">
           <div className="flex items-center justify-between max-w-7xl mx-auto pl-20">
             <div className="flex items-center gap-4">
-              {/* Action Checkboxes - Only show when item is selected */}
-              {state.selectedItem && (
+              {/* Action Checkboxes - Only show when items are selected */}
+              {state.selectedItems.length > 0 && (
                 <>
-                  <div>
+                  <div className="flex items-center">
                     <FloatingCheckbox
                       id="markAsViewed"
                       name="markAsViewed"
@@ -482,12 +524,19 @@ const NotificationPage = (props) => {
                       className=""
                       labelClassName="!text-gray-700"
                       beforeIcon={
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <div className="flex items-center gap-1 relative">
+                          {!actionLoadingStates.markAsViewed && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          )}
+                          {actionLoadingStates.markAsViewed && (
+                            <div className="w-2 h-2 border border-blue-500 border-dotted rounded-full animate-spin"></div>
+                          )}
+                        </div>
                       }
                     />
                   </div>
 
-                  <div>
+                  <div className="flex items-center">
                     <FloatingCheckbox
                       id="markAsPinned"
                       name="markAsPinned"
@@ -498,12 +547,19 @@ const NotificationPage = (props) => {
                       className=""
                       labelClassName="!text-gray-700"
                       beforeIcon={
-                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                        <div className="flex items-center gap-1 relative">
+                          {!actionLoadingStates.markAsPinned && (
+                            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                          )}
+                          {actionLoadingStates.markAsPinned && (
+                            <div className="w-2 h-2 border border-gray-400 border-dotted rounded-full animate-spin"></div>
+                          )}
+                        </div>
                       }
                     />
                   </div>
 
-                  <div>
+                  <div className="flex items-center">
                     <FloatingCheckbox
                       id="markAsUnpinned"
                       name="markAsUnpinned"
@@ -514,7 +570,14 @@ const NotificationPage = (props) => {
                       className=""
                       labelClassName="!text-gray-700"
                       beforeIcon={
-                        <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                        <div className="flex items-center gap-1 relative">
+                          {!actionLoadingStates.markAsUnpinned && (
+                            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                          )}
+                          {actionLoadingStates.markAsUnpinned && (
+                            <div className="w-2 h-2 border border-gray-300 border-dotted rounded-full animate-spin"></div>
+                          )}
+                        </div>
                       }
                     />
                   </div>
@@ -522,20 +585,35 @@ const NotificationPage = (props) => {
               )}
             </div>
 
-            {/* Right side info - Show when item is selected */}
-            {state.selectedItem && (
+            {/* Right side info - Show when items are selected */}
+
+            {state.selectedItems.length > 0 && (
               <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-500">
-                  1 notification selected
-                </span>
-                <button
-                  onClick={() =>
-                    setState((prev) => ({ ...prev, selectedItem: null }))
-                  }
-                  className="text-sm text-gray-400 hover:text-gray-600 underline"
-                >
-                  Clear selection
-                </button>
+                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 group hover:bg-blue-100 transition-colors">
+                  <span className="text-sm font-medium text-blue-700">
+                    {state.selectedItems.length} notification
+                    {state.selectedItems.length > 1 ? "s" : ""} selected
+                  </span>
+                  <button
+                    onClick={handleClearSelection}
+                    className="text-blue-500 hover:text-blue-700 hover:bg-blue-200 rounded-full p-1 transition-colors cursor-pointer"
+                    aria-label="Clear all selections"
+                  >
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </div>
             )}
           </div>

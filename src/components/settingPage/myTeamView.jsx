@@ -12,7 +12,6 @@ import { toast } from "react-toastify";
 const MyTeamView = (props) => {
   const { userDetails, fetchCountries } = props;
   const { travel_Customers = [], meta = {} } = userDetails || {};
-console.log(props,'ppppppp')
   const [metaDetails, setMetaDetails] = useState(meta);
 
   const [travelCustomerValues, setTravelCustomerValues] =

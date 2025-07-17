@@ -28,11 +28,11 @@ const SettingsPage = (props) => {
 
   const IconclassName = "size-6";
   const profileValues = [
-    {
-      icon: <IconStore.profile className={IconclassName} />,
-      title: "Overview",
-      key: "overview",
-    },
+    // {
+    //   icon: <IconStore.profile className={IconclassName} />,
+    //   title: "Overview",
+    //   key: "overview",
+    // },
     {
       icon: <IconStore.myContacts className={IconclassName} />,
       title: "My Account",
@@ -54,16 +54,15 @@ const SettingsPage = (props) => {
       title: "TX Pay",
       key: "txPay",
     },
-    {
-      icon: <IconStore.myContacts className={IconclassName} />,
-      title: "My Referral",
-      key: "myRefferal",
-    },
-
+    // {
+    //   icon: <IconStore.myContacts className={IconclassName} />,
+    //   title: "My Referral",
+    //   key: "myRefferal",
+    // },
     {
       icon: <IconStore.profile className={IconclassName} />,
-      title: "My Customers",
-      key: "myCustomers",
+      title: "My Team",
+      key: "myTeam",
     },
     // {
     //   icon: <IconStore.tickets className={IconclassName} />,
@@ -85,11 +84,9 @@ const SettingsPage = (props) => {
       title: "Request a Feature",
       key: "featureRequest",
     },
-    
   ];
 
   const handleTabClick = (tab) => {
-   
     if (tab === "featureRequest") {
       setShowSubjectDescriptionPopup(true);
       return;
@@ -107,12 +104,12 @@ const SettingsPage = (props) => {
     overview: <Overview />,
     myRefferal: <MyRefferal />,
     myAccount: <MyAccountTeam {...apiData} />,
-    kyc:<KYCPopup {...apiData} />,
+    kyc: <KYCPopup {...apiData} />,
     // UpdateAccount: <MyAccountTeam {...apiData} />,
     changepassword: <ChangePassword {...apiData} />,
     addressBook: <AddressBook {...apiData} />,
     bankAccounts: <BankAccounts {...apiData} />,
-    myCustomers: <MyTeamView {...apiData} />,
+    myTeam: <MyTeamView {...apiData} />,
     linkedCards: <LinkedCards {...apiData} />,
     ticketDelivery: <TicketDelivery {...apiData} />,
     txPay: <TXPay />,
@@ -140,15 +137,15 @@ const SettingsPage = (props) => {
             style={{ top: "57px" }}
           >
             <div className="p-4">
-              <ul className="flex flex-col gap-6 list-none">
+              <ul className="flex flex-col gap-2 list-none">
                 {profileValues.map((value, index) => (
                   <li
                     key={index}
-                    className={`flex ${
+                    className={`flex items-center gap-3 cursor-pointer rounded-lg px-3 py-2 transition-all duration-200 ${
                       activeTab == value?.key
-                        ? "text-[#130061] font-semibold"
-                        : "text-gray-600"
-                    } items-center gap-3 cursor-pointer`}
+                        ? "text-[#130061] font-semibold bg-[#130061]/10"
+                        : "text-gray-600 hover:text-[#130061] hover:bg-gray-50"
+                    }`}
                     onClick={() => handleTabClick(value?.key)}
                   >
                     {value?.icon}
@@ -178,8 +175,10 @@ const SettingsPage = (props) => {
             {profileValues?.map((value, index) => (
               <div
                 key={index}
-                className={`flex flex-col min-w-[80px] w-[100px] justify-center items-center p-2 ${
-                  activeTab === value?.key ? "text-[#130061]" : "text-gray-500"
+                className={`flex flex-col min-w-[80px] w-[110px] justify-center items-center p-2 rounded-lg transition-all duration-200 ${
+                  activeTab === value?.key
+                    ? "text-[#130061] bg-[#130061]/10"
+                    : "text-gray-500 hover:text-[#130061] hover:bg-gray-50"
                 }`}
                 onClick={() => handleTabClick(value?.key)}
               >
@@ -196,14 +195,16 @@ const SettingsPage = (props) => {
         // Desktop Layout (Original)
         <div className="flex h-full">
           {/* Fixed left sidebar - no overflow */}
-          <div className="bg-white w-[200px] shadow pl-4 pr-8 py-8 h-full">
-            <ul className="flex flex-col gap-[25px] list-none">
+          <div className="bg-white  shadow pl-4 pr-8 py-8 h-full">
+            <ul className="flex flex-col gap-2 list-none">
               {profileValues.map((value, index) => (
                 <li
                   key={index}
-                  className={`flex ${
-                    activeTab == value?.key ? "text-[#130061]" : "text-gray-600"
-                  } items-center gap-3 cursor-pointer`}
+                  className={`flex items-center gap-3 cursor-pointer rounded-lg px-3 py-3 transition-all duration-200 ${
+                    activeTab == value?.key
+                      ? "text-[#130061] font-semibold bg-[#130061]/10"
+                      : "text-gray-600 hover:text-[#130061] hover:bg-gray-50"
+                  }`}
                   onClick={() => handleTabClick(value?.key)}
                 >
                   {value?.icon}
@@ -219,6 +220,7 @@ const SettingsPage = (props) => {
           </div>
         </div>
       )}
+
       <SubjectDescriptionPopup
         show={showSubjectDescriptionPopup}
         onClose={() => setShowSubjectDescriptionPopup(false)}
