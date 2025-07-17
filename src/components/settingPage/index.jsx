@@ -27,6 +27,7 @@ const SettingsPage = (props) => {
   const isMobile = useIsMobile();
 
   const IconclassName = "size-6";
+
   const profileValues = [
     // {
     //   icon: <IconStore.profile className={IconclassName} />,
@@ -112,7 +113,7 @@ const SettingsPage = (props) => {
     myTeam: <MyTeamView {...apiData} />,
     linkedCards: <LinkedCards {...apiData} />,
     ticketDelivery: <TicketDelivery {...apiData} />,
-    txPay: <TXPay />,
+    txPay: <TXPay {...apiData} />,
   };
 
   // Toggle mobile menu

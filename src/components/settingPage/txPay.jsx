@@ -1,6 +1,6 @@
 import CurrencyOverview from "./CurrencyOverview";
 
-const TXPay = () => {
+const TXPay = (data) => {
   return (
     <div className="bg-white border-l-[1px] border-[#DADBE5] h-full">
       <div className="bg-[#F1F0FE] p-5">
@@ -8,7 +8,7 @@ const TXPay = () => {
       </div>
 
       <div className="p-5">
-        <CurrencyOverview />
+        <CurrencyOverview data={data?.txPay} />
       </div>
     </div>
   );

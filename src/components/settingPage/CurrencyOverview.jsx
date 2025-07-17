@@ -1,45 +1,10 @@
 import { TrendingUp } from "lucide-react";
 
 const CurrencyOverview = ({ data }) => {
-  // Default data if none provided
-  const defaultData = {
-    success: true,
-    data: {
-      overview: [
-        {
-          currency: "GBP",
-          available_fund: "£ 0.00",
-          pending_fund: "£ 0.00",
-          total_revenue: "£ 123,386.23",
-          bank_account: [],
-        },
-        {
-          currency: "USD",
-          available_fund: "$ 0.00",
-          pending_fund: "$ 0.00",
-          total_revenue: "$ 150.00",
-          bank_account: [],
-        },
-        {
-          currency: "EUR",
-          available_fund: "€ 0.00",
-          pending_fund: "€ 0.00",
-          total_revenue: "€ 9,871.63",
-          bank_account: [],
-        },
-        {
-          currency: "AED",
-          available_fund: "د.إ 0.00",
-          pending_fund: "د.إ 0.00",
-          total_revenue: "د.إ 3,495.00",
-          bank_account: [],
-        },
-      ],
-    },
-  };
+  console.log("sssss", data);
 
   // Use provided data or default
-  const apiData = data || defaultData;
+  const apiData = data || {};
   const currencyData = apiData.data?.overview || [];
 
   // Helper function to format currency values

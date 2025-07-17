@@ -33,11 +33,13 @@ import {
   reportsOverview,
   topSellingEvents,
   fetchBulkListing,
+  fetchSettingsTxPay,
   fetchTournamentsList,
 } from "../apiHandler/request";
 
 export const fetchSettingsPageDetails = async (profile, token, ctx) => {
   const validProfiles = ["myAccount", "changepassword"];
+  console.log(profile, "profileprofile");
   try {
     if (validProfiles?.includes(profile)) {
       const [profileDetails] = await Promise.all([
@@ -84,6 +86,11 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
     } else if (profile == "ticketDelivery") {
       const partnerDetails = await getPartnerSetting(token);
       return { partnerDetails };
+    } else if (profile === "txPay") {
+      const txPay = await fetchSettingsTxPay(token);
+      console.log(txPay, "txPaytxPaytxPay");
+
+      return { txPay };
     }
   } catch (err) {
     console.log("ERROR in fetchSettingsPageDetails", err);

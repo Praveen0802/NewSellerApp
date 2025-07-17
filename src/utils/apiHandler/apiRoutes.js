@@ -8,7 +8,7 @@ export const API_ROUTES = {
   UPDATE_TEAM_MEMBERS:`/settings/update-my-team`,
   SALES_ORDER_DETAILS: `/sales/order-details`,
   REPORTS_ORDER_DETAILS: `/reports/order-details`,
-  REPORTS_ORDER_LOG:  `/reports/order-logs`,
+  REPORTS_ORDER_LOG: `/reports/order-logs`,
   REPORTS_INVENTORY_LOGS: `/reports/inventory-logs`,
   SALES_ORDER_LOG: `/sales/order-logs`,
   SALES_INVENTORY_LOG: `/sales/inventory-logs`,
@@ -91,4 +91,5 @@ export const API_ROUTES = {
   NOTIFICATION_ACTIVITY_HISTORY: "/notification/activity-history",
   NOTIFICATION_UPDATE: "/notification/update-notification",
   GET_NOTIFICATION_COUNT: "/ui-settings/menu-notification",
+  GET_TX_PAY: "/settings/lmt-pay",
 };
