@@ -2,6 +2,7 @@ import axios from "axios";
 import AJAX, { fetchAuthorizationKey } from ".";
 import { API_ROUTES } from "./apiRoutes";
 import { allCountryCodes } from "../constants/allContryCodes";
+import { inventoryLog, orderDetails, orderLog } from "@/data/testOrderDetails";
 
 const isClient = typeof window !== "undefined";
 
@@ -172,7 +173,7 @@ export const fetchSalesOverview = async (token, params = {}) => {
 };
 
 export const fetchProfileDetails = async (token, method, data) => {
-  console.log(token, method, data,'oooooooooooooo');
+  console.log(token, method, data, "oooooooooooooo");
   try {
     const response = await makeRequest({
       url: API_ROUTES.PROFILE_DETAILS,
@@ -783,6 +784,154 @@ export const fetchSalesPageData = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchSalesPageData", error);
+    throw error;
+  }
+};
+
+export const getTeamMembers = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_TEAM_MEMBERS,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getTeamMembers", error);
+    throw error;
+  }
+};
+
+export const fetchSalesOrderDetails = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.SALES_ORDER_DETAILS,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success
+      ? response?.data?.data?.length > 0
+        ? response?.data?.data
+        : orderDetails
+      : orderDetails;
+  } catch (error) {
+    // console.log("ERROR in fetchSalesPageData", error);
+    // throw error;
+    return orderDetails;
+  }
+};
+
+export const fetchSalesOrderLogs = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.SALES_ORDER_LOG,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success
+      ? response?.data?.data?.length > 0
+        ? response?.data?.data
+        : orderLog
+      : orderLog;
+  } catch (error) {
+    console.log("ERROR in fetchSalesPageData", error);
+    throw error;
+  }
+};
+
+export const fetchSalesInventoryLogs = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.SALES_INVENTORY_LOG,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success
+      ? response?.data?.data?.length > 0
+        ? response?.data?.data
+        : inventoryLog
+      : inventoryLog;
+  } catch (error) {
+    console.log("ERROR in fetchSalesPageData", error);
+    throw error;
+  }
+};
+
+export const fetchReportsOrderDetails = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.REPORTS_ORDER_DETAILS,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success
+      ? response?.data?.data?.length > 0
+        ? response?.data?.data
+        : orderDetails
+      : orderDetails;
+  } catch (error) {
+    // console.log("ERROR in fetchSalesPageData", error);
+    // throw error;
+    return orderDetails;
+  }
+};
+
+export const fetchReportsOrderLogs = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.REPORTS_ORDER_LOG,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success
+      ? response?.data?.data?.length > 0
+        ? response?.data?.data
+        : orderLog
+      : orderLog;
+  } catch (error) {
+    return orderLog;
+    console.log("ERROR in fetchReportsPageData", error);
+    throw error;
+  }
+};
+
+export const fetchReportsInventoryLogs = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.REPORTS_INVENTORY_LOGS,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success
+      ? response?.data?.data?.length > 0
+        ? response?.data?.data
+        : inventoryLog
+      : inventoryLog;
+  } catch (error) {
+    return inventoryLog;
+    console.log("ERROR in fetchSalesPageData", error);
+    throw error;
+  }
+};
+
+export const fetchTournamentsList = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.TOURNAMENTS_LIST,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchTournamentsList", error);
     throw error;
   }
 };

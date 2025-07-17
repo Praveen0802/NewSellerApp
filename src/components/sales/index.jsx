@@ -1,34 +1,52 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TabbedLayout from "../tabbedLayout";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import StickyDataTable from "../tradePage/components/stickyDataTable";
 import OrderInfo from "../orderInfoPopup";
 import LogDetailsModal from "../ModalComponents/LogDetailsModal";
-import { convertKeyToDisplayName } from "@/utils/helperFunctions";
+import { constructTeamMembersDetails, convertKeyToDisplayName } from "@/utils/helperFunctions";
 import Button from "../commonComponents/button";
-import { downloadSalesCSVReport } from "@/utils/apiHandler/request";
+import {
+  downloadSalesCSVReport,
+  fetchSalesInventoryLogs,
+  fetchSalesOrderDetails,
+  fetchSalesOrderLogs,
+  fetchSalesPageData,
+} from "@/utils/apiHandler/request";
 import { Clock, Eye } from "lucide-react";
+import { inventoryLog } from "@/data/testOrderDetails";
 
 const SalesPage = (props) => {
   const { profile, response = {} } = props;
+  const { tournamentList } = response;
+  const tournamentOptions = tournamentList?.map((item) => ({
+    value: item.tournament_id,
+    label: item.tournament_name,
+  }));
+  const [pageLoader, setPageLoader] = useState(false);
 
   const [filtersApplied, setFiltersApplied] = useState({
-    pending: 0,
-    delivered: 0,
-    completed: 0,
-    cancelled: 0,
-    replaced: 0,
-    page: 1,
+    order_status: profile,
   });
+  const [teamMembers, setTeamMembers] = useState([]);
+
+  const constructTeamMembersData = async() => {
+    const response = await constructTeamMembersDetails();
+    setTeamMembers(response);
+  }
+
+
+  useEffect(()=>{
+    constructTeamMembersData();
+  },[])
+
 
   const [activeTab, setActiveTab] = useState(profile || "pending");
-  const [selectedOrderDetails, setSelectedOrderDetails] = useState({
-    flag: false,
-    data: {},
-  });
 
-  const [overViewData, setOverViewData] = useState(response?.overview);
-  const [salesData, setSalesData] = useState(response?.list);
+  const [overViewData, setOverViewData] = useState(
+    response?.salesPage?.overview
+  );
+  const [salesData, setSalesData] = useState(response?.salesPage?.list);
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [selectedItems, setSelectedItems] = useState([]);
   const [showLogDetailsModal, setShowLogDetailsModal] = useState(false);
@@ -56,6 +74,19 @@ const SalesPage = (props) => {
     { key: "city_name", label: "City Name" },
     { key: "quantity", label: "Quantity" },
   ];
+
+  const apiCall = async (params) => {
+    setPageLoader(true);
+    const updatedFilters = { ...filtersApplied, ...params };
+    setFiltersApplied(updatedFilters);
+    const salesData = await fetchSalesPageData("", updatedFilters);
+    if (salesData) {
+      setOverViewData(salesData.overview);
+      setSalesData(salesData.list);
+    }
+
+    setPageLoader(false);
+  };
 
   // Dynamically create initial visible columns state from allHeaders
   const createInitialVisibleColumns = () => {
@@ -87,16 +118,32 @@ const SalesPage = (props) => {
   // Filter headers based on visibility
   const headers = allHeaders.filter((header) => visibleColumns[header.key]);
 
-  const handleEdit = (item) => {
-    console.log("Edit item:", item);
+  const getOrderDetails = async (bookingNo) => {
+    setPageLoader(true);
+    const salesData = await fetchSalesOrderDetails("", {
+      booking_no: bookingNo,
+    });
+    setShowInfoPopup({
+      flag: true,
+      data: salesData,
+    });
+    setPageLoader(false);
   };
 
-  const handleDelete = (item) => {
-    console.log("Delete item:", item);
-  };
-
-  const handlePrint = (item) => {
-    console.log("Print item:", item);
+  const getLogDetailsDetails = async (bookingNo) => {
+    setPageLoader(true);
+    const orderLogs = await fetchSalesOrderLogs("", {
+      booking_no: bookingNo,
+    });
+    const inventoryLogs = await fetchSalesInventoryLogs("", {
+      booking_no: bookingNo,
+    });
+    setShowLogDetailsModal({
+      flag: true,
+      orderLogs: orderLogs,
+      inventoryLogs: inventoryLogs,
+    });
+    setPageLoader(false);
   };
 
   // Create right sticky columns with action buttons
@@ -104,7 +151,7 @@ const SalesPage = (props) => {
     {
       icon: (
         <Clock
-          onClick={() => setShowLogDetailsModal(true)}
+          onClick={() => getLogDetailsDetails(item?.bg_id)}
           className="size-4"
         />
       ),
@@ -112,10 +159,7 @@ const SalesPage = (props) => {
     },
     {
       icon: (
-        <Eye
-          onClick={() => setShowInfoPopup(true)}
-          className="size-5"
-        />
+        <Eye onClick={() => getOrderDetails(item?.bg_id)} className="size-5" />
       ),
       className: " cursor-pointer",
     },
@@ -137,15 +181,14 @@ const SalesPage = (props) => {
     }, []),
   };
 
-  const [csvLoader,setCsvLoader] = useState(false)
-
-
+  const [csvLoader, setCsvLoader] = useState(false);
   // Configuration for filters per tab
   const filterConfig = {
-    pending: [
+    [profile]: [
       {
         type: "text",
         name: "searchMatch",
+        value: filtersApplied?.searchMatch,
         label: "Search Match event or Booking number",
         className: "!py-[7px] !px-[12px] !text-[#343432] !text-[14px]",
         parentClassName: "!w-[300px]",
@@ -154,17 +197,16 @@ const SalesPage = (props) => {
         type: "select",
         name: "team_members",
         label: "Team Members",
-        options: [
-          { value: "1_selected", label: "1 selected" },
-          { value: "mark_johnson", label: "Mark Johnson" },
-          { value: "john_doe", label: "John Doe" },
-        ],
-        parentClassName: "!w-[30%]",
+        value: filtersApplied?.team_members,
+        multiselect:true,
+        options: teamMembers,
+        parentClassName: "!w-[15%]",
         className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
         labelClassName: "!text-[11px]",
       },
       {
         type: "select",
+        value: filtersApplied?.ticket_type,
         name: "ticket_type",
         label: "Ticket Type",
         options: [
@@ -173,183 +215,50 @@ const SalesPage = (props) => {
           { value: "standard", label: "Standard" },
           { value: "premium", label: "Premium" },
         ],
-        parentClassName: "!w-[30%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+        parentClassName: "!w-[15%]",
+        className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
         labelClassName: "!text-[11px]",
       },
       {
         type: "select",
-        name: "category",
-        label: "Category",
-        options: [
-          { value: "none", label: "None" },
-          { value: "football", label: "Football" },
-          { value: "concert", label: "Concert" },
-          { value: "theatre", label: "Theatre" },
-        ],
-        parentClassName: "!w-[30%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+        name: "tournament",
+        label: "Tournament",
+        value: filtersApplied?.tournament,
+        options: tournamentOptions,
+        parentClassName: "!w-[20%]",
+        className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
         labelClassName: "!text-[11px]",
       },
       {
         type: "date",
         name: "orderDate",
+        singleDateMode: false,
         label: "Order Date",
         parentClassName: "!w-[200px]",
         className: "!py-[8px] !px-[16px] mobile:text-xs",
-        singleDateMode: false,
-      },
-      {
-        type: "date",
-        name: "deliverByDate",
-        label: "Deliver by Date",
-        parentClassName: "!w-[200px]",
-        className: "!py-[8px] !px-[16px] mobile:text-xs",
-        singleDateMode: false,
-      },
-      {
-        type: "date",
-        name: "eventDate",
-        label: "Event Date",
-        parentClassName: "!w-[200px]",
-        className: "!py-[8px] !px-[16px] mobile:text-xs",
-        singleDateMode: false,
-      },
-    ],
-    delivered: [
-      {
-        type: "text",
-        name: "searchMatch",
-        label: "Search Match event or Booking number",
-        className: "!py-[7px] !px-[12px] !text-[#343432] !text-[14px]",
-      },
-      {
-        type: "select",
-        name: "delivery_method",
-        label: "Delivery Method",
-        options: [
-          { value: "all", label: "All Methods" },
-          { value: "email", label: "Email" },
-          { value: "mobile", label: "Mobile" },
-          { value: "postal", label: "Postal" },
-        ],
-        parentClassName: "!w-[30%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-        labelClassName: "!text-[11px]",
-      },
-      {
-        type: "date",
-        name: "deliveryDate",
-        label: "Delivery Date",
-        parentClassName: "!w-[200px]",
-        className: "!py-[8px] !px-[16px] mobile:text-xs",
-        singleDateMode: false,
-      },
-    ],
-    completed: [
-      {
-        type: "text",
-        name: "searchMatch",
-        label: "Search Match event or Booking number",
-        className: "!py-[7px] !px-[12px] !text-[#343432] !text-[14px]",
-      },
-      {
-        type: "select",
-        name: "completion_status",
-        label: "Completion Status",
-        options: [
-          { value: "all", label: "All" },
-          { value: "successful", label: "Successful" },
-          { value: "partial", label: "Partial" },
-        ],
-        parentClassName: "!w-[30%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-        labelClassName: "!text-[11px]",
-      },
-      {
-        type: "date",
-        name: "completionDate",
-        label: "Completion Date",
-        parentClassName: "!w-[200px]",
-        className: "!py-[8px] !px-[16px] mobile:text-xs",
-        singleDateMode: false,
-      },
-    ],
-    cancelled: [
-      {
-        type: "text",
-        name: "searchMatch",
-        label: "Search Match event or Booking number",
-        className: "!py-[7px] !px-[12px] !text-[#343432] !text-[14px]",
-      },
-      {
-        type: "select",
-        name: "cancellation_reason",
-        label: "Cancellation Reason",
-        options: [
-          { value: "all", label: "All Reasons" },
-          { value: "customer_request", label: "Customer Request" },
-          { value: "event_cancelled", label: "Event Cancelled" },
-          { value: "payment_failed", label: "Payment Failed" },
-        ],
-        parentClassName: "!w-[30%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-        labelClassName: "!text-[11px]",
-      },
-      {
-        type: "date",
-        name: "cancellationDate",
-        label: "Cancellation Date",
-        parentClassName: "!w-[200px]",
-        className: "!py-[8px] !px-[16px] mobile:text-xs",
-        singleDateMode: false,
-      },
-    ],
-    replaced: [
-      {
-        type: "text",
-        name: "searchMatch",
-        label: "Search Match event or Booking number",
-        className: "!py-[7px] !px-[12px] !text-[#343432] !text-[14px]",
-      },
-      {
-        type: "select",
-        name: "replacement_reason",
-        label: "Replacement Reason",
-        options: [
-          { value: "all", label: "All Reasons" },
-          { value: "damaged", label: "Damaged" },
-          { value: "lost", label: "Lost" },
-          { value: "upgrade", label: "Upgrade" },
-        ],
-        parentClassName: "!w-[30%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-        labelClassName: "!text-[11px]",
-      },
-      {
-        type: "date",
-        name: "replacementDate",
-        label: "Replacement Date",
-        parentClassName: "!w-[200px]",
-        className: "!py-[8px] !px-[16px] mobile:text-xs",
-        singleDateMode: false,
       },
     ],
   };
-
   const handleTabChange = (tab) => {
-    console.log("Sales tab changed to:", tab);
     setActiveTab(tab);
     setSelectedItems([]);
   };
 
-  const handleFilterChange = (filterKey, value, allFilters, currentTab) => {
-    console.log("Sales filter changed:", {
-      filterKey,
-      value,
-      allFilters,
-      currentTab,
-    });
+  const handleFilterChange = async (filterKey, value) => {
+    let params = {};
+    if (filterKey === "orderDate") {
+      params = {
+        ...params,
+        order_date_from: value?.startDate,
+        order_date_to: value?.endDate,
+      };
+    } else {
+      params = {
+        ...params,
+        [filterKey]: value,
+      };
+    }
+    await apiCall(params);
   };
 
   const handleCheckboxToggle = (checkboxKey, isChecked, allCheckboxValues) => {
@@ -375,6 +284,7 @@ const SalesPage = (props) => {
       [columnKey]: !prev[columnKey],
     }));
   };
+  
 
   // Configuration for tabs - matching your screenshot
   const tabsConfig = [
@@ -408,51 +318,48 @@ const SalesPage = (props) => {
     },
   ];
 
-  const handleDownloadCSV = async() =>{
+  const handleDownloadCSV = async () => {
     setCsvLoader(true);
     try {
       const response = await downloadSalesCSVReport();
       // Check if response is successful
-      if (response ) {
+      if (response) {
         // Create a blob from the response data
-        const blob = new Blob([response], { 
-          type: 'application/csv;charset=utf-8;' 
+        const blob = new Blob([response], {
+          type: "application/csv;charset=utf-8;",
         });
-        
+
         // Create a temporary URL for the blob
         const url = window.URL.createObjectURL(blob);
-        
+
         // Create a temporary anchor element
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
-        
+
         // Set the filename (you can customize this)
         const filename = `export_${new Date().toISOString().slice(0, 10)}.csv`;
         link.download = filename;
-        
+
         // Append to body, click, and remove
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         // Clean up the URL object
         window.URL.revokeObjectURL(url);
-        
+
         // Optional: Show success message
-        console.log('CSV downloaded successfully');
-        
+        console.log("CSV downloaded successfully");
       } else {
-        console.error('No data received from server');
+        console.error("No data received from server");
       }
-      
     } catch (error) {
-      console.error('Error downloading CSV:', error);
+      console.error("Error downloading CSV:", error);
       // Handle error (show toast, alert, etc.)
     } finally {
       setCsvLoader(false);
     }
-  
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -466,12 +373,26 @@ const SalesPage = (props) => {
         onCheckboxToggle={handleCheckboxToggle}
         onColumnToggle={handleColumnToggle}
         visibleColumns={visibleColumns}
+        showSelectedFilterPills={true}
+        currentFilterValues={{ ...filtersApplied, order_status: "" }}
       />
       <LogDetailsModal
-        show={showLogDetailsModal}
-        onClose={() => setShowLogDetailsModal(false)}
+        show={showLogDetailsModal?.flag}
+        onClose={() =>
+          setShowLogDetailsModal({
+            flag: false,
+            orderLogs: [],
+            inventoryLogs: [],
+          })
+        }
+        orderLogs={showLogDetailsModal?.orderLogs}
+        inventoryLogs={showLogDetailsModal?.inventoryLogs}
       />
-      <OrderInfo show={showInfoPopup} onClose={() => setShowInfoPopup(false)} />
+      <OrderInfo
+        show={showInfoPopup?.flag}
+        data={showInfoPopup?.data}
+        onClose={() => setShowInfoPopup({ flag: false, data: [] })}
+      />
 
       {/* StickyDataTable section */}
       <div className="p-4">
@@ -488,7 +409,10 @@ const SalesPage = (props) => {
                 root: "py-[4px] justify-center cursor-pointer",
                 label_: "text-[12px] px-[2]",
               }}
-              > Export CSV</Button>
+            >
+              {" "}
+              Export CSV
+            </Button>
           </div>
 
           {/* StickyDataTable */}
@@ -497,7 +421,7 @@ const SalesPage = (props) => {
               headers={headers}
               data={listData}
               rightStickyColumns={rightStickyColumns}
-              loading={false}
+              loading={pageLoader}
               onScrollEnd={() => {
                 console.log("Reached end of table - load more data");
               }}

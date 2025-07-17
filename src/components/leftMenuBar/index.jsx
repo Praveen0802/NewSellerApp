@@ -731,12 +731,7 @@ const LeftMenuBar = () => {
   // Updated sales sub items to match your requirements with counts
   const salesSubItems = [
     { name: "Pending", route: "sales/pending", key: "sales-pending", count: 0 },
-    {
-      name: "Awaiting Delivery",
-      route: "sales/awaiting-delivery",
-      key: "sales-awaiting-delivery",
-      count: 0,
-    },
+
     {
       name: "Delivered",
       route: "sales/delivered",
@@ -754,12 +749,6 @@ const LeftMenuBar = () => {
       route: "sales/cancelled",
       key: "sales-cancelled",
       count: 2,
-    },
-    {
-      name: "Replaced",
-      route: "sales/replaced",
-      key: "sales-replaced",
-      count: 0,
     },
   ];
 

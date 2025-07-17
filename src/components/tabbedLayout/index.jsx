@@ -358,7 +358,7 @@ const TabbedLayout = ({
       <div className={containerClassName}>
         <div className="bg-white">
           {/* List Items Section */}
-          <div className="px-[24px] py-[20px] border-b-[1px] border-[#E0E1EA] overflow-x-auto">
+          <div className="px-[24px] py-[12px] border-b-[1px] border-[#E0E1EA] overflow-x-auto">
             <div className="flex gap-4 flex-nowrap min-w-min md:min-w-0">
               {getCurrentListItems()?.map((item, index) => (
                 <div key={index} className="min-w-[200px]">
@@ -390,7 +390,7 @@ const TabbedLayout = ({
               filterConfig={getVisibleFilters()}
               currentTab={selectedTab}
               onFilterChange={handleFilterChange}
-              containerClassName="md:flex flex-wrap gap-4 items-center  p-4"
+              containerClassName="md:flex flex-wrap gap-3 items-center  p-3"
               initialValues={currentFilterValues}
             />
           )}

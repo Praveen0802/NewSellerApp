@@ -1,12 +1,20 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import TabbedLayout from "../tabbedLayout";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import StickyDataTable from "../tradePage/components/stickyDataTable";
 import Button from "../commonComponents/button";
 import OrderInfo from "../orderInfoPopup";
 import LogDetailsModal from "../ModalComponents/LogDetailsModal";
-import { convertKeyToDisplayName } from "@/utils/helperFunctions";
-import { downloadReports, reportEventSearch, reportHistory } from "@/utils/apiHandler/request";
+import { constructTeamMembersDetails, convertKeyToDisplayName } from "@/utils/helperFunctions";
+import {
+  downloadReports,
+  fetchReportsInventoryLogs,
+  fetchReportsOrderDetails,
+  fetchReportsOrderLogs,
+  reportEventSearch,
+  reportHistory,
+  reportsOverview,
+} from "@/utils/apiHandler/request";
 
 const RportHistory = (props) => {
   const [filtersApplied, setFiltersApplied] = useState({
@@ -16,7 +24,7 @@ const RportHistory = (props) => {
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [showLogDetailsModal, setShowLogDetailsModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [exportLoader,setExportLoader] = useState(false);
+  const [exportLoader, setExportLoader] = useState(false);
   const [overViewData, setOverViewData] = useState(
     props?.response?.reportsOverviewData?.value
   );
@@ -28,11 +36,24 @@ const RportHistory = (props) => {
     props?.response?.reportHistoryData?.value
   );
 
+  const [teamMembers, setTeamMembers] = useState([]);
+
+  const constructTeamMembersData = async() => {
+    const response = await constructTeamMembersDetails();
+    setTeamMembers(response);
+  }
+
+
+  useEffect(()=>{
+    constructTeamMembersData();
+  },[])
+
   // Debounce timer ref
   const debounceTimer = useRef(null);
 
   // Debounced search function
   const debouncedSearch = useCallback(async (query) => {
+    setSearchValue(query);
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
@@ -58,52 +79,49 @@ const RportHistory = (props) => {
     if (!showSearchDropdown || searchMatches.length === 0) return null;
 
     return (
-      <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+      <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
         {searchMatches.map((item, index) => (
           <div
             key={item.match_id || index}
-            className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+            className="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
             onClick={() => {
-              setSearchValue(item.match_name);
               setShowSearchDropdown(false);
-              handleSearchMatchChange(item.match_name);
+              handleSearchMatchChange(item.match_id);
             }}
           >
             <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="font-medium text-sm text-gray-900">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm text-gray-900 truncate">
                   {item.match_name}
                 </p>
-                <div className="flex items-center gap-4 mt-1">
-                  <span className="text-xs text-gray-500">
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="text-xs text-gray-500 truncate">
                     {item.tournament_name}
                   </span>
-                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <div className="flex items-center gap-1 text-xs text-gray-500 shrink-0">
                     <IconStore.calendar className="size-3" />
                     <span>
-                      {new Date(item.match_date).toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
+                      {new Date(item.match_date).toLocaleDateString("en-US", {
+                        day: "2-digit",
+                        month: "short",
                       })}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <div className="flex items-center gap-1 text-xs text-gray-500 shrink-0">
                     <IconStore.clock className="size-3" />
                     <span>{item.match_time}</span>
                   </div>
                 </div>
                 {item.stadium && (
-                  <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                  <div className="flex items-center gap-1 mt-1 text-xs text-gray-400">
                     <IconStore.location className="size-3" />
-                    <span>{item.stadium}</span>
+                    <span className="truncate">{item.stadium}</span>
                   </div>
                 )}
               </div>
-              <div className="ml-4">
-                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                  <IconStore.search className="size-4 text-gray-400" />
+              <div className="ml-2 shrink-0">
+                <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
+                  <IconStore.search className="size-3 text-gray-400" />
                 </div>
               </div>
             </div>
@@ -128,18 +146,67 @@ const RportHistory = (props) => {
     { key: "order_status", label: "Order Status" },
     { key: "payment_status", label: "Payment Status" },
   ];
+  const createInitialVisibleColumns = () => {
+    return headers.reduce((acc, header) => {
+      acc[header.key] = true; // Set all columns as visible by default
+      return acc;
+    }, {});
+  };
 
+  // New state for column visibility - dynamically formed from allHeaders
+  const [visibleColumns, setVisibleColumns] = useState(
+    createInitialVisibleColumns()
+  );
+
+  const filteredHeaders = headers.filter(
+    (header) => visibleColumns[header.key]
+  );
+
+  const handleColumnToggle = (columnKey) => {
+    setVisibleColumns((prev) => ({
+      ...prev,
+      [columnKey]: !prev[columnKey],
+    }));
+  };
   // Transform data for the table
   const transformedData = staticReportsData?.reports_history?.map((item) => ({
     ...item,
   }));
+
+  const getOrderDetails = async (bookingNo) => {
+    setIsLoading(true);
+    const salesData = await fetchReportsOrderDetails("", {
+      booking_no: bookingNo,
+    });
+    setShowInfoPopup({
+      flag: true,
+      data: salesData,
+    });
+    setIsLoading(false);
+  };
+
+  const getLogDetailsDetails = async (bookingNo) => {
+    setIsLoading(true);
+    const orderLogs = await fetchReportsOrderLogs("", {
+      booking_no: bookingNo,
+    });
+    const inventoryLogs = await fetchReportsInventoryLogs("", {
+      booking_no: bookingNo,
+    });
+    setShowLogDetailsModal({
+      flag: true,
+      orderLogs: orderLogs,
+      inventoryLogs: inventoryLogs,
+    });
+    setIsLoading(false);
+  };
 
   // Create right sticky columns with action buttons
   const rightStickyColumns = staticReportsData?.reports_history?.map((item) => [
     {
       icon: (
         <IconStore.clock
-          onClick={() => setShowLogDetailsModal(true)}
+          onClick={() => getOrderDetails(item.order_id)}
           className="size-5"
         />
       ),
@@ -148,7 +215,7 @@ const RportHistory = (props) => {
     {
       icon: (
         <IconStore.eye
-          onClick={() => setShowInfoPopup(true)}
+          onClick={() => getLogDetailsDetails(item.order_id)}
           className="size-5"
         />
       ),
@@ -167,103 +234,100 @@ const RportHistory = (props) => {
     ),
   };
 
+  const apiCall = async (params) => {
+    setIsLoading(true);
+
+    const updatedFilters = { ...filtersApplied, ...params, page: 1 };
+    setFiltersApplied(updatedFilters);
+    const [reportOverview, reportData] = await Promise.all([
+      reportsOverview("", updatedFilters),
+      reportHistory("", updatedFilters),
+    ]);
+    setStaticReportsData(reportData);
+    setOverViewData(reportOverview);
+    setIsLoading(false);
+  };
+
   const handleSearchMatchChange = async (value) => {
     const updatedFilters = {
       ...filtersApplied,
       searchMatch: value,
       page: 1, // Reset to first page on new search
     };
-    
-    try {
-      const response = await reportHistory("", updatedFilters);
-      setStaticReportsData(response);
-      setFiltersApplied(updatedFilters);
-    } catch (error) {
-      console.error("Report history error:", error);
-    }
+
+    await apiCall(updatedFilters);
   };
 
+  // Configuration for filters
   // Configuration for filters
   const filterConfig = {
     reports: [
       {
         type: "text",
         name: "searchMatch",
-        label: "Search event or order ID",
         value: searchValue,
-        onchange: (value) => {
-          setSearchValue(value);
-          debouncedSearch(value);
-        },
         showDropdown: true,
         dropDownComponent: searchMatchDropDown(),
+        label: "Search Match event or Booking number",
         className: "!py-[7px] !px-[12px] !text-[#343432] !text-[14px]",
-        onFocus: () => {
-          if (searchMatches.length > 0) {
-            setShowSearchDropdown(true);
-          }
-        },
-        onBlur: () => {
-          // Delay hiding dropdown to allow click events
-          setTimeout(() => setShowSearchDropdown(false), 200);
-        },
-      },
-      {
-        type: "select",
-        name: "venue",
-        label: "Venue",
-        options: [
-          { value: "all", label: "All Venues" },
-          { value: "dubai_tennis", label: "Dubai Tennis Stadium" },
-          { value: "saadiyat_island", label: "Saadiyat Island" },
-          { value: "the_venue", label: "The Venue" },
-          { value: "zayed_stadium", label: "Zayed Sports City Stadium" },
-        ],
-        parentClassName: "!w-[30%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-        labelClassName: "!text-[11px]",
+        parentClassName: "!w-[300px]",
       },
       {
         type: "select",
         name: "team_members",
         label: "Team Members",
-        options: [
-          { value: "1_selected", label: "1 selected" },
-          { value: "amir_khan", label: "Amir Khan" },
-          { value: "mark_johnson", label: "Mark Johnson" },
-        ],
-        parentClassName: "!w-[30%]",
+        value: filtersApplied?.team_members,
+        multiselect:true,
+        options: teamMembers,
+        parentClassName: "!w-[15%]",
         className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
         labelClassName: "!text-[11px]",
       },
       {
         type: "select",
-        name: "category",
-        label: "Category",
+        value: filtersApplied?.ticket_type,
+        name: "ticket_type",
+        label: "Ticket Type",
         options: [
-          { value: "all", label: "All Categories" },
-          { value: "sports", label: "Sports" },
-          { value: "concert", label: "Concert" },
-          { value: "theatre", label: "Theatre" },
+          { value: "none", label: "None" },
+          { value: "vip", label: "VIP" },
+          { value: "standard", label: "Standard" },
+          { value: "premium", label: "Premium" },
         ],
-        parentClassName: "!w-[30%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+        parentClassName: "!w-[15%]",
+        className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
         labelClassName: "!text-[11px]",
       },
       {
         type: "select",
-        name: "performer",
-        label: "Performer",
+        name: "order_status",
+        label: "Order Status",
+        value: filtersApplied?.order_status,
         options: [
-          { value: "all", label: "All Performers" },
-          { value: "christina_aguilera", label: "Christina Aguilera" },
-          { value: "coldplay", label: "Coldplay" },
-          { value: "tennis_tournament", label: "Tennis Tournament" },
-          { value: "ufc", label: "UFC" },
+          { value: "completed", label: "Completed" },
+          { value: "fulfilled", label: "Fulfilled" },
+          { value: "pending", label: "Pending" },
+          { value: "cancelled", label: "Cancelled" },
         ],
-        parentClassName: "!w-[30%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+        parentClassName: "!w-[15%]",
+        className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
         labelClassName: "!text-[11px]",
+      },
+      {
+        type: "date",
+        name: "orderDate",
+        singleDateMode: false,
+        label: "Order Date",
+        parentClassName: "!w-[200px]",
+        className: "!py-[8px] !px-[16px] mobile:text-xs",
+      },
+      {
+        type: "date",
+        name: "transactionDate",
+        singleDateMode: false,
+        label: "Transaction Date",
+        parentClassName: "!w-[200px]",
+        className: "!py-[8px] !px-[16px] mobile:text-xs",
       },
     ],
   };
@@ -275,7 +339,7 @@ const RportHistory = (props) => {
       ...filtersApplied,
       page: filtersApplied.page + 1,
     };
-    
+
     try {
       const response = await reportHistory("", updatedFilter);
       setStaticReportsData({
@@ -299,67 +363,87 @@ const RportHistory = (props) => {
     allFilters,
     currentTab
   ) => {
+    let params = {};
+    // Handle different filter types
+    if (filterKey === "orderDate") {
+      params = {
+        ...params,
+        order_date_from: value?.startDate,
+        order_date_to: value?.endDate,
+      };
+    } else if (filterKey === "transactionDate") {
+      params = {
+        ...params,
+        transaction_start_date: value?.startDate,
+        transaction_end_date: value?.endDate,
+      };
+    } else if (filterKey === "eventDate") {
+      params = {
+        ...params,
+        event_start_date: value?.startDate,
+        event_end_date: value?.endDate,
+      };
+    } else {
+      params = {
+        ...params,
+        [filterKey]: value,
+      };
+    }
+
     const updatedFilters = {
       ...filtersApplied,
-      [filterKey]: value,
+      ...params,
       page: 1, // Reset to first page on filter change
     };
-    
-    // Handle search match separately with debounce
-    if (filterKey === "searchMatch") {
+
+    if (filterKey === "searchMatch" && value) {
       debouncedSearch(value);
     } else {
-      // For other filters, apply immediately
       try {
-        const response = await reportHistory("", updatedFilters);
-        setStaticReportsData(response);
-        setFiltersApplied(updatedFilters);
+        await apiCall(updatedFilters);
       } catch (error) {
         console.error("Filter change error:", error);
       }
     }
   };
-
   const handleExportCSV = async () => {
     setExportLoader(true);
-    
+
     try {
       const response = await downloadReports("");
       // Check if response is successful
-      if (response ) {
+      if (response) {
         // Create a blob from the response data
-        const blob = new Blob([response], { 
-          type: 'application/csv;charset=utf-8;' 
+        const blob = new Blob([response], {
+          type: "application/csv;charset=utf-8;",
         });
-        
+
         // Create a temporary URL for the blob
         const url = window.URL.createObjectURL(blob);
-        
+
         // Create a temporary anchor element
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
-        
+
         // Set the filename (you can customize this)
         const filename = `export_${new Date().toISOString().slice(0, 10)}.csv`;
         link.download = filename;
-        
+
         // Append to body, click, and remove
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         // Clean up the URL object
         window.URL.revokeObjectURL(url);
-        
+
         // Optional: Show success message
-        console.log('CSV downloaded successfully');
-        
+        console.log("CSV downloaded successfully");
       } else {
-        console.error('No data received from server');
+        console.error("No data received from server");
       }
-      
     } catch (error) {
-      console.error('Error downloading CSV:', error);
+      console.error("Error downloading CSV:", error);
       // Handle error (show toast, alert, etc.)
     } finally {
       setExportLoader(false);
@@ -380,14 +464,30 @@ const RportHistory = (props) => {
         listItemsConfig={listItemsConfig}
         filterConfig={filterConfig}
         onTabChange={() => {}}
+        onColumnToggle={handleColumnToggle}
+        visibleColumns={visibleColumns}
         onFilterChange={handleFilterChange}
+        currentFilterValues={{ ...filtersApplied, page: "" }}
+        showSelectedFilterPills={true}
         onCheckboxToggle={() => {}}
       />
       <LogDetailsModal
-        show={showLogDetailsModal}
-        onClose={() => setShowLogDetailsModal(false)}
+        show={showLogDetailsModal?.flag}
+        onClose={() =>
+          setShowLogDetailsModal({
+            flag: false,
+            orderLogs: [],
+            inventoryLogs: [],
+          })
+        }
+        orderLogs={showLogDetailsModal?.orderLogs}
+        inventoryLogs={showLogDetailsModal?.inventoryLogs}
       />
-      <OrderInfo show={showInfoPopup} onClose={() => setShowInfoPopup(false)} />
+      <OrderInfo
+        show={showInfoPopup?.flag}
+        data={showInfoPopup?.data}
+        onClose={() => setShowInfoPopup({ flag: false, data: [] })}
+      />
       {/* StickyDataTable section */}
       <div className="p-4">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -409,7 +509,7 @@ const RportHistory = (props) => {
           {/* StickyDataTable */}
           <div className="max-h-[calc(100vh-370px)] overflow-auto">
             <StickyDataTable
-              headers={headers}
+              headers={filteredHeaders}
               data={transformedData}
               rightStickyColumns={rightStickyColumns}
               loading={isLoading}

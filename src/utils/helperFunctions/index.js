@@ -1,4 +1,4 @@
-import { refreshAuthToken } from "../apiHandler/request";
+import { getTeamMembers, refreshAuthToken } from "../apiHandler/request";
 import { readCookie } from "./cookie";
 
 export function formatDate(date) {
@@ -199,3 +199,13 @@ function convertKeyToDisplayNameWithUpperCurrency(key) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
+
+export const constructTeamMembersDetails = async () => {
+  const teamMembers = await getTeamMembers();
+  return teamMembers?.my_teams?.map((member) => {
+    return {
+      label: member?.first_name,
+      value: member?.id,
+    };
+  });
+};

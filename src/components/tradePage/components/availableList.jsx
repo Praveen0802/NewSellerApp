@@ -18,7 +18,7 @@ const AvailableList = ({ list }) => {
 
   return (
     <div
-      className={`border border-gray-200 rounded-md bg-white py-3 px-4 w-full flex flex-col gap-2 ${
+      className={`border border-gray-200 rounded-md bg-white py-2 px-2 w-full flex flex-col gap-2 ${
         list?.showCheckbox
           ? "cursor-pointer hover:bg-gray-50 transition-colors"
           : ""
@@ -32,9 +32,9 @@ const AvailableList = ({ list }) => {
         }
       }}
     >
-      <p className="text-2xl text-[#343432]">{list?.value}</p>
+      <p className="text-[18px] text-[#343432]">{list?.value}</p>
       <div className="flex items-center gap-2 justify-between">
-        <p className="text-xs text-gray-500 font-normal">{list?.name}</p>
+        <p className="text-[11px] text-gray-500 font-normal">{list?.name}</p>
         {list?.showCheckbox && (
           <input
             type="checkbox"

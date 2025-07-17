@@ -10,78 +10,7 @@ import CustomerDetails from "../orderDetails/components/customerDetails";
 import OrderedTickets from "../orderDetails/components/orderedTickets";
 import RightViewModal from "../commonComponents/rightViewModal";
 
-const OrderInfo = ({ show, onClose }) => {
-  // Example usage in your parent component
-  const orderData = [
-    {
-      order_details: {
-        order_id: 2589,
-        order_date: "2022-09-12T08:51:55.000000Z",
-        order_status: 1,
-        ticket_types: "E-Ticket",
-        ticket_type_id: 2,
-        delivered_by: null,
-        days_in_event: "-",
-      },
-      address_details: {
-        seller_id: 11,
-        first_name: null,
-        last_name: null,
-        email: null,
-        phone_number: null,
-      },
-      user_address_details: {
-        id: 11,
-        user_id: 11,
-        first_name: "seo",
-        last_name: "1boxoffice",
-        country_code: "",
-        phone_number: "3213214561",
-        address: "MG Road",
-        address_line2: null,
-        address_line3: null,
-        city: "1558",
-        state: "17",
-        zip_code: "560100",
-        country: "101",
-        address_type: "",
-        primary_address: 1,
-      },
-      ticket_details: {
-        description: "",
-        venue: "Vodafone Arena",
-        stadium_id: 248,
-        match_date: "2023-05-26",
-        match_time: "00:00",
-        seat_category: "Away",
-        ticket_types: "E-Ticket",
-        ticket_type_id: 2,
-        quantity: 2,
-        ticket_price: 1,
-        order_value: 2.2,
-        currency_type: "GBP",
-      },
-      attendee_details: {
-        booking_id: 2589,
-        ticket_id: 2638,
-        ticket_status: 2,
-        ticket_file: "blog_medium_barc_jpg-1665220329.jpg",
-        seat: null,
-        serial: 2,
-        ticket_upload_date: "2022-10-08 09:12:28",
-        ticket_contact_number: null,
-        email: "sivait28@gmail.com",
-        phone: null,
-      },
-      listing_note: [
-        {
-          id: 7,
-          name: "Concession Ticket - Child",
-        },
-      ],
-      order_notes: null,
-    },
-  ];
+const OrderInfo = ({ show, onClose, data: orderData }) => {
 
   const [expandedVersion, setExpandedVersion] = useState(false);
 

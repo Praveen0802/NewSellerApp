@@ -33,7 +33,8 @@ const FilterSection = ({
   // Convert filter config to FormFields format and add current values
   const formFieldsData = filterConfig.map((filter) => ({
     ...filter,
-    value: filterValues[filter.name] || filter.defaultValue || "",
+    value:
+      filterValues[filter.name] || filter.defaultValue || filter?.value || "",
     onChange: (e) => {
       const value = e?.target?.value !== undefined ? e.target.value : e;
       handleFilterChange(filter.name, value);
