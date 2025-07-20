@@ -27,8 +27,13 @@ const DepositPopup = ({ onClose, data }) => {
     return desc.split(" - DATA -")[0] || desc;
   };
 
-  // Status helper functions
+  // Status helper functions - now handles string status values
   const getStatusText = (status) => {
+    if (typeof status === "string") {
+      return status; // Return the string status as-is (e.g., "Pending", "Approved", etc.)
+    }
+
+    // Fallback for numeric status
     switch (status) {
       case 1:
         return "Approved";
@@ -42,12 +47,17 @@ const DepositPopup = ({ onClose, data }) => {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 1:
+    const statusText =
+      typeof status === "string"
+        ? status.toLowerCase()
+        : getStatusText(status).toLowerCase();
+
+    switch (statusText) {
+      case "approved":
         return "bg-green-100 text-green-800"; // Green for Approved
-      case 2:
-        return "text-[#F5A623] bg-[#FFF8EC]"; // Blue for Pending
-      case 3:
+      case "pending":
+        return "text-[#F5A623] bg-[#FFF8EC]"; // Orange for Pending
+      case "rejected":
         return "text-[#FF3B30] bg-[#FFEFED]"; // Red for Rejected
       default:
         return "text-gray-500 bg-gray-100";
@@ -70,9 +80,7 @@ const DepositPopup = ({ onClose, data }) => {
           <h2 className="text-xl font-semibold text-gray-800">
             Transaction Details
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Ref: {data?.reference_no}
-          </p>
+          <p className="text-sm text-gray-500 mt-1">Ref: {data?.referenceNo}</p>
         </div>
         <button
           onClick={onClose}
@@ -100,11 +108,11 @@ const DepositPopup = ({ onClose, data }) => {
           </div>
           <div className="flex items-baseline">
             <h1 className="text-2xl font-bold text-[#343432]">
-              {data?.price_with_currency}
+              {data?.amount}
             </h1>
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            {formatDateTime(data?.created_date_time)}
+            {formatDateTime(data?.date)}
           </p>
         </div>
 
@@ -119,7 +127,7 @@ const DepositPopup = ({ onClose, data }) => {
             <div className="flex justify-between items-center px-4 py-3">
               <span className="text-sm text-gray-600">Reference Number</span>
               <span className="text-sm font-medium text-gray-800">
-                {data?.reference_no}
+                {data?.referenceNo}
               </span>
             </div>
             <div className="flex justify-between items-center px-4 py-3">
@@ -129,9 +137,9 @@ const DepositPopup = ({ onClose, data }) => {
               </span>
             </div>
             <div className="flex justify-between items-center px-4 py-3">
-              <span className="text-sm text-gray-600">Currency</span>
+              <span className="text-sm text-gray-600">Transaction Type</span>
               <span className="text-sm font-medium text-gray-800">
-                {data?.currency}
+                {data?.transactionType}
               </span>
             </div>
             <div className="flex justify-between items-center px-4 py-3">
@@ -147,7 +155,7 @@ const DepositPopup = ({ onClose, data }) => {
             <div className="flex justify-between items-center px-4 py-3">
               <span className="text-sm text-gray-600">Payment Method</span>
               <span className="text-sm font-medium text-gray-800">
-                {data?.payment_transfer_by}
+                {data?.paymentMethod}
               </span>
             </div>
           </div>

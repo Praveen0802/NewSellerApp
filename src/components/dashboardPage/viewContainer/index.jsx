@@ -1,4 +1,5 @@
 import CustomSelect from "@/components/commonComponents/customSelect";
+import NoDataFound from "@/components/NoDataFound";
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 
@@ -69,7 +70,7 @@ const ViewContainer = ({
           dropdownItemPadding="py-1 pl-2 pr-4 md:pr-6"
         />
       </div>
-      
+
       <div className="border border-[#eaeaf1] rounded-md">
         <div className="grid md:grid-cols-2 p-3 gap-3 md:p-4">
           {listValues?.map((listItem, listIndex) => {
@@ -99,7 +100,7 @@ const ViewContainer = ({
             );
           })}
         </div>
-        
+
         {displayValues?.length > 0 ? (
           <div className="border-t border-[#eaeaf1]">
             <div className="flex items-center p-2 border-b border-[#eaeaf1] justify-between bg-gray-50">
@@ -108,7 +109,7 @@ const ViewContainer = ({
               </p>
               <p className="text-gray-400 font-medium text-xs">Revenue</p>
             </div>
-            
+
             <div
               ref={scrollContainerRef}
               className="max-h-[150px] overflow-auto"
@@ -129,7 +130,7 @@ const ViewContainer = ({
                   </div>
                 );
               })}
-              
+
               {/* Loading shimmer for pagination */}
               {isLoadingMore && (
                 <div className="border-t border-[#eaeaf1]">
@@ -138,7 +139,7 @@ const ViewContainer = ({
                   ))}
                 </div>
               )}
-              
+
               {/* End of data indicator */}
               {!hasMore && displayValues?.length > 0 && (
                 <div className="p-3 text-center">
@@ -163,11 +164,7 @@ const ViewContainer = ({
             </div>
           </div>
         ) : (
-          <div className="border-t max-h-[150px] overflow-auto p-4 h-full border-[#eaeaf1]">
-            <p className="text-base text-[#343432] font-normal text-center">
-              No Data Found
-            </p>
-          </div>
+          <NoDataFound />
         )}
       </div>
     </div>

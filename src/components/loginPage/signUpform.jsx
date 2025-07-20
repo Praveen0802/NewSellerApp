@@ -14,8 +14,10 @@ import {
   RegisterUser,
   ResendVerificationRequest,
 } from "@/utils/apiHandler/request";
+import { allCountryCodes } from "@/utils/constants/allContryCodes";
+import useCountryCodes from "@/Hooks/useCountryCodes";
 
-const SignupForm = ({ fetchedCountryCodes }) => {
+const SignupForm = () => {
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -47,7 +49,7 @@ const SignupForm = ({ fetchedCountryCodes }) => {
   const handleChange = (e, key, type) => {
     const name = key;
     let value;
-    
+
     if (type === "select") {
       value = e;
     } else if (type === "checkbox") {
@@ -55,7 +57,7 @@ const SignupForm = ({ fetchedCountryCodes }) => {
     } else {
       value = e.target?.value;
     }
-    
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -130,7 +132,8 @@ const SignupForm = ({ fetchedCountryCodes }) => {
 
     // Validate terms acceptance
     if (!formData.terms_accepted) {
-      newErrors.terms_accepted = "You must accept the Terms and Conditions and Privacy Policy";
+      newErrors.terms_accepted =
+        "You must accept the Terms and Conditions and Privacy Policy";
       valid = false;
     }
 
@@ -179,13 +182,8 @@ const SignupForm = ({ fetchedCountryCodes }) => {
     const response = await ResendVerificationRequest("", body);
     setResetRequestSent(true);
   };
-
-  const countryCodes = fetchedCountryCodes.map((item) => {
-    return {
-      value: `${item?.phone_code}`,
-      label: `${item?.country_short_name} ${item?.country_code}`,
-    };
-  });
+  const { allCountryCodeOptions } = useCountryCodes();
+  const countryCodes = allCountryCodeOptions;
 
   return (
     <>
@@ -369,7 +367,9 @@ const SignupForm = ({ fetchedCountryCodes }) => {
                     name="terms_accepted"
                     type="checkbox"
                     checked={formData.terms_accepted}
-                    onChange={(e) => handleChange(e, "terms_accepted", "checkbox")}
+                    onChange={(e) =>
+                      handleChange(e, "terms_accepted", "checkbox")
+                    }
                     className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-2 focus:ring-[#64EAA5] cursor-pointer"
                     required
                   />
@@ -379,11 +379,17 @@ const SignupForm = ({ fetchedCountryCodes }) => {
                   className="ml-2 text-[11px] text-[#343432]"
                 >
                   By signing up, you agree to our{" "}
-                  <a href="/terms" className="text-[#130061] hover:underline font-medium">
+                  <a
+                    href="/terms"
+                    className="text-[#130061] hover:underline font-medium"
+                  >
                     Terms and Conditions
                   </a>{" "}
                   and{" "}
-                  <a href="/privacy" className="text-[#130061] hover:underline font-medium">
+                  <a
+                    href="/privacy"
+                    className="text-[#130061] hover:underline font-medium"
+                  >
                     Privacy Policy
                   </a>
                 </label>

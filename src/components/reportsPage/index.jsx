@@ -27,7 +27,7 @@ import { getAuthToken } from "@/utils/helperFunctions";
 
 const ReportsPage = (props) => {
   const { apiData } = props;
-  console.log(apiData,'apiDataapiData')
+  console.log(apiData, "apiDataapiData");
   const { account_data, deposit_history, transaction_history, countriesList } =
     apiData;
   const flagMap = {
@@ -109,11 +109,16 @@ const ReportsPage = (props) => {
   };
 
   const handleEyeClick = async (item, transactionType) => {
-    const payload = { id: item?.id };
-    const response =
-      transactionType == "transaction"
-        ? await getTransactionDetails(getAuthToken(), payload)
-        : await getDepositDetails(getAuthToken(), payload);
+    try {
+      const payload = { id: item?.id };
+      const response =
+        transactionType == "transaction"
+          ? await getTransactionDetails(getAuthToken(), payload)
+          : await getDepositDetails(getAuthToken(), payload);
+      //TODO : Update the setEyeViewPopup data with the response to get Additional details
+    } catch (error) {
+      console.log("ERROR in handleEyeClick", error);
+    }
     setEyeViewPopup({
       flag: true,
       data: { ...item, transactionType: transactionType },

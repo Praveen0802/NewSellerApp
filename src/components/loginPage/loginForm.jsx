@@ -98,16 +98,26 @@ const LoginForm = () => {
             setCookie("user_token", response?.user_id);
             router.push("/dashboard");
           } else {
+            const errorMessage =
+              typeof response?.message === "string"
+                ? response.message
+                : "Invalid email or password";
             setErrors({
-              email: response?.message || "Invalid email or password",
-              password: response?.message || "Invalid email or password",
+              email: errorMessage,
+              password: errorMessage,
             });
-            setLoader(false);
           }
-        } catch {
+          setLoader(false);
+        } catch (error) {
+          console.error("Login error:", error);
+          const errorMessage =
+            error?.response?.data?.message ||
+            error?.message ||
+            "Invalid email or password";
+
           setErrors({
-            email: response?.message || "Invalid email or password",
-            password: response?.message || "Invalid email or password",
+            email: errorMessage,
+            password: errorMessage,
           });
           setLoader(false);
         }
