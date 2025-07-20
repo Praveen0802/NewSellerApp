@@ -11,6 +11,7 @@ import {
 import { toast } from "react-toastify";
 import FooterButton from "@/components/footerButton";
 import useIsMobile from "@/utils/helperFunctions/useIsmobile";
+import useCountryCodes from "@/Hooks/useCountryCodes";
 
 const AddEditAddress = ({
   onClose,
@@ -58,7 +59,7 @@ const AddEditAddress = ({
     zipCode: zip_code,
     is_default: primary_address == 1 ? true : false,
   });
-console.log(formFieldValues?.country,'iiiiiiii')
+  console.log(formFieldValues?.country, "iiiiiiii");
   const fetchCityDetails = async (id) => {
     if (!id) return;
     try {
@@ -77,14 +78,15 @@ console.log(formFieldValues?.country,'iiiiiiii')
   };
 
   const fetchPhoneCodeOptions = async () => {
-    const response = await getDialingCode();
-    const phoneCodeField = response?.data?.map((item) => {
-      return {
-        value: `${item?.phone_code}`,
-        label: `${item?.country_short_name} ${item?.country_code}`,
-      };
-    });
-    setPhoneCodeOptions(phoneCodeField);
+    // const response = await getDialingCode();
+    // const phoneCodeField = response?.data?.map((item) => {
+    //   return {
+    //     value: `${item?.phone_code}`,
+    //     label: `${item?.country_short_name} ${item?.country_code}`,
+    //   };
+    // });
+    const { allCountryCodeOptions } = useCountryCodes();
+    setPhoneCodeOptions(allCountryCodeOptions);
   };
   useEffect(() => {
     fetchPhoneCodeOptions();
@@ -126,7 +128,7 @@ console.log(formFieldValues?.country,'iiiiiiii')
   const countryList = fetchCountries?.map((list) => {
     return { value: list?.id, label: list?.name };
   });
-  
+
   const fieldStyle =
     "w-full rounded-md border border-gray-300 p-3 text-gray-700 focus:border-indigo-300 focus:ring-1 focus:ring-indigo-300 focus:outline-none transition-all duration-200";
 

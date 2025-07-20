@@ -12,6 +12,7 @@ import {
 import { toast } from "react-toastify";
 import FooterButton from "@/components/footerButton";
 import { InfoIcon } from "lucide-react";
+import useCountryCodes from "@/Hooks/useCountryCodes";
 
 const AddEditUser = ({
   onClose,
@@ -81,14 +82,15 @@ const AddEditUser = ({
   }, [formFieldValues?.country]);
 
   const fetchPhoneCodeOptions = async () => {
-    const response = await getDialingCode();
-    const phoneCodeField = response?.data?.map((item) => {
-      return {
-        value: item?.phone_code,
-        label: `${item?.country_short_name} ${item?.country_code}`,
-      };
-    });
-    setPhoneCodeOptions(phoneCodeField);
+    // const response = await getDialingCode();
+    // const phoneCodeField = response?.data?.map((item) => {
+    //   return {
+    //     value: item?.phone_code,
+    //     label: `${item?.country_short_name} ${item?.country_code}`,
+    //   };
+    // });
+    const { allCountryCodeOptions } = useCountryCodes();
+    setPhoneCodeOptions(allCountryCodeOptions);
   };
 
   useEffect(() => {

@@ -24,7 +24,7 @@ const SignupForm = () => {
     email: "",
     password: "",
     confirm_password: "",
-    mobile_number: "",
+    phone_number: "",
     phone_code: "44",
     terms_accepted: false, // Add new field for terms acceptance
   });
@@ -35,7 +35,7 @@ const SignupForm = () => {
     email: "",
     password: "",
     confirm_password: "",
-    mobile_number: "",
+    phone_number: "",
     phone_code: "",
     terms_accepted: "", // Add error field for terms
   });
@@ -79,7 +79,7 @@ const SignupForm = () => {
       email: "",
       password: "",
       confirm_password: "",
-      mobile_number: "",
+      phone_number: "",
       phone_code: "",
       terms_accepted: "",
     };
@@ -119,13 +119,13 @@ const SignupForm = () => {
     }
 
     // Optional fields don't need validation
-    // if phone_code is provided, mobile_number is required and vice versa
-    if (formData.phone_code && !formData.mobile_number) {
-      newErrors.mobile_number = "Mobile number is required with country code";
+    // if phone_code is provided, phone_number is required and vice versa
+    if (formData.phone_code && !formData.phone_number) {
+      newErrors.phone_number = "Mobile number is required with country code";
       valid = false;
     }
 
-    if (formData.mobile_number && !formData.phone_code) {
+    if (formData.phone_number && !formData.phone_code) {
       newErrors.phone_code = "Country code is required with mobile number";
       valid = false;
     }
@@ -344,14 +344,14 @@ const SignupForm = () => {
                 </div>
                 <div className="w-full md:w-3/4">
                   <FloatingLabelInput
-                    id="mobile_number"
-                    name="mobile_number"
-                    keyValue={"mobile_number"}
+                    id="phone_number"
+                    name="phone_number"
+                    keyValue={"phone_number"}
                     type="tel"
                     label="Mobile Number"
-                    value={formData?.mobile_number}
+                    value={formData?.phone_number}
                     onChange={handleChange}
-                    error={errors.mobile_number}
+                    error={errors.phone_number}
                     className={
                       "!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#343432] !text-[13px] sm:!text-[14px]"
                     }
