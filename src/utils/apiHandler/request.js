@@ -618,7 +618,6 @@ export const DeleteUserDetails = async (
   }
 };
 
-
 export const addTeamMembers = async (
   token,
   id,
@@ -1312,11 +1311,12 @@ export const purchaseTicketsBuy = async (token, id, params = {}, data) => {
 
 export const deleteAddressBook = async (token, payload) => {
   try {
+    const { id } = payload ?? {};
     const response = await makeRequest({
-      url: `${API_ROUTES.DELETE_ADDRESS_BOOK}`,
-      method: "POST",
+      url: `${API_ROUTES.DELETE_ADDRESS_BOOK}/${id}`,
+      method: "DELETE",
       ...(token && { token: token }),
-      data: payload,
+      // data: payload,
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {

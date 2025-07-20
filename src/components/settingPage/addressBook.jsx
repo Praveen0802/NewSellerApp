@@ -1,5 +1,7 @@
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+
 import RightViewModal from "../commonComponents/rightViewModal";
 import AddEditAddress from "./components/addEditAddress";
 import Button from "../commonComponents/button";
@@ -179,6 +181,7 @@ const AddressBook = (props) => {
         flag: false,
         id: null,
       });
+      toast.success("Address deleted successfully.");
     } finally {
       setIsLoading(false);
     }
