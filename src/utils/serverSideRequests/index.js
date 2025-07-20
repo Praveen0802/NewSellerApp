@@ -50,7 +50,7 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
       // return { addressDetails, profileDetails, fetchCountries, dialingCode };
     } else if (profile === "addressBook") {
       const results = await Promise.allSettled([
-        fetchAddressBookDetails(token, "", "GET", "",{primary_address: 1}),
+        fetchAddressBookDetails(token, "", "GET", "", { primary_address: 1 }),
         fetchAddressBookDetails(token, "", "GET", ""),
         fetchProfileDetails(token, "GET"),
         fetchCountrieList(token),
@@ -71,12 +71,11 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
         fetchCountries,
       };
     } else if (profile == "myTeam") {
-      const [userDetails,fetchCountries] = await Promise.all([
+      const [userDetails, fetchCountries] = await Promise.all([
         fetchUserDetails(token),
         fetchCountrieList(token),
       ]);
-      console.log(userDetails,'userDetailsuserDetails')
-      return { userDetails,fetchCountries };
+      return { userDetails, fetchCountries };
     } else if (profile == "linkedCards") {
       const shopperRefernce = ctx?.req?.cookies?.user_token;
 
@@ -136,7 +135,7 @@ export const fetchDashboardPageDetails = async (token) => {
       dashboardAwaitingDelivery(token, { date_format: "today" }),
       dashboardActivity(token),
       dashboardNotifications(token),
-      topSellingEvents(token),
+      topSellingEvents(token, { date_format: "last_60days" }),
       // dashbordTrade(token),
       dashbordReports(token),
     ]);

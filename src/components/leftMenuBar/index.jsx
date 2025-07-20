@@ -440,7 +440,7 @@ const NotificationsPopup = ({
 
   if (!isOpen) return null;
 
-  const sidebarWidth = showFullDisplay ? 200 : 60;
+  const sidebarWidth = showFullDisplay ? 174 : 60;
 
   // Mobile layout
   if (isMobile) {

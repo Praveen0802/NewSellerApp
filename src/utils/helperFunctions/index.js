@@ -209,3 +209,36 @@ export const constructTeamMembersDetails = async () => {
     };
   });
 };
+
+export function formatDateToBoldDisplay(dateString) {
+  // Create a Date object from the input string
+  const date = new Date(dateString);
+
+  // Array of day names
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  // Array of month names
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  // Get the day name, day number, month name, and year
+  const dayName = days[date.getDay()];
+  const day = date.getDate();
+  const monthName = months[date.getMonth()];
+  const year = date.getFullYear();
+
+  // Return formatted string
+  return `${dayName}, ${day} ${monthName} ${year}`;
+}

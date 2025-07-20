@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useRouter } from "next/router";
 
 import canelTicket from "../../../public/cancel-ticke.svg";
 import replaced from "../../../public/replaced.svg";
@@ -21,7 +22,7 @@ import {
   fetchSalesOverview,
   topSellingEvents,
   fetchReports,
-  dashbordReports, // Add your reports API function here
+  dashbordReports,
 } from "@/utils/apiHandler/request";
 
 const DashboardPage = (props) => {
@@ -42,6 +43,8 @@ const DashboardPage = (props) => {
   const [filters, setFilters] = useState({
     salesOverView: "last_180days",
     awaitingDelivery: "today",
+    topSelling: "last_60days",
+    topSellingCategory: "", //allCategories
   });
 
   // Track current page for pagination - Added notifications, activity, and reports
@@ -51,6 +54,7 @@ const DashboardPage = (props) => {
     notifications: 1,
     activity: 1,
     reports: 1,
+    topSelling: 1,
   });
 
   const updateApiCall = async (keyValue, params, isPagination = false) => {
@@ -131,14 +135,40 @@ const DashboardPage = (props) => {
       [filterKey]: value,
     }));
 
-    updateApiCall(filterKey, {
-      date_format: value,
-      page: 1, // Reset to first page when filter changes
-    });
+    // Prepare params based on filter type
+    let params = { page: 1 };
+    let apiKey = filterKey;
+
+    if (filterKey === "topSelling") {
+      // For date range changes, include both date and category
+      params = {
+        date_format: value,
+        category: filters.topSellingCategory,
+        page: 1,
+      };
+    } else if (filterKey === "topSellingCategory") {
+      // For category changes, include both category and current date range
+      params = {
+        date_format: filters.topSelling,
+        category: value,
+        page: 1,
+      };
+      apiKey = "topSelling"; // Use topSelling API for category changes
+    } else if (
+      filterKey === "salesOverView" ||
+      filterKey === "awaitingDelivery"
+    ) {
+      params = {
+        date_format: value,
+        page: 1,
+      };
+    }
+
+    updateApiCall(apiKey, params);
   };
 
   const handleScrollEnd = async (keyValue) => {
-    // Extended to handle notifications, activity, and reports pagination
+    // Extended to handle notifications, activity, reports, and topSelling pagination
     if (
       [
         "salesOverView",
@@ -146,6 +176,7 @@ const DashboardPage = (props) => {
         "notifications",
         "activity",
         "reports",
+        "topSelling",
       ].includes(keyValue)
     ) {
       const currentMeta = resultData[keyValue]?.meta;
@@ -166,10 +197,16 @@ const DashboardPage = (props) => {
         // For salesOverView and awaitingDelivery, include date_format
         if (keyValue === "salesOverView" || keyValue === "awaitingDelivery") {
           params.date_format = filters[keyValue];
+        } else if (keyValue === "topSelling") {
+          // Include both date and category for topSelling pagination
+          params = {
+            page: nextPage,
+            date_format: filters.topSelling,
+            category: filters.topSellingCategory,
+          };
         }
 
-        // For reports, no additional params needed, just page
-        // For notifications and activity, no additional params needed, just page
+        // For reports, notifications and activity, no additional params needed, just page
 
         // Call API with next page
         await updateApiCall(keyValue, params, true); // isPagination = true
@@ -254,12 +291,12 @@ const DashboardPage = (props) => {
 
   const reportValues = {
     title: "Reports",
-    options: [
-      { value: "today", label: "Today" },
-      { value: "yesterday", label: "Yesterday" },
-    ],
-    selectedOption: "today",
-    onchange: () => {},
+    // options: [
+    //   { value: "today", label: "Today" },
+    //   { value: "yesterday", label: "Yesterday" },
+    // ],
+    // selectedOption: "today",
+    // onchange: () => {},
     reports: [
       {
         image: Pound,
@@ -289,10 +326,11 @@ const DashboardPage = (props) => {
     ],
     tableView: {
       head: ["Match Name", "Revenue"],
-      body: resultData?.reports?.history?.map((item) => ({
-        matchName: item?.match_name,
-        revenue: item?.revenue,
-      })) || [],
+      body:
+        resultData?.reports?.history?.map((item) => ({
+          matchName: item?.match_name,
+          revenue: item?.revenue,
+        })) || [],
     },
     // Add pagination support for reports
     handleScrollEnd: handleScrollEnd,
@@ -305,11 +343,15 @@ const DashboardPage = (props) => {
     title: "Top Selling Events",
     firstSelect: {
       options: [
-        { value: "today", label: "Today" },
-        { value: "yesterday", label: "Yesterday" },
+        { value: "last_7days", label: "Last 7 days" },
+        { value: "last_15days", label: "Last 15 days" },
+        { value: "last_30days", label: "Last 30 days" },
+        { value: "last_60days", label: "Last 60 days" },
       ],
-      selectedOption: "today",
-      onchange: () => {},
+      selectedOption: filters.topSelling,
+      onChange: (value) => {
+        handleSelectOptionChange("topSelling", value);
+      },
     },
     secondSelect: {
       options: [
@@ -317,64 +359,33 @@ const DashboardPage = (props) => {
         { value: "sports", label: "Sports" },
         { value: "concerts", label: "Concerts" },
       ],
-      selectedOption: "allCategories",
-      onchange: () => {},
+      selectedOption: filters.topSellingCategory,
+      onChange: (value) => {
+        handleSelectOptionChange("topSellingCategory", value);
+      },
     },
     tableViews: {
       title: ["Event Description", "Event Date"],
-      body: [
-        {
-          eventName: "Arsenal FC vs Nottingham Forest FC",
-          eventDate: "Sat, 23 Nov 2024",
+      body:
+        resultData?.topSelling?.events_list?.map((item) => ({
+          eventName: item?.match_name,
+          eventDate: item?.match_date,
           ctaName: "Create Listing",
-        },
-        {
-          eventName: "Arsenal FC vs Nottingham Forest FC",
-          eventDate: "Sat, 23 Nov 2024",
-          ctaName: "Create Listing",
-        },
-        {
-          eventName: "Arsenal FC vs Nottingham Forest FC",
-          eventDate: "Sat, 23 Nov 2024",
-          ctaName: "Create Listing",
-        },
-        {
-          eventName: "Arsenal FC vs Nottingham Forest FC",
-          eventDate: "Sat, 23 Nov 2024",
-          ctaName: "Create Listing",
-        },
-        {
-          eventName: "Arsenal FC vs Nottingham Forest FC",
-          eventDate: "Sat, 23 Nov 2024",
-          ctaName: "Create Listing",
-        },
-        {
-          eventName: "Arsenal FC vs Nottingham Forest FC",
-          eventDate: "Sat, 23 Nov 2024",
-          ctaName: "Create Listing",
-        },
-        {
-          eventName: "Arsenal FC vs Nottingham Forest FC",
-          eventDate: "Sat, 23 Nov 2024",
-          ctaName: "Create Listing",
-        },
-        {
-          eventName: "Arsenal FC vs Nottingham Forest FC",
-          eventDate: "Sat, 23 Nov 2024",
-          ctaName: "Create Listing",
-        },
-        {
-          eventName: "Arsenal FC vs Nottingham Forest FC",
-          eventDate: "Sat, 23 Nov 2024",
-          ctaName: "Create Listing",
-        },
-        {
-          eventName: "Arsenal FC vs Nottingham Forest FC",
-          eventDate: "Sat, 23 Nov 2024",
-          ctaName: "Create Listing",
-        },
-      ],
+        })) || [],
     },
+    // Add pagination support for topSelling
+    handleScrollEnd: handleScrollEnd,
+    keyValue: "topSelling",
+    meta: resultData?.topSelling?.meta,
+    loader: loader.topSelling,
+  };
+
+  console.log("resultData", resultData);
+
+  const router = useRouter();
+  const handleCreateListing = () => {
+    //TODO: Add your create listing logic here
+    router.push("/add-listings");
   };
 
   return (
@@ -411,7 +422,12 @@ const DashboardPage = (props) => {
             />
           </div>
           <div className="w-full md::w-1/2 flex flex-col">
-            <TopSellingEvents sellingEvents={sellingEvents} />
+            <TopSellingEvents
+              sellingEvents={sellingEvents}
+              handleClick={handleCreateListing}
+              handleScrollEnd={handleScrollEnd}
+              loader={loader.topSelling}
+            />
           </div>
         </div>
         <TradeTickets />
