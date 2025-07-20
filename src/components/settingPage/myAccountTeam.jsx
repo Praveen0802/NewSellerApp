@@ -8,6 +8,7 @@ import AccounInfoForm from "./components/accounInfoForm";
 import { toast } from "react-toastify";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import { getAuthToken } from "@/utils/helperFunctions";
+import useCountryCodes from "@/Hooks/useCountryCodes";
 
 const MyAccountTeam = (props) => {
   const { profileDetails } = props;
@@ -19,12 +20,14 @@ const MyAccountTeam = (props) => {
     phoneNumber: profileDetails?.phone_number,
   };
 
-  const countryCodeValues = props?.dialingCode?.data?.map((item) => {
-    return {
-      value: `${item?.country_code}`,
-      label: `${item?.country_short_name} ${item?.country_code}`,
-    };
-  });
+  // const countryCodeValues = props?.dialingCode?.data?.map((item) => {
+  //   return {
+  //     value: `${item?.country_code}`,
+  //     label: `${item?.country_short_name} ${item?.country_code}`,
+  //   };
+  // });
+
+  const { allCountryCodeOptions } = useCountryCodes();
 
   const [formData, setFormData] = useState(initialValues);
   const [submitLoader, setSubmitLoader] = useState(false);
@@ -90,7 +93,7 @@ const MyAccountTeam = (props) => {
               handleChange={handleChange}
               countryCode={countryCode}
               handleCountryCodeChange={handleCountryCodeChange}
-              countryCodeValues={countryCodeValues}
+              countryCodeValues={allCountryCodeOptions}
               disabled={!edit}
             />
             <div className="flex max-md:w-[50%] gap-3 items-center">

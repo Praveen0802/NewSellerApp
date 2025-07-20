@@ -27,6 +27,7 @@ import "react-toastify/dist/ReactToastify.css";
 import AdyenDropIn from "./adyenPurchaseNewCard";
 import { useRouter } from "next/router";
 import GuestDetails from "./guestDetails";
+import useCountryCodes from "@/Hooks/useCountryCodes";
 
 const ConfirmPurchasePopup = ({ onClose }) => {
   const { confirmPurchasePopupFields } = useSelector((state) => state?.common);
@@ -69,6 +70,8 @@ const ConfirmPurchasePopup = ({ onClose }) => {
     setSelectedAddress(id);
   };
 
+  const { allCountryCodeOptions } = useCountryCodes();
+
   const fetchAddressPaymentDetails = async () => {
     try {
       const [addressDetails, paymentDetails, dialingCode, countryList] =
@@ -85,14 +88,15 @@ const ConfirmPurchasePopup = ({ onClose }) => {
           return { label: item?.name, value: item?.id };
         })
       );
-      setPhoneCodeOptions(
-        dialingCode?.value?.data?.map((item) => {
-          return {
-            value: item?.phone_code,
-            label: `${item?.country_short_name} ${item?.country_code}`,
-          };
-        })
-      );
+      // setPhoneCodeOptions(
+      //   dialingCode?.value?.data?.map((item) => {
+      //     return {
+      //       value: item?.phone_code,
+      //       label: `${item?.country_short_name} ${item?.country_code}`,
+      //     };
+      //   })
+      // );
+      setPhoneCodeOptions(allCountryCodeOptions);
       setAddressDetails(addressDetails?.value);
       setPaymentDetails(paymentDetails?.value?.payment_methods);
       setSelectedAddress(
@@ -183,11 +187,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
           selectedPayment?.field?.RecurringDetail?.recurringDetailReference,
       });
       if (response?.result?.status == 1) {
-        bookingConfirm(
-          true,
-          "Booking Confirmed Successfully",
-          bookingNo
-        );
+        bookingConfirm(true, "Booking Confirmed Successfully", bookingNo);
       } else {
         bookingConfirm(false, response?.message || "Booking failed");
       }
