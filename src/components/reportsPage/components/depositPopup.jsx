@@ -80,7 +80,7 @@ const DepositPopup = ({ onClose, data }) => {
           <h2 className="text-xl font-semibold text-gray-800">
             Transaction Details
           </h2>
-          <p className="text-sm text-gray-500 mt-1">Ref: {data?.referenceNo}</p>
+          <p className="text-sm text-gray-500 mt-1">Ref: {data?.reference_no}</p>
         </div>
         <button
           onClick={onClose}
@@ -108,11 +108,14 @@ const DepositPopup = ({ onClose, data }) => {
           </div>
           <div className="flex items-baseline">
             <h1 className="text-2xl font-bold text-[#343432]">
-              {data?.amount}
+              {data?.price_with_currency || data?.amount}
             </h1>
+            {data?.currency && !data?.price_with_currency && (
+              <span className="text-sm text-gray-600 ml-2">{data?.currency}</span>
+            )}
           </div>
           <p className="text-xs text-gray-500 mt-2">
-            {formatDateTime(data?.date)}
+            {formatDateTime(data?.created_date_time)}
           </p>
         </div>
 
@@ -127,13 +130,13 @@ const DepositPopup = ({ onClose, data }) => {
             <div className="flex justify-between items-center px-4 py-3">
               <span className="text-sm text-gray-600">Reference Number</span>
               <span className="text-sm font-medium text-gray-800">
-                {data?.referenceNo}
+                {data?.reference_no}
               </span>
             </div>
             <div className="flex justify-between items-center px-4 py-3">
               <span className="text-sm text-gray-600">Amount</span>
               <span className="text-sm font-medium text-gray-800">
-                {data?.amount}
+                {data?.price_with_currency || `${data?.amount} ${data?.currency}`}
               </span>
             </div>
             <div className="flex justify-between items-center px-4 py-3">
@@ -155,14 +158,20 @@ const DepositPopup = ({ onClose, data }) => {
             <div className="flex justify-between items-center px-4 py-3">
               <span className="text-sm text-gray-600">Payment Method</span>
               <span className="text-sm font-medium text-gray-800">
-                {data?.paymentMethod}
+                {data?.payment_transfer_by}
+              </span>
+            </div>
+            <div className="flex justify-between items-center px-4 py-3">
+              <span className="text-sm text-gray-600">Created Date</span>
+              <span className="text-sm font-medium text-gray-800">
+                {formatDateTime(data?.created_date_time)}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Proof Document */}
-        {data?.proof && (
+        {/* Proof Document - Only show if proof exists and is not empty */}
+        {data?.proof && data?.proof.trim() !== "" && (
           <div className="mx-6 mb-4 bg-white rounded-lg border border-gray-200 overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-200">
               <h3 className="font-medium text-gray-700">Payment Proof</h3>
@@ -170,7 +179,7 @@ const DepositPopup = ({ onClose, data }) => {
             <div className="px-4 py-3">
               <button
                 onClick={handleDownloadProof}
-                className="flex items-cente cursor-pointer justify-center w-full py-2 px-4 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors border border-blue-200"
+                className="flex items-center cursor-pointer justify-center w-full py-2 px-4 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors border border-blue-200"
               >
                 <IconStore.download className="size-4 mr-2" />
                 <span className="text-sm font-medium">
@@ -189,7 +198,7 @@ const DepositPopup = ({ onClose, data }) => {
             </h3>
           </div>
           {data?.notes && (
-            <div className="px-4 py-3">
+            <div className="px-4 py-3 border-b border-gray-100">
               <h4 className="text-sm font-medium text-gray-700 mb-2">Notes</h4>
               <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded border border-gray-100">
                 {data?.notes}
@@ -197,7 +206,7 @@ const DepositPopup = ({ onClose, data }) => {
             </div>
           )}
           {data?.description && (
-            <div className="px-4 py-3">
+            <div className="px-4 py-3 border-b border-gray-100">
               <h4 className="text-sm font-medium text-gray-700 mb-2">
                 Description
               </h4>

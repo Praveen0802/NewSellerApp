@@ -11,6 +11,7 @@ import {
 } from "@/utils/apiHandler/request";
 import SelectDateComponent from "./selectDateComponent";
 import { useRouter } from "next/router";
+import { SearchX } from "lucide-react";
 
 // Shimmer Effect Component
 const ShimmerItem = () => (
@@ -41,7 +42,7 @@ const EventSearch = ({ onClose, allCategories }) => {
   const [loading, setLoading] = useState(false);
   const [venueOptions, setVenueOptions] = useState([]);
 
-  const [filtersApplied, setFiltersApplied] = useState({ query: "" });
+  const [filtersApplied, setFiltersApplied] = useState({});
   const [selected, setSelected] = useState();
 
   const fetchApiCall = async (params) => {
@@ -91,6 +92,8 @@ const EventSearch = ({ onClose, allCategories }) => {
       label: item?.name,
       id: item?.id,
       ...(item?.is_tournament && { is_tournament: item?.is_tournament }),
+      ...(item?.game_category && { game_category: item?.game_category }),
+      ...(item?.is_tixstock && { is_tixstock: item?.is_tixstock }),
       ...(item?.is_game_category && {
         is_game_category: item?.is_game_category,
       }),
@@ -103,7 +106,6 @@ const EventSearch = ({ onClose, allCategories }) => {
     const dateType = type === "date"; // Fixed equality check
     const value = selectType || dateType ? e : e.target.value;
     setFormFieldValues({ ...formFieldValues, [key]: value });
-    console.log(selectedObject, "selectedObjectselectedObject");
     if (key === "event_date") {
       const updatedQueryValues = {
         ...filtersApplied,
@@ -135,13 +137,14 @@ const EventSearch = ({ onClose, allCategories }) => {
             ? selectedObject?.is_game_category
             : "",
         category_id: selectedObject?.id != undefined ? selectedObject?.id : "",
+        is_tixstock: selectedObject?.is_tixstock || "",
+        game_category: selectedObject?.game_category || "",
       };
       console.log(updatedQueryValues, "updatedQueryValues");
       setFiltersApplied(updatedQueryValues);
       fetchApiCall(updatedQueryValues);
     }
   };
-
   const handleVenueViewClick = async (params, name, type) => {
     setFormFieldValues({ ...formFieldValues, [type]: name });
     setVenueOptions([]);
@@ -234,33 +237,33 @@ const EventSearch = ({ onClose, allCategories }) => {
       labelClassName: "!text-[12px] text-gray-600  block",
       placeholder: "Enter event/performer",
     },
-    {
-      label: "Venue/City",
-      type: "text",
-      id: "venue",
-      name: "venue",
-      showDropdown: true,
-      dropDownComponent: venueSearchEventComponent("venue"),
-      // onBlur: handleVenueBlurChange,
-      value: formFieldValues?.venue,
-      onChange: (e) => handleChange(e, "venue"),
-      className: `!py-[6px] !text-[13px] !px-[10px] `,
-      labelClassName: "!text-[12px] text-gray-600  block",
-      placeholder: "Enter venue/city",
-    },
-    {
-      label: "All event categories",
-      type: "select",
-      searchable: true,
-      mandatory: true,
-      id: "event_categories",
-      name: "event_categories",
-      value: formFieldValues?.event_categories,
-      onChange: handleChange,
-      className: `!py-[6px] !text-[13px] !px-[10px]`,
-      labelClassName: "!text-[12px] text-gray-600  block",
-      options: categoriesList,
-    },
+    // {
+    //   label: "Venue/City",
+    //   type: "text",
+    //   id: "venue",
+    //   name: "venue",
+    //   showDropdown: true,
+    //   dropDownComponent: venueSearchEventComponent("venue"),
+    //   // onBlur: handleVenueBlurChange,
+    //   value: formFieldValues?.venue,
+    //   onChange: (e) => handleChange(e, "venue"),
+    //   className: `!py-[6px] !text-[13px] !px-[10px] `,
+    //   labelClassName: "!text-[12px] text-gray-600  block",
+    //   placeholder: "Enter venue/city",
+    // },
+    // {
+    //   label: "All event categories",
+    //   type: "select",
+    //   searchable: true,
+    //   mandatory: true,
+    //   id: "event_categories",
+    //   name: "event_categories",
+    //   value: formFieldValues?.event_categories,
+    //   onChange: handleChange,
+    //   className: `!py-[6px] !text-[13px] !px-[10px]`,
+    //   labelClassName: "!text-[12px] text-gray-600  block",
+    //   options: categoriesList,
+    // },
   ];
 
   const handleEventClick = async (item) => {
@@ -280,9 +283,35 @@ const EventSearch = ({ onClose, allCategories }) => {
         </div>
       );
     } else {
+      // Check if there are no results
+      const hasPerformers = displayEventValues?.performers?.length > 0;
+      const hasEvents = displayEventValues?.events?.length > 0;
+      const hasSearched = Object.values(filtersApplied).length > 0;
+      // Only show "no results" if user has searched and there are no results
+      if (hasSearched && !hasPerformers && !hasEvents) {
+        return (
+          <div className="flex flex-col items-center justify-center py-8 px-4">
+            <div className="text-gray-400 mb-4">
+              <SearchX className="w-12 h-12" />
+            </div>
+            <p className="text-gray-500 text-center text-sm">
+              No results found
+            </p>
+            <p className="text-gray-400 text-center text-xs mt-1">
+              Try adjusting your search criteria
+            </p>
+          </div>
+        );
+      }
+
+      // Return empty div if no search has been performed yet
+      if (!hasSearched) {
+        return <div></div>;
+      }
+
       return (
         <>
-          {displayEventValues?.performers?.length > 0 && (
+          {hasPerformers && (
             <div className="flex flex-col gap-2">
               <p className="px-4 text-[13px] font-medium">Performers</p>
               {displayEventValues?.performers?.map((item, index) => (
@@ -301,7 +330,7 @@ const EventSearch = ({ onClose, allCategories }) => {
               ))}
             </div>
           )}
-          {displayEventValues?.events?.length > 0 && (
+          {hasEvents && (
             <div className={`flex flex-col gap-2 p-3 `}>
               <p className="px-4 text-[13px] font-medium">Events</p>
               {displayEventValues.events.map((item, index) => (
@@ -361,7 +390,7 @@ const EventSearch = ({ onClose, allCategories }) => {
   return (
     <div className="bg-white w-full h-full shadow-md border-r-[1px] border-[#E0E1EA] flex flex-col">
       <div className="flex justify-between items-center border-b-[1px] border-[#E0E1EA] p-4">
-        <p className="text-[#343432] text-[18px] font-semibold">Event Search</p>
+        <p className="text-[#343432] text-[16px] font-semibold">Event Search</p>
         <div className="flex gap-2 items-center">
           <button onClick={handleClickReset} className="cursor-pointer">
             <IconStore.reload className="stroke-[#3E2E7E] size-4" />

@@ -390,6 +390,7 @@ export const dashboardNotifications = async (token, params) => {
       ...(params && { params: params }),
       ...(token && { token: token }),
     });
+    console.log(response?.data?.data, "response?.dataaa");
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in DASHBOARD_NOTIFICATIONS", error);
@@ -408,6 +409,36 @@ export const topSellingEvents = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in TOP_SELLING_EVENTS", error);
+    throw error;
+  }
+};
+
+export const LMTpurchaseTracking = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.LMT_TRADE_TRACKING,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in LMTpurchaseTracking", error);
+    throw error;
+  }
+};
+
+export const LMTTradeOrders = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.LMT_TRADE_ORDERS,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in LMTTradeOrders", error);
     throw error;
   }
 };
@@ -563,6 +594,22 @@ export const fetchCityBasedonCountry = async (token, params) => {
   try {
     const response = await makeRequest({
       url: API_ROUTES.FETCH_CITIES,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getDepositDetails", error);
+    throw error;
+  }
+};
+
+
+export const getAllPermissions = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_ALL_PERMISSIONS,
       method: "GET",
       ...(token && { token: token }),
       ...(params && { params: params }),
@@ -1041,7 +1088,6 @@ export const FetchEventSearch = async (token, params = {}) => {
     lang: "en",
     currency: "GBP",
   };
-  console.log(queryParams, "queryParamsqueryParams");
   try {
     const response = await makeRequest({
       url: API_ROUTES.FETCH_EVENT_SEARCH,
@@ -1171,8 +1217,8 @@ export const purchaseTracking = async (token, method = "GET", params) => {
   try {
     const queryParams = {
       lang: "en",
-      currency: "GBP",
-      page: 1,
+      // currency: "GBP",
+      // page: 1,
       ...params,
     };
     const response = await makeRequest({

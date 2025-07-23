@@ -40,9 +40,9 @@ const AddDepositSummary = ({ onClose }) => {
 
   const fetchCurrencies = async () => {
     const response = await getCurrencyDetails();
-    const options = response?.data?.map((item) => ({
-      label: item?.currency,
-      value: item?.currency,
+    const options = response?.map((item) => ({
+      label: item?.code,
+      value: item?.code,
     }));
     setCurrencyDetails(options);
   };
@@ -54,7 +54,7 @@ const AddDepositSummary = ({ onClose }) => {
 
   useEffect(() => {
     fetchCurrencies();
-    fetchAccountDetails();
+    // fetchAccountDetails();
   }, []);
 
   const isFormValid = () => {
@@ -183,7 +183,7 @@ const AddDepositSummary = ({ onClose }) => {
 
       {/* Scrollable content area */}
       <div className="flex flex-col gap-1 overflow-y-auto flex-grow">
-        <TopPopupModal bankAccountDetails={bankAccountDetails} />
+        {/* <TopPopupModal bankAccountDetails={bankAccountDetails} /> */}
 
         {/* Form Content - Adjusted padding for mobile */}
         <div className="flex flex-col gap-3 sm:gap-4 p-3 sm:px-6 sm:pb-6">

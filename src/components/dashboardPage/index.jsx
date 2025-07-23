@@ -23,13 +23,15 @@ import {
   topSellingEvents,
   fetchReports,
   dashbordReports,
+  fetchPurchaseTracking,  // Add this API function
+  fetchTradeOrders,
+  LMTpurchaseTracking,
+  LMTTradeOrders,      // Add this API function
 } from "@/utils/apiHandler/request";
 
 const DashboardPage = (props) => {
-  console.log("props", props);
 
   const [resultData, setResultData] = useState(props?.response);
-  console.log(" ", resultData);
 
   const [loader, setLoader] = useState({
     salesOverView: false,
@@ -38,6 +40,8 @@ const DashboardPage = (props) => {
     notifications: false,
     topSelling: false,
     reports: false,
+    purchaseTracking: false,
+    tradeOrders: false,
   });
 
   const [filters, setFilters] = useState({
@@ -47,7 +51,7 @@ const DashboardPage = (props) => {
     topSellingCategory: "", //allCategories
   });
 
-  // Track current page for pagination - Added notifications, activity, and reports
+  // Track current page for pagination - Added all sections
   const [currentPages, setCurrentPages] = useState({
     salesOverView: 1,
     awaitingDelivery: 1,
@@ -55,6 +59,8 @@ const DashboardPage = (props) => {
     activity: 1,
     reports: 1,
     topSelling: 1,
+    purchaseTracking: 1,
+    tradeOrders: 1,
   });
 
   const updateApiCall = async (keyValue, params, isPagination = false) => {
@@ -77,6 +83,10 @@ const DashboardPage = (props) => {
         response = await topSellingEvents("", params);
       } else if (keyValue === "reports") {
         response = await dashbordReports("", params);
+      } else if (keyValue === "purchaseTracking") {
+        response = await LMTpurchaseTracking("", params);
+      } else if (keyValue === "tradeOrders") {
+        response = await LMTTradeOrders("", params);
       }
 
       if (isPagination) {
@@ -103,8 +113,22 @@ const DashboardPage = (props) => {
               ...(prevData[keyValue]?.history || []),
               ...(response?.history || []),
             ],
+            // Add support for purchase tracking ticket details
+            ticket_details: [
+              ...(prevData[keyValue]?.ticket_details || []),
+              ...(response?.ticket_details || []),
+            ],
+            // Add support for trade orders data
+            data: keyValue === "tradeOrders" ? {
+              ...response?.data,
+              data: [
+                ...(prevData[keyValue]?.data?.data || []),
+                ...(response?.data?.data || []),
+              ],
+            } : prevData[keyValue]?.data,
             // Update meta with new pagination info
             meta: response?.meta,
+            pagination: response?.pagination, // For purchase tracking
           },
         }));
       } else {
@@ -168,7 +192,7 @@ const DashboardPage = (props) => {
   };
 
   const handleScrollEnd = async (keyValue) => {
-    // Extended to handle notifications, activity, reports, and topSelling pagination
+    // Extended to handle all sections including purchaseTracking and tradeOrders
     if (
       [
         "salesOverView",
@@ -177,9 +201,20 @@ const DashboardPage = (props) => {
         "activity",
         "reports",
         "topSelling",
+        "purchaseTracking",
+        "tradeOrders",
       ].includes(keyValue)
     ) {
-      const currentMeta = resultData[keyValue]?.meta;
+      let currentMeta;
+      
+      // Handle different meta structures
+      if (keyValue === "purchaseTracking") {
+        currentMeta = resultData[keyValue]?.pagination;
+      } else if (keyValue === "tradeOrders") {
+        currentMeta = resultData[keyValue]?.data;
+      } else {
+        currentMeta = resultData[keyValue]?.meta;
+      }
 
       // Check if there are more pages to load
       if (currentMeta && currentMeta.current_page < currentMeta.last_page) {
@@ -206,7 +241,7 @@ const DashboardPage = (props) => {
           };
         }
 
-        // For reports, notifications and activity, no additional params needed, just page
+        // For purchaseTracking and tradeOrders, no additional params needed, just page
 
         // Call API with next page
         await updateApiCall(keyValue, params, true); // isPagination = true
@@ -430,7 +465,11 @@ const DashboardPage = (props) => {
             />
           </div>
         </div>
-        <TradeTickets />
+        <TradeTickets 
+          resultData={resultData}
+          handleScrollEnd={handleScrollEnd}
+          loader={loader}
+        />
         <ReportViewContainer reportValues={reportValues} />
       </div>
     </div>

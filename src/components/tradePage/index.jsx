@@ -113,7 +113,7 @@ const TradePage = (props) => {
       {/* Wallet info - Responsive for both desktop and mobile */}
       <div className="md:absolute top-0 flex gap-2 md:gap-3 items-center bg-white p-2 md:p-4 w-full md:w-auto right-0 z-10">
         <div className="flex-1 md:flex-none max-md:px-4">
-          <AvailableFunds fetchWalletBalance={fetchWalletBalance} />
+          {/* <AvailableFunds fetchWalletBalance={fetchWalletBalance} /> */}
         </div>
         <div
           onClick={handleOpenAddWalletPopup}

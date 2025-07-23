@@ -1,6 +1,37 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 
-const TradeTicketsContainer = ({ tracking, className }) => {
+const TradeTicketsContainer = ({ 
+  tracking, 
+  className, 
+  handleScrollEnd, 
+  loader 
+}) => {
+  const scrollRef = useRef(null);
+
+  const handleScroll = () => {
+    const element = scrollRef.current;
+    if (element) {
+      const { scrollTop, scrollHeight, clientHeight } = element;
+      
+      // Check if scrolled to bottom (with a small threshold)
+      if (scrollTop + clientHeight >= scrollHeight - 5) {
+        // Check if there are more pages to load
+        const meta = tracking?.meta;
+        if (meta && meta.current_page < meta.last_page && !loader) {
+          handleScrollEnd?.(tracking?.keyValue);
+        }
+      }
+    }
+  };
+
+  useEffect(() => {
+    const element = scrollRef.current;
+    if (element) {
+      element.addEventListener('scroll', handleScroll);
+      return () => element.removeEventListener('scroll', handleScroll);
+    }
+  }, [tracking?.meta, loader]);
+
   return (
     <div className={`${className}`}>
       <div
@@ -16,7 +47,10 @@ const TradeTicketsContainer = ({ tracking, className }) => {
           {tracking?.subHeading}
         </p>
       </div>
-      <div className="flex flex-col overflow-auto max-h-[180px]">
+      <div 
+        ref={scrollRef}
+        className="flex flex-col overflow-auto max-h-[180px]"
+      >
         {tracking?.listItems.map((item, index) => (
           <div
             key={index}
@@ -30,6 +64,11 @@ const TradeTicketsContainer = ({ tracking, className }) => {
             </p>
           </div>
         ))}
+        {loader && (
+          <div className="flex items-center justify-center p-4">
+            <div className="text-[13px] text-[#7D82A4]">Loading...</div>
+          </div>
+        )}
       </div>
     </div>
   );

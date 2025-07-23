@@ -35,6 +35,8 @@ import {
   fetchBulkListing,
   fetchSettingsTxPay,
   fetchTournamentsList,
+  LMTpurchaseTracking,
+  LMTTradeOrders,
 } from "../apiHandler/request";
 
 export const fetchSettingsPageDetails = async (profile, token, ctx) => {
@@ -108,14 +110,14 @@ export const fetchSalesPageDetails = async (profile, token, ctx) => {
 
 export const fetchWalletPageDetails = async (token) => {
   try {
-    const [transactionHistory] = await Promise.all([
+    const [transactionHistory, depositHistory] = await Promise.all([
       // fetchLMTOverview(token),
-      // fetchDepositHistoryMonthly(token),
+      fetchDepositHistoryMonthly(token),
       fetchTransactionHistoryMonthly(token),
     ]);
     return {
       ...transactionHistory,
-      // ...depositHistory,
+      ...depositHistory,
       // ...walletBalance,
     };
   } catch {}
@@ -123,14 +125,7 @@ export const fetchWalletPageDetails = async (token) => {
 
 export const fetchDashboardPageDetails = async (token) => {
   try {
-    const [
-      salesOverView,
-      awaitingDelivery,
-      activity,
-      notifications,
-      topSelling,
-      reports,
-    ] = await Promise.all([
+    const results = await Promise.allSettled([
       fetchSalesOverview(token, { date_format: "last_180days" }),
       dashboardAwaitingDelivery(token, { date_format: "today" }),
       dashboardActivity(token),
@@ -138,7 +133,23 @@ export const fetchDashboardPageDetails = async (token) => {
       topSellingEvents(token, { date_format: "last_60days" }),
       // dashbordTrade(token),
       dashbordReports(token),
+      LMTpurchaseTracking(token),
+      LMTTradeOrders(token),
     ]);
+
+    const [
+      salesOverView,
+      awaitingDelivery,
+      activity,
+      notifications,
+      topSelling,
+      reports,
+      purchaseTracking,
+      tradeOrders
+    ] = results.map((result) =>
+      result.status === "fulfilled" ? result.value : null
+    );
+
     return {
       salesOverView,
       awaitingDelivery,
@@ -146,6 +157,8 @@ export const fetchDashboardPageDetails = async (token) => {
       notifications,
       topSelling,
       reports,
+      purchaseTracking,
+      tradeOrders
     };
   } catch {
     return [];

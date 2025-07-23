@@ -12,7 +12,7 @@ import AttendeeDetails from "./components/attendeeDetails";
 import PaymentOrderDetails from "./components/paymentOrderDetails";
 import DownLoadYourTickets from "./components/downLoadYourTickets";
 
-const OrderDetails = ({ show, onClose, data }) => {
+const OrderDetails = ({ show, onClose, data={} }) => {
   const {
     order_details = {},
     customer_details = {},
