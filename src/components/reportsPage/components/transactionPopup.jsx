@@ -3,6 +3,8 @@ import { IconStore } from "@/utils/helperFunctions/iconStore";
 import React from "react";
 
 const TransactionPopup = ({ data, onClose }) => {
+
+
   const renderDetailItem = (label, value) => (
     <div className="flex justify-between items-center py-2 border-b border-gray-100">
       <span className="text-gray-500 text-sm">{label}</span>

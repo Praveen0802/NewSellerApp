@@ -6,6 +6,7 @@ import {
   addTeamMembers,
   fetchCityBasedonCountry,
   fetchUserDetails,
+  getAllPermissions,
   getDialingCode,
   updateTeamMembers,
 } from "@/utils/apiHandler/request";
@@ -25,31 +26,31 @@ const AddEditUser = ({
     first_name = "",
     last_name = "",
     email = "",
-    mobile_number = "",
-    phone_code = 91,
-    address = "",
-    city_id = "",
-    zip_code = "",
-    country_id = "",
-    user_roles = [],
+    phone_number = "",
+    country_code = "+91",
+    permissions = "",
   } = userDetails;
 
   const editType = type === "edit";
   const [loader, setLoader] = useState(false);
-  const [cityOptions, setCityOptions] = useState([]);
   const [phoneCodeOptions, setPhoneCodeOptions] = useState([]);
+  const [permissionValues, setPermissionValues] = useState([]);
 
+  // Convert existing permissions string to array for edit mode
+  const existingPermissions =
+    editType && permissions
+      ? permissions.split(",").map((p) => parseInt(p.trim()))
+      : [];
+console.log(existingPermissions,permissions,'existingPermissionsexistingPermissions',userDetails)
   const [formFieldValues, setFormFieldValues] = useState({
     first_name: first_name,
     last_name: last_name,
     email: email,
-    mobile_number: mobile_number,
-    phone_code: phone_code,
-    address: address,
-    country: country_id,
-    city: city_id,
-    zipCode: zip_code,
-    userRoles: user_roles,
+    phone_number: phone_number,
+    country_code: country_code,
+    password: "",
+    confirm_password: "",
+    permissions: existingPermissions,
   });
 
   const handleChange = (e, key, type) => {
@@ -58,43 +59,36 @@ const AddEditUser = ({
     setFormFieldValues({ ...formFieldValues, [key]: value });
   };
 
-  const fetchCityDetails = async (id) => {
-    if (!id) return;
+  // Special handler for permissions checkbox
+  const handlePermissionChange = (e, key) => {
+    const selectedPermissions = e.target.value; // This will be an array from checkbox component
+    setFormFieldValues({ ...formFieldValues, [key]: selectedPermissions });
+  };
+
+  const getPermission = async () => {
     try {
-      const response = await fetchCityBasedonCountry("", { country_id: id });
-      const cityField =
-        response?.length > 0
-          ? response?.map((list) => {
-              return { value: list?.id, label: list?.name };
-            })
-          : [];
-      setCityOptions(cityField);
+      const permission = await getAllPermissions();
+      const permissionKeys = permission?.permissions?.map((item) => {
+        return {
+          value: item?.id,
+          label: item?.description,
+        };
+      });
+      setPermissionValues(permissionKeys || []);
     } catch (error) {
-      console.error("Error fetching cities:", error);
-      toast.error("Failed to load cities");
+      console.error("Error fetching permissions:", error);
+      toast.error("Failed to load permissions");
     }
   };
 
-  useEffect(() => {
-    if (formFieldValues?.country) {
-      fetchCityDetails(formFieldValues?.country);
-    }
-  }, [formFieldValues?.country]);
-
   const fetchPhoneCodeOptions = async () => {
-    // const response = await getDialingCode();
-    // const phoneCodeField = response?.data?.map((item) => {
-    //   return {
-    //     value: item?.phone_code,
-    //     label: `${item?.country_short_name} ${item?.country_code}`,
-    //   };
-    // });
     const { allCountryCodeOptions } = useCountryCodes();
     setPhoneCodeOptions(allCountryCodeOptions);
   };
 
   useEffect(() => {
     fetchPhoneCodeOptions();
+    getPermission();
   }, []);
 
   const isFormValid = () => {
@@ -102,25 +96,45 @@ const AddEditUser = ({
       "first_name",
       "last_name",
       "email",
-      "mobile_number",
-      "country",
-      "city",
-      "zipCode",
+      "phone_number",
+      "country_code",
+      "password",
+      "confirm_password",
     ];
-    return requiredFields.every((field) => formFieldValues[field]);
+
+    // Check if all required fields are filled
+    const fieldsValid = requiredFields.every((field) => formFieldValues[field]);
+
+    // Check password validations
+    const passwordMinLength =
+      formFieldValues.password && formFieldValues.password.length >= 8;
+    const passwordsMatch =
+      formFieldValues.password === formFieldValues.confirm_password;
+
+    return fieldsValid && passwordMinLength && passwordsMatch;
   };
 
-  // Prepare country and city lists for dropdown
-  const countryList = fetchCountries?.map((list) => ({
-    value: list?.id,
-    label: list?.name,
-  }));
+  // Helper function to get password error message
+  const getPasswordError = () => {
+    if (!formFieldValues.password) return "";
+    if (formFieldValues.password.length < 8)
+      return "Password must be at least 8 characters";
+    return "";
+  };
 
-  // Updated field styling to match AddEditAddress component
+  // Helper function to get confirm password error message
+  const getConfirmPasswordError = () => {
+    if (!formFieldValues.confirm_password) return "";
+    if (formFieldValues.password !== formFieldValues.confirm_password)
+      return "Passwords do not match";
+    return "";
+  };
+
+  // Updated field styling
   const fieldStyle =
     "w-full rounded-md border border-gray-300 p-3 text-gray-700 focus:border-indigo-300 focus:ring-1 focus:ring-indigo-300 focus:outline-none transition-all duration-200";
 
-  // Form fields configuration - now with city and zipcode included
+  // Form fields configuration - only required fields
   const userFormFields = [
     [
       {
@@ -192,15 +206,18 @@ const AddEditUser = ({
         id: "phone_section",
         customComponent: (
           <div className="flex space-x-2 w-full">
-            <div className="w-1/4">
+            <div className="w-1/3">
+              <label className="text-sm text-gray-600 mb-1 block">
+                Country Code
+              </label>
               <FormFields
                 formFields={[
                   {
                     type: "select",
-                    id: "phone_code",
-                    name: "phone_code",
-                    value: formFieldValues?.phone_code,
-                    onChange: (e) => handleChange(e, "phone_code", "select"),
+                    id: "country_code",
+                    name: "country_code",
+                    value: formFieldValues?.country_code,
+                    onChange: (e) => handleChange(e, "country_code", "select"),
                     className: `!py-2 !px-4 ${fieldStyle}`,
                     searchable: true,
                     options: phoneCodeOptions,
@@ -208,19 +225,21 @@ const AddEditUser = ({
                 ]}
               />
             </div>
-            <div className="w-3/4">
+            <div className="w-2/3">
+              <label className="text-sm text-gray-600 mb-1 block">
+                Phone Number
+              </label>
               <FormFields
                 formFields={[
                   {
                     type: "text",
-                    id: "mobile_number",
-                    label: "Phone Number",
-                    name: "mobile_number",
-                    value: formFieldValues?.mobile_number,
-                    onChange: (e) => handleChange(e, "mobile_number"),
+                    id: "phone_number",
+                    name: "phone_number",
+                    value: formFieldValues?.phone_number,
+                    onChange: (e) => handleChange(e, "phone_number"),
                     className: `!py-2 !px-4 ${fieldStyle}`,
-                    placeholder: "Enter mobile number",
-                    rightIcon: formFieldValues?.mobile_number
+                    placeholder: "Enter phone number",
+                    rightIcon: formFieldValues?.phone_number
                       ? () => (
                           <span className="text-green-500">
                             <IconStore.circleTick className="size-5" />
@@ -237,116 +256,94 @@ const AddEditUser = ({
     ],
     [
       {
-        label: "Address",
-        type: "text",
-        id: "address",
-        name: "address",
-        value: formFieldValues?.address,
-        onChange: (e) => handleChange(e, "address"),
+        label: "Password",
+        type: "password",
+        id: "password",
+        mandatory: true,
+        name: "password",
+        value: formFieldValues?.password,
+        onChange: (e) => handleChange(e, "password"),
         className: `!py-2 !px-4 ${fieldStyle}`,
         labelClassName: "text-sm text-gray-600 mb-1 block",
-        placeholder: "Enter address",
-        rightIcon: formFieldValues?.address
-          ? () => (
-              <span className="text-green-500">
-                <IconStore.circleTick className="size-5" />
-              </span>
-            )
-          : null,
+        placeholder: "Enter password (min 8 characters)",
+        error: getPasswordError(),
+        rightIcon:
+          formFieldValues?.password && formFieldValues?.password.length >= 8
+            ? () => (
+                <span className="text-green-500">
+                  <IconStore.circleTick className="size-5" />
+                </span>
+              )
+            : null,
       },
     ],
     [
       {
-        label: "Country",
-        type: "select",
-        searchable: true,
+        label: "Confirm Password",
+        type: "password",
+        id: "confirm_password",
         mandatory: true,
-        id: "country",
-        name: "country",
-        value: formFieldValues?.country,
-        onChange: (e) => handleChange(e, "country", "select"),
+        name: "confirm_password",
+        value: formFieldValues?.confirm_password,
+        onChange: (e) => handleChange(e, "confirm_password"),
         className: `!py-2 !px-4 ${fieldStyle}`,
         labelClassName: "text-sm text-gray-600 mb-1 block",
-        options: countryList?.length
-          ? countryList
-          : [{ value: "", label: "Select Country" }],
+        placeholder: "Confirm password",
+        error: getConfirmPasswordError(),
+        rightIcon:
+          formFieldValues?.confirm_password &&
+          formFieldValues?.password === formFieldValues?.confirm_password &&
+          formFieldValues?.password.length >= 8
+            ? () => (
+                <span className="text-green-500">
+                  <IconStore.circleTick className="size-5" />
+                </span>
+              )
+            : null,
       },
     ],
+    // Permissions checkbox field
     [
       {
-        label: "City",
-        type: "select",
-        id: "city",
-        name: "city",
-        searchable: true,
-        mandatory: true,
-        value: formFieldValues?.city,
-        onChange: (e) => handleChange(e, "city", "select"),
-        disabled: !formFieldValues?.country,
-        className: `!py-2 !px-4 ${fieldStyle} ${
-          !formFieldValues?.country ? "opacity-60" : ""
-        }`,
-        labelClassName: "text-sm text-gray-600 mb-1 block",
-        options: cityOptions,
-        rightIcon: formFieldValues?.city
-          ? () => (
-              <span className="text-green-500">
-                <IconStore.circleTick className="size-5" />
-              </span>
-            )
-          : null,
-      },
-      {
-        label: "Zip Code",
-        type: "text",
-        mandatory: true,
-        id: "zipCode",
-        name: "zipCode",
-        value: formFieldValues?.zipCode,
-        onChange: (e) => handleChange(e, "zipCode"),
-        className: `!py-2 !px-4 ${fieldStyle}`,
-        labelClassName: "text-sm text-gray-600 mb-1 block",
-        placeholder: "Enter postal code",
-        rightIcon: formFieldValues?.zipCode
-          ? () => (
-              <span className="text-green-500">
-                <IconStore.circleTick className="size-5" />
-              </span>
-            )
-          : null,
+        label: "Permissions",
+        type: "checkbox",
+        id: "permissions",
+        name: "permissions",
+        multiselect: true,
+        value: formFieldValues?.permissions || [],
+        onChange: handlePermissionChange,
+        options: permissionValues,
+        className: "border border-gray-300 rounded-md",
+        labelClassName: "text-sm text-gray-600 mb-2 block font-medium",
+        parentClassName: "w-full",
       },
     ],
   ];
 
   const handleSubmit = async () => {
     setLoader(true);
+
+    // Convert permissions array to comma-separated string
+    const permissionsString = Array.isArray(formFieldValues.permissions)
+      ? formFieldValues.permissions.join(",")
+      : "";
+
     const payload = {
       first_name: formFieldValues.first_name,
       last_name: formFieldValues.last_name,
       email: formFieldValues.email,
-      mobile_number: formFieldValues.mobile_number,
-      country_code: formFieldValues.phone_code,
-      address: formFieldValues.address,
-      city: formFieldValues.city,
-      zip_code: formFieldValues.zipCode,
-      country: formFieldValues.country,
+      country_code: formFieldValues.country_code,
+      phone_number: parseInt(formFieldValues.phone_number),
+      password: formFieldValues.password,
+      confirm_password: formFieldValues.confirm_password,
+      permissions: permissionsString,
     };
 
     try {
       if (!editType) {
-        const response = await addTeamMembers(
-          "",
-          editType ? id : "",
-          editType ? "PUT" : "POST",
-          payload
-        );
+        const response = await addTeamMembers("", "", "POST", payload);
       } else {
-        const response = await updateTeamMembers(
-          "",
-          editType ? id : "",
-          editType ? "PUT" : "POST",
-          payload
-        );
+        const response = await updateTeamMembers("", id, "PUT", payload);
       }
 
       toast.success(`User ${editType ? "updated" : "added"} successfully`);
@@ -374,30 +371,31 @@ const AddEditUser = ({
       </div>
 
       <div className="p-6 flex flex-col gap-6 overflow-y-auto h-full">
+        {/* First Name and Last Name */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormFields formFields={[userFormFields[0][0]]} />
           <FormFields formFields={[userFormFields[1][0]]} />
         </div>
 
+        {/* Email */}
         <div className="w-full">
           <FormFields formFields={[userFormFields[2][0]]} />
         </div>
 
+        {/* Phone Section */}
         <div className="w-full">
           <FormFields formFields={[userFormFields[3][0]]} />
         </div>
 
-        <div className="w-full">
+        {/* Password and Confirm Password */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormFields formFields={[userFormFields[4][0]]} />
-        </div>
-
-        <div className="w-full">
           <FormFields formFields={[userFormFields[5][0]]} />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Permissions */}
+        <div className="w-full">
           <FormFields formFields={[userFormFields[6][0]]} />
-          <FormFields formFields={[userFormFields[6][1]]} />
         </div>
       </div>
 

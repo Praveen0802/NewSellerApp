@@ -74,7 +74,7 @@ const PurchaseFolder = (props) => {
   }, []);
   const eyeIconClick = async (item) => {
     const response = await purchaseHistory("", {
-      booking_no: item?.booking_no,
+      booking_no: item?.booking_id,
     });
     setShowOrderPopup({
       flag: true,

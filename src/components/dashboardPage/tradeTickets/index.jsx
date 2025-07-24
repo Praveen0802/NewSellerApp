@@ -2,47 +2,31 @@ import Button from "@/components/commonComponents/button";
 import React from "react";
 import TradeTicketsContainer from "./tradeTicketsContainer";
 
-const TradeTickets = () => {
+const TradeTickets = ({ resultData, handleScrollEnd, loader }) => {
   const tracking = {
     title: "Tracking",
-    count: "1",
+    count: resultData?.purchaseTracking?.tracking || "0",
     subHeading: "price",
-    listItems: [
-      { title: "Milwaukee Bucks at New York Knicks", amount: "£3,955.00" },
-      { title: "Milwaukee Bucks at New York Knicks", amount: "£3,955.00" },
-    ],
+    listItems:
+      resultData?.purchaseTracking?.ticket_details?.map((item) => ({
+        title: item?.match_name,
+        amount: item?.price_with_currency,
+      })) || [],
+    keyValue: "purchaseTracking",
+    meta: resultData?.purchaseTracking?.pagination,
   };
 
   const purchases = {
     title: "Purchases",
-    count: "1",
+    count: resultData?.tradeOrders?.total_count || "0",
     subHeading: "Event Date",
-    listItems: [
-      {
-        title: "Al-Nassr FC vs Inter Miami CF",
-        amount: "Thu, 01 Feb 2024, 18:00",
-      },
-      {
-        title: "Al-Nassr FC vs Inter Miami CF",
-        amount: "Thu, 01 Feb 2024, 18:00",
-      },
-      {
-        title: "Al-Nassr FC vs Inter Miami CF",
-        amount: "Thu, 01 Feb 2024, 18:00",
-      },
-      {
-        title: "Al-Nassr FC vs Inter Miami CF",
-        amount: "Thu, 01 Feb 2024, 18:00",
-      },
-      {
-        title: "Al-Nassr FC vs Inter Miami CF",
-        amount: "Thu, 01 Feb 2024, 18:00",
-      },
-      {
-        title: "Al-Nassr FC vs Inter Miami CF",
-        amount: "Thu, 01 Feb 2024, 18:00",
-      },
-    ],
+    listItems:
+      resultData?.tradeOrders?.data?.data?.map((item) => ({
+        title: item?.match_name,
+        amount: item?.match_datetime,
+      })) || [],
+    keyValue: "tradeOrders",
+    meta: resultData?.tradeOrders?.data,
   };
 
   return (
@@ -57,10 +41,14 @@ const TradeTickets = () => {
         <TradeTicketsContainer
           tracking={tracking}
           className="w-full md:w-[50%] border-b-[1px] md:border-b-0 md:border-r-[1px] border-[#eaeaf1]"
+          handleScrollEnd={handleScrollEnd}
+          loader={loader?.purchaseTracking}
         />
         <TradeTicketsContainer
           tracking={purchases}
           className="w-full md:w-[50%]"
+          handleScrollEnd={handleScrollEnd}
+          loader={loader?.tradeOrders}
         />
       </div>
     </div>

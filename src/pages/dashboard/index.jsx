@@ -17,13 +17,13 @@ export default Dashboard;
 export const getServerSideProps = async (context) => {
   const validToken = checkValidAuthToken(context);
   const authToken = getAuthToken(context);
-  console.log("validToken", validToken);
+
   if (!validToken) {
     return nextRedirect("login");
   }
   // const response = await fetchDashboardData(authToken);
   const response = await fetchDashboardPageDetails(authToken);
-  console.log("response", response);
+
   return {
     props: { response },
   };

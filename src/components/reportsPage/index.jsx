@@ -116,13 +116,18 @@ const ReportsPage = (props) => {
           ? await getTransactionDetails(getAuthToken(), payload)
           : await getDepositDetails(getAuthToken(), payload);
       //TODO : Update the setEyeViewPopup data with the response to get Additional details
+      setEyeViewPopup({
+        flag: true,
+        data: { ...response, transactionType: transactionType },
+      });
     } catch (error) {
       console.log("ERROR in handleEyeClick", error);
+      setEyeViewPopup({
+        flag: true,
+        data: { ...item, transactionType: transactionType },
+      });
     }
-    setEyeViewPopup({
-      flag: true,
-      data: { ...item, transactionType: transactionType },
-    });
+   
   };
 
   const getStatusText = (statusCode) => {
