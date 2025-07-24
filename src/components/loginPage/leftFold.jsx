@@ -2,14 +2,23 @@ import Image from "next/image";
 import React from "react";
 import logo from "../../../public/logo.png";
 import Button from "../commonComponents/button";
+import { useRouter } from "next/router";
 
-const LeftFold = ({ signUpForm, setSignUpForm,hideMobile=false }) => {
+const LeftFold = ({ signUpForm, setSignUpForm, hideMobile = false }) => {
+  const router = useRouter();
   const toggleForm = () => {
+    if (!signUpForm) {
+      router.push("/signup");
+    }
     setSignUpForm(!signUpForm);
   };
 
   return (
-    <div className={`${hideMobile ? 'max-md:hidden bg-[#E0E1EA]' : 'md:hidden'}  w-full md:w-1/2 rounded-t-xl md:rounded-tr-none md:rounded-l-xl p-4 sm:p-6 md:p-8 flex flex-col items-center justify-center gap-3 md:gap-4`}>
+    <div
+      className={`${
+        hideMobile ? "max-md:hidden bg-[#E0E1EA]" : "md:hidden"
+      }  w-full md:w-1/2 rounded-t-xl md:rounded-tr-none md:rounded-l-xl p-4 sm:p-6 md:p-8 flex flex-col items-center justify-center gap-3 md:gap-4`}
+    >
       {/* <Image
         src={logo}
         width={200}

@@ -2,10 +2,10 @@ const ROOT_URL = process.env.API_BASE_URL;
 
 export const API_ROUTES = {
   REPORTS_OVERVIEW: `/reports/overview`,
-  GET_TEAM_MEMBERS:`/settings/my-teams`,
-  DELETE_TEAM_MEMBERS:`/settings/delete-my-team`,
-  ADD_TEAM_MEMBERS:`/settings/add-my-team`,
-  UPDATE_TEAM_MEMBERS:`/settings/update-my-team`,
+  GET_TEAM_MEMBERS: `/settings/my-teams`,
+  DELETE_TEAM_MEMBERS: `/settings/delete-my-team`,
+  ADD_TEAM_MEMBERS: `/settings/add-my-team`,
+  UPDATE_TEAM_MEMBERS: `/settings/update-my-team`,
   SALES_ORDER_DETAILS: `/sales/order-details`,
   REPORTS_ORDER_DETAILS: `/reports/order-details`,
   REPORTS_ORDER_LOG: `/reports/order-logs`,
@@ -92,4 +92,6 @@ export const API_ROUTES = {
   NOTIFICATION_UPDATE: "/notification/update-notification",
   GET_NOTIFICATION_COUNT: "/ui-settings/menu-notification",
   GET_TX_PAY: "/settings/lmt-pay",
+  ZOHO_EMBED: "/zoho-sign/embed",
+  FETCH_CURRENCY: "/currencies",
 };
