@@ -136,14 +136,28 @@ const AddressDetails = ({
     ],
     [
       {
+        label: "Address",
+        type: "text",
+        mandatory: true,
+        id: "address",
+        name: "address",
+        value: formFieldValues?.address,
+        onChange: (e) => handleChange(e, "address"),
+        className: `!py-[4px] !px-4 ${fieldStyle}`,
+        labelClassName: "!text-[12px] text-gray-600  block",
+       
+      },
+    ],
+    [
+      {
         label: "Country",
         type: "select",
         searchable: true,
         mandatory: true,
-        id: "country_id",
-        name: "country_id",
-        value: formFieldValues?.country_id,
-        onChange: (e) => handleChange(e, "country_id", "select"),
+        id: "country",
+        name: "country",
+        value: formFieldValues?.country,
+        onChange: (e) => handleChange(e, "country", "select"),
         className: `!py-[4px] !px-4 ${fieldStyle}`,
         labelClassName: "!text-[12px] text-gray-600  block",
         options: countryList?.length
@@ -161,9 +175,9 @@ const AddressDetails = ({
         mandatory: true,
         value: formFieldValues?.city,
         onChange: (e) => handleChange(e, "city", "select"),
-        disabled: !formFieldValues?.country_id,
+        disabled: !formFieldValues?.country,
         className: `!py-[4px] !px-4 ${fieldStyle} ${
-          !formFieldValues?.country_id ? "opacity-60" : ""
+          !formFieldValues?.country ? "opacity-60" : ""
         }`,
         labelClassName: "!text-[12px] text-gray-600  block",
         options: cityOptions,
@@ -198,12 +212,12 @@ const AddressDetails = ({
                   className="w-3 h-3 text-blue-600 cursor-pointer"
                   checked={selectedAddress == index}
                   onChange={() => {
-                    handleAddressChange(index);
+                    handleAddressChange(index,field);
                   }}
                 />
                 <div className="ml-3 flex items-center">
                   <p className="text-gray-700 text-[13px] font-medium">
-                    {field?.address_type} - {field?.address_line1}
+                    {field?.address_type} - {field?.address}
                   </p>
                 </div>
               </div>
@@ -256,6 +270,9 @@ const AddressDetails = ({
 
               <div className="w-full">
                 <FormFields formFields={[userFormFields[5][0]]} />
+              </div>
+              <div className="w-full">
+                <FormFields formFields={[userFormFields[6][0]]} />
               </div>
             </div>
           </div>

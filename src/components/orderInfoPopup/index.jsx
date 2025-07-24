@@ -11,7 +11,6 @@ import OrderedTickets from "../orderDetails/components/orderedTickets";
 import RightViewModal from "../commonComponents/rightViewModal";
 
 const OrderInfo = ({ show, onClose, data: orderData }) => {
-
   const [expandedVersion, setExpandedVersion] = useState(false);
 
   // Handle new array format data
@@ -28,14 +27,17 @@ const OrderInfo = ({ show, onClose, data: orderData }) => {
   }
 
   const {
-    order_details,
-    address_details,
-    user_address_details,
-    ticket_details,
-    attendee_details,
-    listing_note,
-    order_notes,
+    orderArr: order_details,
+    addressArr: address_details,
+    userAddressArr: user_address_details,
+    tickets,
   } = data;
+
+  // Extract ticket details and other info from the tickets array
+  const ticket_details = tickets?.map(ticket => ticket.ticketArr) || [];
+  const attendee_details = tickets?.[0]?.attendeeArr || {};
+  const listing_note = tickets?.[0]?.listing_note || [];
+  const order_notes = tickets?.[0]?.ticketArr?.order_notes;
 
   const ctaText = [
     { title: "Order Notes", cta: order_notes ? "View Note" : "+ Add Note" },
@@ -49,10 +51,10 @@ const OrderInfo = ({ show, onClose, data: orderData }) => {
   const orderObject = {
     order_id: order_details?.order_id,
     order_date: order_details?.order_date,
-    order_status: order_details?.order_status === 1 ? "Active" : "Inactive",
+    order_status: order_details?.order_status === 1 ? "Active" : order_details?.order_status === null ? "Pending" : "Inactive",
     delivered_by: order_details?.delivered_by || "Not specified",
     days_to_event: order_details?.days_in_event,
-    ticket_type: order_details?.ticket_types,
+    ticket_type: ticket_details?.[0]?.ticket_types,
   };
 
   // Format customer details
@@ -77,6 +79,18 @@ const OrderInfo = ({ show, onClose, data: orderData }) => {
     setExpandedVersion(!expandedVersion);
   };
 
+  // Transform ticket_details to match expected format for OrderedTickets component
+  const transformedTicketDetails = ticket_details.map(ticket => ({
+    ...ticket,
+    // Add any additional transformations needed for OrderedTickets component
+    venue_name: ticket.venue,
+    event_date: ticket.match_date,
+    event_time: ticket.match_time,
+    category: ticket.seat_category,
+    price: ticket.ticket_price,
+    currency: ticket.currency_type,
+  }));
+
   return (
     <RightViewModal className={"!w-[600px]"} show={show} onClose={onClose}>
       <div className={`w-[600px]`}>
@@ -93,7 +107,7 @@ const OrderInfo = ({ show, onClose, data: orderData }) => {
             </div>
           </div>
           <div className="p-[24px] flex flex-col gap-4">
-            {/* <CtaValues ctaText={ctaText} /> */}
+            <CtaValues ctaText={ctaText} />
             <div className={`flex ${expandedVersion ? "" : "flex-col "} gap-4`}>
               <div className={`${expandedVersion ? "w-1/2" : "w-full"}`}>
                 <OrderValues orderObject={orderObject} />
@@ -106,10 +120,13 @@ const OrderInfo = ({ show, onClose, data: orderData }) => {
                 />
               </div>
             </div>
-            <OrderedTickets ticket_details={ticket_details} />
+            <OrderedTickets ticket_details={transformedTicketDetails} />
             {benefits.length > 0 && (
               <Benifits benefits_restrictions={benefits} />
             )}
+            
+            {/* Add expand/collapse button if needed */}
+            
           </div>
         </div>
       </div>

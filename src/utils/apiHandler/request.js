@@ -338,6 +338,76 @@ export const fetchBankAccountDetails = async (
   }
 };
 
+export const updateBankAccount = async (
+  token,
+  id,
+  method = "GET",
+  data,
+  params
+) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.UPDATE_BANK_ACCOUNT}${id ? `/${id}` : ""}`,
+      method: method,
+      ...(token && { token: token }),
+      ...(data && { data: data }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchBankAccountDetails", error);
+    throw error;
+  }
+};
+
+export const payOutOverview = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.PAYOUT_OVERVIEW,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchOrderHistory", error);
+    throw error;
+  }
+};
+
+export const payOutHistory = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.PAYOUT_HISTORY,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchOrderHistory", error);
+    throw error;
+  }
+};
+
+export const payOutOrderHistory = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.PAYOUT_HISTORY_DETAILS,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchOrderHistory", error);
+    throw error;
+  }
+};
+
+
+
+
 export const sendResetRequest = async (data) => {
   try {
     const response = await makeRequest({
@@ -390,7 +460,6 @@ export const dashboardNotifications = async (token, params) => {
       ...(params && { params: params }),
       ...(token && { token: token }),
     });
-    console.log(response?.data?.data, "response?.dataaa");
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in DASHBOARD_NOTIFICATIONS", error);
@@ -507,6 +576,21 @@ export const fetchDepositHistoryMonthly = async (token, params) => {
   try {
     const response = await makeRequest({
       url: API_ROUTES.MONTHLY_DEPOSIT_HISTORY,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchDepositHistoryMonthly", error);
+    throw error;
+  }
+};
+
+export const lmtOverview = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.LMT_PAY_OVERVIEW,
       method: "GET",
       ...(params && { params: params }),
       ...(token && { token: token }),
@@ -1202,6 +1286,26 @@ export const purchaseFavouratesTracking = async (
   try {
     const response = await makeRequest({
       url: `${API_ROUTES.PURCHASE_TRACKING}${id ? `/${id}` : ""}`,
+      method: method,
+      ...(token && { token: token }),
+      ...(data && { data: data }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in purchaseFavouratesTracking", error);
+    throw error;
+  }
+};
+
+export const AddFavouratesTracing = async (
+  token,
+  method = "GET",
+  data,
+  id
+) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.ADD_PURCHASE_TRACKING}${id ? `/${id}` : ""}`,
       method: method,
       ...(token && { token: token }),
       ...(data && { data: data }),

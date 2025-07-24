@@ -37,6 +37,10 @@ import {
   fetchTournamentsList,
   LMTpurchaseTracking,
   LMTTradeOrders,
+  lmtOverview,
+  payOutOverview,
+  payOutHistory,
+  payOutOrderHistory,
 } from "../apiHandler/request";
 
 export const fetchSettingsPageDetails = async (profile, token, ctx) => {
@@ -108,19 +112,56 @@ export const fetchSalesPageDetails = async (profile, token, ctx) => {
   };
 };
 
-export const fetchWalletPageDetails = async (token) => {
+export const fetchWalletPageDetails = async (token, index) => {
   try {
-    const [transactionHistory, depositHistory] = await Promise.all([
-      // fetchLMTOverview(token),
-      fetchDepositHistoryMonthly(token),
-      fetchTransactionHistoryMonthly(token),
-    ]);
-    return {
-      ...transactionHistory,
-      ...depositHistory,
-      // ...walletBalance,
-    };
-  } catch {}
+    if (index == "wallet") {
+      const results = await Promise.allSettled([
+        fetchDepositHistoryMonthly(token),
+        fetchTransactionHistoryMonthly(token),
+        lmtOverview(token),
+        fetchCountrieList(token),
+      ]);
+
+      // Extract successful results, use empty object as fallback for failed requests
+      const [
+        depositHistory,
+        transactionHistory,
+        lmtOverviewData,
+        countriesList,
+      ] = results.map((result) =>
+        result.status === "fulfilled" ? result.value : {}
+      );
+
+      return {
+        ...transactionHistory,
+        ...depositHistory,
+        ...lmtOverviewData,
+        countriesList,
+      };
+    } else if (index == "payouts") {
+      const results = await Promise.allSettled([
+        payOutOverview(token),
+        payOutHistory(token),
+        payOutOrderHistory(token),
+        fetchCountrieList(token),
+      ]);
+      // Extract successful results, use empty object as fallback for failed requests
+      const [payoutOverview, payoutHistory, payoutOrders, countriesList] =
+        results.map((result) =>
+          result.status === "fulfilled" ? result.value : {}
+        );
+
+      return {
+        ...payoutOverview,
+        payoutHistory: payoutHistory,
+        payoutOrders: payoutOrders,
+        countriesList,
+      };
+    }
+  } catch (error) {
+    console.error("Error in fetchWalletPageDetails:", error);
+    return {};
+  }
 };
 
 export const fetchDashboardPageDetails = async (token) => {
@@ -145,7 +186,7 @@ export const fetchDashboardPageDetails = async (token) => {
       topSelling,
       reports,
       purchaseTracking,
-      tradeOrders
+      tradeOrders,
     ] = results.map((result) =>
       result.status === "fulfilled" ? result.value : null
     );
@@ -158,7 +199,7 @@ export const fetchDashboardPageDetails = async (token) => {
       topSelling,
       reports,
       purchaseTracking,
-      tradeOrders
+      tradeOrders,
     };
   } catch {
     return [];

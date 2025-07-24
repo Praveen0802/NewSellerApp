@@ -88,6 +88,7 @@ const GuestDetails = ({
         label: "Date of Birth",
         type: "date",
         mandatory: true,
+        singleDateMode: true,
       },
       passport_number: {
         label: "Passport Number",
@@ -164,6 +165,7 @@ const GuestDetails = ({
         onChange: (e) => handleChange(e, fieldName, guestIndex, config.type),
         className: `!py-2 !px-4 ${fieldStyle}`,
         labelClassName: "text-sm text-gray-600 mb-1 block",
+        singleDateMode: true,
       };
 
       // Add type-specific properties

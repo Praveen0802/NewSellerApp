@@ -16,7 +16,7 @@ export async function getServerSideProps(context) {
   const authToken = getAuthToken(context);
   const response = await fetchTradePageData(initialStep, authToken, matchId);
   // const allCategories = await FetchAllCategories(authToken);
-  // const fetchTabCount = await FetchTabTotal(authToken);
+  const fetchTabCount = await FetchTabTotal(authToken);
   // const fetchWalletBalance = await getWalletBalance(authToken);
   return {
     props: {
@@ -24,7 +24,7 @@ export async function getServerSideProps(context) {
       ...(matchId && { matchId: matchId }),
       response: response || {},
       // allCategories: allCategories || [],
-      // fetchTabCount: fetchTabCount || {},
+      fetchTabCount: fetchTabCount || {},
       ...(success && { success: success }),
       ...(booking_no && { booking_no: booking_no }),
       // fetchWalletBalance

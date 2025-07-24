@@ -895,7 +895,7 @@ const LeftMenuBar = () => {
       image: diagram,
       name: "Wallet",
       key: "reports",
-      route: "reports",
+      route: "reports/wallet",
     },
     {
       image: Bulkticket,
