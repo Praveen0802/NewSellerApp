@@ -16,7 +16,7 @@ const FloatingLabelInput = ({
   autoComplete = "on",
   mandatory = false,
   labelClassName = "",
-  parentClassName='',
+  parentClassName = "",
   dropDownComponent,
   readOnly,
   className = "",
@@ -24,8 +24,9 @@ const FloatingLabelInput = ({
   placeholder = "",
   error = "",
   rightIcon = null,
+  autoFocus = false,
 }) => {
-  console.log(parentClassName,'parentClassNameparentClassName')
+  console.log(parentClassName, "parentClassNameparentClassName");
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   // Update focus state when value changes
@@ -34,6 +35,13 @@ const FloatingLabelInput = ({
   }, [value]);
 
   const handleFocus = () => setIsFocused(true);
+
+  useEffect(() => {
+    if (autoFocus) {
+      setIsFocused(true);
+      document.getElementById(id).focus();
+    }
+  }, [autoFocus]);
 
   const handleBlur = (e) => {
     if (e.target.value === "") {

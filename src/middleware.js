@@ -48,12 +48,14 @@ export async function middleware(request) {
       if (validateAuthToken) {
         if (validateAuthToken?.token) {
           const response = NextResponse.next();
-          console.log("enteringHereeeee");
-          response.cookies.set("auth_token", decodeURIComponent(validateAuthToken?.token), {
-            httpOnly: true,
-            sameSite: "strict",
-          
-          });
+          response.cookies.set(
+            "auth_token",
+            decodeURIComponent(validateAuthToken?.token),
+            {
+              httpOnly: true,
+              sameSite: "strict",
+            }
+          );
           response.cookies.set(
             "auth_token_validity",
             currentTimeEpochTimeInMilliseconds().toString()

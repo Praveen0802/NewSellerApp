@@ -791,7 +791,7 @@ const LeftMenuBar = () => {
     try {
       const token = getCookie("auth_token") || currentUser?.token;
       const { data } = (await fetchNotificationCount()) ?? {};
-      const { unread_count } = data;
+      const { unread_count = 0 } = data ?? {};
 
       // Update Redux store with notification count
       dispatch(updateNotificationCount(unread_count));

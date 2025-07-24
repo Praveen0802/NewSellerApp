@@ -13,6 +13,7 @@ const makeRequest = async ({
   token,
   formData = null,
   params = null,
+  headers = {},
 }) => {
   const ROOT_URL = process.env.API_BASE_URL;
   let modifiedUrl = isClient ? url : `${ROOT_URL}${url}`;
@@ -1736,5 +1737,38 @@ export const fetchSettingsTxPay = async (token) => {
   } catch (error) {
     console.log("ERROR in fetchNotificationCount", error);
     return error?.response?.data;
+  }
+};
+
+export const zohoEmbed = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.ZOHO_EMBED}`,
+      method: "POST",
+      ...(token && { token: token }),
+      data: data,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in updateNotification", error);
+    return error?.response?.data;
+  }
+};
+
+export const fetchCurrency = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.FETCH_CURRENCY,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchSalesPageData", error);
+    throw error;
   }
 };
