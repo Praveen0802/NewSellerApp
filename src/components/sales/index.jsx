@@ -112,7 +112,7 @@ const SalesPage = (props) => {
   const headers = allHeaders.filter((header) => visibleColumns[header.key]);
 
   const getOrderDetails = async (item) => {
-    setPageLoader(true);
+    // setPageLoader(true);
     const salesData = await fetchSalesOrderDetails("", {
       booking_id: item?.bg_id,
     });
@@ -120,11 +120,11 @@ const SalesPage = (props) => {
       flag: true,
       data: salesData,
     });
-    setPageLoader(false);
+    // setPageLoader(false);
   };
 
   const getLogDetailsDetails = async (item) => {
-    setPageLoader(true);
+    // setPageLoader(true);
     const orderLogs = await fetchSalesOrderLogs("", {
       booking_id: item?.bg_id,
     });
@@ -136,7 +136,7 @@ const SalesPage = (props) => {
       orderLogs: orderLogs,
       inventoryLogs: inventoryLogs,
     });
-    setPageLoader(false);
+    // setPageLoader(false);
   };
   // Create right sticky columns with action buttons
   const rightStickyColumns = salesData.map((item) => [

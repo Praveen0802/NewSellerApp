@@ -412,7 +412,7 @@ const TabbedLayout = ({
                       previousListItems?.length == 4
                         ? "grid grid-cols-4 gap-4"
                         : "flex gap-4 flex-nowrap"
-                    } min-w-min md:min-w-0 absolute inset-0 transition-transform duration-300 ease-in-out z-10
+                    } min-w-min md:min-w-0 absolute inset-0 transition-transform overflow-scroll duration-300 ease-in-out z-10
                     ${
                       transitionDirection === "next"
                         ? "transform -translate-x-full"
@@ -446,7 +446,7 @@ const TabbedLayout = ({
                   ${
                     currentListItems?.length == 4
                       ? "grid grid-cols-4 gap-4"
-                      : "flex gap-4 flex-nowrap"
+                      : "flex gap-4 flex-nowrap overflow-x-scroll"
                   } min-w-min md:min-w-0 transition-transform duration-300 ease-in-out
                   ${
                     isTransitioning

@@ -25,6 +25,117 @@ import {
 } from "@/utils/apiHandler/request";
 import { updateNotificationCount } from "@/utils/redux/common/action";
 
+// Custom Tooltip Component with Portal Support
+const Tooltip = ({ children, content, position = "right" }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const triggerRef = useRef(null);
+  const tooltipRef = useRef(null);
+
+  const showTooltip = useCallback(() => {
+    if (triggerRef.current && content) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      let x = 0;
+      let y = 0;
+
+      switch (position) {
+        case "right":
+          x = rect.right + 8;
+          y = rect.top + rect.height / 2;
+          break;
+        case "left":
+          x = rect.left - 8;
+          y = rect.top + rect.height / 2;
+          break;
+        case "top":
+          x = rect.left + rect.width / 2;
+          y = rect.top - 8;
+          break;
+        case "bottom":
+          x = rect.left + rect.width / 2;
+          y = rect.bottom + 8;
+          break;
+        default:
+          x = rect.right + 8;
+          y = rect.top + rect.height / 2;
+      }
+
+      setTooltipPosition({ x, y });
+      setIsVisible(true);
+    }
+  }, [content, position]);
+
+  const hideTooltip = useCallback(() => {
+    setIsVisible(false);
+  }, []);
+
+  useEffect(() => {
+    const trigger = triggerRef.current;
+    if (trigger) {
+      trigger.addEventListener('mouseenter', showTooltip);
+      trigger.addEventListener('mouseleave', hideTooltip);
+      
+      return () => {
+        trigger.removeEventListener('mouseenter', showTooltip);
+        trigger.removeEventListener('mouseleave', hideTooltip);
+      };
+    }
+  }, [showTooltip, hideTooltip]);
+
+  const getTransformClass = () => {
+    switch (position) {
+      case "right":
+        return "-translate-y-1/2";
+      case "left":
+        return "-translate-y-1/2 -translate-x-full";
+      case "top":
+        return "-translate-x-1/2 -translate-y-full";
+      case "bottom":
+        return "-translate-x-1/2";
+      default:
+        return "-translate-y-1/2";
+    }
+  };
+
+  const getArrowClass = () => {
+    switch (position) {
+      case "right":
+        return "absolute top-1/2 -translate-y-1/2 -left-1 border-4 border-transparent border-r-gray-900";
+      case "left":
+        return "absolute top-1/2 -translate-y-1/2 -right-1 border-4 border-transparent border-l-gray-900";
+      case "top":
+        return "absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900";
+      case "bottom":
+        return "absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900";
+      default:
+        return "absolute top-1/2 -translate-y-1/2 -left-1 border-4 border-transparent border-r-gray-900";
+    }
+  };
+
+  return (
+    <>
+      <div ref={triggerRef} className="w-full">
+        {children}
+      </div>
+      
+      {/* Portal-like tooltip rendered at document body level */}
+      {isVisible && content && typeof document !== 'undefined' && (
+        <div
+          ref={tooltipRef}
+          className={`fixed z-[99999] px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap pointer-events-none ${getTransformClass()}`}
+          style={{
+            left: `${tooltipPosition.x}px`,
+            top: `${tooltipPosition.y}px`,
+          }}
+        >
+          {content}
+          <div className={getArrowClass()}></div>
+        </div>
+      )}
+    </>
+  );
+};
+
 // Temporary fallback for IconStore.leftArrow if import fails
 const LeftArrowIcon = ({ className }) => (
   <svg
@@ -139,7 +250,7 @@ const NotificationsPopup = ({
   const { currentUser } = useSelector((state) => state.currentUser);
   const { notificationCountData } = useSelector((state) => state.common);
   const dispatch = useDispatch();
-console.log(notificationCountData, "notificationCountData");
+  console.log(notificationCountData, "notificationCountData");
   // API functions using your actual API calls
   const fetchNotificationHistoryData = async (page = 1, append = false) => {
     try {
@@ -803,16 +914,16 @@ const LeftMenuBar = () => {
   // Fetch notification count on component mount
   useEffect(() => {
     // if (notificationCountData.isLoaded) {
-      fetchNotificationCountForBadge();
+    fetchNotificationCountForBadge();
     // }
   }, [notificationCountData.isLoaded]);
 
   function getUnReadNotificationCount(notificationCountData) {
     // if (notificationCountData?.isLoaded) {
-      const notification = Number(notificationCountData?.notification) || 0;
-      const activity = Number(notificationCountData?.activity) || 0;
+    const notification = Number(notificationCountData?.notification) || 0;
+    const activity = Number(notificationCountData?.activity) || 0;
 
-      return notification;
+    return notification;
     // }
     // return 0;
   }
@@ -1005,97 +1116,112 @@ const LeftMenuBar = () => {
             </button>
           </div>
 
-          <div className="flex flex-col p-4 gap-4">
-            {leftPaneValues
-              .filter((_, index) => index !== 0)
-              .map((item, idx) => {
-                const index = idx + 1;
-                return (
-                  <div title={item?.name} key={index}>
-                    <div
-                      onClick={() => handleSelectedClick(index, item)}
-                      className={`cursor-pointer flex gap-3 items-center p-3 transition-colors duration-200 ${
-                        item?.key === active ||
-                        (item?.key === "sales" && active?.startsWith("sales-"))
-                          ? "bg-[#64EAA5] rounded-md"
-                          : "hover:bg-[#5f6365] rounded-md"
-                      }`}
-                    >
-                      {item?.image && (
-                        <Image
-                          src={item?.image}
-                          alt="icon"
-                          width={24}
-                          height={24}
-                        />
-                      )}
-                      {item?.icon && item?.icon}
-                      {item?.text && (
-                        <p className="text-[18px] font-medium text-[#FFFFFF]">
-                          {item?.text}
-                        </p>
-                      )}
-                      <div className="text-white capitalize text-[14px] flex-1">
-                        {item?.name}
-                      </div>
-                      {item?.badge && (
-                        <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                          {item?.badge}
-                        </span>
-                      )}
-                      {item?.hasSubItems && (
-                        <ChevronRight
-                          className={`size-4 text-white transition-transform duration-200 ${
-                            salesExpanded ? "rotate-90" : ""
+          {/* Scrollable menu content with proper flex layout */}
+          <div className="flex flex-col h-[calc(100%-4rem)]">
+            {/* Main menu items - scrollable area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {leftPaneValues
+                .filter((_, index) => index !== 0)
+                .map((item, idx) => {
+                  const index = idx + 1;
+                  return (
+                    <div key={index}>
+                      <Tooltip content={item?.name} position="left">
+                        <div
+                          onClick={() => handleSelectedClick(index, item)}
+                          className={`cursor-pointer flex gap-3 items-center p-3 transition-colors duration-200 ${
+                            item?.key === active ||
+                            (item?.key === "sales" &&
+                              active?.startsWith("sales-"))
+                              ? "bg-[#64EAA5] rounded-md"
+                              : "hover:bg-[#5f6365] rounded-md"
                           }`}
-                        />
+                        >
+                          {item?.image && (
+                            <Image
+                              src={item?.image}
+                              alt="icon"
+                              width={24}
+                              height={24}
+                            />
+                          )}
+                          {item?.icon && item?.icon}
+                          {item?.text && (
+                            <p className="text-[18px] font-medium text-[#FFFFFF]">
+                              {item?.text}
+                            </p>
+                          )}
+                          <div className="text-white capitalize text-[14px] flex-1">
+                            {item?.name}
+                          </div>
+                          {item?.badge && item?.badge > 0 && (
+                            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                              {item?.badge}
+                            </span>
+                          )}
+                          {item?.hasSubItems && (
+                            <ChevronRight
+                              className={`size-4 text-white transition-transform duration-200 ${
+                                salesExpanded ? "rotate-90" : ""
+                              }`}
+                            />
+                          )}
+                        </div>
+                      </Tooltip>
+
+                      {/* Sub items for mobile */}
+                      {item?.hasSubItems && salesExpanded && (
+                        <div className="ml-4 mt-2 space-y-1">
+                          {item?.subItems?.map((subItem, subIndex) => (
+                            <Tooltip
+                              key={subItem.key}
+                              content={subItem.name}
+                              position="left"
+                            >
+                              <div
+                                onClick={() => handleSubItemClick(subItem)}
+                                className={`cursor-pointer flex items-center justify-between p-2 text-sm transition-colors duration-200 relative ${
+                                  subItem?.key === active
+                                    ? "bg-[#64EAA5] rounded-md text-black"
+                                    : "text-gray-300 hover:bg-[#5f6365] rounded-md"
+                                }`}
+                              >
+                                <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-400"></div>
+                                <div className="absolute left-0 top-1/2 w-4 h-0.5 bg-gray-400 -translate-y-1/2"></div>
+                                {subIndex < item?.subItems?.length - 1 && (
+                                  <div className="absolute left-0 top-1/2 bottom-0 w-0.5 bg-gray-400"></div>
+                                )}
+
+                                <div className="flex items-center gap-2 ml-4">
+                                  <span>{subItem.name}</span>
+                                </div>
+
+                                {subItem.count !== undefined && (
+                                  <span className="bg-gray-600 text-white text-xs px-2 py-0.5 rounded-full ml-auto">
+                                    {subItem.count}
+                                  </span>
+                                )}
+                              </div>
+                            </Tooltip>
+                          ))}
+                        </div>
                       )}
                     </div>
+                  );
+                })}
+            </div>
 
-                    {/* Sub items for mobile */}
-                    {item?.hasSubItems && salesExpanded && (
-                      <div className="ml-4 mt-2 space-y-1">
-                        {item?.subItems?.map((subItem, subIndex) => (
-                          <div
-                            key={subItem.key}
-                            onClick={() => handleSubItemClick(subItem)}
-                            className={`cursor-pointer flex items-center justify-between p-2 text-sm transition-colors duration-200 relative ${
-                              subItem?.key === active
-                                ? "bg-[#64EAA5] rounded-md text-black"
-                                : "text-gray-300 hover:bg-[#5f6365] rounded-md"
-                            }`}
-                          >
-                            <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-400"></div>
-                            <div className="absolute left-0 top-1/2 w-4 h-0.5 bg-gray-400 -translate-y-1/2"></div>
-                            {subIndex < item?.subItems?.length - 1 && (
-                              <div className="absolute left-0 top-1/2 bottom-0 w-0.5 bg-gray-400"></div>
-                            )}
-
-                            <div className="flex items-center gap-2 ml-4">
-                              <span>{subItem.name}</span>
-                            </div>
-
-                            {subItem.count !== undefined && (
-                              <span className="bg-gray-600 text-white text-xs px-2 py-0.5 rounded-full ml-auto">
-                                {subItem.count}
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-          </div>
-
-          <div className="absolute bottom-0 w-full p-4 border-t border-[#51428E]">
-            <div
-              onClick={handleLogout}
-              className="flex items-center gap-3 cursor-pointer p-3 hover:bg-[#5f6365] rounded-md"
-            >
-              <Image src={logout} alt="logout" width={24} height={24} />
-              <span className="text-white text-[14px]">Logout</span>
+            {/* Fixed logout button at bottom */}
+            <div className="border-t border-[#51428E] p-4">
+              <Tooltip content="Logout" position="left">
+                <div
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 cursor-pointer p-3 hover:bg-[#5f6365] rounded-md"
+                >
+                  <Image src={logout} alt="logout" width={24} height={24} />
+                  <span className="text-white text-[14px]">Logout</span>
+                </div>
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -1123,72 +1249,111 @@ const LeftMenuBar = () => {
     );
   }
 
-  // Desktop view
+  // Desktop view with fixed layout
   return (
     <>
       <div
-        className={`bg-[#343432] z-[99] flex flex-col justify-between transition-all duration-300 ${
+        className={`bg-[#343432] z-[99] flex flex-col transition-all duration-300 ${
           showFullDisplay ? "w-[200px]" : "w-[60px]"
-        } h-[100vh] relative`}
+        }`}
       >
-        <div>
-          <div className="h-[80px] px-[10px] py-[20px] border-b-[1px] border-[#51428E] flex items-center justify-center">
-            <Image src={logo} alt="logo" width={40} height={40} />
-          </div>
+        {/* Header section - fixed */}
+        <div className="h-[80px] px-[10px] py-[20px] border-b-[1px] border-[#51428E] flex items-center justify-center flex-shrink-0">
+          <Image src={logo} alt="logo" width={40} height={40} />
+        </div>
+
+        {/* Main menu items - scrollable area */}
+        <div className="flex-1 overflow-y-auto">
           <div className="flex flex-col p-[10px] gap-3">
             {leftPaneValues.map((item, index) => (
               <div key={index}>
-                <div
-                  onClick={() => handleSelectedClick(index, item)}
-                  className={`cursor-pointer flex gap-3 items-center p-[6px] transition-colors duration-200 relative ${
-                    item?.key === active ||
-                    (item?.key === "sales" && active?.startsWith("sales-"))
-                      ? "bg-[#64EAA5] rounded-md"
-                      : "hover:bg-[#5f6365] rounded-md"
-                  }`}
-                >
-                  {item?.image && (
-                    <Image
-                      src={item?.image}
-                      alt="logo"
-                      width={24}
-                      height={24}
-                    />
-                  )}
-                  {item?.icon && item?.icon}
-                  {item?.text && (
-                    <p className="text-[18px] font-medium text-[#FFFFFF]">
-                      {item?.text}
-                    </p>
-                  )}
-                  {item?.name && showFullDisplay && (
+                {!showFullDisplay && index !== 0 ? (
+                  // Show tooltip when sidebar is collapsed (except for minimize button)
+                  <Tooltip content={item?.name} position="right">
                     <div
-                      className={`text-white capitalize text-[15px] whitespace-nowrap overflow-hidden transition-all duration-300 flex-1 ${
-                        showFullDisplay
-                          ? "max-w-[120px] opacity-100"
-                          : "max-w-0 opacity-0"
+                      onClick={() => handleSelectedClick(index, item)}
+                      className={`cursor-pointer flex gap-3 items-center p-[6px] transition-colors duration-200 relative ${
+                        item?.key === active ||
+                        (item?.key === "sales" && active?.startsWith("sales-"))
+                          ? "bg-[#64EAA5] rounded-md"
+                          : "hover:bg-[#5f6365] rounded-md"
                       }`}
                     >
-                      {item?.name}
+                      {item?.image && (
+                        <Image
+                          src={item?.image}
+                          alt="logo"
+                          width={24}
+                          height={24}
+                        />
+                      )}
+                      {item?.icon && item?.icon}
+                      {item?.text && (
+                        <p className="text-[18px] font-medium text-[#FFFFFF]">
+                          {item?.text}
+                        </p>
+                      )}
+                      {item?.badge && item?.badge > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                          {item?.badge}
+                        </span>
+                      )}
                     </div>
-                  )}
-                  {item?.badge && item?.badge > 0 && showFullDisplay && (
-                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                      {item?.badge}
-                    </span>
-                  )}
-                  {item?.hasSubItems && showFullDisplay && (
-                    <div className="w-4 h-4 flex items-center justify-center">
-                      <div
-                        className={`w-2 h-2 border-r-2 border-b-2 border-white transition-transform duration-200 ${
-                          salesExpanded
-                            ? "rotate-45 -translate-y-0.5"
-                            : "-rotate-45 translate-y-0.5"
-                        }`}
+                  </Tooltip>
+                ) : (
+                  // Regular display when sidebar is expanded or for minimize button
+                  <div
+                    onClick={() => handleSelectedClick(index, item)}
+                    className={`cursor-pointer flex gap-3 items-center p-[6px] transition-colors duration-200 relative ${
+                      item?.key === active ||
+                      (item?.key === "sales" && active?.startsWith("sales-"))
+                        ? "bg-[#64EAA5] rounded-md"
+                        : "hover:bg-[#5f6365] rounded-md"
+                    }`}
+                  >
+                    {item?.image && (
+                      <Image
+                        src={item?.image}
+                        alt="logo"
+                        width={24}
+                        height={24}
                       />
-                    </div>
-                  )}
-                </div>
+                    )}
+                    {item?.icon && item?.icon}
+                    {item?.text && (
+                      <p className="text-[18px] font-medium text-[#FFFFFF]">
+                        {item?.text}
+                      </p>
+                    )}
+                    {item?.name && showFullDisplay && (
+                      <div
+                        className={`text-white capitalize text-[15px] whitespace-nowrap overflow-hidden transition-all duration-300 flex-1 ${
+                          showFullDisplay
+                            ? "max-w-[120px] opacity-100"
+                            : "max-w-0 opacity-0"
+                        }`}
+                      >
+                        {item?.name}
+                      </div>
+                    )}
+                    {item?.badge && item?.badge > 0 && showFullDisplay && (
+                      <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                        {item?.badge}
+                      </span>
+                    )}
+                    {item?.hasSubItems && showFullDisplay && (
+                      <div className="w-4 h-4 flex items-center justify-center">
+                        <div
+                          className={`w-2 h-2 border-r-2 border-b-2 border-white transition-transform duration-200 ${
+                            salesExpanded
+                              ? "rotate-45 -translate-y-0.5"
+                              : "-rotate-45 translate-y-0.5"
+                          }`}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Sub items for desktop */}
                 {item?.hasSubItems && salesExpanded && showFullDisplay && (
@@ -1226,14 +1391,35 @@ const LeftMenuBar = () => {
             ))}
           </div>
         </div>
-        <div onClick={handleLogout} className="p-[10px] cursor-pointer">
-          <Image
-            src={logout}
-            alt="logo"
-            width={24}
-            height={24}
-            className="cursor-pointer hover:opacity-80 transition-opacity duration-200"
-          />
+
+        {/* Logout button - fixed at bottom */}
+        <div className="p-[10px] cursor-pointer border-t border-[#51428E] flex-shrink-0">
+          {!showFullDisplay ? (
+            <Tooltip content="Logout" position="right">
+              <Image
+                src={logout}
+                alt="logo"
+                width={24}
+                height={24}
+                className="cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                onClick={handleLogout}
+              />
+            </Tooltip>
+          ) : (
+            <div
+              onClick={handleLogout}
+              className="flex items-center gap-3 cursor-pointer p-2 hover:bg-[#5f6365] rounded-md"
+            >
+              <Image
+                src={logout}
+                alt="logo"
+                width={24}
+                height={24}
+                className="cursor-pointer hover:opacity-80 transition-opacity duration-200"
+              />
+              <span className="text-white text-[14px]">Logout</span>
+            </div>
+          )}
         </div>
       </div>
 

@@ -91,7 +91,7 @@ export const API_ROUTES = {
   PURCHASE_TICKET_CONFIRMATON: "/purchase/tickets/confirmation",
   PAY_WITH_SAVED_CARDS: "/adyen/pay-with-saved-card",
   PURCHASE_ATTENDEE_DETAILS: "/purchase/atendee-update-bulk",
-  GET_CONTACT_DETAILS: "/settings/get-contact-details",
+  GET_CONTACT_DETAILS: "/settings/seller-contacts",
   GET_WALLET_BALANCE: "/wallet/get-wallet-balance",
   GET_PARTNER_SETTINGS: "/settings/get-partner-setting",
   POST_PARTNER_SETTINGS: "/settings/partner-setting",
