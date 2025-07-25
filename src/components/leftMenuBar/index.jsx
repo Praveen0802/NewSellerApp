@@ -1011,7 +1011,7 @@ const LeftMenuBar = () => {
               .map((item, idx) => {
                 const index = idx + 1;
                 return (
-                  <div key={index}>
+                  <div title={item?.name} key={index}>
                     <div
                       onClick={() => handleSelectedClick(index, item)}
                       className={`cursor-pointer flex gap-3 items-center p-3 transition-colors duration-200 ${

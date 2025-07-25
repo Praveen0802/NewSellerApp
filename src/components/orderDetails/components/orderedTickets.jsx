@@ -15,32 +15,38 @@ const OrderedTickets = ({ ticket_details }) => {
     );
   }
 
+  // Helper function to clean price strings (remove currency symbols)
+  const cleanPrice = (priceString) => {
+    if (!priceString) return "0";
+    return priceString.toString().replace(/[£$€]/g, "").trim();
+  };
+
   const listingObject = [
-    { 
-      name: "Event Venue", 
-      text: ticket_details?.venue || "Not specified" 
+    {
+      name: "Event Venue",
+      text: ticket_details?.venue || "Not specified",
     },
-    { 
-      name: "Event Date", 
-      text: ticket_details?.match_date || "Not specified" 
+    {
+      name: "Event Date",
+      text: ticket_details?.match_date || "Not specified",
     },
-    { 
-      name: "Event Time", 
-      text: ticket_details?.match_time || "Not specified" 
+    {
+      name: "Event Time",
+      text: ticket_details?.match_time || "Not specified",
     },
-    { 
-      name: "Seat Details", 
-      text: ticket_details?.seat_category || "Not specified" 
+    {
+      name: "Seat Details",
+      text: ticket_details?.seat_category || "Not specified",
     },
     {
       values: [
-        { 
-          name: "Ticket Type", 
-          text: ticket_details?.ticket_types || "Not specified" 
+        {
+          name: "Ticket Type",
+          text: ticket_details?.ticket_types || "Not specified",
         },
-        { 
-          name: "Quantity", 
-          text: ticket_details?.quantity?.toString() || "0" 
+        {
+          name: "Quantity",
+          text: ticket_details?.quantity?.toString() || "0",
         },
       ],
       twoKeys: true,
@@ -49,11 +55,15 @@ const OrderedTickets = ({ ticket_details }) => {
       values: [
         {
           name: "Ticket Price",
-          text: `${ticket_details?.currency_type || "GBP"} ${ticket_details?.ticket_price || "0"}`,
+          text:
+            ticket_details?.ticket_price ||
+            `${ticket_details?.currency_type || "GBP"} 0`,
         },
         {
           name: "Order Value",
-          text: `${ticket_details?.currency_type || "GBP"} ${ticket_details?.order_value || "0"}`,
+          text:
+            ticket_details?.order_value ||
+            `${ticket_details?.currency_type || "GBP"} 0`,
         },
       ],
       twoKeys: true,
@@ -71,12 +81,12 @@ const OrderedTickets = ({ ticket_details }) => {
             <Fragment key={index}>
               {item?.twoKeys ? (
                 <div className="grid grid-cols-2 gap-4">
-                  {item?.values?.map((item, index) => {
+                  {item?.values?.map((valueItem, valueIndex) => {
                     return (
                       <DisplayValues
-                        key={index}
-                        text={item?.name}
-                        value={item?.text}
+                        key={valueIndex}
+                        text={valueItem?.name}
+                        value={valueItem?.text}
                       />
                     );
                   })}

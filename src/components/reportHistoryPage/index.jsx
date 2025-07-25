@@ -305,7 +305,7 @@ const RportHistory = (props) => {
   }));
 
   const getOrderDetails = async (item) => {
-    setIsLoading(true);
+    // setIsLoading(true);
     const salesData = await fetchReportsOrderDetails("", {
       booking_id: item?.id,
     });
@@ -313,11 +313,11 @@ const RportHistory = (props) => {
       flag: true,
       data: salesData,
     });
-    setIsLoading(false);
+    // setIsLoading(false);
   };
 
   const getLogDetailsDetails = async (item) => {
-    setIsLoading(true);
+    // setIsLoading(true);
     const orderLogs = await fetchReportsOrderLogs("", {
       booking_id: item?.id,
     });
@@ -329,7 +329,7 @@ const RportHistory = (props) => {
       orderLogs: orderLogs,
       inventoryLogs: inventoryLogs,
     });
-    setIsLoading(false);
+    // setIsLoading(false);
   };
 
   // Create right sticky columns with action buttons

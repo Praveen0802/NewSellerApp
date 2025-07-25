@@ -27,23 +27,24 @@ const OrderInfo = ({ show, onClose, data: orderData }) => {
   }
 
   const {
-    orderArr: order_details,
-    addressArr: address_details,
-    userAddressArr: user_address_details,
-    tickets,
+    order_details,
+    address_details,
+    user_address_details,
+    ticket_details,
+    attendee_details
   } = data;
 
-  // Extract ticket details and other info from the tickets array
-  const ticket_details = tickets?.map(ticket => ticket.ticketArr) || [];
-  const attendee_details = tickets?.[0]?.attendeeArr || {};
-  const listing_note = tickets?.[0]?.listing_note || [];
-  const order_notes = tickets?.[0]?.ticketArr?.order_notes;
+  // Extract order notes from ticket details
+  const order_notes = ticket_details?.[0]?.order_notes;
+  
+  // Extract ticket file from attendee details
+  const ticket_file = attendee_details?.[0]?.ticket_file;
 
   const ctaText = [
     { title: "Order Notes", cta: order_notes ? "View Note" : "+ Add Note" },
     {
       title: "Additional File",
-      cta: attendee_details?.ticket_file ? "Download File" : "No File",
+      cta: ticket_file ? "Download File" : "No File",
     },
   ];
 
@@ -51,45 +52,53 @@ const OrderInfo = ({ show, onClose, data: orderData }) => {
   const orderObject = {
     order_id: order_details?.order_id,
     order_date: order_details?.order_date,
-    order_status: order_details?.order_status === 1 ? "Active" : order_details?.order_status === null ? "Pending" : "Inactive",
+    order_status: order_details?.order_status === 1 ? "Active" : 
+                 order_details?.order_status === null ? "Pending" : "Inactive",
     delivered_by: order_details?.delivered_by || "Not specified",
     days_to_event: order_details?.days_in_event,
     ticket_type: ticket_details?.[0]?.ticket_types,
   };
 
-  // Format customer details
-  const customerName =
-    user_address_details?.first_name && user_address_details?.last_name
-      ? `${user_address_details.first_name} ${user_address_details.last_name}`
-      : address_details?.first_name && address_details?.last_name
-      ? `${address_details.first_name} ${address_details.last_name}`
-      : "Not provided";
+  // Format customer details - prioritize attendee details, then user address, then address
+  const attendee = attendee_details?.[0];
+  
+  const customerName = attendee?.first_name && attendee?.last_name
+    ? `${attendee.first_name} ${attendee.last_name}`
+    : user_address_details?.first_name && user_address_details?.last_name
+    ? `${user_address_details.first_name} ${user_address_details.last_name}`
+    : address_details?.first_name && address_details?.last_name
+    ? `${address_details.first_name} ${address_details.last_name}`
+    : "Not provided";
 
-  const customerEmail =
-    attendee_details?.email || address_details?.email || "Not provided";
-  const mobileNumber =
-    user_address_details?.phone_number ||
-    address_details?.phone_number ||
-    "Not provided";
+  const customerEmail = attendee?.email || 
+                       address_details?.email || 
+                       "Not provided";
+                       
+  const mobileNumber = attendee?.phone ||
+                      user_address_details?.phone_number ||
+                      address_details?.phone_number ||
+                      "Not provided";
 
-  // Format benefits/restrictions from listing_note
-  const benefits = listing_note?.map((note) => note.name) || [];
+  // Format benefits/restrictions from listing_note in ticket_details
+  const benefits = ticket_details?.[0]?.listing_note?.map((note) => note.name) || [];
 
   const handleCollapseModal = () => {
     setExpandedVersion(!expandedVersion);
   };
 
   // Transform ticket_details to match expected format for OrderedTickets component
-  const transformedTicketDetails = ticket_details.map(ticket => ({
-    ...ticket,
-    // Add any additional transformations needed for OrderedTickets component
-    venue_name: ticket.venue,
-    event_date: ticket.match_date,
-    event_time: ticket.match_time,
-    category: ticket.seat_category,
-    price: ticket.ticket_price,
-    currency: ticket.currency_type,
-  }));
+  // Since ticket_details is now an array, we'll use the first ticket or handle multiple tickets
+  const transformedTicketDetails = ticket_details?.[0] ? {
+    venue: ticket_details[0].venue,
+    match_date: ticket_details[0].match_date,
+    match_time: ticket_details[0].match_time,
+    seat_category: ticket_details[0].seat_category,
+    ticket_types: ticket_details[0].ticket_types,
+    quantity: ticket_details[0].quantity,
+    ticket_price: ticket_details[0].ticket_price,
+    order_value: ticket_details[0].order_value,
+    currency_type: ticket_details[0].currency_type,
+  } : null;
 
   return (
     <RightViewModal className={"!w-[600px]"} show={show} onClose={onClose}>
@@ -120,7 +129,9 @@ const OrderInfo = ({ show, onClose, data: orderData }) => {
                 />
               </div>
             </div>
-            <OrderedTickets ticket_details={transformedTicketDetails} />
+            {transformedTicketDetails && (
+              <OrderedTickets ticket_details={transformedTicketDetails} />
+            )}
             {benefits.length > 0 && (
               <Benifits benefits_restrictions={benefits} />
             )}
