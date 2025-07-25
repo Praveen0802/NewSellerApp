@@ -5,7 +5,11 @@ import Button from "../commonComponents/button";
 import TableView from "./components/tableView";
 import RightViewModal from "../commonComponents/rightViewModal";
 import AddEditUser from "./components/addEditUser";
-import { DeleteUserDetails, fetchUserDetails } from "@/utils/apiHandler/request";
+import {
+  DeleteUserDetails,
+  editUserDetails,
+  fetchUserDetails,
+} from "@/utils/apiHandler/request";
 import DeleteConfirmation from "../commonComponents/deleteConfirmation";
 import { toast } from "react-toastify";
 
@@ -13,9 +17,8 @@ const MyTeamView = (props) => {
   const { userDetails, fetchCountries } = props;
   const { my_teams = [], meta = {} } = userDetails || {};
   const [metaDetails, setMetaDetails] = useState(meta);
-  console.log(props,"my_teams", my_teams, fetchCountries);
-  const [travelCustomerValues, setTravelCustomerValues] =
-    useState(my_teams);
+  console.log(props, "my_teams", my_teams, fetchCountries);
+  const [travelCustomerValues, setTravelCustomerValues] = useState(my_teams);
   const [deleteLoader, setDeleteLoader] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -110,10 +113,10 @@ const MyTeamView = (props) => {
 
   const handleEditClick = async (item) => {
     setIsLoading(true);
-    const response = await fetchUserDetails("", "", "GET", "", {
-      id: item?.id,
+    const response = await editUserDetails("", "GET", {
+      user_id: item?.id,
     });
-    setEditUserValues({ id: item?.id, ...response?.my_teams[0] });
+    setEditUserValues({ id: item?.id, ...response });
     setUserViewPopup({
       show: true,
       type: "edit",

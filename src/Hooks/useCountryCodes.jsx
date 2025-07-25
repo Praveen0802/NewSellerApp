@@ -5,7 +5,7 @@ const useCountryCodes = () => {
   const allCountryCodeOptions = allCountryCodes?.data?.map((item) => {
     return {
       label: `${item?.short_name} ${item?.dialing_code}`,
-      value: `${item?.phone_code}`,
+      value: `${item?.dialing_code}`,
     };
   });
 

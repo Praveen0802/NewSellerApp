@@ -5,6 +5,7 @@ export const API_ROUTES = {
   LMT_TRADE_TRACKING: `/purchase/lmt-trade/tracking/history`,
   LMT_TRADE_ORDERS: `/purchase/lmt-trade/history`,
   GET_TEAM_MEMBERS: `/settings/my-teams`,
+  EDIT_USER_ID: `/settings/edit-my-team`,
   DELETE_TEAM_MEMBERS: `/settings/delete-my-team`,
   ADD_TEAM_MEMBERS: `/settings/add-my-team`,
   UPDATE_TEAM_MEMBERS: `/settings/update-my-team`,

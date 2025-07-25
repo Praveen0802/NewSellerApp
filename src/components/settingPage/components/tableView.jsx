@@ -121,7 +121,7 @@ const TableView = (props) => {
               <th className={headerClassName}>Name</th>
               <th className={headerClassName}>Email</th>
               <th className={headerClassName}>Phone</th>
-              <th className={headerClassName}>Country</th>
+              {/* <th className={headerClassName}>Country</th> */}
               <th className={headerClassName}>Actions</th>
             </tr>
           </thead>
@@ -144,9 +144,9 @@ const TableView = (props) => {
                   </td>
                   <td className={rowClassName}>{user.email}</td>
                   <td className={rowClassName}>
-                    {user.country_code} {user.mobile_number}
+                    {user.country_code} {user.phone_number}
                   </td>
-                  <td className={rowClassName}>{user.country}</td>
+                  {/* <td className={rowClassName}>{user.country}</td> */}
                   <td className={rowClassName}>
                     <div className="flex gap-2 items-center">
                       <button

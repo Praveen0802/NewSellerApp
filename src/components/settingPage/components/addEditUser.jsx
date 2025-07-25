@@ -37,11 +37,17 @@ const AddEditUser = ({
   const [permissionValues, setPermissionValues] = useState([]);
 
   // Convert existing permissions string to array for edit mode
-  const existingPermissions =
-    editType && permissions
-      ? permissions.split(",").map((p) => parseInt(p.trim()))
-      : [];
-console.log(existingPermissions,permissions,'existingPermissionsexistingPermissions',userDetails)
+  const existingPermissions = permissions;
+  // editType && permissions
+  //   ? permissions.split(",").map((p) => parseInt(p.trim()))
+  //   : [];
+  console.log(
+    existingPermissions,
+    permissions,
+    country_code,
+    "existingPermissionsexistingPermissions",
+    userDetails
+  );
   const [formFieldValues, setFormFieldValues] = useState({
     first_name: first_name,
     last_name: last_name,
@@ -329,6 +335,7 @@ console.log(existingPermissions,permissions,'existingPermissionsexistingPermissi
       : "";
 
     const payload = {
+      ...(editType && { user_id: id }),
       first_name: formFieldValues.first_name,
       last_name: formFieldValues.last_name,
       email: formFieldValues.email,
@@ -343,7 +350,7 @@ console.log(existingPermissions,permissions,'existingPermissionsexistingPermissi
       if (!editType) {
         const response = await addTeamMembers("", "", "POST", payload);
       } else {
-        const response = await updateTeamMembers("", id, "PUT", payload);
+        const response = await updateTeamMembers("", "", "PUT", payload);
       }
 
       toast.success(`User ${editType ? "updated" : "added"} successfully`);

@@ -20,7 +20,7 @@ export async function getServerSideProps(ctx) {
     return nextRedirect("login");
   }
   const response = await fetchWalletPageDetails(authToken);
-
+  return nextRedirect("reports/wallet");
   return {
     props: { apiData: response ?? {} },
   };

@@ -728,6 +728,25 @@ export const fetchUserDetails = async (
   }
 };
 
+export const editUserDetails = async (
+  token,
+  method = "GET",
+  params
+) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.EDIT_USER_ID}`,
+      method: method,
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchUserDetails", error);
+    throw error;
+  }
+};
+
 export const DeleteUserDetails = async (
   token,
   id,
