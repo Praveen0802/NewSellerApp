@@ -25,8 +25,9 @@ const FloatingLabelInput = ({
   error = "",
   rightIcon = null,
   autoFocus = false,
+  showError = false,
 }) => {
-  console.log(parentClassName, "parentClassNameparentClassName");
+  console.log(parentClassName, "parentClassNameparentClassName", error);
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   // Update focus state when value changes
@@ -173,7 +174,9 @@ const FloatingLabelInput = ({
         )}
       </div>
 
-      {/* {error && <p className="mt-1 text-sm text-red-500">{error}</p>} */}
+      {error && showError && (
+        <p className="mt-1 text-sm text-red-500">{error}</p>
+      )}
     </div>
   );
 };

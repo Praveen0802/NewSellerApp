@@ -690,7 +690,6 @@ export const fetchCityBasedonCountry = async (token, params) => {
   }
 };
 
-
 export const getAllPermissions = async (token, params) => {
   try {
     const response = await makeRequest({
@@ -943,7 +942,7 @@ export const RegisterUser = async (token, data) => {
       data: data,
     });
     console.log(response, "responseresponse");
-    return response?.data?.success ? response?.data?.data : {};
+    return response?.data?.success ? response?.data : {};
   } catch (error) {
     console.log("ERROR in RegisterUser", error?.response, error);
     return error?.response?.data;
