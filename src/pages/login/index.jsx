@@ -1,5 +1,4 @@
 import LoginPage from "@/components/loginPage";
-import { getDialingCode } from "@/utils/apiHandler/request";
 import { checkValidAuthToken, nextRedirect } from "@/utils/helperFunctions";
 import React from "react";
 
@@ -14,8 +13,7 @@ export const getServerSideProps = async (context) => {
   if (validToken) {
     return nextRedirect("dashboard");
   }
-  // const fetchedCountryCodes = await getDialingCode();
   return {
-    props: {  },
+    props: {},
   };
 };

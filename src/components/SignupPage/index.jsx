@@ -1,24 +1,31 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ChevronLeft,
   RefreshCw,
   User,
   Building2,
-  Check,
   Loader2,
   LogIn,
+  Mail,
+  CheckCircle,
+  Shield,
+  UserPlus,
 } from "lucide-react";
 import { useRouter } from "next/router";
 
 import FloatingLabelInput from "../floatinginputFields";
 import FloatingSelect from "../floatinginputFields/floatingSelect";
-import { readCookie, setCookie } from "@/utils/helperFunctions/cookie";
+import {
+  getCookie,
+  readCookie,
+  setCookie,
+} from "@/utils/helperFunctions/cookie";
 import {
   RegisterUser,
-  zohoEmbed,
   fetchCityBasedonCountry,
 } from "@/utils/apiHandler/request";
 import useCountryCodes from "@/Hooks/useCountryCodes";
+import { toast } from "react-toastify";
 
 const SignupFlow = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -29,13 +36,14 @@ const SignupFlow = () => {
     last_name: "",
     email: "",
     password: "",
+    confirm_password: "",
     user_type: "1",
     phone_country_code: "+91",
     phone_number: "",
     address: "",
     city: "",
     zip_code: "",
-    country: "", // Changed to empty string to force selection
+    country: "",
     currency: "",
     business_name: "",
     is_business: "0",
@@ -51,19 +59,13 @@ const SignupFlow = () => {
   const [cityOptions, setCityOptions] = useState([]);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
 
+  // Refs for error fields
+  const errorRefs = useRef({});
+
   const totalSteps = 4;
 
   // Get country and phone code options from hook
   const { allCountryCodeOptions, countryOptions } = useCountryCodes();
-
-  // Phone code options (keeping existing structure)
-  const phoneCodeOptions = [
-    { value: "+91", label: "+91 (India)" },
-    { value: "+1", label: "+1 (US)" },
-    { value: "+44", label: "+44 (UK)" },
-    { value: "+33", label: "+33 (France)" },
-    { value: "+49", label: "+49 (Germany)" },
-  ];
 
   // Currency options (keeping existing)
   const currencyOptions = [
@@ -73,31 +75,54 @@ const SignupFlow = () => {
     { value: "JPY", label: "¥ JPY" },
   ];
 
-  // Calculate progress percentage based on actual completion
-  const calculateProgress = () => {
-    let completedSteps = 0;
+  // Stepper configuration
+  const stepperSteps = [
+    {
+      id: 1,
+      title: "Choose Account",
+      icon: User,
+      description: "Business or Individual",
+    },
+    {
+      id: 2,
+      title: "Register",
+      icon: UserPlus,
+      description: "Complete your details",
+    },
+    {
+      id: 3,
+      title: "Verify Email",
+      icon: Mail,
+      description: "Check your inbox",
+    },
+    {
+      id: 4,
+      title: "Complete KYC",
+      icon: Shield,
+      description: "Verify your identity",
+    },
+  ];
 
-    // Step 1: User type selection
-    if (userType) {
-      completedSteps = 1;
+  // Function to scroll to first error field
+  const scrollToFirstError = (errorFields) => {
+    const firstErrorField = Object.keys(errorFields)[0];
+    if (firstErrorField && errorRefs.current[firstErrorField]) {
+      errorRefs.current[firstErrorField].scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "nearest",
+      });
+
+      // Focus the input field for better UX
+      setTimeout(() => {
+        const inputElement = errorRefs.current[firstErrorField].querySelector(
+          "input, select, textarea"
+        );
+        if (inputElement) {
+          inputElement.focus();
+        }
+      }, 500);
     }
-
-    // Step 2: Form completion - check if step 2 is completed (form submitted)
-    if (currentStep >= 2 && userType) {
-      completedSteps = 2;
-    }
-
-    // Step 3: Document signing (when currentStep reaches 3)
-    if (currentStep >= 3) {
-      completedSteps = 3;
-    }
-
-    // Step 4: Completion
-    if (currentStep >= 4) {
-      completedSteps = 4;
-    }
-
-    return (completedSteps / totalSteps) * 100;
   };
 
   // Load saved data from cookies on component mount
@@ -168,15 +193,6 @@ const SignupFlow = () => {
     setCookie("signup_step", currentStep.toString(), 7);
   }, [currentStep]);
 
-  // Save form data to cookies whenever it changes
-  // useEffect(() => {
-  //   setCookie(
-  //     "signup_form_data",
-  //     encodeURIComponent(JSON.stringify(formData)),
-  //     7
-  //   );
-  // }, [formData]);
-
   // Simulate URL changes for demo purposes
   const updateUrl = (path) => {
     setCurrentUrl(path);
@@ -231,6 +247,13 @@ const SignupFlow = () => {
       newErrors.password = "Password must be at least 8 characters";
     }
 
+    // Validate confirm password
+    if (!formData.confirm_password.trim()) {
+      newErrors.confirm_password = "Please confirm your password";
+    } else if (formData.password !== formData.confirm_password) {
+      newErrors.confirm_password = "Passwords do not match";
+    }
+
     if (!formData.phone_number.trim()) {
       newErrors.phone_number = "Phone number is required";
     }
@@ -260,6 +283,14 @@ const SignupFlow = () => {
     }
 
     setErrors(newErrors);
+
+    // Scroll to first error if any
+    if (Object.keys(newErrors).length > 0) {
+      setTimeout(() => {
+        scrollToFirstError(newErrors);
+      }, 100);
+    }
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -274,36 +305,15 @@ const SignupFlow = () => {
       }-${year}`;
     };
 
-    // Create payload with formatted DOB
+    // Create payload with formatted DOB and exclude confirm_password
+    const { confirm_password, ...apiFormData } = formData;
     const formattedFormData = {
-      ...formData,
-      dob: formatDOB(formData.dob),
+      ...apiFormData,
+      dob: formatDOB(apiFormData.dob),
     };
 
-    const zohoEmbedPayload = {
-      recipient_name: `${formData.first_name} ${formData.last_name}`,
-      recipient_email: formData.email,
-      ...(formData?.is_business == 1
-        ? { company_name: formData?.business_name }
-        : {}),
-      location: formData.address,
-      testing: true,
-    };
-
-    try {
-      const promises = [];
-      promises.push(RegisterUser("", formattedFormData));
-      promises.push(zohoEmbed("", zohoEmbedPayload));
-      const [registerResponse, zohoEmbedResponse] = await Promise.all(promises);
-
-      console.log("registerResponse", registerResponse);
-      console.log("zohoEmbedResponse", zohoEmbedResponse);
-
-      return { success: true, data: { registerResponse, zohoEmbedResponse } };
-    } catch (error) {
-      console.error("Registration process error:", error);
-      return { success: false, error };
-    }
+    const resp = await RegisterUser("", formattedFormData);
+    return resp;
   };
 
   const handleFormSubmit = (e) => {
@@ -312,82 +322,53 @@ const SignupFlow = () => {
     if (!validateForm()) {
       return;
     }
-
     submitForm();
   };
 
   const submitForm = async () => {
     setIsLoading(true);
     try {
+      // Save form data to cookies before API call
+      setCookie(
+        "signup_form_data",
+        encodeURIComponent(JSON.stringify(formData)),
+        7
+      );
+
       const result = await startRegistrationProcess(formData);
+      console.log(result, "result");
 
-      // if (result.success) {
-      //   // Move to step 3 after successful form submission
-      //   setCurrentStep(3);
-      //   // Clear any existing errors
-      //   setErrors({});
-      // } else {
-      //   // Handle API errors - map them to form fields
-      //   if (
-      //     result.error &&
-      //     result.error.response &&
-      //     result.error.response.data
-      //   ) {
-      //     const apiResponse = result.error.response.data;
+      const { message, success = false } = result ?? {};
+      if (Boolean(success)) {
+        toast.success(
+          "Registration successful! Please check your email for verification."
+        );
+        setCurrentStep(3); // Move to email verification step
+        return;
+      } else {
+        console.error("Registration failed:", message);
+        const errorFields = {};
+        Object.keys(message).forEach((key) => {
+          errorFields[key] = message[key];
+        });
+        setErrors((prev) => ({
+          ...prev,
+          ...errorFields,
+        }));
 
-      //     if (!apiResponse.success && apiResponse.message) {
-      //       const apiErrors = {};
+        // Scroll to first error field from API response
+        setTimeout(() => {
+          scrollToFirstError(errorFields);
+        }, 100);
 
-      //       // Map API error fields to form field names
-      //       Object.keys(apiResponse.message).forEach((fieldName) => {
-      //         const errorMessages = apiResponse.message[fieldName];
-      //         // Take the first error message for each field
-      //         apiErrors[fieldName] = Array.isArray(errorMessages)
-      //           ? errorMessages[0]
-      //           : errorMessages;
-      //       });
-
-      //       setErrors(apiErrors);
-      //       console.error("API validation errors:", apiErrors);
-      //     }
-      //   } else {
-      //     // Generic error handling
-      //     console.error("Form submission error:", result.error);
-      //     setErrors({
-      //       general: "An error occurred during registration. Please try again.",
-      //     });
-      //   }
-      // }
+        toast.error("Registration failed. Please try again.");
+      }
     } catch (error) {
       console.error("Form submission error:", error);
       setErrors({ general: "An unexpected error occurred. Please try again." });
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const startPolling = (actionId) => {
-    setIsPolling(true);
-    const pollInterval = setInterval(async () => {
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        const isComplete = Math.random() > 0.7;
-
-        if (isComplete) {
-          clearInterval(pollInterval);
-          setIsPolling(false);
-          setCurrentStep(4);
-        }
-      } catch (error) {
-        console.error("Polling error:", error);
-      }
-    }, 3000);
-
-    setTimeout(() => {
-      clearInterval(pollInterval);
-      setIsPolling(false);
-    }, 120000);
   };
 
   const handleNext = async () => {
@@ -429,8 +410,9 @@ const SignupFlow = () => {
       last_name: "",
       email: "",
       password: "",
+      confirm_password: "",
       user_type: "1",
-      phone_country_code: "+91",
+      phone_country_code: "",
       phone_number: "",
       address: "",
       city: "",
@@ -491,7 +473,7 @@ const SignupFlow = () => {
                 attend or reselling tickets.
               </p>
               <button
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors text-sm lg:text-base ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors text-sm lg:text-base cursor-pointer ${
                   userType === "individual"
                     ? "bg-[#10B981] text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -524,7 +506,7 @@ const SignupFlow = () => {
                 tickets at scale.
               </p>
               <button
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors text-sm lg:text-base ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors text-sm lg:text-base cursor-pointer ${
                   userType === "business"
                     ? "bg-[#10B981] text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -540,7 +522,7 @@ const SignupFlow = () => {
     </div>
   );
 
-  // Step 2: Form Submission - Updated with proper field ordering
+  // Step 2: Form Submission
   const renderStep2 = () => (
     <div className="flex flex-col justify-center h-full px-4 lg:px-0 py-4">
       <div className="w-full max-w-2xl mx-auto">
@@ -558,174 +540,228 @@ const SignupFlow = () => {
         <form onSubmit={handleFormSubmit}>
           <div className="space-y-4 lg:space-y-6 max-h-[60vh] overflow-y-auto pr-2">
             {userType === "business" && (
-              <FloatingLabelInput
-                label="Business Name"
-                id="business_name"
-                keyValue="business_name"
-                value={formData.business_name}
-                onChange={handleChange}
-                error={errors.business_name}
-                required
-                className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-              />
+              <div ref={(el) => (errorRefs.current.business_name = el)}>
+                <FloatingLabelInput
+                  label="Business Name"
+                  id="business_name"
+                  keyValue="business_name"
+                  value={formData.business_name}
+                  onChange={handleChange}
+                  error={errors.business_name}
+                  required
+                  showError={true}
+                  className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                />
+              </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FloatingLabelInput
-                label="First Name"
-                id="first_name"
-                keyValue="first_name"
-                value={formData.first_name}
-                onChange={handleChange}
-                error={errors.first_name}
-                required
-                className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-              />
-              <FloatingLabelInput
-                label="Last Name"
-                id="last_name"
-                keyValue="last_name"
-                value={formData.last_name}
-                onChange={handleChange}
-                error={errors.last_name}
-                required
-                className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-              />
-            </div>
-
-            <FloatingLabelInput
-              label="Email Address"
-              type="email"
-              id="email"
-              keyValue="email"
-              value={formData.email}
-              onChange={handleChange}
-              error={errors.email}
-              required
-              className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-            />
-
-            <FloatingLabelInput
-              label="Password"
-              type="password"
-              id="password"
-              keyValue="password"
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-              required
-              className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-1">
-                <FloatingSelect
-                  label="Phone Code"
-                  options={allCountryCodeOptions}
-                  selectedValue={formData.phone_country_code}
-                  onSelect={handleChange}
-                  keyValue="phone_country_code"
-                  error={errors.phone_country_code}
+              <div ref={(el) => (errorRefs.current.first_name = el)}>
+                <FloatingLabelInput
+                  label="First Name"
+                  id="first_name"
+                  keyValue="first_name"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                  error={errors.first_name}
                   required
-                  searchable={true}
+                  showError={true}
+                  className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
                 />
               </div>
-              <div className="md:col-span-2">
+              <div ref={(el) => (errorRefs.current.last_name = el)}>
                 <FloatingLabelInput
-                  label="Phone Number"
-                  type="tel"
-                  id="phone_number"
-                  keyValue="phone_number"
-                  value={formData.phone_number}
+                  label="Last Name"
+                  id="last_name"
+                  keyValue="last_name"
+                  value={formData.last_name}
                   onChange={handleChange}
-                  error={errors.phone_number}
+                  error={errors.last_name}
                   required
+                  showError={true}
                   className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
                 />
               </div>
             </div>
 
-            <FloatingLabelInput
-              label="Date of Birth"
-              type="date"
-              id="dob"
-              keyValue="dob"
-              value={formData.dob}
-              onChange={handleChange}
-              error={errors.dob}
-              required
-              className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-            />
-
-            <FloatingLabelInput
-              label="Address"
-              id="address"
-              keyValue="address"
-              value={formData.address}
-              onChange={handleChange}
-              error={errors.address}
-              required
-              className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-            />
-
-            {/* Country field - made searchable */}
-            <FloatingSelect
-              label="Country"
-              options={countryOptions || []}
-              selectedValue={formData.country}
-              onSelect={handleChange}
-              keyValue="country"
-              error={errors.country}
-              required
-              searchable={true}
-            />
-
-            {/* City field - comes right after country - made searchable */}
-            <FloatingSelect
-              label={isLoadingCities ? "Loading Cities..." : "City"}
-              options={cityOptions}
-              selectedValue={formData.city}
-              onSelect={handleChange}
-              keyValue="city"
-              error={errors.city}
-              required
-              disabled={!formData.country || isLoadingCities}
-              placeholder={
-                !formData.country
-                  ? "Select country first"
-                  : isLoadingCities
-                  ? "Loading..."
-                  : "Select city"
-              }
-              searchable={true}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div ref={(el) => (errorRefs.current.email = el)}>
               <FloatingLabelInput
-                label="Zip Code"
-                id="zip_code"
-                keyValue="zip_code"
-                value={formData.zip_code}
+                label="Email Address"
+                type="email"
+                id="email"
+                keyValue="email"
+                value={formData.email}
                 onChange={handleChange}
-                error={errors.zip_code}
+                error={errors.email}
                 required
+                showError={true}
                 className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
               />
-              <div>
-                <FloatingSelect
-                  label="Currency"
-                  options={currencyOptions}
-                  selectedValue={formData.currency}
-                  onSelect={handleChange}
-                  keyValue="currency"
-                  error={errors.currency}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div ref={(el) => (errorRefs.current.password = el)}>
+                <FloatingLabelInput
+                  label="Password"
+                  type="password"
+                  id="password"
+                  keyValue="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={errors.password}
                   required
-                  searchable={true}
+                  showError={true}
+                  className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                />
+              </div>
+              <div ref={(el) => (errorRefs.current.confirm_password = el)}>
+                <FloatingLabelInput
+                  label="Confirm Password"
+                  type="password"
+                  id="confirm_password"
+                  keyValue="confirm_password"
+                  value={formData.confirm_password}
+                  onChange={handleChange}
+                  error={errors.confirm_password}
+                  required
+                  showError={true}
+                  className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
                 />
               </div>
             </div>
 
-            {/* Display general error if any */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-1">
+                <div ref={(el) => (errorRefs.current.phone_country_code = el)}>
+                  <FloatingSelect
+                    label="Phone Code"
+                    options={allCountryCodeOptions}
+                    selectedValue={formData.phone_country_code}
+                    onSelect={handleChange}
+                    keyValue="phone_country_code"
+                    error={errors.phone_country_code}
+                    required
+                    searchable={true}
+                    showError={true}
+                    paddingClassName="px-3 py-[11px]"
+                  />
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <div ref={(el) => (errorRefs.current.phone_number = el)}>
+                  <FloatingLabelInput
+                    label="Phone Number"
+                    type="tel"
+                    id="phone_number"
+                    keyValue="phone_number"
+                    value={formData.phone_number}
+                    onChange={handleChange}
+                    error={errors.phone_number}
+                    required
+                    showError={true}
+                    className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div ref={(el) => (errorRefs.current.dob = el)}>
+              <FloatingLabelInput
+                label="Date of Birth"
+                type="date"
+                id="dob"
+                keyValue="dob"
+                value={formData.dob}
+                onChange={handleChange}
+                error={errors.dob}
+                required
+                showError={true}
+                className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+              />
+            </div>
+
+            <div ref={(el) => (errorRefs.current.address = el)}>
+              <FloatingLabelInput
+                label="Address"
+                id="address"
+                keyValue="address"
+                value={formData.address}
+                onChange={handleChange}
+                error={errors.address}
+                required
+                showError={true}
+                className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+              />
+            </div>
+
+            <div ref={(el) => (errorRefs.current.country = el)}>
+              <FloatingSelect
+                label="Country"
+                options={countryOptions || []}
+                selectedValue={formData.country}
+                onSelect={handleChange}
+                keyValue="country"
+                error={errors.country}
+                required
+                showError={true}
+                searchable={true}
+              />
+            </div>
+
+            <div ref={(el) => (errorRefs.current.city = el)}>
+              <FloatingSelect
+                label={isLoadingCities ? "Loading Cities..." : "City"}
+                options={cityOptions}
+                selectedValue={formData.city}
+                onSelect={handleChange}
+                keyValue="city"
+                error={errors.city}
+                required
+                disabled={!formData.country || isLoadingCities}
+                placeholder={
+                  !formData.country
+                    ? "Select country first"
+                    : isLoadingCities
+                    ? "Loading..."
+                    : "Select city"
+                }
+                searchable={true}
+                showError={true}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div ref={(el) => (errorRefs.current.zip_code = el)}>
+                <FloatingLabelInput
+                  label="Zip Code"
+                  id="zip_code"
+                  keyValue="zip_code"
+                  value={formData.zip_code}
+                  onChange={handleChange}
+                  error={errors.zip_code}
+                  required
+                  showError={true}
+                  className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                />
+              </div>
+              <div>
+                <div ref={(el) => (errorRefs.current.currency = el)}>
+                  <FloatingSelect
+                    label="Currency"
+                    options={currencyOptions}
+                    selectedValue={formData.currency}
+                    onSelect={handleChange}
+                    keyValue="currency"
+                    error={errors.currency}
+                    required
+                    searchable={true}
+                    paddingClassName="px-3 py-[11px]"
+                    showError={true}
+                  />
+                </div>
+              </div>
+            </div>
+
             {errors.general && (
               <div className="text-red-500 text-sm mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                 {errors.general}
@@ -733,68 +769,99 @@ const SignupFlow = () => {
             )}
           </div>
 
-          {/* Hidden submit button */}
           <button type="submit" style={{ display: "none" }} />
         </form>
       </div>
     </div>
   );
 
-  // Step 3: Document Signing
   const renderStep3 = () => (
-    <div className="flex flex-col h-full">
-      <div className="text-center mb-4 lg:mb-6 px-4">
-        <h2 className="text-xl lg:text-3xl font-semibold text-gray-800 mb-4">
-          Complete Document Signing
-        </h2>
-        <p className="text-gray-600 text-sm lg:text-base">
-          Please sign the required seller agreement documents to complete your
-          registration
-        </p>
-        {isPolling && (
-          <div className="flex items-center justify-center gap-2 mt-4 text-[#10B981]">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="text-sm">Waiting for signature completion...</span>
-          </div>
-        )}
-      </div>
+    <div className="flex flex-col items-center justify-center h-full px-4 lg:px-0">
+      <div className="w-full max-w-md mx-auto text-center">
+        <div className="w-16 h-16 lg:w-20 lg:h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Mail className="w-8 h-8 lg:w-10 lg:h-10 text-blue-600" />
+        </div>
 
-      <div className="flex-1 px-4">
-        {signUrl && (
-          <iframe
-            src={signUrl}
-            className="w-full h-full border border-gray-300 rounded-lg"
-            title="Document Signing"
-            frameBorder="0"
-          />
-        )}
+        <h2 className="text-xl lg:text-3xl font-semibold text-gray-800 mb-4">
+          Check Your Email
+        </h2>
+
+        <p className="text-gray-600 mb-6 text-sm lg:text-base">
+          We've sent a verification email to:
+        </p>
+
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+          <p className="font-medium text-gray-800">{formData.email}</p>
+        </div>
+
+        <p className="text-gray-600 text-sm lg:text-base mb-8">
+          Please click the verification link in your email to complete your
+          registration. The link will expire in 24 hours.
+        </p>
+
+        {/* <div className="space-y-4">
+          <button
+            className="w-full bg-[#10B981] text-white py-3 px-6 rounded-lg font-medium hover:bg-emerald-600 transition-colors"
+            onClick={() => {
+              // Resend email logic here
+              toast.info("Verification email resent!");
+            }}
+          >
+            Resend Email
+          </button>
+
+          <p className="text-xs text-gray-500">
+            Didn't receive the email? Check your spam folder or try resending.
+          </p>
+        </div> */}
       </div>
     </div>
   );
 
-  // Step 4: Success
-  const renderStep4 = () => (
-    <div className="flex flex-col items-center justify-center h-full px-4">
-      <div className="text-center max-w-md">
-        <div className="w-16 h-16 lg:w-20 lg:h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Check className="w-8 h-8 lg:w-10 lg:h-10 text-[#10B981]" />
-        </div>
-        <h2 className="text-xl lg:text-3xl font-semibold text-gray-800 mb-4">
-          Welcome to Seats Brokers!
-        </h2>
-        <p className="text-gray-600 mb-6 text-sm lg:text-base">
-          Your seller account has been successfully created and documents have
-          been signed. You can now start selling tickets on our platform.
-        </p>
-        <div className="space-y-4">
-          <button className="w-full bg-[#10B981] text-white py-3 px-6 rounded-lg font-medium hover:bg-emerald-600 transition-colors">
-            Start Selling
-          </button>
-          <button className="w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-50 transition-colors">
-            Go to Dashboard
-          </button>
-        </div>
-      </div>
+  // Stepper Component
+  const renderStepper = () => (
+    <div className="space-y-4">
+      {stepperSteps.map((step, index) => {
+        const isCompleted = currentStep > step.id;
+        const isActive = currentStep === step.id;
+        const IconComponent = step.icon;
+
+        return (
+          <div key={step.id} className="flex items-center gap-3">
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
+                isCompleted
+                  ? "bg-[#10B981] text-white"
+                  : isActive
+                  ? "bg-[#10B981] text-white"
+                  : "bg-gray-200 text-gray-500"
+              }`}
+            >
+              {isCompleted ? (
+                <CheckCircle className="w-5 h-5" />
+              ) : (
+                <IconComponent className="w-5 h-5" />
+              )}
+            </div>
+            <div className="flex-1">
+              <h4
+                className={`font-medium transition-colors ${
+                  isCompleted || isActive ? "text-gray-800" : "text-gray-500"
+                }`}
+              >
+                {step.title}
+              </h4>
+              <p
+                className={`text-sm transition-colors ${
+                  isCompleted || isActive ? "text-gray-600" : "text-gray-400"
+                }`}
+              >
+                {step.description}
+              </p>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 
@@ -806,126 +873,89 @@ const SignupFlow = () => {
         return renderStep2();
       case 3:
         return renderStep3();
-      case 4:
-        return renderStep4();
       default:
         return renderStep1();
     }
   };
 
-  // Get the actual progress percentage
-  const progressPercentage = calculateProgress();
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-emerald-50 flex">
-      {/* Left Sidebar - Hidden on mobile for step 3 */}
-      <div
-        className={`${
-          currentStep === 3
-            ? "hidden lg:flex lg:w-1/4"
-            : "hidden lg:flex lg:w-2/5"
-        } flex-col justify-between p-6 lg:p-8 text-gray-800 bg-gradient-to-br from-gray-50 via-white to-emerald-50 border-r border-gray-200 relative overflow-hidden`}
-      >
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-20 left-10 w-32 h-32 bg-[#10B981] rounded-full blur-3xl"></div>
-          <div className="absolute bottom-40 right-10 w-24 h-24 bg-emerald-300 rounded-full blur-2xl"></div>
-          <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-[#10B981] rounded-full blur-xl"></div>
-        </div>
-
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-8 lg:mb-12">
-            <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-[#10B981] via-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg lg:text-xl">
-                SB
-              </span>
+    <div className="min-h-screen lg:min-h-screen min-h-[100dvh] bg-gradient-to-br from-gray-50 via-white to-emerald-50 flex flex-col lg:flex-row">
+      {/* Left Sidebar */}
+      <div className="hidden lg:flex lg:w-2/5 flex-col justify-between p-6 lg:p-8 text-gray-800 bg-white border-r border-gray-200">
+        <div>
+          {/* Header with Sign In */}
+          <div className="flex items-center justify-between mb-8 lg:mb-12">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-[#10B981] via-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-lg lg:text-xl">
+                  SB
+                </span>
+              </div>
+              <div>
+                <span className="text-lg lg:text-xl font-bold text-gray-800">
+                  SEATS BROKERS
+                </span>
+                <p className="text-xs lg:text-sm text-emerald-600 font-medium">
+                  Global Ticket Sales
+                </p>
+              </div>
             </div>
-            <div>
-              <span className="text-lg lg:text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                SEATS BROKERS
-              </span>
-              <p className="text-xs lg:text-sm text-emerald-600 font-medium">
-                Powering Global Ticket Sales
-              </p>
-            </div>
-          </div>
-
-          <div className="mb-6 lg:mb-8">
-            <h1 className="text-2xl lg:text-3xl font-bold mb-4 text-gray-800 leading-tight">
-              Join the world's most trusted ticket selling platform for
-              professionals.
-            </h1>
-          </div>
-
-          <div className="mb-6 lg:mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm font-medium text-gray-700">
-                Step {currentStep} of {totalSteps}
-              </span>
-              <span className="text-xs text-gray-500">
-                {Math.round(progressPercentage)}% complete
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2.5 shadow-inner">
-              <div
-                className="bg-gradient-to-r from-[#10B981] to-emerald-400 h-2.5 rounded-full transition-all duration-500 ease-out shadow-sm"
-                style={{ width: `${progressPercentage}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="bg-white/80 backdrop-blur-sm p-4 lg:p-6 rounded-xl border border-gray-200/50 shadow-sm">
-            <div className="flex items-center gap-2 mb-3">
-              <LogIn className="w-5 h-5 text-[#10B981]" />
-              <h3 className="font-semibold text-gray-800">
-                Already have an account?
-              </h3>
-            </div>
-            <p className="text-sm text-gray-600 mb-4">
-              Sign in to access your seller dashboard and manage your listings.
-            </p>
             <button
               onClick={handleLogin}
-              className="w-full bg-gradient-to-r from-[#10B981] to-emerald-500 text-white py-2.5 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-emerald-600 transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 text-[#10B981] hover:bg-emerald-50 rounded-lg font-medium transition-colors border border-[#10B981]"
             >
               <LogIn className="w-4 h-4" />
-              Sign In to Dashboard
+              Sign In
             </button>
+          </div>
+
+          <div className="mb-8">
+            <h1 className="text-2xl lg:text-3xl font-bold mb-4 text-gray-800 leading-tight">
+              Join the world's most trusted ticket selling platform.
+            </h1>
+            <p className="text-gray-600 text-base">
+              Start selling tickets with confidence and reach millions of buyers
+              worldwide.
+            </p>
+          </div>
+
+          {/* Stepper */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Registration Progress
+            </h3>
+            {renderStepper()}
           </div>
         </div>
 
-        <div className="text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-200/50">
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-200">
             <div className="w-2 h-2 bg-[#10B981] rounded-full animate-pulse"></div>
             <span className="text-[#10B981] text-sm font-medium">
-              Global reach. Trusted sales.
+              Secure & Trusted Platform
             </span>
           </div>
         </div>
       </div>
 
       {/* Right Content Area */}
-      <div
-        className={`${
-          currentStep === 3 ? "flex-1" : "flex-1"
-        } bg-white flex flex-col`}
-      >
+      <div className="flex-1 bg-white flex flex-col min-h-[100dvh] lg:min-h-screen">
         {/* Mobile Header */}
         <div className="lg:hidden bg-white border-b border-gray-200 sticky top-0 z-50">
           {/* Top Sign In Section */}
           <div className="bg-gradient-to-r from-emerald-50 to-green-50 px-4 py-2 border-b border-emerald-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <LogIn className="w-4 h-4 text-[#10B981]" />
                 <span className="text-sm text-gray-600">
                   Already have an account?
                 </span>
               </div>
               <button
                 onClick={handleLogin}
-                className="text-sm font-medium text-[#10B981] hover:text-emerald-700 transition-colors"
+                className="text-sm font-medium text-[#10B981] hover:text-emerald-700 transition-colors flex items-center gap-1"
               >
-                Sign In →
+                <LogIn className="w-3 h-3" />
+                Sign In
               </button>
             </div>
           </div>
@@ -954,36 +984,77 @@ const SignupFlow = () => {
               </button>
             </div>
 
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">
-                Step {currentStep} of {totalSteps}
-              </span>
-              <span className="text-xs text-gray-500">
-                {Math.round(progressPercentage)}% complete
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-[#10B981] to-emerald-400 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${progressPercentage}%` }}
-              />
+            {/* Mobile Stepper */}
+            <div className="mb-3">
+              <div className="flex items-center justify-between relative">
+                {stepperSteps.map((step, index) => {
+                  const isCompleted = currentStep > step.id;
+                  const isActive = currentStep === step.id;
+                  const IconComponent = step.icon;
+
+                  return (
+                    <div
+                      key={step.id}
+                      className="flex flex-col items-center flex-1 relative"
+                    >
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 transition-all duration-200 relative z-10 ${
+                          isCompleted
+                            ? "bg-[#10B981] text-white"
+                            : isActive
+                            ? "bg-[#10B981] text-white"
+                            : "bg-gray-200 text-gray-500"
+                        }`}
+                      >
+                        {isCompleted ? (
+                          <CheckCircle className="w-4 h-4" />
+                        ) : (
+                          <IconComponent className="w-4 h-4" />
+                        )}
+                      </div>
+                      <span
+                        className={`text-xs font-medium text-center ${
+                          isCompleted || isActive
+                            ? "text-gray-800"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {step.title}
+                      </span>
+                      {index < stepperSteps.length - 1 && (
+                        <div
+                          className={`absolute top-4 left-full w-full h-0.5 -z-10 ${
+                            isCompleted ? "bg-[#10B981]" : "bg-gray-200"
+                          }`}
+                          style={{
+                            width: `calc(100% - 16px)`,
+                            marginLeft: "8px",
+                          }}
+                        ></div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col lg:overflow-hidden">
-          {renderCurrentStep()}
+        {/* Main Content - Scrollable */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto">{renderCurrentStep()}</div>
         </div>
 
-        {/* Bottom Navigation - Sticky on Mobile */}
-        <div className="p-4 lg:p-6 border-t bg-white lg:relative sticky bottom-0 z-40 shadow-lg lg:shadow-none">
+        {/* Bottom Navigation - Sticky Footer */}
+        <div className="p-4 lg:p-6 border-t bg-white sticky bottom-0 z-40 shadow-lg lg:shadow-none">
           <div className="flex justify-between max-w-2xl mx-auto">
             <button
               onClick={handleBack}
-              disabled={currentStep === 1 || currentStep === 4}
+              disabled={
+                currentStep === 1 || currentStep === 3 || currentStep === 4
+              }
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                currentStep === 1 || currentStep === 4
+                currentStep === 1 || currentStep === 3 || currentStep === 4
                   ? "text-gray-400 cursor-not-allowed"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
@@ -1007,7 +1078,7 @@ const SignupFlow = () => {
                 className={`flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center ${
                   !userType
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg"
+                    : "bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg cursor-pointer"
                 }`}
               >
                 <span>Next</span>
@@ -1047,6 +1118,30 @@ const SignupFlow = () => {
                     <ChevronLeft className="w-4 h-4 rotate-180" />
                   </>
                 )}
+              </button>
+            )}
+
+            {currentStep === 3 && (
+              <button
+                onClick={() => {
+                  toast.info(
+                    "After Email Verification you can login to your account and continue with the KYC process."
+                  );
+                }} //setCurrentStep(4)
+                className="flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg"
+              >
+                <span>Continue to KYC</span>
+                <ChevronLeft className="w-4 h-4 rotate-180" />
+              </button>
+            )}
+
+            {currentStep === 4 && (
+              <button
+                onClick={handleLogin}
+                className="flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg"
+              >
+                <span>Go to Login</span>
+                <LogIn className="w-4 h-4" />
               </button>
             )}
           </div>
