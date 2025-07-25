@@ -171,7 +171,7 @@ export const fetchDashboardPageDetails = async (token) => {
       dashboardAwaitingDelivery(token, { date_format: "today" }),
       dashboardActivity(token),
       dashboardNotifications(token),
-      topSellingEvents(token, { date_format: "last_60days" }),
+      topSellingEvents(token, { date_format: "last_180days" }),
       // dashbordTrade(token),
       dashbordReports(token),
       LMTpurchaseTracking(token),

@@ -5,6 +5,64 @@ import { IconStore } from "@/utils/helperFunctions/iconStore";
 import ChevronRight from "@/components/commonComponents/filledChevron/chevronRight";
 import TooltipWrapper from "@/components/TooltipWrapper";
 
+// Utility function to format dates
+const formatDate = (dateString, format = "default") => {
+  if (!dateString) return "";
+
+  // Check if it's a valid date string
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString; // Return original if not a valid date
+
+  const options = {
+    default: {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    },
+    dateOnly: {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+    },
+    timeOnly: {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    },
+    full: {
+      year: "numeric",
+      month: "long",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    },
+  };
+
+  return date.toLocaleDateString("en-US", options[format] || options.default);
+};
+
+// Function to detect if a string is a date format
+const isDateString = (value) => {
+  if (typeof value !== "string") return false;
+
+  // Common date patterns
+  const datePatterns = [
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{6})?Z?$/, // ISO format
+    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/, // SQL datetime format
+    /^\d{4}-\d{2}-\d{2}$/, // Date only format
+  ];
+
+  return (
+    datePatterns.some((pattern) => pattern.test(value)) &&
+    !isNaN(Date.parse(value))
+  );
+};
+
 // Shimmer loading component for table cells
 const ShimmerCell = ({ width = "100%" }) => (
   <div
@@ -32,6 +90,7 @@ const StickyDataTable = ({
   onScrollEnd = null, // New prop name,
   handleTicketMouseEnter = () => {},
   handleTicketMouseLeave = () => {},
+  dateFormatConfig = {}, // New prop for date formatting configuration
 }) => {
   // Use whichever callback is provided
   const scrollEndCallback = onScrollEnd || fetchScrollEnd;
@@ -39,7 +98,12 @@ const StickyDataTable = ({
   // Calculate the width of sticky columns based on consistent sizing
   const maxStickyColumnsLength =
     rightStickyColumns.length > 0
-      ? Math.max(...rightStickyColumns.map((cols) => Array.isArray(cols) ? cols.length : 0), 0)
+      ? Math.max(
+          ...rightStickyColumns.map((cols) =>
+            Array.isArray(cols) ? cols.length : 0
+          ),
+          0
+        )
       : 0;
   const stickyColumnsWidth = maxStickyColumnsLength * 50; // 50px per column
 
@@ -65,6 +129,19 @@ const StickyDataTable = ({
 
   // Reference to the parent element that might have vertical scrolling
   const parentScrollRef = useRef(null);
+
+  // Function to get the appropriate date format for a column
+  const getDateFormat = (columnKey) => {
+    return dateFormatConfig[columnKey] || "default";
+  };
+
+  // Function to format cell value based on its type
+  const formatCellValue = (value, columnKey) => {
+    if (isDateString(value)) {
+      return formatDate(value, getDateFormat(columnKey));
+    }
+    return value;
+  };
 
   // Generate shimmer loading rows
   const renderShimmerRows = (count = 10) => {
@@ -348,21 +425,29 @@ const StickyDataTable = ({
   // Ensure rightStickyColumns matches displayData length
   const normalizedStickyColumns = useMemo(() => {
     // If rightStickyColumns is an array of arrays (one per row)
-    if (Array.isArray(rightStickyColumns) && rightStickyColumns.length > 0 && Array.isArray(rightStickyColumns[0])) {
+    if (
+      Array.isArray(rightStickyColumns) &&
+      rightStickyColumns.length > 0 &&
+      Array.isArray(rightStickyColumns[0])
+    ) {
       // If rightStickyColumns already matches displayData length, use it as-is
       if (rightStickyColumns.length === displayData.length) {
         return rightStickyColumns;
       }
-      
+
       // Otherwise, pad or truncate to match displayData length
-      return Array(displayData.length).fill(0).map((_, i) => 
-        i < rightStickyColumns.length ? rightStickyColumns[i] : []
-      );
+      return Array(displayData.length)
+        .fill(0)
+        .map((_, i) =>
+          i < rightStickyColumns.length ? rightStickyColumns[i] : []
+        );
     }
-    
+
     // If rightStickyColumns is just a single array of column configs (same for all rows)
     // or if it's something else, return empty arrays for each row
-    return Array(displayData.length).fill(0).map(_ => []);
+    return Array(displayData.length)
+      .fill(0)
+      .map((_) => []);
   }, [rightStickyColumns, displayData]);
 
   return (
@@ -409,7 +494,9 @@ const StickyDataTable = ({
 
               return (
                 <tr
-                  key={row.isShimmer ? `shimmer-${rowIndex}` : (row.id || rowIndex)}
+                  key={
+                    row.isShimmer ? `shimmer-${rowIndex}` : row.id || rowIndex
+                  }
                   className="border-b border-[#E0E1EA] bg-white hover:bg-gray-50"
                   onMouseEnter={() =>
                     handleTicketMouseEnter(row?.seat_category_id)
@@ -417,10 +504,16 @@ const StickyDataTable = ({
                   onMouseLeave={() => handleTicketMouseLeave()}
                 >
                   {regularHeaders?.map((header) => {
+                    const rawValue = row[header?.key];
+                    const formattedValue = formatCellValue(
+                      rawValue,
+                      header.key
+                    );
+
                     const displayText =
-                      typeof row[header?.key] == "string"
-                        ? row[header?.key]?.toLowerCase()
-                        : row[header?.key];
+                      typeof formattedValue == "string"
+                        ? formattedValue?.toLowerCase()
+                        : formattedValue;
 
                     return (
                       <td
@@ -457,8 +550,11 @@ const StickyDataTable = ({
                                  ? "text-[#0037D5]"
                                  : "text-[#343432]")
                              } capitalize`}
+                            title={
+                              isDateString(rawValue) ? rawValue : undefined
+                            } // Show original value on hover for dates
                           >
-                            {row[header?.key]}
+                            {formattedValue}
                           </span>
                         )}
                       </td>
@@ -484,7 +580,7 @@ const StickyDataTable = ({
               <thead>
                 <tr className="bg-white border-b border-[#E0E1EA]">
                   {rightStickyHeaders?.map((header, idx) => (
-                    <th 
+                    <th
                       key={`sticky-header-${idx}`}
                       className="py-2 px-2 text-left text-[#7D82A4] text-[13px] border-r-[1px] border-[#E0E1EA] font-medium whitespace-nowrap"
                     >
@@ -493,7 +589,9 @@ const StickyDataTable = ({
                   ))}
                   {maxStickyColumnsLength > rightStickyHeaders?.length && (
                     <th
-                      colSpan={maxStickyColumnsLength - rightStickyHeaders?.length}
+                      colSpan={
+                        maxStickyColumnsLength - rightStickyHeaders?.length
+                      }
                       className="py-2 px-2"
                     >
                       <div className="flex justify-end items-center">
@@ -525,7 +623,9 @@ const StickyDataTable = ({
                           }`}
                           aria-label="Scroll right"
                         >
-                          <ChevronRight color={canScrollRight ? "" : "#B4B7CB"} />
+                          <ChevronRight
+                            color={canScrollRight ? "" : "#B4B7CB"}
+                          />
                         </button>
                       </div>
                     </th>
@@ -589,13 +689,20 @@ const StickyDataTable = ({
                 }
 
                 // Get the row-specific sticky columns, or empty array if not defined
-                const rowStickyColumns = !loading && Array.isArray(normalizedStickyColumns[rowIndex]) 
-                  ? normalizedStickyColumns[rowIndex] 
-                  : [];
+                const rowStickyColumns =
+                  !loading && Array.isArray(normalizedStickyColumns[rowIndex])
+                    ? normalizedStickyColumns[rowIndex]
+                    : [];
 
                 return (
                   <tr
-                    key={row.isShimmer ? `shimmer-sticky-${rowIndex}` : (row.id ? `sticky-${row.id}` : `sticky-${rowIndex}`)}
+                    key={
+                      row.isShimmer
+                        ? `shimmer-sticky-${rowIndex}`
+                        : row.id
+                        ? `sticky-${row.id}`
+                        : `sticky-${rowIndex}`
+                    }
                     className="border-b border-[#E0E1EA] bg-white hover:bg-gray-50"
                   >
                     {/* Render shimmer for loading state or actual content */}

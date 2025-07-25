@@ -139,7 +139,7 @@ const NotificationsPopup = ({
   const { currentUser } = useSelector((state) => state.currentUser);
   const { notificationCountData } = useSelector((state) => state.common);
   const dispatch = useDispatch();
-
+console.log(notificationCountData, "notificationCountData");
   // API functions using your actual API calls
   const fetchNotificationHistoryData = async (page = 1, append = false) => {
     try {
@@ -802,19 +802,19 @@ const LeftMenuBar = () => {
 
   // Fetch notification count on component mount
   useEffect(() => {
-    if (!notificationCountData.isLoaded) {
+    // if (notificationCountData.isLoaded) {
       fetchNotificationCountForBadge();
-    }
-  }, []);
+    // }
+  }, [notificationCountData.isLoaded]);
 
   function getUnReadNotificationCount(notificationCountData) {
-    if (notificationCountData?.isLoaded) {
+    // if (notificationCountData?.isLoaded) {
       const notification = Number(notificationCountData?.notification) || 0;
       const activity = Number(notificationCountData?.activity) || 0;
 
-      return notification + activity;
-    }
-    return 0;
+      return notification;
+    // }
+    // return 0;
   }
 
   // Updated sales sub items to match your requirements with counts

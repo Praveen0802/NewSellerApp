@@ -1,5 +1,3 @@
-// Add this to your TabbedLayout component
-
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import SelectListItem from "../tradePage/components/selectListItem";
@@ -57,12 +55,20 @@ const TabbedLayout = ({
   onClearAllFilters,
   showSelectedFilterPills = false,
   hideVisibleColumns = false,
+  // New prop to receive transition direction from parent (only for specific components)
+  transitionDirection: parentTransitionDirection = null,
 }) => {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState(initialTab || tabs[0]?.key);
   const [checkboxValues, setCheckboxValues] = useState({});
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
+
+  // New states for transition handling
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionDirection, setTransitionDirection] = useState("next");
+  const [previousListItems, setPreviousListItems] = useState([]);
+  const [currentListItems, setCurrentListItems] = useState([]);
 
   // Initialize activeFilters with all filters checked by default
   const [activeFilters, setActiveFilters] = useState(() => {
@@ -136,6 +142,44 @@ const TabbedLayout = ({
         : false,
     }));
   };
+
+  // Handle transitions for list items when they change
+  useEffect(() => {
+    const newItems = getCurrentListItems();
+    const currentItemsString = JSON.stringify(
+      currentListItems.map((item) => ({ name: item.name, value: item.value }))
+    );
+    const newItemsString = JSON.stringify(
+      newItems.map((item) => ({ name: item.name, value: item.value }))
+    );
+
+    // Only trigger transition if the actual content has changed AND we have transition direction
+    if (
+      currentItemsString !== newItemsString &&
+      currentListItems.length > 0 &&
+      parentTransitionDirection
+    ) {
+      setPreviousListItems([...currentListItems]); // Create a copy
+      setIsTransitioning(true);
+      setTransitionDirection(parentTransitionDirection);
+
+      // Update items immediately but keep transition state
+      setCurrentListItems(newItems);
+
+      // End transition after animation completes
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setPreviousListItems([]);
+      }, 300); // Match CSS transition duration
+    } else {
+      // If no transition direction provided, just update without animation
+      setCurrentListItems(newItems);
+    }
+  }, [
+    JSON.stringify(listItemsConfig[selectedTab]),
+    checkboxValues,
+    parentTransitionDirection,
+  ]);
 
   // Get all available filters for current tab
   const getAvailableFilters = () => {
@@ -357,30 +401,96 @@ const TabbedLayout = ({
 
       <div className={containerClassName}>
         <div className="bg-white">
-          {/* List Items Section */}
-          <div className="px-[24px] py-[12px] border-b-[1px] border-[#E0E1EA] overflow-x-auto">
-            <div className="flex gap-4 flex-nowrap min-w-min md:min-w-0">
-              {getCurrentListItems()?.map((item, index) => (
-                <div key={index} className="min-w-[200px]">
-                  <AvailableList
-                    key={item.key || index}
-                    list={{
-                      name: item?.name,
-                      value: item?.value,
-                      showCheckbox: item?.showCheckbox,
-                      isChecked: item?.isChecked,
-                      onCheckChange:
-                        item?.showCheckbox && item?.key
-                          ? () => handleCheckboxToggle(item.key, item.isChecked)
-                          : undefined,
-                      onClick:
-                        item?.showCheckbox && item?.key
-                          ? () => handleCheckboxToggle(item.key, item.isChecked)
-                          : undefined,
-                    }}
-                  />
+          {/* List Items Section with Transitions */}
+          <div className="px-[24px] py-[12px] border-b-[1px] border-[#E0E1EA] overflow-hidden">
+            <div className="relative">
+              {/* Previous Items (sliding out) */}
+              {isTransitioning && previousListItems.length > 0 && (
+                <div
+                  className={`
+                    ${
+                      previousListItems?.length == 4
+                        ? "grid grid-cols-4 gap-4"
+                        : "flex gap-4 flex-nowrap"
+                    } min-w-min md:min-w-0 absolute inset-0 transition-transform duration-300 ease-in-out z-10
+                    ${
+                      transitionDirection === "next"
+                        ? "transform -translate-x-full"
+                        : "transform translate-x-full"
+                    }
+                  `}
+                >
+                  {previousListItems?.map((item, index) => (
+                    <div
+                      key={`previous-${item.key || index}-${Date.now()}`}
+                      className="min-w-[200px]"
+                    >
+                      <AvailableList
+                        list={{
+                          name: item?.name,
+                          value: item?.value,
+                          showCheckbox: item?.showCheckbox,
+                          isChecked: item?.isChecked,
+                          onCheckChange: undefined, // Disable interactions during transition
+                          onClick: undefined,
+                        }}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
+
+              {/* Current Items */}
+              <div
+                className={`
+                  ${
+                    currentListItems?.length == 4
+                      ? "grid grid-cols-4 gap-4"
+                      : "flex gap-4 flex-nowrap"
+                  } min-w-min md:min-w-0 transition-transform duration-300 ease-in-out
+                  ${
+                    isTransitioning
+                      ? "transform translate-x-0"
+                      : "transform translate-x-0"
+                  }
+                `}
+                style={{
+                  transform: isTransitioning
+                    ? "translateX(0)"
+                    : "translateX(0)",
+                  animation: isTransitioning
+                    ? transitionDirection === "next"
+                      ? "slideInFromRight 0.3s ease-in-out"
+                      : "slideInFromLeft 0.3s ease-in-out"
+                    : "none",
+                }}
+              >
+                {currentListItems?.map((item, index) => (
+                  <div
+                    key={`current-${item.key || index}-${Date.now()}`}
+                    className="min-w-[200px]"
+                  >
+                    <AvailableList
+                      list={{
+                        name: item?.name,
+                        value: item?.value,
+                        showCheckbox: item?.showCheckbox,
+                        isChecked: item?.isChecked,
+                        onCheckChange:
+                          item?.showCheckbox && item?.key && !isTransitioning
+                            ? () =>
+                                handleCheckboxToggle(item.key, item.isChecked)
+                            : undefined,
+                        onClick:
+                          item?.showCheckbox && item?.key && !isTransitioning
+                            ? () =>
+                                handleCheckboxToggle(item.key, item.isChecked)
+                            : undefined,
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -407,6 +517,53 @@ const TabbedLayout = ({
           )}
         </div>
       </div>
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes slideInFromRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+
+        @keyframes slideInFromLeft {
+          from {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+
+        @keyframes slideOutToLeft {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+        }
+
+        @keyframes slideOutToRight {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   );
 };

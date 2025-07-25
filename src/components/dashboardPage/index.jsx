@@ -47,7 +47,7 @@ const DashboardPage = (props) => {
   const [filters, setFilters] = useState({
     salesOverView: "last_180days",
     awaitingDelivery: "today",
-    topSelling: "last_60days",
+    topSelling: "last_180days",
     topSellingCategory: "", //allCategories
   });
 
@@ -382,21 +382,11 @@ const DashboardPage = (props) => {
         { value: "last_15days", label: "Last 15 days" },
         { value: "last_30days", label: "Last 30 days" },
         { value: "last_60days", label: "Last 60 days" },
+          { value: "last_180days", label: "Last 6 months" },
       ],
       selectedOption: filters.topSelling,
       onChange: (value) => {
         handleSelectOptionChange("topSelling", value);
-      },
-    },
-    secondSelect: {
-      options: [
-        { value: "allCategories", label: "All Categories" },
-        { value: "sports", label: "Sports" },
-        { value: "concerts", label: "Concerts" },
-      ],
-      selectedOption: filters.topSellingCategory,
-      onChange: (value) => {
-        handleSelectOptionChange("topSellingCategory", value);
       },
     },
     tableViews: {

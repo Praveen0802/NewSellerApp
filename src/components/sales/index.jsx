@@ -126,10 +126,10 @@ const SalesPage = (props) => {
   const getLogDetailsDetails = async (item) => {
     setPageLoader(true);
     const orderLogs = await fetchSalesOrderLogs("", {
-      booking_no: item?.bg_id,
+      booking_id: item?.bg_id,
     });
     const inventoryLogs = await fetchSalesInventoryLogs("", {
-      booking_no: item?.bg_id,
+      ticket_id: item?.bg_id,
     });
     setShowLogDetailsModal({
       flag: true,

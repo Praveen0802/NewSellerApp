@@ -17,6 +17,133 @@ import {
 } from "@/utils/apiHandler/request";
 import useTeamMembersDetails from "@/Hooks/useTeamMembersDetails";
 
+// Currency Slider Component
+const CurrencySlider = ({
+  overViewData,
+  onCurrencyChange,
+  setTransitionDirection,
+}) => {
+  // Extract currencies from the overview data
+  const getCurrencies = () => {
+    if (!overViewData) return [];
+
+    const currencies = new Set();
+    Object.keys(overViewData).forEach((key) => {
+      const parts = key.split("_");
+      const currency = parts[parts.length - 1];
+      if (["gbp", "usd", "eur", "aed"].includes(currency)) {
+        currencies.add(currency);
+      }
+    });
+
+    return Array.from(currencies);
+  };
+
+  const currencies = getCurrencies();
+  const [currentCurrencyIndex, setCurrentCurrencyIndex] = useState(0);
+  const currentCurrency = currencies[currentCurrencyIndex];
+
+  // Get currency symbol
+  const getCurrencySymbol = (currency) => {
+    const symbols = {
+      gbp: "£",
+      usd: "$",
+      eur: "€",
+      aed: "د.إ",
+    };
+    return symbols[currency] || currency.toUpperCase();
+  };
+
+  // Extract data for current currency
+  const getCurrentCurrencyData = () => {
+    if (!overViewData || !currentCurrency) return [];
+
+    const data = [];
+    const prefix = `total_sales_${currentCurrency}`;
+    const revenuePrefix = `total_revenue_${currentCurrency}`;
+    const payoutsPrefix = `total_payouts_${currentCurrency}`;
+    const ticketsPrefix = `tickets_sold_${currentCurrency}`;
+
+    if (overViewData[prefix] !== undefined) {
+      data.push({
+        name: "Total Sales",
+        value: overViewData[prefix],
+        key: `sales_${currentCurrency}`,
+      });
+    }
+
+    if (overViewData[revenuePrefix] !== undefined) {
+      data.push({
+        name: "Total Revenue",
+        value: overViewData[revenuePrefix],
+        key: `revenue_${currentCurrency}`,
+      });
+    }
+
+    if (overViewData[payoutsPrefix] !== undefined) {
+      data.push({
+        name: "Total Payouts",
+        value: overViewData[payoutsPrefix],
+        key: `payouts_${currentCurrency}`,
+      });
+    }
+
+    if (overViewData[ticketsPrefix] !== undefined) {
+      data.push({
+        name: "Tickets Sold",
+        value: overViewData[ticketsPrefix],
+        key: `tickets_${currentCurrency}`,
+      });
+    }
+
+    return data;
+  };
+
+  const handlePrevious = () => {
+    const newIndex =
+      currentCurrencyIndex === 0
+        ? currencies.length - 1
+        : currentCurrencyIndex - 1;
+    if (setTransitionDirection) {
+      setTransitionDirection("prev"); // Set direction BEFORE changing currency
+      // Reset direction after a short delay to prevent multiple triggers
+      setTimeout(() => setTransitionDirection(null), 100);
+    }
+    setCurrentCurrencyIndex(newIndex);
+    onCurrencyChange?.(currencies[newIndex]);
+  };
+
+  const handleNext = () => {
+    const newIndex =
+      currentCurrencyIndex === currencies.length - 1
+        ? 0
+        : currentCurrencyIndex + 1;
+    if (setTransitionDirection) {
+      setTransitionDirection("next"); // Set direction BEFORE changing currency
+      // Reset direction after a short delay to prevent multiple triggers
+      setTimeout(() => setTransitionDirection(null), 100);
+    }
+    setCurrentCurrencyIndex(newIndex);
+    onCurrencyChange?.(currencies[newIndex]);
+  };
+
+  const currentData = getCurrentCurrencyData();
+
+  if (currencies.length === 0) {
+    return [];
+  }
+
+  return {
+    data: currentData,
+    currentCurrency,
+    currencies,
+    currentCurrencyIndex,
+    handlePrevious,
+    handleNext,
+    getCurrencySymbol,
+  };
+};
+
 const RportHistory = (props) => {
   const [filtersApplied, setFiltersApplied] = useState({
     page: 1,
@@ -32,6 +159,10 @@ const RportHistory = (props) => {
   const [searchMatches, setSearchMatches] = useState([]);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [currentCurrency, setCurrentCurrency] = useState("gbp");
+
+  // Add transition direction state for currency slider
+  const [transitionDirection, setTransitionDirection] = useState(null);
 
   const [staticReportsData, setStaticReportsData] = useState(
     props?.response?.reportHistoryData?.value
@@ -41,6 +172,13 @@ const RportHistory = (props) => {
 
   // Debounce timer ref
   const debounceTimer = useRef(null);
+
+  // Get currency slider data with transition direction setter
+  const currencySliderResult = CurrencySlider({
+    overViewData,
+    onCurrencyChange: setCurrentCurrency,
+    setTransitionDirection: setTransitionDirection, // Pass the transition direction setter
+  });
 
   // Debounced search function
   const debouncedSearch = useCallback(async (query) => {
@@ -137,6 +275,7 @@ const RportHistory = (props) => {
     { key: "order_status", label: "Order Status" },
     { key: "payment_status", label: "Payment Status" },
   ];
+
   const createInitialVisibleColumns = () => {
     return headers.reduce((acc, header) => {
       acc[header.key] = true; // Set all columns as visible by default
@@ -159,15 +298,16 @@ const RportHistory = (props) => {
       [columnKey]: !prev[columnKey],
     }));
   };
+
   // Transform data for the table
   const transformedData = staticReportsData?.reports_history?.map((item) => ({
     ...item,
   }));
 
-  const getOrderDetails = async (bookingNo) => {
+  const getOrderDetails = async (item) => {
     setIsLoading(true);
     const salesData = await fetchReportsOrderDetails("", {
-      booking_no: bookingNo,
+      booking_id: item?.id,
     });
     setShowInfoPopup({
       flag: true,
@@ -176,13 +316,13 @@ const RportHistory = (props) => {
     setIsLoading(false);
   };
 
-  const getLogDetailsDetails = async (bookingNo) => {
+  const getLogDetailsDetails = async (item) => {
     setIsLoading(true);
     const orderLogs = await fetchReportsOrderLogs("", {
-      booking_no: bookingNo,
+      booking_id: item?.id,
     });
     const inventoryLogs = await fetchReportsInventoryLogs("", {
-      booking_no: bookingNo,
+      ticket_id: item?.id,
     });
     setShowLogDetailsModal({
       flag: true,
@@ -197,7 +337,7 @@ const RportHistory = (props) => {
     {
       icon: (
         <IconStore.clock
-          onClick={() => getOrderDetails(item.order_id)}
+          onClick={() => getLogDetailsDetails(item)}
           className="size-5"
         />
       ),
@@ -206,7 +346,7 @@ const RportHistory = (props) => {
     {
       icon: (
         <IconStore.eye
-          onClick={() => getLogDetailsDetails(item.order_id)}
+          onClick={() => getOrderDetails(item)}
           className="size-5"
         />
       ),
@@ -214,15 +354,72 @@ const RportHistory = (props) => {
     },
   ]);
 
-  // Configuration for list items (stats cards)
+  // Modified configuration for list items (stats cards) - now uses currency slider data
   const listItemsConfig = {
-    reports: Object.entries(overViewData).reduce(
-      (acc, [key, value]) => {
-        acc.push({ name: convertKeyToDisplayName(key), value });
-        return acc;
-      },
-      [] // Keep the array, but use push() instead of assignment
-    ),
+    reports: currencySliderResult.data || [],
+  };
+
+  // Currency navigation component for full width container
+  const CurrencyNavigationContainer = () => {
+    const {
+      currencies,
+      currentCurrencyIndex,
+      handlePrevious,
+      handleNext,
+      getCurrencySymbol,
+      currentCurrency,
+    } = currencySliderResult;
+
+    if (currencies.length <= 1) return null;
+
+    return (
+      <div className="relative flex items-center justify-center px-4 py-2 bg-gray-50 border-b border-gray-200">
+        {/* Left Arrow */}
+        <button
+          onClick={() => {
+            setTransitionDirection("prev"); // Set direction first
+            handlePrevious();
+            // Reset after short delay
+            setTimeout(() => setTransitionDirection(null), 100);
+          }}
+          className="absolute left-4 p-2 rounded-full hover:bg-gray-200 transition-colors z-10"
+          disabled={currencies.length <= 1}
+        >
+          <IconStore.chevronLeft className="w-5 h-5 text-gray-600" />
+        </button>
+
+        {/* Center Content */}
+        <div className="flex items-center gap-3">
+          <span className="text-lg font-semibold text-gray-700">
+            {getCurrencySymbol(currentCurrency)} {currentCurrency.toUpperCase()}
+          </span>
+          <div className="flex gap-2">
+            {currencies.map((currency, index) => (
+              <div
+                key={currency}
+                className={`w-3 h-3 rounded-full transition-colors ${
+                  index === currentCurrencyIndex ? "bg-blue-500" : "bg-gray-300"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Right Arrow */}
+        <button
+          onClick={() => {
+            setTransitionDirection("next"); // Set direction first
+            handleNext();
+            // Reset after short delay
+            setTimeout(() => setTransitionDirection(null), 100);
+          }}
+          className="absolute right-4 p-2 rounded-full hover:bg-gray-200 transition-colors z-10"
+          disabled={currencies.length <= 1}
+        >
+          <IconStore.chevronRight className="w-5 h-5 text-gray-600" />
+        </button>
+      </div>
+    );
   };
 
   const apiCall = async (params) => {
@@ -249,7 +446,6 @@ const RportHistory = (props) => {
     await apiCall(updatedFilters);
   };
 
-  // Configuration for filters
   // Configuration for filters
   const filterConfig = {
     reports: [
@@ -322,7 +518,7 @@ const RportHistory = (props) => {
       },
     ],
   };
-  console.log(filtersApplied, "filtersApplied");
+
   const handleScrollEnd = async () => {
     if (filtersApplied.page >= staticReportsData.meta.total_pages) return;
     setIsLoading(true);
@@ -397,6 +593,7 @@ const RportHistory = (props) => {
       }
     }
   };
+
   const handleExportCSV = async () => {
     setExportLoader(true);
 
@@ -450,18 +647,25 @@ const RportHistory = (props) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <TabbedLayout
-        initialTab="reports"
-        listItemsConfig={listItemsConfig}
-        filterConfig={filterConfig}
-        onTabChange={() => {}}
-        onColumnToggle={handleColumnToggle}
-        visibleColumns={visibleColumns}
-        onFilterChange={handleFilterChange}
-        currentFilterValues={{ ...filtersApplied, page: "" }}
-        showSelectedFilterPills={true}
-        onCheckboxToggle={() => {}}
-      />
+      <div className="bg-white">
+        {/* Currency navigation container */}
+        <CurrencyNavigationContainer />
+
+        <TabbedLayout
+          initialTab="reports"
+          listItemsConfig={listItemsConfig}
+          filterConfig={filterConfig}
+          onTabChange={() => {}}
+          onColumnToggle={handleColumnToggle}
+          visibleColumns={visibleColumns}
+          onFilterChange={handleFilterChange}
+          currentFilterValues={{ ...filtersApplied, page: "" }}
+          showSelectedFilterPills={true}
+          onCheckboxToggle={() => {}}
+          transitionDirection={transitionDirection} // Pass transition direction to TabbedLayout
+        />
+      </div>
+
       <LogDetailsModal
         show={showLogDetailsModal?.flag}
         onClose={() =>
