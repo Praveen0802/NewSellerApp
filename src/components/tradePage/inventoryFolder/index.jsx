@@ -26,6 +26,7 @@ import {
   isEmptyObject,
 } from "@/utils/helperFunctions";
 import {
+  AddFavouratesTracing,
   purchaseEvents,
   purchaseFavouratesTracking,
   purchaseTickets,
@@ -229,7 +230,7 @@ const InventoryFolder = (props) => {
       m_id: matchId,
       s_no: item?.s_no,
     };
-    const response = await purchaseFavouratesTracking("", "POST", payload);
+    const response = await AddFavouratesTracing("", "POST", payload);
     const updatedTicketDetails = displayTicketDetails?.map((ticket) => {
       if (ticket?.s_no == item?.s_no) {
         return {

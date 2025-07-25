@@ -3,12 +3,12 @@ import React, { useState, useRef, useEffect } from "react";
 import StatusBadge from "../reportsPage/components/statusbadge";
 import TableShimmer from "./tableShimmer";
 
-
 const CollapsablePaymentTable = ({
   sections,
   onRowClick,
   selectedTab,
   isLoading = false,
+  tableType = "reports", // "reports" or "payout"
 }) => {
   const [expandedSections, setExpandedSections] = useState(
     sections?.map((_, index) => index === 0) || []
@@ -61,6 +61,32 @@ const CollapsablePaymentTable = ({
     );
   }
 
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "paid":
+        return "text-green-600";
+      case "pending":
+        return "text-yellow-600";
+      case "processing":
+        return "text-blue-600";
+      case "failed":
+      case "rejected":
+        return "text-red-600";
+      case "approved":
+        return "text-green-600";
+      default:
+        return "text-gray-600";
+    }
+  };
+
+  // Function to determine the transaction type for onRowClick based on table type
+  const getTransactionType = () => {
+    if (tableType === "payout") {
+      return "payout";
+    }
+    return selectedTab === "transaction" ? "transaction" : "wallet";
+  };
+
   return (
     <div className="w-full flex flex-col gap-4 mobile:gap-2">
       {sections.map((section, sectionIndex) => (
@@ -71,7 +97,7 @@ const CollapsablePaymentTable = ({
               !expandedSections[sectionIndex]
                 ? "rounded-[6px]"
                 : "rounded-t-[6px]"
-            } bg-[#343432]  text-white px-4 py-3 cursor-pointer mobile:px-3 mobile:py-2`}
+            } bg-[#343432] text-white px-4 py-3 cursor-pointer mobile:px-3 mobile:py-2`}
             onClick={() => toggleSection(sectionIndex)}
           >
             <h3 className="text-[14px] font-semibold mobile:text-xs">
@@ -133,20 +159,21 @@ const CollapsablePaymentTable = ({
                     return (
                       <tr key={rowIndex} className="mobile:text-xs">
                         {Object.entries(row).map(([key, values], cellIndex) => {
-                          if (key == "id") return null;
+                          if (key === "id") return null;
+                          
                           const statusKey = key === "status";
                           const eyeKey = key === "eye";
                           const isFirstCell = cellIndex === 0;
                           const isLastCell =
                             cellIndex ===
-                            Object.keys(row).filter((k) => k !== "id").length -
-                              1;
+                            Object.keys(row).filter((k) => k !== "id").length - 1;
 
-                          // Format payment method to show credited/debited with appropriate sign
+                          // Format payment method for transaction/wallet tabs only
                           let displayValue = values;
                           let icon = null;
 
-                          if (key === "paymentMethod") {
+                          // Only show credit/debit formatting for reports page (transaction/wallet tabs)
+                          if (key === "paymentMethod" && tableType === "reports") {
                             if (values?.toLowerCase() === "credit") {
                               icon = (
                                 <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-100 mr-1">
@@ -168,12 +195,7 @@ const CollapsablePaymentTable = ({
                             <td
                               onClick={() => {
                                 eyeKey &&
-                                  onRowClick(
-                                    row,
-                                    selectedTab == "transaction"
-                                      ? "transaction"
-                                      : "wallet"
-                                  );
+                                  onRowClick(row, getTransactionType());
                               }}
                               className={`py-3 pl-4 mobile:py-2 mobile:pl-2 ${
                                 key === "eye" && "w-[56px] hover:bg-gray-100"
@@ -182,14 +204,13 @@ const CollapsablePaymentTable = ({
                               } border-[#E0E1EA] ${
                                 eyeKey && "border-l-[1px] cursor-pointer"
                               } ${
-                                key === "paymentMethod" && values === "credit"
+                                // Different styling logic for reports vs payout
+                                tableType === "reports" && key === "paymentMethod" && values === "credit"
                                   ? "text-green-500"
-                                  : key === "paymentMethod" &&
-                                    values === "debit"
+                                  : tableType === "reports" && key === "paymentMethod" && values === "debit"
                                   ? "text-red-500"
-                                  : cellIndex === section.headers.length - 1 &&
-                                    (values === "Sent" || values === "Approved")
-                                  ? "text-green-400"
+                                  : statusKey
+                                  ? getStatusColor(values)
                                   : "text-[#343432]"
                               } ${
                                 isFirstCell
@@ -208,7 +229,7 @@ const CollapsablePaymentTable = ({
                                 <IconStore.eye className="stroke-black size-4 mobile:size-3" />
                               ) : statusKey ? (
                                 <StatusBadge status={values} />
-                              ) : key === "paymentMethod" ? (
+                              ) : key === "paymentMethod" && tableType === "reports" ? (
                                 <div className="flex items-center">
                                   {icon}
                                   <span

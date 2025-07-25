@@ -66,8 +66,19 @@ const ConfirmPurchasePopup = ({ onClose }) => {
     setSelectedPayment(name);
   };
 
-  const handleAddressChange = (id) => {
+  const handleAddressChange = (id, field) => {
+    console.log(field, "fieldfieldfield");
     setSelectedAddress(id);
+    setFormFieldValues({
+      ...formFieldValues,
+      first_name: field?.first_name,
+      last_name: field?.last_name,
+      email: field?.email,
+      dialing_code: field?.phone_code,
+      mobile_no: field?.mobile_number,
+      country: field?.country_id,
+      city: field?.city_id,
+    });
   };
 
   const { allCountryCodeOptions } = useCountryCodes();
@@ -102,6 +113,22 @@ const ConfirmPurchasePopup = ({ onClose }) => {
       setSelectedAddress(
         addressDetails?.value?.findIndex((item) => item.primary_address == 1)
       );
+      const address = addressDetails?.value?.filter(
+        (item) => item.primary_address == 1
+      );
+      const primaryAddress = address[0];
+      setFormFieldValues({
+        ...formFieldValues,
+        first_name: primaryAddress?.first_name,
+        last_name: primaryAddress?.last_name,
+        email: primaryAddress?.email,
+        dialing_code: primaryAddress?.phone_code,
+        mobile_no: primaryAddress?.mobile_number,
+        country: primaryAddress?.country_id,
+        city: primaryAddress?.city_id,
+        address: primaryAddress?.address,
+      });
+      console.log(address, "address");
     } catch (error) {
       toast.error("Failed to load address and payment details");
     }
@@ -129,10 +156,10 @@ const ConfirmPurchasePopup = ({ onClose }) => {
   };
 
   useEffect(() => {
-    if (formFieldValues?.country_id) {
-      fetchCityDetails(formFieldValues?.country_id);
+    if (formFieldValues?.country) {
+      fetchCityDetails(formFieldValues?.country);
     }
-  }, [formFieldValues?.country_id]);
+  }, [formFieldValues?.country]);
 
   const handleInputAdressChange = (e, key, type) => {
     const value = type == "select" ? e : e.target.value;
@@ -265,19 +292,20 @@ const ConfirmPurchasePopup = ({ onClose }) => {
           cart_id: response?.cart_id,
           lang: "en",
           client_country: "IN",
-          ...(selectedAddress == "other"
-            ? {
-                first_name: formFieldValues?.first_name,
-                last_name: formFieldValues?.last_name,
-                email: formFieldValues?.email,
-                mobile_no: formFieldValues?.mobile_no,
-                dialing_code: `${formFieldValues?.dialing_code}`,
-                country_id: `${formFieldValues?.country_id}`,
-                city: `${formFieldValues?.city}`,
-              }
-            : {
-                billing_address_id: `${addressDetails?.[selectedAddress]?.id}`,
-              }),
+          // ...(selectedAddress == "other"
+          //   ? {
+          first_name: formFieldValues?.first_name,
+          last_name: formFieldValues?.last_name,
+          email: formFieldValues?.email,
+          mobile_no: formFieldValues?.mobile_no,
+          dialing_code: `${formFieldValues?.dialing_code}`,
+          country: `${formFieldValues?.country}`,
+          city: `${formFieldValues?.city}`,
+          address: `${formFieldValues?.address}`,
+          // }
+          // : {
+          //     billing_address_id: `${addressDetails?.[selectedAddress]?.id}`,
+          //   }),
           payment_method: `${paymentMethod}`,
         };
 
@@ -291,10 +319,15 @@ const ConfirmPurchasePopup = ({ onClose }) => {
         setAdyenBookingId(apiResponse?.booking_id);
 
         if (apiResponse?.guest_data?.length > 0) {
-          const guestData = apiResponse?.guest_data;
-          setGuestDetails(guestData);
-          setLoader(false);
-          return;
+          const guestKey = apiResponse?.guest_data?.some((guest) => {
+            return guest?.required_fields?.length > 0;
+          });
+          if (guestKey) {
+            const guestData = apiResponse?.guest_data;
+            setGuestDetails(guestData);
+            setLoader(false);
+            return;
+          }
         }
         if (apiResponse?.status == "success") {
           paymentSubmit(

@@ -81,7 +81,6 @@ const SalesPage = (props) => {
 
     setPageLoader(false);
   };
-
   // Dynamically create initial visible columns state from allHeaders
   const createInitialVisibleColumns = () => {
     return allHeaders.reduce((acc, header) => {
@@ -112,10 +111,10 @@ const SalesPage = (props) => {
   // Filter headers based on visibility
   const headers = allHeaders.filter((header) => visibleColumns[header.key]);
 
-  const getOrderDetails = async (bookingNo) => {
+  const getOrderDetails = async (item) => {
     setPageLoader(true);
     const salesData = await fetchSalesOrderDetails("", {
-      booking_no: bookingNo,
+      booking_id: item?.bg_id,
     });
     setShowInfoPopup({
       flag: true,
@@ -124,13 +123,13 @@ const SalesPage = (props) => {
     setPageLoader(false);
   };
 
-  const getLogDetailsDetails = async (bookingNo) => {
+  const getLogDetailsDetails = async (item) => {
     setPageLoader(true);
     const orderLogs = await fetchSalesOrderLogs("", {
-      booking_no: bookingNo,
+      booking_no: item?.bg_id,
     });
     const inventoryLogs = await fetchSalesInventoryLogs("", {
-      booking_no: bookingNo,
+      booking_no: item?.bg_id,
     });
     setShowLogDetailsModal({
       flag: true,
@@ -139,13 +138,12 @@ const SalesPage = (props) => {
     });
     setPageLoader(false);
   };
-
   // Create right sticky columns with action buttons
   const rightStickyColumns = salesData.map((item) => [
     {
       icon: (
         <Clock
-          onClick={() => getLogDetailsDetails(item?.bg_id)}
+          onClick={() => getLogDetailsDetails(item)}
           className="size-4"
         />
       ),
@@ -153,7 +151,7 @@ const SalesPage = (props) => {
     },
     {
       icon: (
-        <Eye onClick={() => getOrderDetails(item?.bg_id)} className="size-5" />
+        <Eye onClick={() => getOrderDetails(item)} className="size-5" />
       ),
       className: " cursor-pointer",
     },

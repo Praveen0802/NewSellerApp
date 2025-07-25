@@ -24,12 +24,14 @@ import Button from "../commonComponents/button";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import FloatingDateRange from "../commonComponents/dateRangeInput";
 import { getAuthToken } from "@/utils/helperFunctions";
+import SelectListItem from "../tradePage/components/selectListItem";
+import { useRouter } from "next/router";
 
 const ReportsPage = (props) => {
   const { apiData } = props;
-  console.log(apiData, "apiDataapiData");
-  const { account_data, deposit_history, transaction_history, countriesList } =
+  const { overview, deposit_history, transaction_history, countriesList } =
     apiData;
+
   const flagMap = {
     GBP: ukFlag,
     USD: usFlag,
@@ -43,13 +45,7 @@ const ReportsPage = (props) => {
     useState(transaction_history);
   const [depositHistory, setDepositHistory] = useState(deposit_history);
 
-  const [filterValues, setFilterValues] = useState({
-    paymentReference: "",
-    creditType: "",
-    dateRange: "",
-  });
-
-  const values = account_data?.map((item) => {
+  const values = overview?.map((item) => {
     return {
       icon: flagMap[item.currency],
       amount: item.balance_amount,
@@ -62,7 +58,7 @@ const ReportsPage = (props) => {
       },
     };
   });
-
+  const router = useRouter();
   const [tabSwitchLoader, setTabSwitchLoader] = useState(false);
   const [payOutPopup, setPayOutPopup] = useState({ flag: false, data: "" });
   const [eyeViewPopup, setEyeViewPopup] = useState({ flag: false, data: "" });
@@ -127,7 +123,6 @@ const ReportsPage = (props) => {
         data: { ...item, transactionType: transactionType },
       });
     }
-   
   };
 
   const getStatusText = (statusCode) => {
@@ -396,6 +391,7 @@ const ReportsPage = (props) => {
                   selectedTab={selectedTab}
                   onRowClick={handleEyeClick}
                   isLoading={isLoading}
+                  tableType="reports"
                 />
               )}
             </div>

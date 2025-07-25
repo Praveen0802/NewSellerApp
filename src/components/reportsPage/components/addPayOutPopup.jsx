@@ -1,7 +1,7 @@
 import Button from "@/components/commonComponents/button";
 import CustomModal from "@/components/commonComponents/customModal";
 import FormFields from "@/components/formFieldsComponent";
-import { fetchBankAccountDetails } from "@/utils/apiHandler/request";
+import { fetchBankAccountDetails, updateBankAccount } from "@/utils/apiHandler/request";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -158,7 +158,7 @@ const AddPayOutPopup = ({ show, onClose, item = {}, countriesList }) => {
   const handleSubmit = async () => {
     setSubmitLoader(true);
     const bankId = item?.bank_id ? item?.bank_id : "";
-    const response = await fetchBankAccountDetails(
+    const response = await updateBankAccount(
       "",
       bankId,
       bankId ? "PUT" : "POST",
