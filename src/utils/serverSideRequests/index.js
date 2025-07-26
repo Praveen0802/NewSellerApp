@@ -41,6 +41,7 @@ import {
   payOutOverview,
   payOutHistory,
   payOutOrderHistory,
+  fetchAddHistoryFilters,
 } from "../apiHandler/request";
 
 export const fetchSettingsPageDetails = async (profile, token, ctx) => {
@@ -110,6 +111,14 @@ export const fetchSalesPageDetails = async (profile, token, ctx) => {
     tournamentList:
       tournamentList?.status === "fulfilled" ? tournamentList.value : null,
   };
+};
+
+export const getAddlistingPageData = async (token, matchId) => {
+  const response = await fetchAddHistoryFilters(token, {
+    match_id: matchId,
+    listing_type: "single",
+  });
+  return response;
 };
 
 export const fetchWalletPageDetails = async (token, index) => {

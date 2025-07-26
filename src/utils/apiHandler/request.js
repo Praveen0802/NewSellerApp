@@ -406,9 +406,6 @@ export const payOutOrderHistory = async (token, params) => {
   }
 };
 
-
-
-
 export const sendResetRequest = async (data) => {
   try {
     const response = await makeRequest({
@@ -588,6 +585,21 @@ export const fetchDepositHistoryMonthly = async (token, params) => {
   }
 };
 
+export const fetchAddHistoryFilters = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_ADD_LISTING_FILTERS,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchAddHistoryFilters", error);
+    throw error;
+  }
+};
+
 export const lmtOverview = async (token, params) => {
   try {
     const response = await makeRequest({
@@ -727,11 +739,7 @@ export const fetchUserDetails = async (
   }
 };
 
-export const editUserDetails = async (
-  token,
-  method = "GET",
-  params
-) => {
+export const editUserDetails = async (token, method = "GET", params) => {
   try {
     const response = await makeRequest({
       url: `${API_ROUTES.EDIT_USER_ID}`,
@@ -1316,12 +1324,7 @@ export const purchaseFavouratesTracking = async (
   }
 };
 
-export const AddFavouratesTracing = async (
-  token,
-  method = "GET",
-  data,
-  id
-) => {
+export const AddFavouratesTracing = async (token, method = "GET", data, id) => {
   try {
     const response = await makeRequest({
       url: `${API_ROUTES.ADD_PURCHASE_TRACKING}${id ? `/${id}` : ""}`,

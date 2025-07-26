@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import Button from "../commonComponents/button";
 import { useDispatch } from "react-redux";
 import { updateWalletPopupFlag } from "@/utils/redux/common/action";
@@ -12,6 +12,7 @@ import FloatingLabelInput from "../floatinginputFields";
 import FloatingSelect from "../floatinginputFields/floatingSelect";
 import FloatingDateRange from "../commonComponents/dateRangeInput";
 import { dateFormat } from "@/utils/helperFunctions";
+import { debounce, entries } from "lodash";
 import {
   ChevronUp,
   ChevronDown,
@@ -19,14 +20,29 @@ import {
   Edit,
   Trash2,
   Download,
+  Calendar1Icon,
+  Clock,
+  LocateIcon,
+  MapPin,
+  Loader2,
 } from "lucide-react";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import UploadTickets from "../ModalComponents/uploadTickets";
 import ScrollableAccordionTable from "../TicketsPage/scrollableTable";
 import ViewMapPopup from "./ViewMapPopup";
+import { FetchEventSearch } from "@/utils/apiHandler/request";
+import { useRouter } from "next/router";
+import SearchedList from "../tradePage/components/searchedList";
+import FormFields from "../formFieldsComponent";
 
 // Filter Dropdown Component
-const FilterDropdown = ({ isOpen, onClose, filterConfig, activeFilters, onFilterToggle }) => {
+const FilterDropdown = ({
+  isOpen,
+  onClose,
+  filterConfig,
+  activeFilters,
+  onFilterToggle,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -36,7 +52,7 @@ const FilterDropdown = ({ isOpen, onClose, filterConfig, activeFilters, onFilter
         <div className="p-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold">Search filters</h3>
         </div>
-        
+
         <div className="p-4">
           {filterConfig?.map((filter, index) => (
             <div key={index} className="flex items-center justify-between py-2">
@@ -50,12 +66,13 @@ const FilterDropdown = ({ isOpen, onClose, filterConfig, activeFilters, onFilter
             </div>
           ))}
         </div>
-        
+
         <div className="p-4 border-t border-gray-200">
           <button
             onClick={() => {
-              const allFilterNames = filterConfig?.map(filter => filter.name) || [];
-              allFilterNames.forEach(filterName => {
+              const allFilterNames =
+                filterConfig?.map((filter) => filter.name) || [];
+              allFilterNames.forEach((filterName) => {
                 if (!activeFilters.includes(filterName)) {
                   onFilterToggle(filterName);
                 }
@@ -72,12 +89,18 @@ const FilterDropdown = ({ isOpen, onClose, filterConfig, activeFilters, onFilter
 };
 
 // Column Dropdown Component
-const ColumnDropdown = ({ isOpen, onClose, headers, visibleColumns, onColumnToggle }) => {
+const ColumnDropdown = ({
+  isOpen,
+  onClose,
+  headers,
+  visibleColumns,
+  onColumnToggle,
+}) => {
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   if (!isOpen) return null;
 
-  const filteredHeaders = headers?.filter(header => 
+  const filteredHeaders = headers?.filter((header) =>
     header.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -88,7 +111,7 @@ const ColumnDropdown = ({ isOpen, onClose, headers, visibleColumns, onColumnTogg
         <div className="p-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold">Search columns</h3>
         </div>
-        
+
         <div className="p-4">
           <div className="mb-4">
             <input
@@ -99,7 +122,7 @@ const ColumnDropdown = ({ isOpen, onClose, headers, visibleColumns, onColumnTogg
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
             />
           </div>
-          
+
           {filteredHeaders?.map((header, index) => (
             <div key={index} className="flex items-center justify-between py-2">
               <span className="text-sm text-gray-700">{header.label}</span>
@@ -112,11 +135,11 @@ const ColumnDropdown = ({ isOpen, onClose, headers, visibleColumns, onColumnTogg
             </div>
           ))}
         </div>
-        
+
         <div className="p-4 border-t border-gray-200">
           <button
             onClick={() => {
-              headers?.forEach(header => {
+              headers?.forEach((header) => {
                 if (!visibleColumns.includes(header.key)) {
                   onColumnToggle(header.key);
                 }
@@ -132,13 +155,35 @@ const ColumnDropdown = ({ isOpen, onClose, headers, visibleColumns, onColumnTogg
   );
 };
 
-const AddInventoryPage = () => {
+const AddInventoryPage = (props) => {
+  const { matchId, response } = props;
+  console.log(response, "responseresponseresponse");
+
+  const {
+    block_data = {},
+    home_town = {},
+    notes_left = [],
+    notes_right = [],
+    restriction_left = [],
+    restriction_right = [],
+    split_details_left = [],
+    split_details_right = [],
+    split_types = [],
+    ticket_types = [],
+  } = response || {};
+
   const dispatch = useDispatch();
+  const matchDetails = response?.match_data?.[0];
   const [selectedRows, setSelectedRows] = useState([]);
-  const [isStickyExpanded, setIsStickyExpanded] = useState(false);
+  const [searchEventLoader, setSearchEventLoader] = useState(false);
+  const [searchedEvents, setSearchedEvents] = useState([]);
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [showViewPopup, setShowViewPopup] = useState(false);
-  
+  const [searchValue, setSearchValue] = useState(matchDetails?.match_name);
+
+  const router = useRouter();
+
+  const [filtersApplied, setFiltersApplied] = useState({});
   // Filter and column control states
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
@@ -158,8 +203,8 @@ const AddInventoryPage = () => {
       sectionBlock: "Block 1",
       row: "5",
       firstSeat: "3",
-      faceValue: 90000.00,
-      payoutPrice: 90000.00,
+      faceValue: 90000.0,
+      payoutPrice: 90000.0,
       benefits: "Premium view",
       restrictions: "No alcohol",
       dateToShip: "2024-11-20",
@@ -184,8 +229,8 @@ const AddInventoryPage = () => {
       sectionBlock: "Block 5",
       row: "12",
       firstSeat: "8",
-      faceValue: 65000.00,
-      payoutPrice: 65000.00,
+      faceValue: 65000.0,
+      payoutPrice: 65000.0,
       benefits: "Good view",
       restrictions: "None",
       dateToShip: "2024-11-19",
@@ -197,16 +242,8 @@ const AddInventoryPage = () => {
       status: "Pending",
       commission: 8,
       notes: "Standard seating area",
-    }
-  ]);
-
-  const selectedItem = [
-    {
-      matchName: "Manchester United FC vs AFC Bournemouth",
-      mathDate: "Sun, 10 Nov 2024",
-      matchTime: "16:30",
     },
-  ];
+  ]);
 
   // All available headers
   const allHeaders = [
@@ -244,14 +281,24 @@ const AddInventoryPage = () => {
         { value: "Apart", label: "Apart" },
       ],
     },
-    { key: "maxDisplayedTickets", label: "Max Displayed Tickets", editable: true, type: "number" },
+    {
+      key: "maxDisplayedTickets",
+      label: "Max Displayed Tickets",
+      editable: true,
+      type: "number",
+    },
     { key: "fanArea", label: "Fan Area", editable: true },
     { key: "category", label: "Category", editable: true },
     { key: "sectionBlock", label: "Section/Block", editable: true },
     { key: "row", label: "Row", editable: true },
     { key: "firstSeat", label: "First Seat", editable: true },
     { key: "faceValue", label: "Face Value", editable: true, type: "number" },
-    { key: "payoutPrice", label: "Payout Price", editable: true, type: "number" },
+    {
+      key: "payoutPrice",
+      label: "Payout Price",
+      editable: true,
+      type: "number",
+    },
     { key: "benefits", label: "Benefits", editable: true },
     { key: "restrictions", label: "Restrictions", editable: true },
     { key: "dateToShip", label: "Date to Ship", editable: true, type: "date" },
@@ -293,47 +340,183 @@ const AddInventoryPage = () => {
   ];
 
   // Helper functions for default states
-  const getAllFilterNames = () => filterConfig.map(f => f.name);
-  const getAllColumnKeys = () => allHeaders.map(h => h.key);
+  const getAllFilterNames = () => filterConfig.map((f) => f.name);
+  const getAllColumnKeys = () => allHeaders.map((h) => h.key);
 
   // State for active filters and visible columns - all enabled by default
   const [activeFilters, setActiveFilters] = useState(getAllFilterNames());
   const [visibleColumns, setVisibleColumns] = useState(getAllColumnKeys());
 
   // Filter headers based on visible columns
-  const headers = allHeaders.filter(header => visibleColumns.includes(header.key));
+  const headers = allHeaders.filter((header) =>
+    visibleColumns.includes(header.key)
+  );
 
   // Get filtered filter config based on active filters
   const getActiveFilterConfig = () => {
-    return filterConfig.filter(filter => activeFilters.includes(filter.name));
+    return filterConfig.filter((filter) => activeFilters.includes(filter.name));
   };
 
-  const renderListValue = (icon, text) => {
-    return (
-      <div className="flex gap-[8px] items-center">
-        {icon}
-        <p className="text-[12px] font-normal text-[#323A70] truncate">{text}</p>
-      </div>
-    );
+  const fetchApiCall = async (query) => {
+    if (!query.trim()) return; // Don't search for empty strings
+
+    try {
+      setSearchEventLoader(true);
+      setSearchedEvents([]);
+      const response = await FetchEventSearch("", { query });
+      setSearchedEvents(response?.events);
+      setSearchEventLoader(false);
+    } catch (error) {
+      setSearchEventLoader(false);
+      console.error("Search error:", error);
+    }
   };
 
-  const handleOpenAddWalletPopup = () => {
-    dispatch(
-      updateWalletPopupFlag({
-        flag: true,
-      })
-    );
+  // Create debounced version of the API call
+  const debouncedFetchApiCall = useCallback(
+    debounce((query) => {
+      fetchApiCall(query);
+    }, 300), // 300ms delay
+    []
+  );
+
+  const handleSearchedEventClick = (event) => {
+    router.push(`/add-listings/${event?.m_id}`);
+  };
+
+  const handleOnChangeEvents = (e) => {
+    const newValue = e.target.value;
+    setSearchValue(newValue);
+
+    // Call the debounced function
+    debouncedFetchApiCall(newValue);
   };
 
   const openUploadPopup = () => {
     setShowUploadPopup(true);
   };
 
+  const filters = [
+    {
+      type: "select",
+      name: "ticket_block",
+      label: "Block Data",
+      value: filtersApplied?.ticket_block,
+      options: Object.entries(block_data || {}).map(([key, value]) => ({
+        value: key,
+        label: value,
+      })),
+      parentClassName: "",
+      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      labelClassName: "!text-[11px]",
+    },
+    {
+      type: "select",
+      name: "home_town",
+      label: "Home Town",
+      value: filtersApplied?.home_town,
+      options: Object.entries(home_town || {}).map(([key, value]) => ({
+        value: key,
+        label: value,
+      })),
+      parentClassName: "",
+      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      labelClassName: "!text-[11px]",
+    },
+    {
+      type: "select",
+      name: "notes",
+      label: "Notes",
+      value: filtersApplied?.notes,
+      options: [
+        ...(notes_left?.map((note) => ({
+          value: note.id.toString(),
+          label: note.name,
+        })) || []),
+        ...(notes_right?.map((note) => ({
+          value: note.id.toString(),
+          label: note.name,
+        })) || []),
+      ],
+      parentClassName: "",
+      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      labelClassName: "!text-[11px]",
+    },
+    {
+      type: "select",
+      name: "home_town",
+      label: "Home Town",
+      value: filtersApplied?.home_town,
+      options: [
+        ...(restriction_left?.map((note) => ({
+          value: note.id.toString(),
+          label: note.name,
+        })) || []),
+        ...(restriction_right?.map((note) => ({
+          value: note.id.toString(),
+          label: note.name,
+        })) || []),
+      ],
+      parentClassName: "",
+      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      labelClassName: "!text-[11px]",
+    },
+    {
+      type: "select",
+      name: "split _details",
+      label: "Split Details",
+      value: filtersApplied?.split_details,
+      options: [
+        ...(split_details_left?.map((note) => ({
+          value: note.id.toString(),
+          label: note.name,
+        })) || []),
+        ...(split_details_right?.map((note) => ({
+          value: note.id.toString(),
+          label: note.name,
+        })) || []),
+      ],
+      parentClassName: "",
+      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      labelClassName: "!text-[11px]",
+    },
+    {
+      type: "select",
+      name: "split_types",
+      label: "Split Types",
+      value: filtersApplied?.split_types,
+      options: [
+        ...(split_types?.map((note) => ({
+          value: note.id.toString(),
+          label: note.name,
+        })) || []),
+      ],
+      parentClassName: "",
+      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      labelClassName: "!text-[11px]",
+    },
+    {
+      type: "select",
+      name: "ticket_types",
+      label: "Ticket Types",
+      value: filtersApplied?.ticket_types,
+      options: [
+        ...(ticket_types?.map((note) => ({
+          value: note.id.toString(),
+          label: note.name,
+        })) || []),
+      ],
+      parentClassName: "",
+      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      labelClassName: "!text-[11px]",
+    },
+  ];
+
   // Handle filter toggle from dropdown
   const handleFilterToggle = (filterName) => {
-    setActiveFilters(prev => {
+    setActiveFilters((prev) => {
       if (prev.includes(filterName)) {
-        return prev.filter(f => f !== filterName);
+        return prev.filter((f) => f !== filterName);
       } else {
         return [...prev, filterName];
       }
@@ -342,9 +525,9 @@ const AddInventoryPage = () => {
 
   // Handle column toggle from dropdown
   const handleColumnToggle = (columnKey) => {
-    setVisibleColumns(prev => {
+    setVisibleColumns((prev) => {
       if (prev.includes(columnKey)) {
-        return prev.filter(c => c !== columnKey);
+        return prev.filter((c) => c !== columnKey);
       } else {
         return [...prev, columnKey];
       }
@@ -354,7 +537,11 @@ const AddInventoryPage = () => {
   // Create right sticky columns for upload functionality
   const stickyColumns = inventoryData.map((_, index) => [
     {
-      icon: <p className="text-xs font-medium">£{(inventoryData[index]?.faceValue || 0) / 100}</p>,
+      icon: (
+        <p className="text-xs font-medium">
+          £{(inventoryData[index]?.faceValue || 0) / 100}
+        </p>
+      ),
       className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
     },
     {
@@ -373,23 +560,25 @@ const AddInventoryPage = () => {
   ]);
 
   // Single accordion item data wrapped in array for existing component
-  const accordionItems = [{
-    id: 1,
-    title: "Manchester United FC vs AFC Bournemouth",
-    date: "Sun, 10 Nov 2024",
-    time: "16:30",
-    venue: "Old Trafford, Manchester, United Kingdom",
-    available: inventoryData.length.toString(),
-    sold: "0",
-    views: "45",
-    data: inventoryData,
-    rightStickyColumns: stickyColumns,
-  }];
+  const accordionItems = [
+    {
+      id: 1,
+      title: "Manchester United FC vs AFC Bournemouth",
+      date: "Sun, 10 Nov 2024",
+      time: "16:30",
+      venue: "Old Trafford, Manchester, United Kingdom",
+      available: inventoryData.length.toString(),
+      sold: "0",
+      views: "45",
+      data: inventoryData,
+      rightStickyColumns: stickyColumns,
+    },
+  ];
 
   const handleCellEdit = (itemIndex, rowIndex, columnKey, value) => {
     console.log("Cell edited:", { itemIndex, rowIndex, columnKey, value });
-    setInventoryData(prevData => 
-      prevData.map((item, index) => 
+    setInventoryData((prevData) =>
+      prevData.map((item, index) =>
         index === rowIndex ? { ...item, [columnKey]: value } : item
       )
     );
@@ -412,17 +601,19 @@ const AddInventoryPage = () => {
   const handleClone = () => {
     console.log("Cloning selected rows:", selectedRows);
     // Get selected row data and create clones
-    const selectedRowsData = selectedRows.map(id => {
-      const rowId = id.split('-')[1];
-      return inventoryData.find(item => item.id === rowId);
-    }).filter(Boolean);
+    const selectedRowsData = selectedRows
+      .map((id) => {
+        const rowId = id.split("-")[1];
+        return inventoryData.find((item) => item.id === rowId);
+      })
+      .filter(Boolean);
 
-    const clonedRows = selectedRowsData.map(row => ({
+    const clonedRows = selectedRowsData.map((row) => ({
       ...row,
       id: `clone-${Date.now()}-${Math.random()}`,
     }));
 
-    setInventoryData(prevData => [...prevData, ...clonedRows]);
+    setInventoryData((prevData) => [...prevData, ...clonedRows]);
     setSelectedRows([]);
   };
 
@@ -438,9 +629,9 @@ const AddInventoryPage = () => {
 
   const handleDelete = () => {
     console.log("Deleting selected rows:", selectedRows);
-    const rowIdsToDelete = selectedRows.map(id => id.split('-')[1]);
-    setInventoryData(prevData => 
-      prevData.filter(item => !rowIdsToDelete.includes(item.id))
+    const rowIdsToDelete = selectedRows.map((id) => id.split("-")[1]);
+    setInventoryData((prevData) =>
+      prevData.filter((item) => !rowIdsToDelete.includes(item.id))
     );
     setSelectedRows([]);
   };
@@ -482,14 +673,41 @@ const AddInventoryPage = () => {
       ticketsInHand: "No",
       uploadTickets: "",
       deliveryMethod: "Email",
-      saleDate: new Date().toISOString().split('T')[0],
+      saleDate: new Date().toISOString().split("T")[0],
       eventDate: "2024-11-23",
       status: "Active",
       commission: 0,
       notes: "",
     };
 
-    setInventoryData(prevData => [...prevData, newListing]);
+    setInventoryData((prevData) => [...prevData, newListing]);
+  };
+
+  const searchedViewComponent = () => {
+    return (
+      <>
+        {searchedEvents?.length > 0 && (
+          <div className="max-h-[300px] overflow-y-auto p-5 flex flex-col gap-3 shadow-sm border border-[#E0E1EA]">
+            {searchedEvents?.map((item, index) => {
+              return (
+                <div
+                  key={index}
+                  onClick={() => handleSearchedEventClick(item)}
+                  className="hover:scale-105 cursor-pointer transition-transform duration-300"
+                >
+                  <SearchedList item={item} />
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {searchEventLoader && (
+          <div className="max-h-[300px] items-center justify-center overflow-y-auto p-5 flex flex-col gap-3 shadow-sm border border-[#E0E1EA]">
+            <Loader2 className="animate-spin" />
+          </div>
+        )}
+      </>
+    );
   };
 
   const selectedCount = selectedRows.length;
@@ -497,233 +715,180 @@ const AddInventoryPage = () => {
   return (
     <div className="bg-[#F5F7FA] w-full h-full relative">
       {/* Header with selected match info */}
-      <ViewMapPopup onClose={() => setShowViewPopup(false)} show={showViewPopup}/>
+      <ViewMapPopup
+        onClose={() => setShowViewPopup(false)}
+        show={showViewPopup}
+      />
       <div className="bg-white">
-        <div className="border-b-[1px] p-4 border-[#E0E1EA] flex flex-col gap-2">
-          <div className="w-full md:w-auto flex items-center justify-between">
-            {renderListValue(
-              <Image
-                src={blueLocation}
-                alt="location"
-                width={14}
-                height={14}
-              />,
-              "Old Trafford, Manchester, United Kingdom"
+        <div className="border-b-[1px] p-4  border-[#E0E1EA] flex justify-between items-center">
+          <div className="w-full flex items-center gap-4">
+            <FloatingLabelInput
+              key="searchMatch"
+              id="searchMatch"
+              name="searchMatch"
+              keyValue={"searchMatch"}
+              value={searchValue}
+              onChange={(e) => handleOnChangeEvents(e)}
+              type="text"
+              showDropdown={true}
+              dropDownComponent={searchedViewComponent()}
+              label="Search Mactch"
+              className={"!py-[7px] !px-[12px] !text-[#323A70] !text-[14px] "}
+              paddingClassName=""
+              autoComplete="off"
+              showDelete={true}
+              deleteFunction={() => {
+                setSearchValue("");
+                router.push("/add-listings");
+              }}
+              parentClassName="!w-[40%]"
+            />
+            {matchDetails && (
+              <div className="flex gap-3 items-center">
+                <div className="flex gap-1 items-center">
+                  <Calendar1Icon size={14} className="text-[#595c6d]" />
+                  <p className="text-[#3a3c42] text-[13px]">
+                    {matchDetails?.match_date_format}
+                  </p>
+                </div>
+                <div className="flex gap-1 items-center">
+                  <Clock size={14} className="text-[#595c6d]" />
+                  <p className="text-[#3a3c42] text-[13px]">
+                    {matchDetails?.match_time}
+                  </p>
+                </div>
+                <div className="flex gap-1 items-center">
+                  <MapPin size={14} className="text-[#595c6d]" />
+                  <p className="text-[#3a3c42] text-[13px]">
+                    {matchDetails?.stadium_name}
+                  </p>
+                </div>
+              </div>
             )}
-            <p onClick={() => setShowViewPopup(true)} className="text-[12px] font-semibold text-[#0137D5] cursor-pointer hover:underline">
+          </div>
+          {matchDetails && (
+            <p
+              onClick={() => setShowViewPopup(true)}
+              className="text-[12px] whitespace-nowrap font-semibold text-[#0137D5] cursor-pointer hover:underline"
+            >
               View Map
             </p>
-          </div>
-          <div className="flex flex-wrap gap-4">
-            {selectedItem.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-1 w-fit border-[1px] border-[#DADBE5] px-2 py-1 rounded-md"
-              >
-                <IconStore.close className="size-4 cursor-pointer" />
-                <p className="text-[#323A70] text-[14px] font-medium">
-                  {item.matchName}
-                </p>
-                {renderListValue(
-                  <Image
-                    src={blueCalendar}
-                    alt="calendar"
-                    width={14}
-                    height={14}
-                  />,
-                  item.mathDate
-                )}
-                {renderListValue(
-                  <Image
-                    src={blueClock}
-                    alt="clock"
-                    width={14}
-                    height={14}
-                  />,
-                  item.matchTime
-                )}
+          )}
+        </div>
+        {matchDetails && (
+          <>
+            {/* Filter Section with Control Icons */}
+            <div className="border-b-[1px] border-[#DADBE5] p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex gap-4 items-center w-[80%]">
+                  <FormFields formFields={filters} />
+                </div>
+
+                {/* Control Icons */}
+                <div className="flex gap-2 ml-4 relative">
+                  {/* Filter Icon */}
+                  <button
+                    ref={filterButtonRef}
+                    onClick={() => {
+                      setShowFilterDropdown(!showFilterDropdown);
+                      setShowColumnDropdown(false);
+                    }}
+                    className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                    title="Filter options"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46 22,3" />
+                    </svg>
+                  </button>
+
+                  {/* Column Icon */}
+                  <button
+                    ref={columnButtonRef}
+                    onClick={() => {
+                      setShowColumnDropdown(!showColumnDropdown);
+                      setShowFilterDropdown(false);
+                    }}
+                    className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+                    title="Column options"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <rect x="3" y="3" width="6" height="18" />
+                      <rect x="11" y="3" width="6" height="18" />
+                      <rect x="19" y="3" width="2" height="18" />
+                    </svg>
+                  </button>
+
+                  {/* Filter Dropdown */}
+                  <FilterDropdown
+                    isOpen={showFilterDropdown}
+                    onClose={() => setShowFilterDropdown(false)}
+                    filterConfig={filterConfig}
+                    activeFilters={activeFilters}
+                    onFilterToggle={handleFilterToggle}
+                  />
+
+                  {/* Column Dropdown */}
+                  <ColumnDropdown
+                    isOpen={showColumnDropdown}
+                    onClose={() => setShowColumnDropdown(false)}
+                    headers={allHeaders}
+                    visibleColumns={visibleColumns}
+                    onColumnToggle={handleColumnToggle}
+                  />
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Filter Section with Control Icons */}
-        <div className="border-b-[1px] border-[#DADBE5] p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex gap-4 items-center w-[80%]">
-              {getActiveFilterConfig().map((filter) => {
-                switch (filter.name) {
-                  case "selectedMatch":
-                    return (
-                      <FloatingLabelInput
-                        key={filter.name}
-                        id="selectedMatch"
-                        name="selectedMatch"
-                        keyValue={"selectedMatch"}
-                        type="text"
-                        label="Search Inventory"
-                        className={"!py-[7px] !px-[12px] !text-[#323A70] !text-[14px] "}
-                        paddingClassName=""
-                        autoComplete="off"
-                      />
-                    );
-                  case "ticket_type":
-                    return (
-                      <FloatingSelect
-                        key={filter.name}
-                        label={"Ticket Type"}
-                        options={[
-                          { value: "e-ticket", label: "E-ticket" },
-                          { value: "physical", label: "Physical" },
-                          { value: "mobile", label: "Mobile" },
-                        ]}
-                        keyValue="ticket_type"
-                        className=""
-                        paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
-                      />
-                    );
-                  case "inventory_status":
-                    return (
-                      <FloatingSelect
-                        key={filter.name}
-                        label={"Status"}
-                        keyValue="inventory_status"
-                        className=""
-                        paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
-                        options={[
-                          { value: "active", label: "Active" },
-                          { value: "pending", label: "Pending" },
-                          { value: "sold", label: "Sold" },
-                        ]}
-                      />
-                    );
-                  case "eventDate":
-                    return (
-                      <FloatingDateRange
-                        key={filter.name}
-                        id="eventDate"
-                        name="eventDate"
-                        keyValue="eventDate"
-                        parentClassName=""
-                        label="Event Date"
-                        subParentClassName=""
-                        className="!py-[8px] !px-[16px] mobile:text-xs"
-                      />
-                    );
-                  default:
-                    return null;
-                }
-              })}
             </div>
 
-            {/* Control Icons */}
-            <div className="flex gap-2 ml-4 relative">
-              {/* Filter Icon */}
-              <button
-                ref={filterButtonRef}
-                onClick={() => {
-                  setShowFilterDropdown(!showFilterDropdown);
-                  setShowColumnDropdown(false);
+            {/* Add Listings Button */}
+            <div className="flex justify-end px-4 py-2 border-b-[1px] border-[#E0E1EA]">
+              <Button
+                type="blueType"
+                classNames={{
+                  root: "px-2 md:px-3 py-1.5 md:py-2",
+                  label_: "text-xs md:text-sm font-medium",
                 }}
-                className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                title="Filter options"
-              >
-                <svg 
-                  width="16" 
-                  height="16" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2"
-                >
-                  <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46 22,3"/>
-                </svg>
-              </button>
-              
-              {/* Column Icon */}
-              <button
-                ref={columnButtonRef}
-                onClick={() => {
-                  setShowColumnDropdown(!showColumnDropdown);
-                  setShowFilterDropdown(false);
-                }}
-                className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                title="Column options"
-              >
-                <svg 
-                  width="16" 
-                  height="16" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2"
-                >
-                  <rect x="3" y="3" width="6" height="18"/>
-                  <rect x="11" y="3" width="6" height="18"/>
-                  <rect x="19" y="3" width="2" height="18"/>
-                </svg>
-              </button>
-              
-              {/* Filter Dropdown */}
-              <FilterDropdown
-                isOpen={showFilterDropdown}
-                onClose={() => setShowFilterDropdown(false)}
-                filterConfig={filterConfig}
-                activeFilters={activeFilters}
-                onFilterToggle={handleFilterToggle}
-              />
-
-              {/* Column Dropdown */}
-              <ColumnDropdown
-                isOpen={showColumnDropdown}
-                onClose={() => setShowColumnDropdown(false)}
-                headers={allHeaders}
-                visibleColumns={visibleColumns}
-                onColumnToggle={handleColumnToggle}
+                onClick={handleAddListing}
+                label="+ Add Listings"
               />
             </div>
-          </div>
-        </div>
-
-        {/* Add Listings Button */}
-        <div className="flex justify-end px-4 py-2 border-b-[1px] border-[#E0E1EA]">
-          <Button
-            type="blueType"
-            classNames={{
-              root: "px-2 md:px-3 py-1.5 md:py-2",
-              label_: "text-xs md:text-sm font-medium",
+          </>
+        )}
+      </div>
+      {matchDetails && (
+        <>
+          {/* Main Content Area with Single Accordion Table */}
+          <div
+            className="m-6 bg-white rounded max-h-[calc(100vh-400px)] overflow-auto"
+            style={{
+              marginBottom: "80px", // Add margin to ensure content is not hidden
             }}
-            onClick={handleAddListing}
-            label="+ Add Listings"
-          />
-        </div>
-      </div>
-
-      {/* Inventory Count Section */}
-      <div className="border-b-[1px] bg-white border-[#DADBE5] flex items-center">
-        <p className="text-[14px] p-4 text-[#323A70] font-medium border-r-[1px] border-[#DADBE5] w-fit">
-          {inventoryData.length} Inventory Items
-        </p>
-      </div>
-
-      {/* Main Content Area with Single Accordion Table */}
-      <div
-        className="m-6 bg-white rounded max-h-[calc(100vh-400px)] overflow-auto"
-        style={{
-          marginBottom: "80px", // Add margin to ensure content is not hidden
-        }}
-      >
-        <ScrollableAccordionTable
-          items={accordionItems}
-          headers={headers}
-          rightStickyHeaders={["Price", "Upload"]}
-          loading={false}
-          onCellEdit={handleCellEdit}
-          selectedRows={selectedRows}
-          onRowSelectionChange={handleRowSelectionChange}
-        />
-      </div>
-
+          >
+            <ScrollableAccordionTable
+              items={accordionItems}
+              headers={headers}
+              rightStickyHeaders={["Price", "Upload"]}
+              loading={false}
+              onCellEdit={handleCellEdit}
+              selectedRows={selectedRows}
+              onRowSelectionChange={handleRowSelectionChange}
+            />
+          </div>
+        </>
+      )}
       <UploadTickets
         show={showUploadPopup}
         onClose={() => {
@@ -748,7 +913,7 @@ const AddInventoryPage = () => {
                 }
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
-              <label 
+              <label
                 htmlFor="select-all"
                 className="text-sm font-medium text-gray-700 cursor-pointer"
               >

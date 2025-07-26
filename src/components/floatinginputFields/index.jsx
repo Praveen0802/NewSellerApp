@@ -26,16 +26,21 @@ const FloatingLabelInput = ({
   rightIcon = null,
   autoFocus = false,
   showError = false,
+  showDelete = false,
+  deleteFunction = () => {},
 }) => {
-  console.log(parentClassName, "parentClassNameparentClassName", error);
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
   // Update focus state when value changes
   useEffect(() => {
     setIsFocused(value ? true : false);
   }, [value]);
 
-  const handleFocus = () => setIsFocused(true);
+  const handleFocus = () => {
+    setIsFocused(true);
+   
+  };
 
   useEffect(() => {
     if (autoFocus) {
@@ -64,9 +69,24 @@ const FloatingLabelInput = ({
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
+  const handleDelete = () => {
+    if (deleteFunction) {
+      deleteFunction(keyValue);
+    }
+  };
+
   const actualType = type === "password" && showPassword ? "text" : type;
 
-  const baseClasses = `block w-full px-3 py-[14px] text-[14px]  rounded border-[1px] focus:outline-none ${
+  // Check if we should show delete button
+  const shouldShowDelete = showDelete && value && value.length > 0;
+  // Determine padding based on what icons are shown
+  const getRightPadding = () => {
+    if (type === "password" && shouldShowDelete) return "pr-16"; // Both password toggle and delete
+    if (type === "password" || shouldShowDelete || rightIcon) return "pr-10"; // Single icon
+    return "";
+  };
+
+  const baseClasses = `block w-full px-3 py-[14px] text-[14px] rounded border-[1px] focus:outline-none ${
     error ? "border-red-500" : "border-[#DADBE5]"
   } text-[#231F20] caret-[#022B50] ${
     error
@@ -109,17 +129,45 @@ const FloatingLabelInput = ({
           autoComplete={autoComplete}
           required={required}
           readOnly={readOnly}
-          className={`${baseClasses} ${readOnly && "bg-gray-100"} ${
-            rightIcon ? "pr-10" : ""
-          } ${className}`}
+          className={`${baseClasses} ${
+            readOnly && "bg-gray-100"
+          } ${getRightPadding()} ${className}`}
           placeholder={isFocused ? placeholder : ""}
         />
 
+        {/* Delete button - positioned furthest right */}
+        {shouldShowDelete && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer transition-colors"
+            aria-label="Clear input"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        )}
+
+        {/* Password toggle button - positioned second from right when delete is present */}
         {type === "password" && (
           <button
             type="button"
             onClick={togglePasswordVisibility}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 focus:outline-none cursor-pointer"
+            className={`absolute top-1/2 transform -translate-y-1/2 text-gray-500 focus:outline-none cursor-pointer ${
+              shouldShowDelete ? "right-9" : "right-3"
+            }`}
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {!showPassword ? (
@@ -162,11 +210,21 @@ const FloatingLabelInput = ({
           </button>
         )}
 
+        {/* Right icon - positioned based on other icons present */}
         {rightIcon && (
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+          <div
+            className={`absolute top-1/2 transform -translate-y-1/2 ${
+              type === "password" && shouldShowDelete
+                ? "right-16"
+                : type === "password" || shouldShowDelete
+                ? "right-9"
+                : "right-3"
+            }`}
+          >
             {typeof rightIcon === "function" ? rightIcon() : rightIcon}
           </div>
         )}
+
         {showDropdown && dropDownComponent && (
           <div className="absolute z-[999] shadow-md w-full bg-white">
             {dropDownComponent}

@@ -141,11 +141,7 @@ const ViewContainer = ({
               )}
 
               {/* End of data indicator */}
-              {!hasMore && displayValues?.length > 0 && (
-                <div className="p-3 text-center">
-                  <p className="text-gray-400 text-xs">No more data to load</p>
-                </div>
-              )}
+             
             </div>
           </div>
         ) : loader ? (
