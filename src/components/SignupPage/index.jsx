@@ -763,12 +763,12 @@ const SignupFlow = ({ refer_code } = {}) => {
               </div>
             </div>
 
-            {formData?.refer_code && (
+            {refer_code && (
               <FloatingLabelInput
                 label="Referral Code (Optional)"
                 id="referral_code"
                 keyValue="referral_code"
-                value={formData.refer_code}
+                value={refer_code}
                 onChange={handleChange}
                 error={errors.refer_code}
                 required
