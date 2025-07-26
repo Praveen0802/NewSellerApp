@@ -13,7 +13,7 @@ import LinkedCards from "./linkedCards";
 import TicketDelivery from "./ticketDelivery";
 import MyRefferal from "./myRefferal";
 import SubjectDescriptionPopup from "./subjectDescriptionPopup";
-import KYCPopup from "../KYCPopup";
+import KYC from "../KYC";
 
 const SettingsPage = (props) => {
   const { profile, apiData } = props;
@@ -55,11 +55,11 @@ const SettingsPage = (props) => {
       title: "TX Pay",
       key: "txPay",
     },
-    // {
-    //   icon: <IconStore.myContacts className={IconclassName} />,
-    //   title: "My Referral",
-    //   key: "myRefferal",
-    // },
+    {
+      icon: <IconStore.myContacts className={IconclassName} />,
+      title: "My Referral",
+      key: "myRefferal",
+    },
     {
       icon: <IconStore.profile className={IconclassName} />,
       title: "My Team",
@@ -103,9 +103,9 @@ const SettingsPage = (props) => {
 
   const stepperComponent = {
     overview: <Overview />,
-    myRefferal: <MyRefferal />,
+    myRefferal: <MyRefferal {...apiData} />,
     myAccount: <MyAccountTeam {...apiData} />,
-    kyc: <KYCPopup {...apiData} />,
+    kyc: <KYC {...apiData} />,
     // UpdateAccount: <MyAccountTeam {...apiData} />,
     changepassword: <ChangePassword {...apiData} />,
     addressBook: <AddressBook {...apiData} />,

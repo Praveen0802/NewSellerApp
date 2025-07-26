@@ -41,6 +41,11 @@ import {
   payOutOverview,
   payOutHistory,
   payOutOrderHistory,
+  getSellerContract,
+  getAuthPhotoId,
+  getAuthAddress,
+  getReferralCode,
+  getReferralHistory,
 } from "../apiHandler/request";
 
 export const fetchSettingsPageDetails = async (profile, token, ctx) => {
@@ -94,6 +99,21 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
     } else if (profile === "txPay") {
       const txPay = await fetchSettingsTxPay(token);
       return { txPay };
+    } else if (profile === "kyc") {
+      const [photoId, address, contract] = await Promise.allSettled([
+        getAuthPhotoId(token),
+        getAuthAddress(token),
+        getSellerContract(token),
+      ]);
+      return {
+        photoId: photoId?.status === "fulfilled" ? photoId.value : {},
+        address: address?.status === "fulfilled" ? address.value : {},
+        contract: contract?.status === "fulfilled" ? contract.value : {},
+      };
+    } else if (profile === "myRefferal") {
+      const referralCode = (await getReferralCode(token)) ?? {};
+      const referralHistory = (await getReferralHistory(token)) ?? {};
+      return { referralCode, referralHistory };
     }
   } catch (err) {
     console.log("ERROR in fetchSettingsPageDetails", err);
