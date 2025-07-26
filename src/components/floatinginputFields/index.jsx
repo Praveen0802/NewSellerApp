@@ -109,9 +109,9 @@ const FloatingLabelInput = ({
           autoComplete={autoComplete}
           required={required}
           readOnly={readOnly}
-          className={`${baseClasses} ${readOnly && "bg-gray-100"} ${
-            rightIcon ? "pr-10" : ""
-          } ${className}`}
+          className={`${baseClasses} ${
+            readOnly && "bg-gray-100 cursor-not-allowed"
+          } ${rightIcon ? "pr-10" : ""} ${className}`}
           placeholder={isFocused ? placeholder : ""}
         />
 
