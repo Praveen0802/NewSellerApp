@@ -763,20 +763,21 @@ const SignupFlow = ({ refer_code } = {}) => {
               </div>
             </div>
 
-            {refer_code && (
+            <div ref={(el) => (errorRefs.current.refer_code = el)}>
               <FloatingLabelInput
                 label="Referral Code (Optional)"
-                id="referral_code"
-                keyValue="referral_code"
-                value={refer_code}
+                type="text"
+                id="refer_code"
+                keyValue="refer_code"
+                value={formData.refer_code}
                 onChange={handleChange}
                 error={errors.refer_code}
                 required
                 showError={true}
-                className={`!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px] `}
-                readOnly={true}
+                className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                readOnly={refer_code ? true : false}
               />
-            )}
+            </div>
 
             {errors.general && (
               <div className="text-red-500 text-sm mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
