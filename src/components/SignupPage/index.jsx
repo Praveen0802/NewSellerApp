@@ -27,7 +27,7 @@ import {
 import useCountryCodes from "@/Hooks/useCountryCodes";
 import { toast } from "react-toastify";
 
-const SignupFlow = () => {
+const SignupFlow = ({ refer_code } = {}) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [userType, setUserType] = useState("");
   const [currentUrl, setCurrentUrl] = useState("/signup");
@@ -48,6 +48,7 @@ const SignupFlow = () => {
     business_name: "",
     is_business: "0",
     dob: "",
+    refer_code: refer_code || "",
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -760,6 +761,22 @@ const SignupFlow = () => {
                   />
                 </div>
               </div>
+            </div>
+
+            <div ref={(el) => (errorRefs.current.refer_code = el)}>
+              <FloatingLabelInput
+                label="Referral Code (Optional)"
+                type="text"
+                id="refer_code"
+                keyValue="refer_code"
+                value={formData.refer_code}
+                onChange={handleChange}
+                error={errors.refer_code}
+                required
+                showError={true}
+                className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                readOnly={refer_code ? true : false}
+              />
             </div>
 
             {errors.general && (

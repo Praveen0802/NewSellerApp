@@ -105,4 +105,12 @@ export const API_ROUTES = {
   GET_TX_PAY: "/settings/lmt-pay",
   ZOHO_EMBED: "/zoho-sign/embed",
   FETCH_CURRENCY: "/currencies",
+  GET_AUTH_SELLER_CONTRACT: "/auth/seller-contract-document",
+  GET_AUTH_PHOTO_ID: "/auth/seller-photo-document",
+  GET_AUTH_ADDDRESS: "/auth/seller-address-document",
+  SAVE_SELLER_CONTRACT: "/auth/seller-contract-document",
+  SAVE_PHOTO_ID: "/auth/seller-photo-document",
+  SAVE_ADDRESS_DOCUMENT: "/auth/seller-address-document",
+  GET_REFERRAL_CODE: "/auth/get-refer-code",
+  GET_REFERRAL_HISTORY: "/auth/get-refer-history",
 };

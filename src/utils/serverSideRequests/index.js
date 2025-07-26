@@ -3,45 +3,41 @@ import {
   dashboardAwaitingDelivery,
   dashboardNotifications,
   dashbordReports,
-  dashbordTrade,
+  fetchAddHistoryFilters,
   fetchAddressBookDetails,
-  FetchAllCategories,
   fetchBankAccountDetails,
+  fetchBulkListing,
   fetchCountrieList,
-  fetchDashboardData,
-  fetchDepositHistory,
   fetchDepositHistoryMonthly,
   FetchHotEvents,
-  fetchOrderHistory,
   fetchProfileDetails,
   fetchRecentlyViewedList,
   fetchSalesOverview,
   fetchSalesPageData,
-  fetchTransactionHistory,
+  fetchSettingsTxPay,
+  fetchTournamentsList,
   fetchTransactionHistoryMonthly,
   fetchUserDetails,
-  fetchLMTOverview,
-  getDialingCode,
+  getAuthAddress,
+  getAuthPhotoId,
   getLinkedCards,
   getPartnerSetting,
+  getReferralCode,
+  getReferralHistory,
+  getSellerContract,
   LastMinuteEvents,
+  lmtOverview,
+  LMTpurchaseTracking,
+  LMTTradeOrders,
+  payOutHistory,
+  payOutOrderHistory,
+  payOutOverview,
   purchaseEvents,
-  purchaseFavouratesTracking,
   purchaseHistory,
   purchaseTracking,
   reportHistory,
   reportsOverview,
-  topSellingEvents,
-  fetchBulkListing,
-  fetchSettingsTxPay,
-  fetchTournamentsList,
-  LMTpurchaseTracking,
-  LMTTradeOrders,
-  lmtOverview,
-  payOutOverview,
-  payOutHistory,
-  payOutOrderHistory,
-  fetchAddHistoryFilters,
+  topSellingEvents
 } from "../apiHandler/request";
 
 export const fetchSettingsPageDetails = async (profile, token, ctx) => {
@@ -95,6 +91,21 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
     } else if (profile === "txPay") {
       const txPay = await fetchSettingsTxPay(token);
       return { txPay };
+    } else if (profile === "kyc") {
+      const [photoId, address, contract] = await Promise.allSettled([
+        getAuthPhotoId(token),
+        getAuthAddress(token),
+        getSellerContract(token),
+      ]);
+      return {
+        photoId: photoId?.status === "fulfilled" ? photoId.value : {},
+        address: address?.status === "fulfilled" ? address.value : {},
+        contract: contract?.status === "fulfilled" ? contract.value : {},
+      };
+    } else if (profile === "myRefferal") {
+      const referralCode = (await getReferralCode(token)) ?? {};
+      const referralHistory = (await getReferralHistory(token)) ?? {};
+      return { referralCode, referralHistory };
     }
   } catch (err) {
     console.log("ERROR in fetchSettingsPageDetails", err);

@@ -1793,3 +1793,120 @@ export const fetchCurrency = async (token, params) => {
     throw error;
   }
 };
+
+export const getSellerContract = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_AUTH_SELLER_CONTRACT,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in GetSellerContract", error);
+    throw error;
+  }
+};
+
+export const getAuthPhotoId = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_AUTH_PHOTO_ID,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in GetAuthPhotoId", error);
+    throw error;
+  }
+};
+
+export const getAuthAddress = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_AUTH_ADDDRESS,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in GetAuthPhotoId", error);
+    throw error;
+  }
+};
+
+export const saveSellerContract = async (data) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.SAVE_SELLER_CONTRACT,
+      method: "POST",
+      formData: data,
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in saveSellerContract", error);
+    throw error;
+  }
+};
+
+export const savePhotoId = async (data) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.SAVE_PHOTO_ID,
+      method: "POST",
+      formData: data,
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in savePhotoId", error);
+    throw error;
+  }
+};
+
+export const saveAddressDocument = async (data) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.SAVE_ADDRESS_DOCUMENT,
+      method: "POST",
+      formData: data,
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in saveAddressDocument", error);
+    throw error;
+  }
+};
+
+export const getReferralCode = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_REFERRAL_CODE,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in getReferralCode", error);
+    throw error;
+  }
+};
+
+export const getReferralHistory = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_REFERRAL_HISTORY,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in getReferralHistory", error);
+    throw error;
+  }
+};
