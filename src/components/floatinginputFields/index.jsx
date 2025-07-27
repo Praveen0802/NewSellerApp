@@ -8,6 +8,7 @@ const FloatingLabelInput = ({
   onChange = () => {},
   onBlur = null,
   onKeyDown = null,
+  onClick = null, // Add onClick prop
   id,
   keyValue,
   showDropdown = false,
@@ -28,6 +29,8 @@ const FloatingLabelInput = ({
   showError = false,
   showDelete = false,
   deleteFunction = () => {},
+  defaultFocus = false,
+  max,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -39,7 +42,6 @@ const FloatingLabelInput = ({
 
   const handleFocus = () => {
     setIsFocused(true);
-   
   };
 
   useEffect(() => {
@@ -48,6 +50,17 @@ const FloatingLabelInput = ({
       document.getElementById(id).focus();
     }
   }, [autoFocus]);
+
+  useEffect(() => {
+    if (
+      type === "date" ||
+      type === "datetime-local" ||
+      (type === "time" && defaultFocus)
+    ) {
+      setIsFocused(true);
+      // document.getElementById(id).focus();
+    }
+  }, [defaultFocus]);
 
   const handleBlur = (e) => {
     if (e.target.value === "") {
@@ -64,6 +77,19 @@ const FloatingLabelInput = ({
     // Call the onKeyDown callback if provided
     if (onKeyDown && e.key === "Enter") {
       onKeyDown(e, false);
+    }
+  };
+
+  // Add click handler for date inputs
+  const handleClick = (e) => {
+    // For date inputs, trigger the date picker
+    if (type === "date" || type === "datetime-local" || type === "time") {
+      e.target.showPicker?.();
+    }
+
+    // Call the onClick callback if provided
+    if (onClick) {
+      onClick(e);
     }
   };
 
@@ -126,13 +152,19 @@ const FloatingLabelInput = ({
           onFocus={handleFocus}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
+          onClick={handleClick} // Add click handler
           autoComplete={autoComplete}
           required={required}
           readOnly={readOnly}
           className={`${baseClasses} ${
             readOnly && "bg-gray-100 cursor-not-allowed"
-          } ${rightIcon ? "pr-10" : ""} ${className}`}
+          } ${rightIcon ? "pr-10" : ""} ${className} ${
+            type === "date" || type === "datetime-local" || type === "time"
+              ? "cursor-pointer"
+              : ""
+          }`} // Add cursor pointer for date inputs
           placeholder={isFocused ? placeholder : ""}
+          {...(max ? { max } : {})}
         />
 
         {/* Delete button - positioned furthest right */}

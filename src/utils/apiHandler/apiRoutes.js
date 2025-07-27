@@ -113,4 +113,6 @@ export const API_ROUTES = {
   SAVE_ADDRESS_DOCUMENT: "/auth/seller-address-document",
   GET_REFERRAL_CODE: "/auth/get-refer-code",
   GET_REFERRAL_HISTORY: "/auth/get-refer-history",
+  ADD_SALES_PENDING_NOTES: "/sales/save-notes",
+  ADD_REPORTS_NOTES: "/reports/save-notes",
 };

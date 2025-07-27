@@ -23,6 +23,7 @@ const FloatingSelect = ({
   searchable = false,
   rightIcon = null,
   multiselect = false, // New prop for multiselect functionality
+  openUpward = false, // New prop to control dropdown direction
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selected, setSelected] = useState(
@@ -220,6 +221,14 @@ const FloatingSelect = ({
       : "border-[#DADBE5]"
   } ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white cursor-pointer"}`;
 
+  // Determine dropdown positioning classes
+  const getDropdownPositionClasses = () => {
+    if (openUpward) {
+      return "absolute z-[99] w-full bottom-full mb-1 bg-white rounded-md shadow-lg";
+    }
+    return "absolute z-[99] w-full mt-1 bg-white rounded-md shadow-lg";
+  };
+
   return (
     <div className={`relative w-full ${className}`} ref={dropdownRef}>
       {!hideLabel && (
@@ -280,7 +289,13 @@ const FloatingSelect = ({
           )}
           <svg
             className={`w-5 h-5 text-[#130061] transition-transform duration-200 ${
-              isOpen ? "transform rotate-180" : ""
+              isOpen
+                ? openUpward
+                  ? "transform rotate-0"
+                  : "transform rotate-180"
+                : openUpward
+                ? "transform rotate-180"
+                : ""
             } ${disabled ? "text-gray-400" : ""}`}
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 20 20"
@@ -296,7 +311,7 @@ const FloatingSelect = ({
       </div>
 
       {isOpen && !disabled && (
-        <div className="absolute z-[99] w-full mt-1 bg-white rounded-md shadow-lg">
+        <div className={getDropdownPositionClasses()}>
           {multiselect && (
             <div className="flex justify-between items-center px-3 py-2 border-b border-gray-100">
               <button

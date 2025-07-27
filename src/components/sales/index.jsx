@@ -119,6 +119,7 @@ const SalesPage = (props) => {
     setShowInfoPopup({
       flag: true,
       data: salesData,
+      bg_id: item?.bg_id,
     });
     // setPageLoader(false);
   };
@@ -142,17 +143,12 @@ const SalesPage = (props) => {
   const rightStickyColumns = salesData.map((item) => [
     {
       icon: (
-        <Clock
-          onClick={() => getLogDetailsDetails(item)}
-          className="size-4"
-        />
+        <Clock onClick={() => getLogDetailsDetails(item)} className="size-4" />
       ),
       className: " cursor-pointer",
     },
     {
-      icon: (
-        <Eye onClick={() => getOrderDetails(item)} className="size-5" />
-      ),
+      icon: <Eye onClick={() => getOrderDetails(item)} className="size-5" />,
       className: " cursor-pointer",
     },
   ]);
@@ -352,6 +348,12 @@ const SalesPage = (props) => {
     }
   };
 
+  const refreshPopupData = () => {
+    if (showInfoPopup.flag) {
+      getOrderDetails({ bg_id: showInfoPopup?.bg_id });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <TabbedLayout
@@ -383,6 +385,8 @@ const SalesPage = (props) => {
         show={showInfoPopup?.flag}
         data={showInfoPopup?.data}
         onClose={() => setShowInfoPopup({ flag: false, data: [] })}
+        refreshPopupData={refreshPopupData}
+        type="sales"
       />
 
       {/* StickyDataTable section */}

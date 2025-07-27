@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { toast } from "react-toastify";
 
 const useCopyToClipboard = () => {
   const [isCopied, setIsCopied] = useState(false);
@@ -9,6 +10,7 @@ const useCopyToClipboard = () => {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(text);
         setIsCopied(true);
+        toast.success("Copied to clipboard!");
         setTimeout(() => setIsCopied(false), 2000);
         return true;
       }
