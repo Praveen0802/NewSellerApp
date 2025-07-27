@@ -43,7 +43,7 @@ const NotificationActivityList = ({
   };
 
   return (
-    <div className="border-[1px] border-[#eaeaf1] rounded-md bg-white">
+    <div className="border-[1px] border-[#eaeaf1] rounded-md bg-white h-[100%]">
       <div className="flex gap-4 sm:gap-[30px] items-center px-4 pt-4 border-b-[1px] border-[#eaeaf1]">
         {heading.map((item, index) => (
           <p

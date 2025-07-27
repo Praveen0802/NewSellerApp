@@ -23,10 +23,11 @@ import { getAuthToken } from "@/utils/helperFunctions";
 
 const PayoutPage = (props) => {
   const { apiData } = props;
-  console.log(apiData, "apiDataapiData");
 
   const { payout_overview, payoutHistory, payoutOrders, countriesList } =
     apiData;
+
+  console.log("payout_overview", payout_overview);
 
   const flagMap = {
     GBP: ukFlag,
@@ -60,26 +61,32 @@ const PayoutPage = (props) => {
     setDateRange({ startDate: "", endDate: "" });
   }, [selectedTab, payoutHistory, payoutOrders]);
 
-  // Transform payout overview data for ViewComponent
+  // Transform payout overview data for ViewComponent - Updated to match Wallet Overview
   const overviewValues = payout_overview?.map((item) => {
     return {
-      icon: flagMap[item.currency],
-      amount: item.total_amount,
-      balance: "Total Earnings",
+      icon: flagMap?.[item.currency],
+      amount: item?.total_amount, // This will show as "Available Balance"
+      balance: "Available Balance", // Changed from "Total Earnings" to match your UI
+      // Updated keys mapping to match the Wallet Overview structure
       keys: {
-        pendingDelivery: item.pending_delivery.total_ticket_amount,
-        pendingPayout: item.pending_payout.total_ticket_amount,
-        holding: item.holding,
-        currency: item.currency,
+        pendingDelivery:
+          item?.pending_delivery?.total_ticket_amount_with_symbol,
+        pendingPayment: item?.pending_payout?.total_ticket_amount_with_symbol,
+        totalRevenue: item?.total_amount, // Using total_amount as Total Revenue
+        currency: item?.currency,
+        holding: item?.holding,
       },
     };
   });
 
   const handleRequestPayout = async (item) => {
     const currency = item?.keys?.currency;
+
     const response = await fetchBankAccountDetails("", "", "GET", "", {
       currency: currency,
     });
+    console.log("response", item, payout_overview);
+
     setPayOutPopup({
       flag: true,
       data: { ...response[0], currency: currency },

@@ -29,8 +29,8 @@ import { useRouter } from "next/router";
 
 const ReportsPage = (props) => {
   const { apiData } = props;
-  const { overview, deposit_history, transaction_history, countriesList } =
-    apiData;
+  const { data, deposit_history, transaction_history, countriesList } = apiData;
+  const { overview } = data ?? {};
 
   const flagMap = {
     GBP: ukFlag,
@@ -47,14 +47,19 @@ const ReportsPage = (props) => {
 
   const values = overview?.map((item) => {
     return {
-      icon: flagMap[item.currency],
-      amount: item.balance_amount,
+      icon: flagMap?.[item.currency],
+      amount: item?.available_fund,
       balance: "Available Balance",
+      currency: item?.currency,
+      bank_account: item?.bank_account,
+      // Changed from "Total Earnings" to match your UI
+      // Updated keys mapping to match the Wallet Overview structure
       keys: {
-        pendingDelivery: item?.pending_orders,
-        pendingPayment: item?.pending_amount,
-        confirmedOrder: item?.confirmed_orders,
-        currency: item?.currency,
+        pendingDelivery: item?.pending_fund,
+        pendingPayment: item?.pending_fund,
+        totalRevenue: item?.total_revenue, // Using total_amount as Total Revenue
+        // currency: item.currency,
+        // holding: item.holding,
       },
     };
   });
@@ -94,13 +99,18 @@ const ReportsPage = (props) => {
   };
 
   const handleWalletPlusClick = async (item) => {
-    const currency = item?.keys?.currency;
-    const response = await fetchBankAccountDetails("", "", "GET", "", {
-      currency: currency,
-    });
+    //     const currency = item?.keys?.currency;
+    // const response = await fetchBankAccountDetails("", "", "GET", "", {
+    //   currency: currency,
+    // });
+    // setPayOutPopup({
+    //   flag: true,
+    //   data: { ...response[0], currency: currency },
+    // });
+    const { bank_account = [], currency } = item ?? {};
     setPayOutPopup({
       flag: true,
-      data: { ...response[0], currency: currency },
+      data: { ...bank_account?.[0], currency: currency },
     });
   };
 

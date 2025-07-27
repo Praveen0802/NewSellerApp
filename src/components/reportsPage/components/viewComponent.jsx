@@ -3,14 +3,13 @@ import React, { useState } from "react";
 import plus from "../../../../public/plus.svg";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 
-const ViewComponent = ({ item, onClick }) => {
+const ViewComponent = ({ item, onClick, hidePlus = false }) => {
   const [tooltipVisible, setTooltipVisible] = useState(null);
 
   const keyValues = [
-    { key: "Confirmed Orders", value: item?.keys?.confirmedOrder },
-    // { key: "On Hold", value: item?.keys?.onHold, hold: true },""
     { key: "Pending Delivery", value: item?.keys?.pendingDelivery },
     { key: "Pending Payment", value: item?.keys?.pendingPayment },
+    { key: "Total Revenue", value: item?.keys?.totalRevenue },
   ];
 
   return (
@@ -25,12 +24,14 @@ const ViewComponent = ({ item, onClick }) => {
             </p>
           </div>
         </div>
-        <div
-          onClick={() => onClick(item)}
-          className="p-[8px] cursor-pointer rounded-md bg-[#F2F5FD]"
-        >
-          <Image src={plus} width={18} height={18} alt="plus" />
-        </div>
+        {!hidePlus && (
+          <div
+            onClick={() => onClick(item)}
+            className="p-[8px] cursor-pointer rounded-md bg-[#F2F5FD]"
+          >
+            <Image src={plus} width={18} height={18} alt="plus" />
+          </div>
+        )}
       </div>
       <div className="flex flex-col gap-1">
         {keyValues?.map((item, index) => {

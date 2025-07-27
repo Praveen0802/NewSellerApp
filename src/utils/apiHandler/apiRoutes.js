@@ -44,7 +44,7 @@ export const API_ROUTES = {
   UPDATE_ADDRESS_BOOK_DETAILS: `/settings/update-address-book`,
   SAVE_ADDRESS_BOOK_DETAILS: `/settings/add-address-book`,
   FETCH_BANK_ACCOUNTS: `/settings/bank-accounts`,
-  UPDATE_BANK_ACCOUNT: `/payouts/update-bank-account`,
+  UPDATE_BANK_ACCOUNT: `/settings/lmt-pay/update-linked-account`,
   CHANGE_PASSWORD: `/auth/change-password`,
   LMT_OVERVIEW: `/lmt-pay/overview`,
   DEPOSIT_HISTORY: `/wallet/get-deposit-history`,

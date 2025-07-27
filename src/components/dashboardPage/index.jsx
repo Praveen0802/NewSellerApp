@@ -23,14 +23,13 @@ import {
   topSellingEvents,
   fetchReports,
   dashbordReports,
-  fetchPurchaseTracking,  // Add this API function
+  fetchPurchaseTracking, // Add this API function
   fetchTradeOrders,
   LMTpurchaseTracking,
-  LMTTradeOrders,      // Add this API function
+  LMTTradeOrders, // Add this API function
 } from "@/utils/apiHandler/request";
 
 const DashboardPage = (props) => {
-
   const [resultData, setResultData] = useState(props?.response);
 
   const [loader, setLoader] = useState({
@@ -119,13 +118,16 @@ const DashboardPage = (props) => {
               ...(response?.ticket_details || []),
             ],
             // Add support for trade orders data
-            data: keyValue === "tradeOrders" ? {
-              ...response?.data,
-              data: [
-                ...(prevData[keyValue]?.data?.data || []),
-                ...(response?.data?.data || []),
-              ],
-            } : prevData[keyValue]?.data,
+            data:
+              keyValue === "tradeOrders"
+                ? {
+                    ...response?.data,
+                    data: [
+                      ...(prevData[keyValue]?.data?.data || []),
+                      ...(response?.data?.data || []),
+                    ],
+                  }
+                : prevData[keyValue]?.data,
             // Update meta with new pagination info
             meta: response?.meta,
             pagination: response?.pagination, // For purchase tracking
@@ -206,7 +208,7 @@ const DashboardPage = (props) => {
       ].includes(keyValue)
     ) {
       let currentMeta;
-      
+
       // Handle different meta structures
       if (keyValue === "purchaseTracking") {
         currentMeta = resultData[keyValue]?.pagination;
@@ -382,7 +384,7 @@ const DashboardPage = (props) => {
         { value: "last_15days", label: "Last 15 days" },
         { value: "last_30days", label: "Last 30 days" },
         { value: "last_60days", label: "Last 60 days" },
-          { value: "last_180days", label: "Last 6 months" },
+        { value: "last_180days", label: "Last 6 months" },
       ],
       selectedOption: filters.topSelling,
       onChange: (value) => {
@@ -396,6 +398,7 @@ const DashboardPage = (props) => {
           eventName: item?.match_name,
           eventDate: item?.match_date,
           ctaName: "Create Listing",
+          matchId: item?.match_id,
         })) || [],
     },
     // Add pagination support for topSelling
@@ -405,12 +408,10 @@ const DashboardPage = (props) => {
     loader: loader.topSelling,
   };
 
-  console.log("resultData", resultData);
-
   const router = useRouter();
-  const handleCreateListing = () => {
-    //TODO: Add your create listing logic here
-    router.push("/add-listings");
+  const handleCreateListing = (item) => {
+    const { matchId = null } = item ?? {};
+    router.push(`/add-listings${matchId ? `/${matchId}` : ""}`);
   };
 
   return (
@@ -455,7 +456,7 @@ const DashboardPage = (props) => {
             />
           </div>
         </div>
-        <TradeTickets 
+        <TradeTickets
           resultData={resultData}
           handleScrollEnd={handleScrollEnd}
           loader={loader}

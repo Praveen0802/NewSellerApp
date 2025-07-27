@@ -37,7 +37,7 @@ import {
   purchaseTracking,
   reportHistory,
   reportsOverview,
-  topSellingEvents
+  topSellingEvents,
 } from "../apiHandler/request";
 
 export const fetchSettingsPageDetails = async (profile, token, ctx) => {
@@ -138,7 +138,8 @@ export const fetchWalletPageDetails = async (token, index) => {
       const results = await Promise.allSettled([
         fetchDepositHistoryMonthly(token),
         fetchTransactionHistoryMonthly(token),
-        lmtOverview(token),
+        // lmtOverview(token),
+        fetchSettingsTxPay(token),
         fetchCountrieList(token),
       ]);
 

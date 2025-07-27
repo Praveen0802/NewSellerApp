@@ -2,7 +2,8 @@ import ukFlag from "../../../../../public/uk.svg";
 import usFlag from "../../../../../public/us.svg";
 import euFalg from "../../../../../public/eu.svg";
 import Flag from "../../../../../public/flag.svg";
-import ViewComponent from "./ViewComponent";
+import ViewComponent from "@/components/reportsPage/components/viewComponent";
+// import ViewComponent from "./ViewComponent";
 
 const WalletOverview = (data) => {
   // Mock flag images (you'd replace these with your actual flag imports)

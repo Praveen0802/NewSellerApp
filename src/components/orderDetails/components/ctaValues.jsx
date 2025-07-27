@@ -139,7 +139,6 @@ const CtaValues = ({ ctaText, order_notes, onSaveNote = () => {} } = {}) => {
               >
                 <path
                   strokeLinecap="round"
-                  strokeLinecap="round"
                   strokeWidth={2}
                   d="M6 18L18 6M6 6l12 12"
                 />
