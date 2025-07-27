@@ -9,6 +9,7 @@ const IconStore = {
   chevronUp: () => <ChevronUp className="w-5 h-5" />,
 };
 
+
 const LogDetailsModal = ({ show, onClose, orderLogs = [], inventoryLogs = [] }) => {
   const [expandedSections, setExpandedSections] = useState([0]);
   const [activeTab, setActiveTab] = useState("order");

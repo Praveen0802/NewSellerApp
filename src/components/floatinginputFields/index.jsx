@@ -24,6 +24,7 @@ const FloatingLabelInput = ({
   placeholder = "",
   error = "",
   rightIcon = null,
+  iconBefore = null, // New prop for left icon
   autoFocus = false,
   showError = false,
   showDelete = false,
@@ -79,14 +80,20 @@ const FloatingLabelInput = ({
 
   // Check if we should show delete button
   const shouldShowDelete = showDelete && value && value.length > 0;
-  // Determine padding based on what icons are shown
+  
+  // Determine left padding based on iconBefore
+  const getLeftPadding = () => {
+    return iconBefore ? "pl-10" : "px-3";
+  };
+
+  // Determine right padding based on what icons are shown
   const getRightPadding = () => {
     if (type === "password" && shouldShowDelete) return "pr-16"; // Both password toggle and delete
     if (type === "password" || shouldShowDelete || rightIcon) return "pr-10"; // Single icon
-    return "";
+    return iconBefore ? "pr-3" : ""; // Only right padding when we have left icon
   };
 
-  const baseClasses = `block w-full px-3 py-[14px] text-[14px] rounded border-[1px] focus:outline-none ${
+  const baseClasses = `block w-full ${getLeftPadding()} py-[14px] text-[14px] rounded border-[1px] focus:outline-none ${
     error ? "border-red-500" : "border-[#DADBE5]"
   } text-[#231F20] caret-[#022B50] ${
     error
@@ -94,19 +101,19 @@ const FloatingLabelInput = ({
       : isFocused
       ? "border-[#DADBE5] focus:border-indigo-300 focus:ring-1 focus:ring-indigo-300"
       : "border-[#DADBE5]"
-  }`;
+  } ${getRightPadding()}`;
 
   return (
     <div className={`relative w-full ${parentClassName}`}>
       {!hideLabel && (
         <FloatingPlaceholder
-          className={`${labelClassName} `}
+          className={`${labelClassName} ${iconBefore && '!left-10'} `}
           isFocused={isFocused}
           hasError={!!error}
         >
           <span
             style={{ fontSize: isFocused ? "11px" : "13px" }}
-            className={`${labelClassName}  ${
+            className={`${labelClassName}   ${
               error ? "text-red-500" : "text-[#808082]"
             }`}
           >
@@ -117,6 +124,13 @@ const FloatingLabelInput = ({
       )}
 
       <div className="relative">
+        {/* Left icon - iconBefore */}
+        {iconBefore && (
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+            {typeof iconBefore === "function" ? iconBefore() : iconBefore}
+          </div>
+        )}
+
         <input
           id={id}
           type={actualType}
@@ -131,7 +145,7 @@ const FloatingLabelInput = ({
           readOnly={readOnly}
           className={`${baseClasses} ${
             readOnly && "bg-gray-100 cursor-not-allowed"
-          } ${rightIcon ? "pr-10" : ""} ${className}`}
+          } ${className}`}
           placeholder={isFocused ? placeholder : ""}
         />
 
