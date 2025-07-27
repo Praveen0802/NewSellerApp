@@ -437,7 +437,7 @@ const KycComponent = ({
 
       {previewModal.open && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-[50%] h-[50%] flex flex-col">
+          <div className="bg-white rounded-lg shadow-xl w-[60%] h-[80%] flex flex-col">
             {/* Header - Fixed height */}
             <div className="flex-shrink-0 flex items-center justify-between p-3 border-b">
               <div className="flex items-center space-x-2">
@@ -447,7 +447,8 @@ const KycComponent = ({
               </div>
               <button
                 onClick={closePreview}
-                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                className="p-1 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                title="Close"
               >
                 <X className="w-4 h-4 text-gray-600" />
               </button>
