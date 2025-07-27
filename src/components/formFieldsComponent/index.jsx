@@ -21,6 +21,7 @@ const FormFields = ({ formFields }) => {
           onChange,
           className,
           labelClassName,
+          iconBefore,
           mandatory,
           disabled,
           readOnly,
@@ -111,6 +112,7 @@ const FormFields = ({ formFields }) => {
                 dropDownComponent={dropDownComponent}
                 readOnly={readOnly || disabled}
                 className={className}
+                iconBefore={iconBefore}
                 value={value}
                 onChange={onChange}
                 autoComplete="off"

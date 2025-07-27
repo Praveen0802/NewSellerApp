@@ -985,9 +985,15 @@ const LeftMenuBar = () => {
     },
     {
       image: listing,
-      name: "Bulk Listings",
+      name: "My Listings",
       key: "my-listings",
       route: "my-listings",
+    },
+    {
+      image: Bulkticket,
+      name: "Bulk Listings",
+      key: "bulk-listings",
+      route: "bulk-listings",
     },
     {
       image: shopping,

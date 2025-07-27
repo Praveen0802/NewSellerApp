@@ -184,7 +184,7 @@ const FloatingCheckbox = ({
   };
 
   return (
-    <div className="w-full">
+    <div className={` w-full ${parentClassName}`}>
       {multiselect && options.length > 0
         ? renderMultiCheckboxes()
         : renderSingleCheckbox()}

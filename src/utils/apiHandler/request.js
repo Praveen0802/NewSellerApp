@@ -83,6 +83,36 @@ export const fetchBulkListing = async (token, params = {}) => {
   }
 };
 
+export const fetchBulkListingFilters = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_BULK_LISTING_FILTERS,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchBulkListing", error);
+    return {};
+  }
+};
+
+export const fetchBlockDetails = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_BLOCKS_BY_CATEGORY,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchBulkListing", error);
+    return {};
+  }
+};
+
 export const reportHistory = async (token, params = {}) => {
   try {
     const response = await makeRequest({
@@ -585,6 +615,81 @@ export const fetchDepositHistoryMonthly = async (token, params) => {
   }
 };
 
+export const getMyListingOverView = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_MY_LISTING_OVERVIEW,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchDepositHistoryMonthly", error);
+    throw error;
+  }
+};
+
+export const getMyListingFilters = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_MY_LISTING_TICKET_FILTERS,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchDepositHistoryMonthly", error);
+    throw error;
+  }
+};
+
+export const updateMyListing = async (token, id, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.UPDATE_MY_LISTING_TICKETS}${id ? `/${id}` : ""}`,
+      method: "PUT",
+      ...(data && { data: data }),
+      ...(token && { token: token }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in fetchDepositHistoryMonthly", error);
+    throw error;
+  }
+};
+
+export const getMyListingHistory = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_MY_LISTING_TICKET_HISTORY,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchDepositHistoryMonthly", error);
+    throw error;
+  }
+};
+
+export const getViewDetailsPopup = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.VIEW_DETAILS_POPUP,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchDepositHistoryMonthly", error);
+    throw error;
+  }
+};
+
 export const fetchAddHistoryFilters = async (token, params) => {
   try {
     const response = await makeRequest({
@@ -746,6 +851,36 @@ export const editUserDetails = async (token, method = "GET", params) => {
       method: method,
       ...(token && { token: token }),
       ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchUserDetails", error);
+    throw error;
+  }
+};
+
+export const saveAddListing = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.SAVE_ADD_LISTING}`,
+      method: "POST",
+      ...(token && { token: token }),
+      ...(data && { formData: data }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchUserDetails", error);
+    throw error;
+  }
+};
+
+export const saveBulkListing = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.SAVE_BULK_LISTING}`,
+      method: "POST",
+      ...(token && { token: token }),
+      ...(data && { formData: data }),
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {

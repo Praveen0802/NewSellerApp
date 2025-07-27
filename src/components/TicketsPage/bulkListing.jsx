@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import Button from "../commonComponents/button";
 import { useDispatch } from "react-redux";
 import { updateWalletPopupFlag } from "@/utils/redux/common/action";
@@ -6,11 +6,15 @@ import FloatingLabelInput from "../floatinginputFields";
 import FloatingSelect from "../floatinginputFields/floatingSelect";
 import FloatingDateRange from "../commonComponents/dateRangeInput";
 import EventsTable from "./eventsTable";
+import { useRouter } from "next/router";
 
 const BulkListings = (props) => {
-  console.log(props, "propspropsssss");
   const { response } = props;
+  const [selectedRows, setSelectedRows] = useState([]);
   const dispatch = useDispatch();
+  console.log(selectedRows, "selectedRowsselectedRows");
+  const router = useRouter();
+
   const handleOpenAddWalletPopup = () => {
     dispatch(
       updateWalletPopupFlag({
@@ -19,9 +23,17 @@ const BulkListings = (props) => {
     );
   };
 
+  const handleAddticket = () => {
+    if (selectedRows?.length == 1) {
+      router.push(`/add-listings/${selectedRows[0]}`);
+    } else {
+      const values = selectedRows?.join(",");
+      router.push(`/bulk-listings/match?k=${values}`);
+    }
+  };
+
   const headers = [
     { title: "Event Name", key: "match_name" },
-    { title: "Tournament Name", key: "tournament_name" },
     { title: "Match Date", key: "match_date" },
     { title: "Match Time", key: "match_time" },
     { title: "Stadium", key: "stadium" },
@@ -29,13 +41,17 @@ const BulkListings = (props) => {
     { title: "Total Fare", key: "ticket_fare_from" },
   ];
 
-  // Updated event data to match the screenshot
-  const eventListViews = response?.value?.events?.map((list) => ({
-    ...list,
-  }));
+  // ✅ FIX: Memoize eventListViews to prevent unnecessary re-renders
+  const eventListViews = useMemo(() => {
+    return (
+      response?.value?.events?.map((list) => ({
+        ...list,
+      })) || []
+    );
+  }, [response?.value?.events]);
 
   return (
-    <div className="bg-[#F5F7FA] w-full h-full">
+    <div className="bg-[#F5F7FA] w-full h-full relative">
       <div className="flex bg-white items-center py-2 md:py-2 justify-between px-4 md:px-6 border-b border-[#eaeaf1]">
         <p>Filter</p>
         <Button
@@ -94,12 +110,53 @@ const BulkListings = (props) => {
           {eventListViews.length} Events
         </p>
       </div>
-      <div className="m-6 bg-white rounded  max-h-[calc(100vh-300px)] overflow-scroll">
-        {/* This div creates the scrollable container with fixed height */}
+      <div
+        className={`m-6 bg-white rounded max-h-[calc(100vh-300px)] overflow-scroll ${
+          selectedRows?.length > 0 ? "mb-20" : ""
+        }`}
+      >
         <div className="overflow-y-auto overflow-x-auto h-full">
-          <EventsTable events={eventListViews} headers={headers} />
+          <EventsTable
+            events={eventListViews}
+            headers={headers}
+            selectedRows={selectedRows}
+            setSelectedRows={setSelectedRows}
+          />
         </div>
       </div>
+
+      {/* Sticky Bottom Bar */}
+      {selectedRows?.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E5E7EB] shadow-lg z-50">
+          <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-[#323A70] font-medium"></span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                type="outlined"
+                classNames={{
+                  root: "px-4 py-2 border border-[#D1D5DB] text-[#374151] hover:bg-[#F9FAFB]",
+                  label_: "text-sm font-medium",
+                }}
+                onClick={() => setSelectedRows([])}
+                label="Cancel"
+              />
+              <Button
+                type="blueType"
+                classNames={{
+                  root: "px-4 py-2",
+                  label_: "text-sm font-medium",
+                }}
+                onClick={() => {
+                    handleAddticket();
+                }}
+                label="Add Tickets"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

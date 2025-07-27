@@ -1,27 +1,14 @@
-import React, { useState, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
+import { toast } from "react-toastify";
+import TabbedLayout from "../tabbedLayout";
 import Button from "../commonComponents/button";
-import { useDispatch } from "react-redux";
-import { updateWalletPopupFlag } from "@/utils/redux/common/action";
-import blueLocation from "../../../public/blue-location.svg";
-import Image from "next/image";
-import blueCalendar from "../../../public/blue-calendar.svg";
-import blueTicket from "../../../public/blue-ticket.svg";
-import hamburger from "../../../public/hamburger.svg";
-import blueClock from "../../../public/blue-clock.svg";
-import beforeFaviurates from "../../../public/before-favourates.svg";
-import attachmentPin from "../../../public/attachment-pin.svg";
-import attachment6 from "../../../public/attachment-6.svg";
-import attachment3 from "../../../public/attachment-3.svg";
-import attachment1 from "../../../public/attachment-1.svg";
-import crossHand from "../../../public/cross-hand.svg";
-import oneHand from "../../../public/One-hand.svg";
-import star from "../../../public/Star.svg";
-import FloatingLabelInput from "../floatinginputFields";
-import FloatingSelect from "../floatinginputFields/floatingSelect";
-import documentText from "../../../public/document-text.svg";
-import FloatingDateRange from "../commonComponents/dateRangeInput";
-import ScrollableAccordionTable from "./scrollableTable";
-import { dateFormat } from "@/utils/helperFunctions";
+import { IconStore } from "@/utils/helperFunctions/iconStore";
 import {
   ChevronUp,
   ChevronDown,
@@ -29,947 +16,1108 @@ import {
   Edit,
   Trash2,
   Download,
+  Calendar1Icon,
+  Clock,
+  LocateIcon,
+  MapPin,
+  Loader2,
+  Hand,
+  Upload,
+  Eye,
 } from "lucide-react";
-import { IconStore } from "@/utils/helperFunctions/iconStore";
+import {
+  getMyListingHistory,
+  getViewDetailsPopup,
+  updateMyListing,
+} from "@/utils/apiHandler/request";
 import UploadTickets from "../ModalComponents/uploadTickets";
+import InventoryLogsInfo from "../inventoryLogsInfo";
 
-// Filter Dropdown Component
-const FilterDropdown = ({
-  isOpen,
-  onClose,
-  filterConfig,
-  activeFilters,
-  onFilterToggle,
-}) => {
-  if (!isOpen) return null;
-
-  return (
-    <>
-      <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 w-80 max-h-96 overflow-y-auto z-50">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">Search filters</h3>
+const ShimmerCard = () => (
+  <div className="border border-gray-200 rounded-lg mb-4 overflow-hidden animate-pulse">
+    {/* Header Shimmer */}
+    <div className="bg-gray-300 px-3 py-2.5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="w-4 h-4 bg-gray-400 rounded"></div>
+          <div className="w-48 h-4 bg-gray-400 rounded"></div>
+          <div className="flex items-center space-x-3">
+            <div className="w-20 h-3 bg-gray-400 rounded"></div>
+            <div className="w-16 h-3 bg-gray-400 rounded"></div>
+            <div className="w-24 h-3 bg-gray-400 rounded"></div>
+          </div>
         </div>
-
-        <div className="p-4">
-          {filterConfig?.map((filter, index) => (
-            <div key={index} className="flex items-center justify-between py-2">
-              <span className="text-sm text-gray-700">{filter.label}</span>
-              <input
-                type="checkbox"
-                checked={activeFilters.includes(filter.name)}
-                onChange={() => onFilterToggle(filter.name)}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-              />
-            </div>
-          ))}
-        </div>
-
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={() => {
-              const allFilterNames =
-                filterConfig?.map((filter) => filter.name) || [];
-              allFilterNames.forEach((filterName) => {
-                if (!activeFilters.includes(filterName)) {
-                  onFilterToggle(filterName);
-                }
-              });
-            }}
-            className="flex items-center text-sm text-blue-600 hover:text-blue-800"
-          >
-            🔄 Restore defaults
-          </button>
-        </div>
+        <div className="w-16 h-3 bg-gray-400 rounded"></div>
       </div>
-    </>
-  );
-};
+    </div>
 
-// Column Dropdown Component
-const ColumnDropdown = ({
-  isOpen,
-  onClose,
-  headers,
-  visibleColumns,
-  onColumnToggle,
-}) => {
-  const [searchTerm, setSearchTerm] = useState("");
-
-  if (!isOpen) return null;
-
-  const filteredHeaders = headers?.filter((header) =>
-    header.label.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  return (
-    <>
-      <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 w-80 max-h-96 overflow-y-auto z-50">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">Search columns</h3>
+    {/* Table Content Shimmer */}
+    <div className="w-full bg-white">
+      <div className="relative">
+        {/* Table Header Shimmer */}
+        <div className="bg-gray-100 border-b border-gray-200 p-3">
+          <div className="flex space-x-4">
+            <div className="w-4 h-4 bg-gray-300 rounded"></div>
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="w-24 h-4 bg-gray-300 rounded"></div>
+            ))}
+          </div>
         </div>
 
-        <div className="p-4">
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Search columns"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+        {/* Table Rows Shimmer */}
+        {Array.from({ length: 3 }).map((_, rowIndex) => (
+          <div key={rowIndex} className="border-b border-gray-200 p-3">
+            <div className="flex space-x-4 items-center">
+              <div className="w-4 h-4 bg-gray-200 rounded"></div>
+              {Array.from({ length: 8 }).map((_, colIndex) => (
+                <div
+                  key={colIndex}
+                  className="w-24 h-4 bg-gray-200 rounded"
+                ></div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const ShimmerLoader = () => (
+  <div className="m-6 max-h-[calc(100vh-300px)] overflow-y-auto">
+    {Array.from({ length: 2 }).map((_, index) => (
+      <ShimmerCard key={index} />
+    ))}
+  </div>
+);
+
+// Add this CSS for shimmer animation (you can add this to your global CSS or styled-components)
+const shimmerStyles = `
+  @keyframes shimmer {
+    0% {
+      background-position: -200px 0;
+    }
+    100% {
+      background-position: calc(200px + 100%) 0;
+    }
+  }
+  
+  .shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200px 100%;
+    animation: shimmer 1.5s infinite;
+  }
+`;
+
+// Custom MultiSelect Component for table cells
+const MultiSelectEditableCell = ({
+  value,
+  options = [],
+  onSave,
+  className = "",
+  isRowHovered = false,
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Convert string value to array if needed
+  const normalizeValue = (val) => {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+    if (typeof val === "string") {
+      // If it's a comma-separated string, split it
+      return val.includes(",") ? val.split(",").map((v) => v.trim()) : [val];
+    }
+    return [val];
+  };
+
+  // Update editValue when value prop changes
+  useEffect(() => {
+    setEditValue(normalizeValue(value));
+  }, [value]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        const dropdown = document.querySelector("[data-multiselect-dropdown]");
+        if (dropdown && dropdown.contains(event.target)) {
+          return;
+        }
+        setIsDropdownOpen(false);
+      }
+    };
+
+    const handleScroll = (event) => {
+      if (isDropdownOpen) {
+        const dropdown = document.querySelector("[data-multiselect-dropdown]");
+        if (dropdown && dropdown.contains(event.target)) {
+          return;
+        }
+
+        let currentElement = event.target;
+        while (currentElement && currentElement !== document) {
+          if (
+            currentElement.hasAttribute &&
+            currentElement.hasAttribute("data-multiselect-dropdown")
+          ) {
+            return;
+          }
+          currentElement = currentElement.parentElement;
+        }
+
+        setIsDropdownOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && isDropdownOpen) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("scroll", handleScroll, true);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("scroll", handleScroll, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isDropdownOpen]);
+
+  const handleSave = () => {
+    const normalizedCurrent = normalizeValue(value);
+    const normalizedEdit = normalizeValue(editValue);
+
+    if (JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedEdit)) {
+      onSave(normalizedEdit);
+    }
+    setIsEditing(false);
+    setIsDropdownOpen(false);
+  };
+
+  const handleCancel = () => {
+    setEditValue(normalizeValue(value));
+    setIsEditing(false);
+    setIsDropdownOpen(false);
+  };
+
+  const handleOptionToggle = (optionValue) => {
+    const currentValues = normalizeValue(editValue);
+    let newValues;
+
+    if (currentValues.includes(optionValue)) {
+      newValues = currentValues.filter((val) => val !== optionValue);
+    } else {
+      newValues = [...currentValues, optionValue];
+    }
+
+    setEditValue(newValues);
+  };
+
+  const handleSelectAll = () => {
+    setEditValue(options.map((opt) => opt.value));
+  };
+
+  const handleDeselectAll = () => {
+    setEditValue([]);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSave();
+    } else if (e.key === "Escape") {
+      handleCancel();
+    }
+  };
+
+  const getDisplayValue = () => {
+    const normalizedValue = normalizeValue(value);
+    if (normalizedValue.length === 0) return "Select options...";
+
+    return `${normalizedValue.length} item${
+      normalizedValue.length !== 1 ? "s" : ""
+    } selected`;
+  };
+
+  const getSelectedCount = () => {
+    const normalizedValue = normalizeValue(editValue);
+    return normalizedValue.length;
+  };
+
+  if (isEditing) {
+    return (
+      <div className="relative w-full" ref={dropdownRef}>
+        <div
+          className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 bg-white w-full cursor-pointer"
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          onKeyDown={handleKeyPress}
+          tabIndex={0}
+        >
+          <div className="flex justify-between items-center">
+            <span className="truncate">
+              {getSelectedCount() > 0
+                ? `${getSelectedCount()} selected`
+                : "Select options..."}
+            </span>
+            <ChevronDown
+              size={12}
+              className={`transform transition-transform ${
+                isDropdownOpen ? "rotate-180" : ""
+              }`}
             />
           </div>
-
-          {filteredHeaders?.map((header, index) => (
-            <div key={index} className="flex items-center justify-between py-2">
-              <span className="text-sm text-gray-700">{header.label}</span>
-              <input
-                type="checkbox"
-                checked={visibleColumns.includes(header.key)}
-                onChange={() => onColumnToggle(header.key)}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-              />
-            </div>
-          ))}
         </div>
 
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={() => {
-              headers?.forEach((header) => {
-                if (!visibleColumns.includes(header.key)) {
-                  onColumnToggle(header.key);
-                }
-              });
+        {isDropdownOpen && (
+          <div
+            data-multiselect-dropdown
+            className="fixed bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto"
+            style={{
+              zIndex: 9999,
+              top:
+                dropdownRef.current?.getBoundingClientRect()?.bottom +
+                window.scrollY +
+                4,
+              left:
+                dropdownRef.current?.getBoundingClientRect()?.left +
+                window.scrollX,
+              width: dropdownRef.current?.getBoundingClientRect()?.width,
+              minWidth: "200px",
             }}
-            className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+            onScroll={(e) => {
+              e.stopPropagation();
+            }}
           >
-            🔄 Restore defaults
-          </button>
+            <div className="border-b border-gray-200 p-2">
+              <div className="flex justify-between">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelectAll();
+                  }}
+                  className="text-xs px-2 py-1 text-blue-600 hover:text-blue-800"
+                >
+                  Select All
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeselectAll();
+                  }}
+                  className="text-xs px-2 py-1 text-red-600 hover:text-red-800"
+                >
+                  Deselect All
+                </button>
+              </div>
+            </div>
+
+            {options.map((option) => {
+              const isSelected = normalizeValue(editValue).includes(
+                option.value
+              );
+              return (
+                <div
+                  key={option.value}
+                  className={`px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center space-x-2 ${
+                    isSelected ? "bg-blue-50" : ""
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOptionToggle(option.value);
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => {}}
+                    className="w-3 h-3 text-blue-600"
+                  />
+                  <span className="text-xs">{option.label}</span>
+                </div>
+              );
+            })}
+
+            <div className="border-t border-gray-200 p-2 flex justify-end space-x-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCancel();
+                }}
+                className="text-xs px-2 py-1 text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSave();
+                }}
+                className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (isRowHovered) {
+    return (
+      <div
+        className={`cursor-pointer ${className}`}
+        onClick={() => setIsEditing(true)}
+      >
+        <div className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer">
+          <div className="flex justify-between items-center">
+            <span className="truncate">{getDisplayValue()}</span>
+            <ChevronDown size={12} />
+          </div>
         </div>
       </div>
-    </>
+    );
+  }
+
+  return (
+    <div
+      className={`cursor-pointer ${className}`}
+      onClick={() => setIsEditing(true)}
+    >
+      <span className="text-xs truncate">{getDisplayValue()}</span>
+    </div>
   );
 };
 
-const TicketsPage = () => {
-  const dispatch = useDispatch();
+// Simple Editable Cell Component (fallback for non-multiselect)
+// Fixed SimpleEditableCell Component
+const SimpleEditableCell = ({
+  value,
+  type = "text",
+  options = [],
+  onSave,
+  className = "",
+  isRowHovered = false,
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    setEditValue(value);
+  }, [value]);
+
+  const handleSave = () => {
+    // Ensure we're saving the actual value, not the label
+    let valueToSave = editValue;
+
+    // For select fields, make sure we're getting the value
+    if (type === "select" && options.length > 0) {
+      // If editValue is already a value from options, use it directly
+      const existingOption = options.find((opt) => opt.value === editValue);
+      if (existingOption) {
+        valueToSave = editValue;
+      } else {
+        // If somehow we have a label, convert it back to value
+        const optionByLabel = options.find((opt) => opt.label === editValue);
+        valueToSave = optionByLabel ? optionByLabel.value : editValue;
+      }
+    }
+
+    if (valueToSave !== value) {
+      onSave(valueToSave); // Always save the value, not the label
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditValue(value);
+    setIsEditing(false);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSave();
+    } else if (e.key === "Escape") {
+      handleCancel();
+    }
+  };
+
+  const handleBlur = () => {
+    handleSave();
+  };
+
+  const handleSelectChange = (e) => {
+    // Always store the value, not the label
+    setEditValue(e.target.value);
+  };
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      if (inputRef.current.select && type !== "select") {
+        inputRef.current.select();
+      }
+    }
+  }, [isEditing, type]);
+
+  const getDisplayValue = () => {
+    if (type === "select" && options.length > 0) {
+      const option = options.find((opt) => opt.value === value);
+      return option ? option.label : value;
+    }
+    return value || "";
+  };
+
+  if (isEditing) {
+    return (
+      <div className="w-full">
+        {type === "select" ? (
+          <select
+            ref={inputRef}
+            value={editValue || ""} // Ensure we're using the value
+            onChange={handleSelectChange}
+            onKeyDown={handleKeyPress}
+            onBlur={handleBlur}
+            className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 bg-white w-full"
+          >
+            <option value="">Select option...</option>
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            ref={inputRef}
+            type={type}
+            value={editValue || ""}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={handleKeyPress}
+            onBlur={handleBlur}
+            className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 w-full bg-white"
+          />
+        )}
+      </div>
+    );
+  }
+
+  if (isRowHovered) {
+    return (
+      <div
+        className={`cursor-pointer ${className}`}
+        onClick={() => setIsEditing(true)}
+      >
+        {type === "select" ? (
+          <div className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer flex justify-between items-center">
+            <span>{getDisplayValue()}</span>
+            <ChevronDown size={12} />
+          </div>
+        ) : (
+          <input
+            type={type}
+            value={getDisplayValue()}
+            className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer"
+            onClick={() => setIsEditing(true)}
+            readOnly
+          />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`cursor-pointer ${className}`}
+      onClick={() => setIsEditing(true)}
+    >
+      <span className="text-xs">{getDisplayValue()}</span>
+    </div>
+  );
+};
+
+const TicketsPage = (props) => {
+  const { success = "", response } = props;
+  console.log(response, "responseresponse");
+
+  // Memoize the overview data to prevent unnecessary re-renders
+  const overViewData = useMemo(
+    () => response?.overview || {},
+    [response?.overview]
+  );
+
+  const [listingHistoryData, setListingHistoryData] = useState(
+    response?.listingHistory
+  );
+
+  // Mock data based on your JSON structure - you would replace this with actual API calls
+  const mockListingHistory = useMemo(
+    () => listingHistoryData || [],
+    [listingHistoryData]
+  );
+
+  const [filtersApplied, setFiltersApplied] = useState({
+    page: 1,
+  });
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
-  const [isStickyExpanded, setIsStickyExpanded] = useState(false);
+  const [viewDetailsPopup, setViewDetailsPopup] = useState({
+    show: false,
+    rowData: null,
+  });
+
+  // State for tickets data - this will hold the editable data
+  const [ticketsData, setTicketsData] = useState([]);
   const [showUploadPopup, setShowUploadPopup] = useState(false);
+  // Debounce timer ref
+  const debounceTimer = useRef(null);
 
-  // Filter and column control states
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [showColumnDropdown, setShowColumnDropdown] = useState(false);
-  const filterButtonRef = useRef(null);
-  const columnButtonRef = useRef(null);
+  useEffect(() => {
+    if (success) {
+      toast.success("Listing added successfully");
+    }
+  }, [success]);
 
-  // All available headers
-  const allHeaders = [
-    { key: "listingId", label: "Listing ID", sortable: true },
+  // Initialize tickets data from mock data
+  useEffect(() => {
+    const transformedData = [];
+
+    mockListingHistory.forEach((item, matchIndex) => {
+      const matchInfo = item.match_info || {};
+      const tickets = item.tickets || [];
+
+      tickets.forEach((ticket, ticketIndex) => {
+        transformedData.push({
+          id: `${matchIndex}-${ticketIndex}`,
+          matchIndex: matchIndex,
+          ticketIndex: ticketIndex,
+          match_name: matchInfo.match_name || "N/A",
+          venue: matchInfo.stadium_name || "N/A",
+          tournament: matchInfo.tournament_name || "N/A",
+          match_date:
+            new Date(matchInfo.match_date).toLocaleDateString() || "N/A",
+          match_time: matchInfo.match_time || "N/A",
+          ticket_type: ticket.ticket_type || "N/A",
+          ticket_category: ticket.ticket_category || "N/A",
+          quantity: ticket.quantity || 0,
+          price: ticket.price || 0,
+          price_currency: ticket.price_type || "GBP",
+          status:
+            ticket.status === 1
+              ? "Active"
+              : ticket.status === 2
+              ? "Sold"
+              : "Inactive",
+          sell_date: ticket.sell_date || "N/A",
+          row: ticket.row || "N/A",
+          block: ticket.ticket_block || "N/A",
+          listing_notes:
+            ticket.listing_note?.map((note) => note.name).join(", ") || "N/A",
+          rawTicketData: ticket,
+          rawMatchData: matchInfo,
+        });
+      });
+    });
+
+    setTicketsData(transformedData);
+  }, [mockListingHistory]);
+
+  // Define table headers with editable configuration
+  const headers = [
+    { key: "match_name", label: "Match Name", editable: false },
+    { key: "venue", label: "Venue", editable: false },
+    { key: "tournament", label: "Tournament", editable: false },
+    { key: "match_date", label: "Match Date", editable: false },
     {
-      key: "ticketType",
+      key: "ticket_type",
       label: "Ticket Type",
       editable: true,
       type: "select",
-      options: [
-        { value: "External Transfer", label: "External Transfer" },
-        { value: "Internal Transfer", label: "Internal Transfer" },
-        { value: "Direct Sale", label: "Direct Sale" },
-      ],
+      options:
+        response?.filters?.ticket_types?.map((category) => ({
+          value: category?.id,
+          label: category?.name,
+        })) || [],
+    },
+    {
+      key: "ticket_category",
+      label: "Category",
+      editable: true,
+      type: "select",
+      options:
+        response?.filters?.ticket_category?.map((category) => ({
+          value: category?.id,
+          label: category?.name,
+        })) || [],
     },
     { key: "quantity", label: "Quantity", editable: true, type: "number" },
-    { key: "sold", label: "Sold" },
-    {
-      key: "splitType",
-      label: "Split Type",
-      editable: true,
-      type: "select",
-      options: [
-        { value: "None", label: "None" },
-        { value: "Split", label: "Split" },
-        { value: "Bundle", label: "Bundle" },
-      ],
-    },
-    { key: "category", label: "Category", editable: true },
-    { key: "section", label: "Section/Block", editable: true },
-    { key: "row", label: "Row", editable: true },
-    {
-      key: "pricePerTicket",
-      label: "Price per Ticket",
-      editable: true,
-      type: "number",
-    },
-    { key: "totalPrice", label: "Total Price", editable: true, type: "number" },
-    {
-      key: "deliveryMethod",
-      label: "Delivery Method",
-      editable: true,
-      type: "select",
-      options: [
-        { value: "Email", label: "Email" },
-        { value: "Mobile", label: "Mobile" },
-        { value: "Postal", label: "Postal" },
-        { value: "Collection", label: "Collection" },
-      ],
-    },
-    { key: "saleDate", label: "Sale Date", editable: true, type: "date" },
-    { key: "eventDate", label: "Event Date", editable: true, type: "date" },
+    { key: "price", label: "Price", editable: true, type: "number" },
     {
       key: "status",
       label: "Status",
-      editable: true,
+      editable: false,
       type: "select",
-      options: [
-        { value: "Active", label: "Active" },
-        { value: "Sold", label: "Sold" },
-        { value: "Pending", label: "Pending" },
-        { value: "Cancelled", label: "Cancelled" },
-      ],
     },
-    {
-      key: "commission",
-      label: "Commission (%)",
-      editable: true,
-      type: "number",
-    },
-    { key: "notes", label: "Notes", editable: true },
+    { key: "sell_date", label: "Listed Date", editable: false },
+    { key: "row", label: "Row", editable: true, type: "text" },
+    { key: "block", label: "Block", editable: true, type: "text" },
   ];
 
-  // Filter configuration
-  const filterConfig = [
-    {
-      name: "selectedMatch",
-      label: "Search Match Event",
-      type: "text",
-    },
-    {
-      name: "ticket_status",
-      label: "Ticket Status",
-      type: "select",
-    },
-    {
-      name: "booking_status",
-      label: "Booking Status",
-      type: "select",
-    },
-    {
-      name: "eventDate",
-      label: "Event Date",
-      type: "date",
-    },
-  ];
+  // Group tickets by match for the accordion-style display
+  const groupedTicketsData = useMemo(() => {
+    const grouped = [];
 
-  // Helper functions for default states
-  const getAllFilterNames = () => filterConfig.map((f) => f.name);
-  const getAllColumnKeys = () => allHeaders.map((h) => h.key);
+    // Group tickets by matchIndex
+    const groupedByMatch = ticketsData.reduce((acc, ticket) => {
+      const matchIndex = ticket.matchIndex;
+      if (!acc[matchIndex]) {
+        acc[matchIndex] = {
+          matchIndex,
+          matchInfo: ticket.rawMatchData,
+          tickets: [],
+        };
+      }
+      acc[matchIndex].tickets.push(ticket);
+      return acc;
+    }, {});
 
-  // State for active filters and visible columns - all enabled by default
-  const [activeFilters, setActiveFilters] = useState(getAllFilterNames());
-  const [visibleColumns, setVisibleColumns] = useState(getAllColumnKeys());
+    // Convert to array
+    Object.values(groupedByMatch).forEach((group) => {
+      grouped.push({
+        ...group,
+        ticketCount: group.tickets.length,
+      });
+    });
 
-  // Filter headers based on visible columns
-  const headers = allHeaders.filter((header) =>
-    visibleColumns.includes(header.key)
-  );
+    return grouped;
+  }, [ticketsData]);
 
-  // Get filtered filter config based on active filters
-  const getActiveFilterConfig = () => {
-    return filterConfig.filter((filter) => activeFilters.includes(filter.name));
+  const handleCellEdit = (matchIndex, ticketId, columnKey, value, ticket) => {
+    console.log("Cell edited:", {
+      matchIndex,
+      ticketId,
+      columnKey,
+      value,
+      valueType: typeof value,
+      ticket: ticket?.rawTicketData?.s_no,
+    });
+
+    // Find the header configuration for this column
+    const headerConfig = headers.find((h) => h.key === columnKey);
+
+    // For select fields, ensure we're working with the value, not label
+    let processedValue = value;
+    if (headerConfig?.type === "select" && headerConfig?.options) {
+      // If value is already a valid option value, use it
+      const isValidValue = headerConfig.options.some(
+        (opt) => opt.value === value
+      );
+      if (!isValidValue) {
+        // Try to find by label and convert to value
+        const optionByLabel = headerConfig.options.find(
+          (opt) => opt.label === value
+        );
+        if (optionByLabel) {
+          processedValue = optionByLabel.value;
+          console.warn(
+            `Converted label "${value}" to value "${processedValue}" for column ${columnKey}`
+          );
+        }
+      }
+    }
+
+    // Update local state
+    setTicketsData((prevData) =>
+      prevData.map((ticket) =>
+        ticket.id === ticketId
+          ? { ...ticket, [columnKey]: processedValue }
+          : ticket
+      )
+    );
+
+    // Prepare update parameters
+    const updateParams = { [columnKey]: processedValue };
+
+    console.log("Sending update params:", updateParams);
+
+    // Call API update
+    updateCellValues(updateParams, ticket?.rawTicketData?.s_no);
   };
 
-  const handleOpenAddWalletPopup = () => {
-    dispatch(
-      updateWalletPopupFlag({
-        flag: true,
-      })
+  // Enhanced updateCellValues function with better error handling
+  const updateCellValues = async (updatedParams, id) => {
+    try {
+      console.log(
+        "Updating listing with params:",
+        updatedParams,
+        "for ID:",
+        id
+      );
+
+      // Validate that we have an ID
+      if (!id) {
+        console.error("No ID provided for update");
+        toast.error("Unable to update: Missing ticket ID");
+        return;
+      }
+
+      const update = await updateMyListing("", id, updatedParams);
+
+      if (update?.success) {
+        toast.success("Listing updated successfully");
+      } else {
+        console.error("Update failed:", update);
+        toast.error("Failed to update listing");
+      }
+
+      return update;
+    } catch (error) {
+      console.error("Error updating listing:", error);
+      toast.error("Error updating listing");
+      throw error;
+    }
+  };
+
+  const handleHandAction = (rowData, rowIndex) => {
+    console.log("Hand action clicked for row:", rowData, rowIndex);
+    handleCellEdit(
+      rowData?.matchIndex,
+      rowIndex,
+      "tickets_in_hand",
+      !rowData?.tickets_in_hand,
+      rowData
+    );
+    // Implement your hand action logic here (e.g., drag/move functionality)
+  };
+
+  // Custom cell renderer that handles both regular and multiselect types
+  const renderEditableCell = (ticket, header, isRowHovered) => {
+    if (header.type === "multiselect") {
+      return (
+        <MultiSelectEditableCell
+          value={ticket[header.key]}
+          options={header.options || []}
+          onSave={(value) =>
+            handleCellEdit(
+              ticket.matchIndex,
+              ticket.id,
+              header.key,
+              value,
+              ticket
+            )
+          }
+          className={header.className || ""}
+          isRowHovered={isRowHovered}
+        />
+      );
+    }
+
+    return (
+      <SimpleEditableCell
+        value={ticket[header.key]}
+        type={header.type || "text"}
+        options={header.options || []}
+        onSave={(value) =>
+          handleCellEdit(
+            ticket.matchIndex,
+            ticket.id,
+            header.key,
+            value,
+            ticket
+          )
+        }
+        className={header.className || ""}
+        isRowHovered={isRowHovered}
+      />
     );
   };
 
-  const openUploadPopup = () => {
-    setShowUploadPopup(true);
+  // Create sticky columns configuration for each row
+  const getStickyColumnsForRow = (rowData, rowIndex) => {
+    return [
+      {
+        key: "",
+        icon: (
+          <Hand
+            size={14}
+            className={`${
+              rowData?.tickets_in_hand ? "text-green-500" : "text-black"
+            } hover:text-green-500 cursor-pointer`}
+            onClick={() => handleHandAction(rowData, rowIndex)}
+          />
+        ),
+        className: "py-2 text-center border-r border-[#E0E1EA]",
+      },
+      {
+        key: "upload",
+        icon: <IconStore.upload className="size-4" />,
+        className: "cursor-pointer pl-2",
+        tooltipComponent: <p className="text-center">{rowData.ticket_type}</p>,
+        onClick: () => handleUploadAction(rowData, rowIndex),
+      },
+      {
+        key: "view",
+        icon: <Eye className="size-4" />,
+        className: "cursor-pointer px-2",
+        tooltipComponent: (
+          <p className="text-center">
+            Expected Delivery Date:
+            <br />
+            {rowData.match_date}
+          </p>
+        ),
+        tooltipPosition: "top",
+        onClick: () => handleViewDetails(rowData),
+      },
+    ];
   };
 
-  // Handle filter toggle from dropdown
-  const handleFilterToggle = (filterName) => {
-    setActiveFilters((prev) => {
-      if (prev.includes(filterName)) {
-        return prev.filter((f) => f !== filterName);
-      } else {
-        return [...prev, filterName];
-      }
+  // Sticky column headers
+  const stickyHeaders = ["", "", ""];
+  const stickyColumnsWidth = 150;
+
+  // Action handlers for sticky columns
+  const handleUploadAction = (rowData, rowIndex) => {
+    console.log("Upload action clicked for row:", rowData, rowIndex);
+    // Implement your upload action logic here
+    setShowUploadPopup({
+      show: true,
+      rowData: rowData,
+      rowIndex,
+      matchDetails: rowData?.rawMatchData,
     });
   };
 
-  // Handle column toggle from dropdown
+  const handleViewDetails = async (item) => {
+    console.log("View details:", item?.rawTicketData?.s_no);
+    const fetchViewDetailsPopup = await getViewDetailsPopup("", {
+      ticket_id: item?.rawTicketData?.s_no,
+    });
+    setViewDetailsPopup({
+      show: true,
+      rowData: fetchViewDetailsPopup,
+    });
+    // Implement view details logic
+  };
+
+  const handleEditListing = (item) => {
+    console.log("Edit listing:", item);
+    // Implement edit logic
+  };
+
+  const handleDeleteListing = (item) => {
+    console.log("Delete listing:", item);
+    // Implement delete logic
+  };
+
+  const createInitialVisibleColumns = useCallback(() => {
+    return headers.reduce((acc, header) => {
+      acc[header.key] = true;
+      return acc;
+    }, {});
+  }, [headers]);
+
+  const [visibleColumns, setVisibleColumns] = useState(
+    createInitialVisibleColumns()
+  );
+
+  const filteredHeaders = headers.filter(
+    (header) => visibleColumns[header.key]
+  );
+
   const handleColumnToggle = (columnKey) => {
-    setVisibleColumns((prev) => {
-      if (prev.includes(columnKey)) {
-        return prev.filter((c) => c !== columnKey);
-      } else {
-        return [...prev, columnKey];
-      }
+    setVisibleColumns((prev) => ({
+      ...prev,
+      [columnKey]: !prev[columnKey],
+    }));
+  };
+
+  // Memoize the configuration for list items (stats cards)
+  const listItemsConfig = useMemo(
+    () => ({
+      tickets: [
+        {
+          name: "Total Events",
+          value: overViewData.events || 0,
+          key: "total_listings",
+        },
+        {
+          name: "Listings",
+          value: overViewData.listings || 0,
+          key: "active_listings",
+        },
+        {
+          name: "Tickets",
+          value: overViewData.tickets || 0,
+          key: "total_value",
+        },
+        {
+          name: "Published Listings",
+          value: overViewData.published_listings || 0,
+          key: "total_tickets",
+        },
+        {
+          name: "Unpublished Listings",
+          value: overViewData.unpublished_listings || 0,
+          key: "total_tickets_unpublished",
+        },
+      ],
+    }),
+    [overViewData]
+  );
+
+  // Memoize the configuration for filters
+  const filterConfig = useMemo(
+    () => ({
+      tickets: [
+        {
+          type: "select",
+          name: "category",
+          label: "Category",
+          value: filtersApplied?.category,
+          options:
+            response?.filters?.category?.map((category) => ({
+              value: category?.id,
+              label: category?.name,
+            })) || [],
+          parentClassName: "!w-[15%]",
+          className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+          labelClassName: "!text-[11px]",
+        },
+        {
+          type: "select",
+          name: "ticket_category",
+          label: "ticket_category",
+          value: filtersApplied?.ticket_category,
+          options:
+            response?.filters?.ticket_category?.map((category) => ({
+              value: category?.id,
+              label: category?.name,
+            })) || [],
+          parentClassName: "!w-[15%]",
+          className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
+          labelClassName: "!text-[11px]",
+        },
+        {
+          type: "select",
+          name: "ticket_types",
+          label: "ticket_types",
+          value: filtersApplied?.ticket_types,
+          options:
+            response?.filters?.ticket_types?.map((category) => ({
+              value: category?.id,
+              label: category?.name,
+            })) || [],
+          parentClassName: "!w-[15%]",
+          className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
+          labelClassName: "!text-[11px]",
+        },
+        {
+          type: "select",
+          name: "tournament",
+          label: "tournament",
+          value: filtersApplied?.tournament,
+          options:
+            response?.filters?.tournament?.map((category) => ({
+              value: category?.id,
+              label: category?.name,
+            })) || [],
+          parentClassName: "!w-[15%]",
+          className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
+          labelClassName: "!text-[11px]",
+        },
+        {
+          type: "select",
+          name: "user_info",
+          label: "user_info",
+          value: filtersApplied?.user_info,
+          options:
+            response?.filters?.user_info?.map((category) => ({
+              value: category?.id,
+              label: category?.first_name,
+            })) || [],
+          parentClassName: "!w-[15%]",
+          className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
+          labelClassName: "!text-[11px]",
+        },
+      ],
+    }),
+    [filtersApplied, response]
+  );
+
+  const handleFilterChange = async (
+    filterKey,
+    value,
+    allFilters,
+    currentTab
+  ) => {
+    console.log("Filter changed:", {
+      filterKey,
+      value,
+      allFilters,
+      currentTab,
     });
+
+    let params = {};
+
+    // Handle different filter types
+    if (filterKey === "matchDate") {
+      params = {
+        ...params,
+        match_date_from: value?.startDate,
+        match_date_to: value?.endDate,
+      };
+    } else if (filterKey === "listingDate") {
+      params = {
+        ...params,
+        listing_date_from: value?.startDate,
+        listing_date_to: value?.endDate,
+      };
+    } else {
+      params = {
+        ...params,
+        [filterKey]: value,
+      };
+    }
+
+    const updatedFilters = {
+      ...filtersApplied,
+      ...params,
+      page: 1,
+    };
+    setIsLoading(true);
+    const handleApiCall = await getMyListingHistory("", {
+      ...updatedFilters,
+    });
+    setListingHistoryData(handleApiCall);
+    console.log(handleApiCall, "handleApiCallhandleApiCall");
+    setFiltersApplied(updatedFilters);
+    setIsLoading(false);
+
+    try {
+      // Implement your filter API call here
+      console.log("Applying filters:", updatedFilters);
+    } catch (error) {
+      console.error("Filter change error:", error);
+    }
   };
 
-  const stickyColumns = [
-    [
-      {
-        icon: <p className="text-xs font-medium">£165</p>,
-        className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
-      },
-      {
-        icon: <Image width={14} height={14} src={attachmentPin} alt="attach" />,
-        className: "cursor-pointer pl-2",
-        tooltipComponent: <p className="text-center">External Transfer</p>,
-        key: "attach",
-      },
-      {
-        icon: <Image width={16} height={16} src={crossHand} alt="hand" />,
-        className: "cursor-pointer px-2",
-        key: "oneHand",
-        tooltipComponent: (
-          <p className="text-center">
-            Expected Delivery Date:
-            <br />
-            {dateFormat("2024-11-24")}
-          </p>
-        ),
-        tooltipPosition: "top",
-      },
-      {
-        icon: (
-          <IconStore.upload
-            onClick={() => openUploadPopup()}
-            className="size-5 font-[500]"
-            alt="document"
-          />
-        ),
-        className: "cursor-pointer pr-2",
-        key: "document",
-        tooltipComponent: (
-          <div>
-            <p className="text-left">Benefits/Restrictions</p>
-            <ul className="list-disc ml-[20px]">
-              <li>Behind the goal view</li>
-              <li>Atmosphere section</li>
-            </ul>
-          </div>
-        ),
-        tooltipPosition: "top",
-      },
-      {
-        icon: (
-          <Image width={20} height={20} src={beforeFaviurates} alt="star" />
-        ),
-        tooltipComponent: <p className="text-center">Track this ticket</p>,
-        className: "border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer",
-        key: "star",
-      },
-    ],
-    [
-      {
-        icon: <p className="text-xs font-medium">£155</p>,
-        className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
-      },
-      {
-        icon: <Image width={14} height={14} src={attachment3} alt="attach" />,
-        className: "cursor-pointer pl-2",
-        tooltipComponent: <p className="text-center">Internal Transfer</p>,
-        key: "attach",
-      },
-      {
-        icon: <Image width={16} height={16} src={crossHand} alt="hand" />,
-        className: "cursor-pointer px-2",
-        key: "oneHand",
-        tooltipComponent: (
-          <p className="text-center">
-            Expected Delivery Date:
-            <br />
-            {dateFormat("2024-11-25")}
-          </p>
-        ),
-        tooltipPosition: "top",
-      },
-      {
-        icon: (
-          <IconStore.upload
-            onClick={() => openUploadPopup()}
-            className="size-5 font-[500]"
-            alt="document"
-          />
-        ),
-        className: "cursor-pointer pr-2",
-        key: "document",
-      },
-      {
-        icon: <Image width={20} height={20} src={star} alt="star" />,
-        tooltipComponent: <p className="text-center">Track this ticket</p>,
-        className: "border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer",
-        key: "star",
-      },
-    ],
-    [
-      {
-        icon: <p className="text-xs font-medium">£295</p>,
-        className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
-      },
-      {
-        icon: <Image width={14} height={14} src={attachment6} alt="attach" />,
-        className: "cursor-pointer pl-2",
-        tooltipComponent: <p className="text-center">Direct Sale</p>,
-        key: "attach",
-      },
-      {
-        icon: <Image width={16} height={16} src={crossHand} alt="hand" />,
-        className: "cursor-pointer px-2",
-        key: "oneHand",
-        tooltipComponent: (
-          <p className="text-center">
-            Expected Delivery Date:
-            <br />
-            {dateFormat("2024-11-26")}
-          </p>
-        ),
-        tooltipPosition: "top",
-      },
-      {
-        icon: (
-          <IconStore.upload
-            onClick={() => openUploadPopup()}
-            className="size-5 font-[500]"
-            alt="document"
-          />
-        ),
-        className: "cursor-pointer pr-2",
-        key: "document",
-        tooltipComponent: (
-          <div>
-            <p className="text-left">Benefits/Restrictions</p>
-            <ul className="list-disc ml-[20px] grid grid-cols-2 gap-1">
-              <li>Executive lounge access</li>
-              <li>Premium dining</li>
-              <li>Complimentary drinks</li>
-              <li>Best seats in stadium</li>
-            </ul>
-          </div>
-        ),
-        tooltipPosition: "top",
-      },
-      {
-        icon: (
-          <Image width={20} height={20} src={beforeFaviurates} alt="star" />
-        ),
-        tooltipComponent: <p className="text-center">Track this ticket</p>,
-        className: "border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer",
-        key: "star",
-      },
-    ],
-    [
-      {
-        icon: <p className="text-xs font-medium">£165</p>,
-        className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
-      },
-      {
-        icon: <Image width={14} height={14} src={attachmentPin} alt="attach" />,
-        className: "cursor-pointer pl-2",
-        tooltipComponent: <p className="text-center">External Transfer</p>,
-        key: "attach",
-      },
-      {
-        icon: <Image width={16} height={16} src={crossHand} alt="hand" />,
-        className: "cursor-pointer px-2",
-        key: "oneHand",
-        tooltipComponent: (
-          <p className="text-center">
-            Expected Delivery Date:
-            <br />
-            {dateFormat("2024-11-24")}
-          </p>
-        ),
-        tooltipPosition: "top",
-      },
-      {
-        icon: (
-          <IconStore.upload
-            onClick={() => openUploadPopup()}
-            className="size-5 font-[500]"
-            alt="document"
-          />
-        ),
-        className: "cursor-pointer pr-2",
-        key: "document",
-        tooltipComponent: (
-          <div>
-            <p className="text-left">Benefits/Restrictions</p>
-            <ul className="list-disc ml-[20px]">
-              <li>Behind the goal view</li>
-              <li>Atmosphere section</li>
-            </ul>
-          </div>
-        ),
-        tooltipPosition: "top",
-      },
-      {
-        icon: (
-          <Image width={20} height={20} src={beforeFaviurates} alt="star" />
-        ),
-        tooltipComponent: <p className="text-center">Track this ticket</p>,
-        className: "border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer",
-        key: "star",
-      },
-    ],
-    [
-      {
-        icon: <p className="text-xs font-medium">£155</p>,
-        className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
-      },
-      {
-        icon: <Image width={14} height={14} src={attachment3} alt="attach" />,
-        className: "cursor-pointer pl-2",
-        tooltipComponent: <p className="text-center">Internal Transfer</p>,
-        key: "attach",
-      },
-      {
-        icon: <Image width={16} height={16} src={crossHand} alt="hand" />,
-        className: "cursor-pointer px-2",
-        key: "oneHand",
-        tooltipComponent: (
-          <p className="text-center">
-            Expected Delivery Date:
-            <br />
-            {dateFormat("2024-11-25")}
-          </p>
-        ),
-        tooltipPosition: "top",
-      },
-      {
-        icon: (
-          <IconStore.upload
-            onClick={() => openUploadPopup()}
-            className="size-5 font-[500]"
-            alt="document"
-          />
-        ),
-        className: "cursor-pointer pr-2",
-        key: "document",
-      },
-      {
-        icon: <Image width={20} height={20} src={star} alt="star" />,
-        tooltipComponent: <p className="text-center">Track this ticket</p>,
-        className: "border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer",
-        key: "star",
-      },
-    ],
-    [
-      {
-        icon: <p className="text-xs font-medium">£295</p>,
-        className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
-      },
-      {
-        icon: <Image width={14} height={14} src={attachment6} alt="attach" />,
-        className: "cursor-pointer pl-2",
-        tooltipComponent: <p className="text-center">Direct Sale</p>,
-        key: "attach",
-      },
-      {
-        icon: <Image width={16} height={16} src={crossHand} alt="hand" />,
-        className: "cursor-pointer px-2",
-        key: "oneHand",
-        tooltipComponent: (
-          <p className="text-center">
-            Expected Delivery Date:
-            <br />
-            {dateFormat("2024-11-26")}
-          </p>
-        ),
-        tooltipPosition: "top",
-      },
-      {
-        icon: (
-          <IconStore.upload
-            onClick={() => openUploadPopup()}
-            className="size-5 font-[500]"
-            alt="document"
-          />
-        ),
-        className: "cursor-pointer pr-2",
-        key: "document",
-        tooltipComponent: (
-          <div>
-            <p className="text-left">Benefits/Restrictions</p>
-            <ul className="list-disc ml-[20px] grid grid-cols-2 gap-1">
-              <li>Executive lounge access</li>
-              <li>Premium dining</li>
-              <li>Complimentary drinks</li>
-              <li>Best seats in stadium</li>
-            </ul>
-          </div>
-        ),
-        tooltipPosition: "top",
-      },
-      {
-        icon: (
-          <Image width={20} height={20} src={beforeFaviurates} alt="star" />
-        ),
-        tooltipComponent: <p className="text-center">Track this ticket</p>,
-        className: "border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer",
-        key: "star",
-      },
-    ],
-    [
-      {
-        icon: <p className="text-xs font-medium">£165</p>,
-        className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
-      },
-      {
-        icon: <Image width={14} height={14} src={attachmentPin} alt="attach" />,
-        className: "cursor-pointer pl-2",
-        tooltipComponent: <p className="text-center">External Transfer</p>,
-        key: "attach",
-      },
-      {
-        icon: <Image width={16} height={16} src={crossHand} alt="hand" />,
-        className: "cursor-pointer px-2",
-        key: "oneHand",
-        tooltipComponent: (
-          <p className="text-center">
-            Expected Delivery Date:
-            <br />
-            {dateFormat("2024-11-24")}
-          </p>
-        ),
-        tooltipPosition: "top",
-      },
-      {
-        icon: (
-          <IconStore.upload
-            onClick={() => openUploadPopup()}
-            className="size-5 font-[500]"
-            alt="document"
-          />
-        ),
-        className: "cursor-pointer pr-2",
-        key: "document",
-        tooltipComponent: (
-          <div>
-            <p className="text-left">Benefits/Restrictions</p>
-            <ul className="list-disc ml-[20px]">
-              <li>Behind the goal view</li>
-              <li>Atmosphere section</li>
-            </ul>
-          </div>
-        ),
-        tooltipPosition: "top",
-      },
-      {
-        icon: (
-          <Image width={20} height={20} src={beforeFaviurates} alt="star" />
-        ),
-        tooltipComponent: <p className="text-center">Track this ticket</p>,
-        className: "border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer",
-        key: "star",
-      },
-    ],
-  ];
-
-  const rightStickyHeaders = ["", "", "", "", "", ""];
-
-  // Convert your event data into accordion items - using the same data structure as your original
-  const accordionItems = [
-    {
-      id: 1,
-      title: "Nottingham Forest vs Aston Villa",
-      date: "Sat, 23 Nov 2024",
-      time: "08:00 AM",
-      venue: "City Ground",
-      available: "15",
-      sold: "8",
-      views: "120",
-      data: [
-        {
-          id: "2059648309",
-          listingId: "2059648309",
-          ticketType: "External Transfer",
-          quantity: 40,
-          sold: 0,
-          splitType: "None",
-          category: "Main Stand",
-          section: "Main Stand",
-          row: "PREMIUM",
-          pricePerTicket: 165,
-          totalPrice: 6600,
-          deliveryMethod: "Email",
-          saleDate: "2024-11-20",
-          eventDate: "2024-11-23",
-          status: "Active",
-          commission: 10,
-          notes: "Premium seats with excellent view",
-        },
-        {
-          id: "1933901370",
-          listingId: "1933901370",
-          ticketType: "External Transfer",
-          quantity: 40,
-          sold: 0,
-          splitType: "None",
-          category: "Main Stand",
-          section: "Main Stand",
-          row: "PREMIUM",
-          pricePerTicket: 155,
-          totalPrice: 6200,
-          deliveryMethod: "Mobile",
-          saleDate: "2024-11-19",
-          eventDate: "2024-11-23",
-          status: "Active",
-          commission: 8,
-          notes: "Last minute availability",
-        },
-        {
-          id: "2330843130",
-          listingId: "2330843130",
-          ticketType: "External Transfer",
-          quantity: 10,
-          sold: 0,
-          splitType: "None",
-          category: "Main Stand",
-          section: "Main Stand",
-          row: "M01",
-          pricePerTicket: 295,
-          totalPrice: 2950,
-          deliveryMethod: "Collection",
-          saleDate: "2024-11-18",
-          eventDate: "2024-11-23",
-          status: "Pending",
-          commission: 12,
-          notes: "VIP package included",
-        },
-        {
-          id: "5172790641",
-          listingId: "5172790641",
-          ticketType: "Direct Sale",
-          quantity: 20,
-          sold: 5,
-          splitType: "Split",
-          category: "Family Stand",
-          section: "Family Stand",
-          row: "F12",
-          pricePerTicket: 85,
-          totalPrice: 1700,
-          deliveryMethod: "Email",
-          saleDate: "2024-11-17",
-          eventDate: "2024-11-23",
-          status: "Active",
-          commission: 5,
-          notes: "Family friendly section",
-        },
-        {
-          id: "1480917639",
-          listingId: "1480917639",
-          ticketType: "External Transfer",
-          quantity: 10,
-          sold: 0,
-          splitType: "None",
-          category: "Away End",
-          section: "Away End",
-          row: "Row",
-          pricePerTicket: 45,
-          totalPrice: 450,
-          deliveryMethod: "Postal",
-          saleDate: "2024-11-16",
-          eventDate: "2024-11-23",
-          status: "Active",
-          commission: 3,
-          notes: "Away supporters section",
-        },
-        {
-          id: "123825011",
-          listingId: "123825011",
-          ticketType: "External Transfer",
-          quantity: 10,
-          sold: 0,
-          splitType: "None",
-          category: "Main Stand",
-          section: "Main Stand",
-          row: "Row",
-          pricePerTicket: 125,
-          totalPrice: 1250,
-          deliveryMethod: "Email",
-          saleDate: "2024-11-15",
-          eventDate: "2024-11-23",
-          status: "Cancelled",
-          commission: 7,
-          notes: "Cancelled due to seller request",
-        },
-        {
-          id: "4082813833",
-          listingId: "4082813833",
-          ticketType: "External Transfer",
-          quantity: 10,
-          sold: 0,
-          splitType: "None",
-          category: "Main Stand",
-          section: "Main Stand",
-          row: "D",
-          pricePerTicket: 175,
-          totalPrice: 1750,
-          deliveryMethod: "Mobile",
-          saleDate: "2024-11-14",
-          eventDate: "2024-11-23",
-          status: "Active",
-          commission: 9,
-          notes: "Lower tier seats",
-        },
-        {
-          id: "2267793173",
-          listingId: "2267793173",
-          ticketType: "External Transfer",
-          quantity: 10,
-          sold: 0,
-          splitType: "None",
-          category: "Main Stand",
-          section: "Main Stand",
-          row: "D",
-          pricePerTicket: 165,
-          totalPrice: 1650,
-          deliveryMethod: "Collection",
-          saleDate: "2024-11-13",
-          eventDate: "2024-11-23",
-          status: "Sold",
-          commission: 8,
-          notes: "Sold to season ticket holder",
-        },
-      ],
-      rightStickyColumns: stickyColumns,
-    },
-    {
-      id: 2,
-      title: "Chelsea vs Manchester United",
-      date: "Sun, 24 Nov 2024",
-      time: "14:30",
-      venue: "Stamford Bridge",
-      available: "22",
-      sold: "15",
-      views: "350",
-      data: [
-        {
-          id: "3059648309",
-          listingId: "3059648309",
-          ticketType: "External Transfer",
-          quantity: 30,
-          sold: 5,
-          splitType: "None",
-          category: "West Stand",
-          section: "West Stand Upper",
-          row: "PREMIUM",
-          pricePerTicket: 225,
-          totalPrice: 6750,
-          deliveryMethod: "Email",
-          saleDate: "2024-11-21",
-          eventDate: "2024-11-24",
-          status: "Active",
-          commission: 15,
-          notes: "Premium view of the pitch",
-        },
-        {
-          id: "4933901370",
-          listingId: "4933901370",
-          ticketType: "Direct Sale",
-          quantity: 25,
-          sold: 10,
-          splitType: "Split",
-          category: "East Stand",
-          section: "East Stand Lower",
-          row: "A15",
-          pricePerTicket: 185,
-          totalPrice: 4625,
-          deliveryMethod: "Mobile",
-          saleDate: "2024-11-20",
-          eventDate: "2024-11-24",
-          status: "Active",
-          commission: 12,
-          notes: "Close to player tunnel",
-        },
-      ],
-      rightStickyColumns: stickyColumns.slice(0, 2),
-    },
-    {
-      id: 3,
-      title: "Arsenal vs Liverpool",
-      date: "Mon, 25 Nov 2024",
-      time: "20:00",
-      venue: "Emirates Stadium",
-      available: "8",
-      sold: "25",
-      views: "580",
-      data: [
-        {
-          id: "5059648309",
-          listingId: "5059648309",
-          ticketType: "External Transfer",
-          quantity: 15,
-          sold: 8,
-          splitType: "Bundle",
-          category: "North Bank",
-          section: "North Bank Upper",
-          row: "C22",
-          pricePerTicket: 195,
-          totalPrice: 2925,
-          deliveryMethod: "Collection",
-          saleDate: "2024-11-22",
-          eventDate: "2024-11-25",
-          status: "Active",
-          commission: 13,
-          notes: "Behind the goal atmosphere",
-        },
-        {
-          id: "6933901370",
-          listingId: "6933901370",
-          ticketType: "Internal Transfer",
-          quantity: 20,
-          sold: 17,
-          splitType: "None",
-          category: "Clock End",
-          section: "Clock End Lower",
-          row: "G8",
-          pricePerTicket: 145,
-          totalPrice: 2900,
-          deliveryMethod: "Email",
-          saleDate: "2024-11-21",
-          eventDate: "2024-11-25",
-          status: "Active",
-          commission: 8,
-          notes: "Good value seats",
-        },
-        {
-          id: "7330843130",
-          listingId: "7330843130",
-          ticketType: "Direct Sale",
-          quantity: 12,
-          sold: 0,
-          splitType: "Split",
-          category: "Executive",
-          section: "Diamond Club",
-          row: "EXECUTIVE",
-          pricePerTicket: 450,
-          totalPrice: 5400,
-          deliveryMethod: "Collection",
-          saleDate: "2024-11-23",
-          eventDate: "2024-11-25",
-          status: "Pending",
-          commission: 20,
-          notes: "VIP experience with hospitality",
-        },
-      ],
-      rightStickyColumns: stickyColumns.slice(0, 3),
-    },
-  ];
-
-  const handleCellEdit = (itemIndex, rowIndex, columnKey, value) => {
-    console.log("Cell edited:", { itemIndex, rowIndex, columnKey, value });
-    // Here you would typically update your data state or make an API call
-  };
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, []);
 
   const handleRowSelectionChange = (newSelectedRows) => {
     console.log("Row selection changed:", newSelectedRows);
@@ -977,399 +1125,331 @@ const TicketsPage = () => {
   };
 
   const handleSelectAll = () => {
-    // Logic to select all rows across all items
-    const allRowIds = [];
-    accordionItems.forEach((item) => {
-      if (item.data) {
-        item.data.forEach((row) => {
-          allRowIds.push(`${item.id}-${row.id}`);
-        });
-      }
-    });
-    setSelectedRows(allRowIds);
+    const allRowIndices = ticketsData.map((_, index) => index);
+    setSelectedRows(allRowIndices);
   };
 
   const handleDeselectAll = () => {
     setSelectedRows([]);
   };
 
-  const handleClone = () => {
-    console.log("Cloning selected rows:", selectedRows);
-    // Implement clone functionality
-  };
+  // Enhanced Custom Table Component for each match with accordion functionality
+  // Enhanced Custom Table Component with proper alignment
+  // Enhanced Custom Table Component with proper alignment
+  const CustomMatchTable = ({ matchData }) => {
+    const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
+    const [isExpanded, setIsExpanded] = useState(true);
+    const { matchInfo, tickets } = matchData;
 
-  const handleEdit = () => {
-    console.log("Editing selected rows:", selectedRows);
-    // Implement edit functionality
-  };
+    const toggleExpanded = () => {
+      setIsExpanded(!isExpanded);
+    };
 
-  const handleDelete = () => {
-    console.log("Deleting selected rows:", selectedRows);
-    // Implement delete functionality
-  };
-
-  const handleExportCSV = () => {
-    console.log("Exporting selected rows to CSV:", selectedRows);
-    // Implement CSV export functionality
-  };
-
-  const handleCollapseAll = () => {
-    console.log("Collapsing all accordion items");
-    // Implement collapse all functionality
-  };
-
-  // Calculate total events count from accordion items
-  const totalEvents = accordionItems.length;
-  const selectedCount = selectedRows.length;
-  const selectedEventsCount = accordionItems.filter((item) =>
-    selectedRows.some((id) => id.startsWith(`${item.id}-`))
-  ).length;
-
-  return (
-    <div className="bg-[#F5F7FA] w-full h-full relative">
-      {/* Header with Filter and Add Deposit button */}
-      <div className="flex bg-white items-center py-2 md:py-2 justify-between px-4 md:px-6 border-b border-[#eaeaf1]">
-        <div className="flex items-center space-x-4">
-          <p>Filter</p>
-
-          {/* Control Icons */}
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex gap-2 ml-4 relative">
-            {/* Filter Icon */}
-            <button
-              ref={filterButtonRef}
-              onClick={() => {
-                setShowFilterDropdown(!showFilterDropdown);
-                setShowColumnDropdown(false);
-              }}
-              className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-              title="Filter options"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46 22,3" />
-              </svg>
-            </button>
-
-            {/* Column Icon */}
-            <button
-              ref={columnButtonRef}
-              onClick={() => {
-                setShowColumnDropdown(!showColumnDropdown);
-                setShowFilterDropdown(false);
-              }}
-              className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-              title="Column options"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <rect x="3" y="3" width="6" height="18" />
-                <rect x="11" y="3" width="6" height="18" />
-                <rect x="19" y="3" width="2" height="18" />
-              </svg>
-            </button>
-
-            {/* Filter Dropdown */}
-            <FilterDropdown
-              isOpen={showFilterDropdown}
-              onClose={() => setShowFilterDropdown(false)}
-              filterConfig={filterConfig}
-              activeFilters={activeFilters}
-              onFilterToggle={handleFilterToggle}
-            />
-
-            {/* Column Dropdown */}
-            <ColumnDropdown
-              isOpen={showColumnDropdown}
-              onClose={() => setShowColumnDropdown(false)}
-              headers={allHeaders}
-              visibleColumns={visibleColumns}
-              onColumnToggle={handleColumnToggle}
-            />
-          </div>
-          <Button
-          type="blueType"
-          classNames={{
-            root: "px-2 md:px-3 py-1.5 md:py-2",
-            label_: "text-xs md:text-sm font-medium",
-          }}
-          onClick={() => {
-            handleOpenAddWalletPopup();
-          }}
-          label="+ Add Deposit"
-        />
-        </div>
-      </div>
-
-      {/* Filter Section - Only show active filters */}
-      {getActiveFilterConfig().length > 0 && (
-        <div className="border-b-[1px] bg-white border-[#DADBE5] p-4">
-          <div className="flex gap-4 items-center w-[80%]">
-            {getActiveFilterConfig().map((filter) => {
-              switch (filter.name) {
-                case "selectedMatch":
-                  return (
-                    <FloatingLabelInput
-                      key={filter.name}
-                      id="selectedMatch"
-                      name="selectedMatch"
-                      keyValue={"selectedMatch"}
-                      type="text"
-                      label="Search Match Event"
-                      className={
-                        "!py-[7px] !px-[12px] !text-[#323A70] !text-[14px] "
-                      }
-                      paddingClassName=""
-                      autoComplete="off"
-                    />
-                  );
-                case "ticket_status":
-                  return (
-                    <FloatingSelect
-                      key={filter.name}
-                      label={"Ticket Status"}
-                      options={[
-                        { value: "fulfilled", label: "Fulfilled" },
-                        { value: "incomplete", label: "Incomplete" },
-                      ]}
-                      keyValue="ticket_status"
-                      className=""
-                      paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
-                    />
-                  );
-                case "booking_status":
-                  return (
-                    <FloatingSelect
-                      key={filter.name}
-                      label={"Booking Status"}
-                      keyValue="booking_status"
-                      className=""
-                      paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
-                    />
-                  );
-                case "eventDate":
-                  return (
-                    <FloatingDateRange
-                      key={filter.name}
-                      id="eventDate"
-                      name="eventDate"
-                      keyValue="eventDate"
-                      parentClassName=""
-                      label="Event Date"
-                      subParentClassName=""
-                      className="!py-[8px] !px-[16px] mobile:text-xs"
-                    />
-                  );
-                default:
-                  return null;
-              }
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Events Count Section */}
-      <div className="border-b-[1px] bg-white border-[#DADBE5] flex items-center">
-        <p className="text-[14px] p-4 text-[#323A70] font-medium border-r-[1px] border-[#DADBE5] w-fit">
-          {totalEvents} Events
-        </p>
-      </div>
-
-      {/* Main Content Area with Accordion Table */}
-      <div
-        className="m-6 bg-white rounded max-h-[calc(100vh-300px)] overflow-auto"
-        style={{
-          paddingBottom: selectedRows.length > 0 ? "120px" : "0", // Add padding when sticky bar is visible
-        }}
-      >
-        <ScrollableAccordionTable
-          items={accordionItems}
-          headers={headers}
-          rightStickyHeaders={rightStickyHeaders}
-          loading={false}
-          onCellEdit={handleCellEdit}
-          selectedRows={selectedRows}
-          onRowSelectionChange={handleRowSelectionChange}
-        />
-      </div>
-
-      <UploadTickets
-        show={showUploadPopup}
-        onClose={() => {
-          setShowUploadPopup(false);
-        }}
-      />
-
-      {/* Sticky Bottom Container - FIXED z-index and positioning */}
-      {selectedRows.length > 0 && (
+    return (
+      <div className="border border-gray-200 rounded-lg mb-4 overflow-hidden relative">
+        {/* Clickable Table Header with Accordion */}
         <div
-          className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg"
-          style={{ zIndex: 9999 }} // Much higher z-index
+          className="bg-[#343432] text-white px-3 py-2.5 cursor-pointer"
+          onClick={toggleExpanded}
         >
-          {/* Collapsed State */}
-          {!isStickyExpanded && (
-            <div className="flex items-center justify-between px-6 py-3">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedCount > 0}
-                    onChange={
-                      selectedCount > 0 ? handleDeselectAll : handleSelectAll
-                    }
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    Select all
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
+                <div
+                  className={`transform transition-transform duration-200 ${
+                    isExpanded ? "rotate-180" : ""
+                  }`}
+                >
+                  <ChevronDown size={14} />
+                </div>
+                <h3 className="font-medium text-sm truncate max-w-xs">
+                  {matchInfo?.match_name || "Match Details"}
+                </h3>
+              </div>
+              <div className="flex items-center space-x-3 text-xs">
+                <div className="flex items-center space-x-1">
+                  <Calendar1Icon size={11} />
+                  <span className="truncate">
+                    {matchInfo?.match_date
+                      ? new Date(matchInfo.match_date).toLocaleDateString()
+                      : "TBD"}
                   </span>
                 </div>
-                <div className="text-sm text-gray-600">
-                  <span className="font-medium">{selectedCount}</span> selected
-                  in <span className="font-medium">{selectedEventsCount}</span>{" "}
-                  event{selectedEventsCount !== 1 ? "s" : ""}
+                <div className="flex items-center space-x-1">
+                  <Clock size={11} />
+                  <span className="truncate">
+                    {matchInfo?.match_time || "TBD"}
+                  </span>
                 </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={handleDeselectAll}
-                  className="text-sm text-gray-600 hover:text-gray-800 px-3 py-1 hover:bg-gray-100 rounded"
-                >
-                  Deselect
-                </button>
-                <button
-                  onClick={handleClone}
-                  className="flex items-center space-x-1 text-sm text-gray-700 hover:text-gray-900 px-3 py-1 hover:bg-gray-100 rounded"
-                >
-                  <Copy size={16} />
-                  <span>Clone</span>
-                </button>
-                <button
-                  onClick={handleEdit}
-                  className="flex items-center space-x-1 text-sm text-gray-700 hover:text-gray-900 px-3 py-1 hover:bg-gray-100 rounded"
-                >
-                  <Edit size={16} />
-                  <span>Edit</span>
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="flex items-center space-x-1 text-sm text-gray-700 hover:text-gray-900 px-3 py-1 hover:bg-gray-100 rounded"
-                >
-                  <Trash2 size={16} />
-                  <span>Delete</span>
-                </button>
-                <button
-                  onClick={handleExportCSV}
-                  className="flex items-center space-x-1 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded text-sm font-medium"
-                >
-                  <Download size={16} />
-                  <span>Export CSV</span>
-                </button>
-                <button
-                  onClick={() => setIsStickyExpanded(true)}
-                  className="flex items-center space-x-1 text-gray-600 hover:text-gray-800 px-2 py-1 hover:bg-gray-100 rounded"
-                >
-                  <ChevronUp size={16} />
-                </button>
+                <div className="flex items-center space-x-1">
+                  <MapPin size={11} />
+                  <span className="truncate max-w-xs">
+                    {matchInfo?.stadium_name || "TBD"}
+                  </span>
+                </div>
               </div>
             </div>
-          )}
+            <div className="flex items-center space-x-4 text-xs">
+              <span className="text-gray-300">
+                {tickets.length} ticket{tickets.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+          </div>
+        </div>
 
-          {/* Expanded State */}
-          {isStickyExpanded && (
-            <div className="px-6 py-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedCount > 0}
-                      onChange={
-                        selectedCount > 0 ? handleDeselectAll : handleSelectAll
-                      }
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <span className="text-sm font-medium text-gray-700">
-                      Select all
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    <span className="font-medium">{selectedCount}</span>{" "}
-                    selected in{" "}
-                    <span className="font-medium">{selectedEventsCount}</span>{" "}
-                    event{selectedEventsCount !== 1 ? "s" : ""}
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsStickyExpanded(false)}
-                  className="flex items-center space-x-1 text-gray-600 hover:text-gray-800 px-2 py-1 hover:bg-gray-100 rounded"
+        {/* Collapsible Table Content with Sticky Columns */}
+        {isExpanded && (
+          <div className="w-full bg-white relative transition-all duration-300 ease-in-out">
+            {/* Main scrollable table container */}
+            <div className="relative">
+              {/* Main Table */}
+              <div
+                className="w-full overflow-x-auto"
+                style={{ paddingRight: `${stickyColumnsWidth}px` }}
+              >
+                <table
+                  className="w-full border-none"
+                  style={{ minWidth: "1200px" }}
                 >
-                  <ChevronDown size={16} />
-                </button>
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="px-2 py-3 text-left text-gray-600 font-medium whitespace-nowrap text-xs w-12">
+                        <input
+                          type="checkbox"
+                          checked={
+                            selectedRows.length === tickets.length &&
+                            tickets.length > 0
+                          }
+                          onChange={
+                            selectedRows.length > 0
+                              ? handleDeselectAll
+                              : handleSelectAll
+                          }
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                      </th>
+                      {filteredHeaders.map((header) => (
+                        <th
+                          key={header.key}
+                          className="px-2 py-3 text-left text-gray-600 font-medium whitespace-nowrap text-xs min-w-[120px]"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="truncate">{header.label}</span>
+                          </div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tickets.map((ticket, rowIndex) => {
+                      const globalRowIndex = ticketsData.findIndex(
+                        (t) => t.id === ticket.id
+                      );
+                      const isSelected = selectedRows.includes(globalRowIndex);
+
+                      return (
+                        <tr
+                          key={ticket.id}
+                          className={`border-b border-gray-200 transition-colors ${
+                            isSelected
+                              ? "bg-blue-50"
+                              : "bg-white hover:bg-gray-50"
+                          }`}
+                          onMouseEnter={() => setHoveredRowIndex(rowIndex)}
+                          onMouseLeave={() => setHoveredRowIndex(null)}
+                          style={{ height: "48px" }} // Fixed row height
+                        >
+                          <td className="py-3 px-2 text-xs whitespace-nowrap w-12 align-middle">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                const newSelectedRows = isSelected
+                                  ? selectedRows.filter(
+                                      (index) => index !== globalRowIndex
+                                    )
+                                  : [...selectedRows, globalRowIndex];
+                                setSelectedRows(newSelectedRows);
+                              }}
+                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                          </td>
+                          {filteredHeaders.map((header) => (
+                            <td
+                              key={`${rowIndex}-${header.key}`}
+                              className="py-3 px-2 text-xs whitespace-nowrap overflow-hidden text-ellipsis align-middle min-w-[120px]"
+                            >
+                              {header.editable ? (
+                                renderEditableCell(
+                                  ticket,
+                                  header,
+                                  hoveredRowIndex === rowIndex
+                                )
+                              ) : (
+                                <span className="text-xs">
+                                  {ticket[header.key]}
+                                </span>
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={handleDeselectAll}
-                    className="text-sm text-gray-600 hover:text-gray-800 px-3 py-2 hover:bg-gray-100 rounded border border-gray-300"
-                  >
-                    Deselect
-                  </button>
-                  <button
-                    onClick={handleClone}
-                    className="flex items-center space-x-2 text-sm text-gray-700 hover:text-gray-900 px-3 py-2 hover:bg-gray-100 rounded border border-gray-300"
-                  >
-                    <Copy size={16} />
-                    <span>Clone</span>
-                  </button>
-                  <button
-                    onClick={handleEdit}
-                    className="flex items-center space-x-2 text-sm text-gray-700 hover:text-gray-900 px-3 py-2 hover:bg-gray-100 rounded border border-gray-300"
-                  >
-                    <Edit size={16} />
-                    <span>Edit</span>
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    className="flex items-center space-x-2 text-sm text-gray-700 hover:text-gray-900 px-3 py-2 hover:bg-gray-100 rounded border border-gray-300"
-                  >
-                    <Trash2 size={16} />
-                    <span>Delete</span>
-                  </button>
+              {/* Sticky right columns - Fixed positioning and alignment */}
+              <div
+                className="absolute top-0 right-0 bg-white border-l border-gray-200 shadow-lg overflow-hidden"
+                style={{
+                  width: `${stickyColumnsWidth}px`,
+                  height: "auto",
+                }}
+              >
+                {/* Sticky Header */}
+                <div
+                  className="bg-gray-50 border-b border-gray-200 flex"
+                  style={{ height: "45px" }}
+                >
+                  {stickyHeaders.map((header, idx) => (
+                    <div
+                      key={`sticky-header-${idx}`}
+                      className="flex-1 py-3 px-2 text-left text-gray-600 text-xs border-r last:border-r-0 border-gray-200 font-medium whitespace-nowrap text-center flex items-center justify-center"
+                      style={{ minWidth: "50px" }}
+                    >
+                      {header}
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={handleExportCSV}
-                    className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm font-medium"
+
+                {/* Sticky Body Rows */}
+                {tickets.map((ticket, rowIndex) => {
+                  const stickyColumns = getStickyColumnsForRow(
+                    ticket,
+                    rowIndex
+                  );
+                  const globalRowIndex = ticketsData.findIndex(
+                    (t) => t.id === ticket.id
+                  );
+                  const isSelected = selectedRows.includes(globalRowIndex);
+
+                  return (
+                    <div
+                      key={`sticky-${ticket.id}`}
+                      className={`border-b border-gray-200 flex transition-colors ${
+                        isSelected ? "bg-blue-50" : "bg-white hover:bg-gray-50"
+                      }`}
+                      style={{ height: "48px" }} // Match the main table row height
+                      onMouseEnter={() => setHoveredRowIndex(rowIndex)}
+                      onMouseLeave={() => setHoveredRowIndex(null)}
+                    >
+                      {stickyColumns.map((column, colIndex) => (
+                        <div
+                          key={`sticky-${rowIndex}-${colIndex}`}
+                          className={`flex-1 py-3 px-2 text-sm border-r last:border-r-0 border-gray-200 cursor-pointer flex items-center justify-center ${
+                            column?.className || ""
+                          }`}
+                          style={{ minWidth: "50px" }}
+                          onClick={column.onClick}
+                        >
+                          {column.icon}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const handleConfirmClick = (data, index, rowData) => {
+    updateCellValues(data, rowData?.s_no);
+    setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 ">
+      <div className="bg-white">
+        <TabbedLayout
+          tabs={[]} // No tabs needed as per your requirement
+          initialTab="tickets"
+          listItemsConfig={listItemsConfig}
+          filterConfig={filterConfig}
+          onTabChange={() => {}}
+          onColumnToggle={handleColumnToggle}
+          visibleColumns={visibleColumns}
+          onFilterChange={handleFilterChange}
+          currentFilterValues={{ ...filtersApplied, page: "" }}
+          showSelectedFilterPills={true}
+          onCheckboxToggle={() => {}}
+          hideVisibleColumns={false} // Show column controls
+          disableTransitions={true} // New prop to disable transitions
+        />
+      </div>
+
+      {/* Main Content Area with Custom Tables */}
+      {isLoading ? (
+        <ShimmerLoader />
+      ) : (
+        <div className="m-6 max-h-[calc(100vh-300px)] overflow-y-auto">
+          {groupedTicketsData.length > 0 ? (
+            groupedTicketsData.map((matchData, index) => (
+              <CustomMatchTable
+                key={`match-${matchData.matchIndex}`}
+                matchData={matchData}
+              />
+            ))
+          ) : (
+            <div className="bg-white rounded p-8 text-center">
+              <div className="max-w-md mx-auto">
+                <div className="mb-4">
+                  <svg
+                    className="mx-auto h-12 w-12 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    <Download size={16} />
-                    <span>Export CSV</span>
-                  </button>
-                  <button
-                    onClick={handleCollapseAll}
-                    className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 px-3 py-2 hover:bg-gray-100 rounded border border-gray-300"
-                  >
-                    <ChevronDown size={16} />
-                    <span>Collapse all</span>
-                  </button>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
                 </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No tickets found
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  There are no tickets to display at the moment.
+                </p>
               </div>
             </div>
           )}
         </div>
+      )}
+      <UploadTickets
+        show={showUploadPopup?.show}
+        rowData={showUploadPopup?.rowData}
+        matchDetails={showUploadPopup?.matchDetails}
+        handleConfirmClick={handleConfirmClick}
+        rowIndex={showUploadPopup?.rowIndex}
+        onClose={() => {
+          setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
+        }}
+      />
+      {viewDetailsPopup?.show && (
+        <InventoryLogsInfo
+          show={viewDetailsPopup?.show}
+          data={viewDetailsPopup?.rowData}
+          onClose={() => setViewDetailsPopup({ show: false, rowData: null })}
+        />
       )}
     </div>
   );

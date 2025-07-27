@@ -31,16 +31,17 @@ import {
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import UploadTickets from "../ModalComponents/uploadTickets";
 import ScrollableAccordionTable from "../TicketsPage/scrollableTable";
-import ViewMapPopup from "./ViewMapPopup";
 import {
   fetchBlockDetails,
   FetchEventSearch,
   saveAddListing,
+  saveBulkListing,
 } from "@/utils/apiHandler/request";
 import { useRouter } from "next/router";
 import SearchedList from "../tradePage/components/searchedList";
 import FormFields from "../formFieldsComponent";
 import { toast } from "react-toastify";
+import ViewMapPopup from "../addInventoryPage/ViewMapPopup";
 
 // Custom MultiSelect Component for table cells
 const MultiSelectEditableCell = ({
@@ -211,7 +212,7 @@ const MultiSelectEditableCell = ({
         {isDropdownOpen && (
           <div
             data-multiselect-dropdown
-            className="fixed bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto"
+            className="fixed bg-white border border-gray-300 rounded shadow-lg  overflow-y-auto"
             style={{
               zIndex: 9999,
               top:
@@ -579,10 +580,8 @@ const ColumnDropdown = ({
   );
 };
 
-const AddInventoryPage = (props) => {
+const BulkInventory = (props) => {
   const { matchId, response } = props;
-  console.log(response, "responseresponseresponse");
-
   const {
     block_data = {},
     home_town = {},
@@ -597,43 +596,88 @@ const AddInventoryPage = (props) => {
   } = response || {};
 
   const dispatch = useDispatch();
-  const matchDetails = response?.match_data?.[0];
-  // Changed: selectedRows now stores indices instead of IDs
-  const [selectedRows, setSelectedRows] = useState([0]);
+  console.log(response,'ooooooooooo')
+  
+  // CHANGE 1: Handle multiple matches
+  const allMatchDetails = response?.match_data || [];
+  const [expandedMatches, setExpandedMatches] = useState(() => {
+    // Initially expand all matches
+    return allMatchDetails.reduce((acc, match, index) => {
+      acc[match.match_id] = true;
+      return acc;
+    }, {});
+  });
+
+  // CHANGE 2: Modify inventory data structure to handle multiple matches
+  const [inventoryDataByMatch, setInventoryDataByMatch] = useState(() => {
+    // Initialize empty inventory for each match
+    return allMatchDetails.reduce((acc, match) => {
+      acc[match.match_id] = [];
+      return acc;
+    }, {});
+  });
+
+  // CHANGE 3: Modify selected rows to handle multiple matches
+  const [selectedRowsByMatch, setSelectedRowsByMatch] = useState(() => {
+    return allMatchDetails.reduce((acc, match) => {
+      acc[match.match_id] = [];
+      return acc;
+    }, {});
+  });
+
   const [searchEventLoader, setSearchEventLoader] = useState(false);
   const [searchedEvents, setSearchedEvents] = useState([]);
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [showViewPopup, setShowViewPopup] = useState(false);
-  const [searchValue, setSearchValue] = useState(matchDetails?.match_name);
-  const [showTable, setShowTable] = useState(false);
-  console.log(selectedRows, "selectedRowsselectedRows");
+  const [showTableByMatch, setShowTableByMatch] = useState(() => {
+    return allMatchDetails.reduce((acc, match) => {
+      acc[match.match_id] = false;
+      return acc;
+    }, {});
+  });
 
   const router = useRouter();
 
   const [filtersApplied, setFiltersApplied] = useState({});
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
+  const [blockDetailsByCategory, setBlockDetailsByCategory] = useState({});
   const [blockDetails, setBlockDetails] = useState([]);
   const filterButtonRef = useRef(null);
   const columnButtonRef = useRef(null);
 
-  const [inventoryData, setInventoryData] = useState([]);
-  const getBlockDetails = async () => {
-    const getBlockData = await fetchBlockDetails('',{
+  
+  // Enhanced block details fetching for multiple matches
+  const getBlockDetails = async (matchId) => {
+    const getBlockData = await fetchBlockDetails('', {
       match_id: matchId,
       category_id: filtersApplied?.ticket_category,
     });
     const blockData = getBlockData?.map((item) => ({
       label: item?.block_id,
       value: item?.id,
-    }))
-    setBlockDetails(blockData);
+    }));
+    
+    setBlockDetailsByCategory(prev => ({
+      ...prev,
+      [`${matchId}_${filtersApplied?.ticket_category}`]: blockData
+    }));
   };
+console.log(blockDetailsByCategory,'blockDetailsByCategory')
   useEffect(() => {
     if (filtersApplied?.ticket_category) {
-      getBlockDetails();
+      // Fetch block details for all matches
+      allMatchDetails.forEach(match => {
+        getBlockDetails(match.match_id);
+      });
     }
   }, [filtersApplied?.ticket_category]);
+
+  // Get block details for specific match
+  const getBlockDetailsForMatch = (matchId) => {
+    return blockDetailsByCategory[`${matchId}_${filtersApplied?.ticket_category}`] || [];
+  };
+
   // Refs for sticky table functionality
   const containerRef = useRef(null);
   const scrollContainerRef = useRef(null);
@@ -711,10 +755,10 @@ const AddInventoryPage = (props) => {
     },
     {
       type: "select",
-      name: "ticket_block",
+      name: "ticket_block", 
       label: "Ticket Block",
       value: filtersApplied?.ticket_block,
-      options: blockDetails,
+      options: [], // Will be dynamically populated per match
       disabled: !filtersApplied?.ticket_category,
       parentClassName: "!w-[250px]",
       className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
@@ -730,7 +774,7 @@ const AddInventoryPage = (props) => {
       parentClassName: "!w-[250px]",
       iconBefore: (
         <div>
-          <p className="text-xs ">{matchDetails?.price_type || "$"}</p>
+          <p className="text-xs">{allMatchDetails[0]?.price_type || "$"}</p>
         </div>
       ),
       className: "!py-[6px] w-full mobile:text-xs",
@@ -871,8 +915,16 @@ const AddInventoryPage = (props) => {
     return baseHeader;
   });
 
+  // Toggle match accordion
+  const toggleMatchAccordion = (matchId) => {
+    setExpandedMatches(prev => ({
+      ...prev,
+      [matchId]: !prev[matchId]
+    }));
+  };
+
   // Sticky columns configuration - Hand and Upload icons for each row
-  const getStickyColumnsForRow = (rowData, rowIndex) => {
+  const getStickyColumnsForRow = (rowData, rowIndex, matchId) => {
     console.log(rowData, "rowDatarowData");
     return [
       {
@@ -883,7 +935,7 @@ const AddInventoryPage = (props) => {
             className={`${
               rowData?.tickets_in_hand ? "text-green-500" : "text-black"
             } hover:text-green-500 cursor-pointer`}
-            onClick={() => handleHandAction(rowData, rowIndex)}
+            onClick={() => handleHandAction(rowData, rowIndex, matchId)}
           />
         ),
         className: "py-2 text-center border-r border-[#E0E1EA]",
@@ -896,7 +948,7 @@ const AddInventoryPage = (props) => {
             className={`${
               rowData?.ticket_types ? "text-green-500" : "text-gray-300"
             } cursor-pointer`}
-            onClick={() => handleUploadAction(rowData, rowIndex)}
+            onClick={() => handleUploadAction(rowData, rowIndex, matchId)}
           />
         ),
         className: "py-2 text-center",
@@ -909,19 +961,20 @@ const AddInventoryPage = (props) => {
   const stickyColumnsWidth = 100; // 50px per column * 2 columns
 
   // Action handlers for sticky columns
-  const handleHandAction = (rowData, rowIndex) => {
-    console.log("Hand action clicked for row:", rowData, rowIndex);
-    handleCellEdit(0, rowIndex, "tickets_in_hand", !rowData?.tickets_in_hand);
-    // Implement your hand action logic here (e.g., drag/move functionality)
+  const handleHandAction = (rowData, rowIndex, matchId) => {
+    console.log("Hand action clicked for row:", rowData, rowIndex, matchId);
+    handleCellEdit(matchId, rowIndex, "tickets_in_hand", !rowData?.tickets_in_hand);
   };
 
-  const handleUploadAction = (rowData, rowIndex) => {
-    console.log("Upload action clicked for row:", rowData, rowIndex);
-    // Implement your upload action logic here
+  const handleUploadAction = (rowData, rowIndex, matchId) => {
+    console.log("Upload action clicked for row:", rowData, rowIndex, matchId);
+    const matchDetails = allMatchDetails.find(m => m.match_id.toString() === matchId.toString());
     setShowUploadPopup({
       show: true,
       rowData,
       rowIndex,
+      matchId,
+      matchDetails,
     });
   };
 
@@ -1019,7 +1072,7 @@ const AddInventoryPage = (props) => {
       }
       window.removeEventListener("resize", syncRowHeights);
     };
-  }, [inventoryData]);
+  }, [inventoryDataByMatch]);
 
   // Set up scroll event listener for sticky table
   useEffect(() => {
@@ -1039,7 +1092,7 @@ const AddInventoryPage = (props) => {
         }
       };
     }
-  }, [inventoryData]);
+  }, [inventoryDataByMatch]);
 
   const fetchApiCall = async (query) => {
     if (!query.trim()) return;
@@ -1068,12 +1121,6 @@ const AddInventoryPage = (props) => {
     router.push(`/add-listings/${event?.m_id}`);
   };
 
-  const handleOnChangeEvents = (e) => {
-    const newValue = e.target.value;
-    setSearchValue(newValue);
-    debouncedFetchApiCall(newValue);
-  };
-
   // Handle filter toggle from dropdown
   const handleFilterToggle = (filterName) => {
     setActiveFilters((prev) => {
@@ -1096,8 +1143,9 @@ const AddInventoryPage = (props) => {
     });
   };
 
-  const handleCellEdit = (itemIndex, rowIndex, columnKey, value) => {
-    console.log("Cell edited:", { itemIndex, rowIndex, columnKey, value });
+  // Modified cell edit handler for specific match
+  const handleCellEdit = (matchId, rowIndex, columnKey, value) => {
+    console.log("Cell edited:", { matchId, rowIndex, columnKey, value });
     let updatevalues = {};
     if (columnKey == "ticket_types") {
       updatevalues = {
@@ -1108,23 +1156,24 @@ const AddInventoryPage = (props) => {
         paper_ticket_details: {},
       };
     }
-    setInventoryData((prevData) =>
-      prevData.map((item, index) =>
+    setInventoryDataByMatch((prevData) => ({
+      ...prevData,
+      [matchId]: prevData[matchId].map((item, index) =>
         index === rowIndex
           ? { ...item, [columnKey]: value, ...updatevalues }
           : item
       )
-    );
+    }));
   };
 
   // Custom cell renderer that handles both regular and multiselect types
-  const renderEditableCell = (row, header, rowIndex, isRowHovered) => {
+  const renderEditableCell = (row, header, rowIndex, matchId, isRowHovered) => {
     if (header.type === "multiselect") {
       return (
         <MultiSelectEditableCell
           value={row[header.key]}
           options={header.options || []}
-          onSave={(value) => handleCellEdit(0, rowIndex, header.key, value)}
+          onSave={(value) => handleCellEdit(matchId, rowIndex, header.key, value)}
           className={header.className || ""}
           isRowHovered={isRowHovered}
         />
@@ -1136,24 +1185,32 @@ const AddInventoryPage = (props) => {
         value={row[header.key]}
         type={header.type || "text"}
         options={header.options || []}
-        onSave={(value) => handleCellEdit(0, rowIndex, header.key, value)}
+        onSave={(value) => handleCellEdit(matchId, rowIndex, header.key, value)}
         className={header.className || ""}
         isRowHovered={isRowHovered}
       />
     );
   };
 
-  // Changed: handleSelectAll now uses indices
-  const handleSelectAll = () => {
-    const allRowIndices = inventoryData.map((_, index) => index);
-    setSelectedRows(allRowIndices);
+  // Modified select all for specific match
+  const handleSelectAllForMatch = (matchId) => {
+    const matchInventory = inventoryDataByMatch[matchId] || [];
+    const allRowIndices = matchInventory.map((_, index) => index);
+    setSelectedRowsByMatch(prev => ({
+      ...prev,
+      [matchId]: allRowIndices
+    }));
   };
 
-  const handleDeselectAll = () => {
-    setSelectedRows([]);
+  const handleDeselectAllForMatch = (matchId) => {
+    setSelectedRowsByMatch(prev => ({
+      ...prev,
+      [matchId]: []
+    }));
   };
 
-  const constructFormDataAsFields = (publishingData) => {
+  // CHANGE 4: Enhanced form data construction for multiple matches
+  const constructFormDataForMultipleMatches = (allPublishingData) => {
     const formData = new FormData();
 
     // Helper function to transform QR links
@@ -1185,82 +1242,65 @@ const AddInventoryPage = (props) => {
       return result;
     };
 
-    // Add basic fields
-    formData.append("data[0][ticket_types]", publishingData.ticket_types);
-    formData.append("data[0][add_qty_addlist]", publishingData.add_qty_addlist);
-    formData.append("data[0][home_town]", publishingData.home_town);
-    formData.append("data[0][ticket_category]", publishingData.ticket_category);
-    formData.append("data[0][ticket_block]", publishingData.ticket_block);
-    formData.append(
-      "data[0][add_price_addlist]",
-      publishingData.add_price_addlist
-    );
-    formData.append("data[0][row]", publishingData.row);
-    formData.append("data[0][split_type]", publishingData.split_type);
-    formData.append(
-      "data[0][additional_file_type]",
-      publishingData.additional_file_type
-    );
-    formData.append(
-      "data[0][additional_dynamic_content]",
-      publishingData.additional_dynamic_content
-    );
-    formData.append("data[0][match_id]", publishingData.match_id);
-    formData.append(
-      "data[0][add_pricetype_addlist]",
-      publishingData.add_pricetype_addlist
-    );
-    formData.append("data[0][event]", publishingData.event);
+    // Process each match's data
+    allPublishingData.forEach((matchData, matchIndex) => {
+      const { match_id, inventoryItems } = matchData;
+      
+      inventoryItems.forEach((publishingData, itemIndex) => {
+        const dataIndex = `${matchIndex}`;
+        
+        // Add basic fields
+        formData.append(`data[${dataIndex}][ticket_types]`, publishingData.ticket_types);
+        formData.append(`data[${dataIndex}][add_qty_addlist]`, publishingData.add_qty_addlist);
+        formData.append(`data[${dataIndex}][home_town]`, publishingData.home_town);
+        formData.append(`data[${dataIndex}][ticket_category]`, publishingData.ticket_category);
+        formData.append(`data[${dataIndex}][ticket_block]`, 3);
+        formData.append(`data[${dataIndex}][add_price_addlist]`, publishingData.add_price_addlist);
+        formData.append(`data[${dataIndex}][row]`, publishingData.row);
+        formData.append(`data[${dataIndex}][split_type]`, publishingData.split_type);
+        formData.append(`data[${dataIndex}][additional_file_type]`, publishingData.additional_file_type);
+        formData.append(`data[${dataIndex}][additional_dynamic_content]`, publishingData.additional_dynamic_content);
+        formData.append(`data[${dataIndex}][match_id]`, match_id);
+        formData.append(`data[${dataIndex}][add_pricetype_addlist]`, publishingData.add_pricetype_addlist);
+        formData.append(`data[${dataIndex}][event]`, publishingData.event);
+        // Add ticket_details (combination of notes and restrictions)
+        const ticketDetails = [
+          ...(publishingData.notes || []),
+          ...(publishingData.restrictions || []),
+        ];
+        ticketDetails.forEach((detail, index) => {
+          formData.append(`data[${dataIndex}][ticket_details][${index}]`, detail);
+        });
 
-    // Add ticket_details (combination of notes and restrictions)
-    const ticketDetails = [
-      ...(publishingData.notes || []),
-      ...(publishingData.restrictions || []),
-    ];
-    ticketDetails.forEach((detail, index) => {
-      formData.append(`data[0][ticket_details][${index}]`, detail);
-    });
+        // Add ticket_details1 (split_details)
+        if (publishingData.split_details) {
+          publishingData.split_details.forEach((detail, index) => {
+            formData.append(`data[${dataIndex}][ticket_details1][${index}]`, detail);
+          });
+        }
 
-    // Add ticket_details1 (split_details)
-    if (publishingData.split_details) {
-      publishingData.split_details.forEach((detail, index) => {
-        formData.append(`data[0][ticket_details1][${index}]`, detail);
-      });
-    }
+        // Add transformed QR links
+        const qrLinksTransformed = transformQRLinks(publishingData.qr_links);
+        if (qrLinksTransformed.qr_link_android) {
+          formData.append(`data[${dataIndex}][qr_link_android]`, qrLinksTransformed.qr_link_android);
+        }
+        if (qrLinksTransformed.qr_link_ios) {
+          formData.append(`data[${dataIndex}][qr_link_ios]`, qrLinksTransformed.qr_link_ios);
+        }
 
-    // Add transformed QR links
-    const qrLinksTransformed = transformQRLinks(publishingData.qr_links);
-    if (qrLinksTransformed.qr_link_android) {
-      formData.append(
-        "data[0][qr_link_android]",
-        qrLinksTransformed.qr_link_android
-      );
-    }
-    if (qrLinksTransformed.qr_link_ios) {
-      formData.append("data[0][qr_link_ios]", qrLinksTransformed.qr_link_ios);
-    }
+        // Add paper_ticket_details as JSON string
+        // formData.append(`data[${dataIndex}][paper_ticket_details]`, JSON.stringify(publishingData.paper_ticket_details));
 
-    // Add paper_ticket_details as JSON string
-    formData.append(
-      "data[0][paper_ticket_details]",
-      JSON.stringify(publishingData.paper_ticket_details)
-    );
-
-    // Handle file uploads
-    if (
-      publishingData.upload_tickets &&
-      publishingData.upload_tickets.length > 0
-    ) {
-      publishingData.upload_tickets.forEach((ticket, index) => {
-        if (ticket.file && ticket.file instanceof File) {
-          formData.append(
-            `data[0][upload_tickets][${index}]`,
-            ticket.file,
-            ticket.name
-          );
+        // Handle file uploads
+        if (publishingData.upload_tickets && publishingData.upload_tickets.length > 0) {
+          publishingData.upload_tickets.forEach((ticket, index) => {
+            if (ticket.file && ticket.file instanceof File) {
+              formData.append(`data[${dataIndex}][upload_tickets][${index}]`, ticket.file, ticket.name);
+            }
+          });
         }
       });
-    }
+    });
 
     return formData;
   };
@@ -1276,36 +1316,66 @@ const AddInventoryPage = (props) => {
     }
   };
 
-  // Changed: handleDelete now uses indices to filter out selected rows
-  const handleDelete = () => {
-    console.log("Deleting selected rows:", selectedRows);
-    setInventoryData((prevData) =>
-      prevData.filter((_, index) => !selectedRows.includes(index))
-    );
-    setSelectedRows([]);
+  // Modified delete handler for specific match
+  const handleDeleteForMatch = (matchId) => {
+    const selectedRows = selectedRowsByMatch[matchId] || [];
+    console.log("Deleting selected rows for match:", matchId, selectedRows);
+    
+    setInventoryDataByMatch((prevData) => ({
+      ...prevData,
+      [matchId]: prevData[matchId].filter((_, index) => !selectedRows.includes(index))
+    }));
+    
+    setSelectedRowsByMatch(prev => ({
+      ...prev,
+      [matchId]: []
+    }));
   };
-  const [loader,setLoader] = useState(false);
+
+  const [loader, setLoader] = useState(false);
+  
+  // Modified publish handler for multiple matches
   const handlePublishLive = async () => {
     setLoader(true);
-    const publishingData = inventoryData[selectedRows]; // Get first selected row
-    const updatedData = {
-      match_id: matchDetails?.match_id,
-      event: "E",
-      ...publishingData,
-      add_pricetype_addlist: "EUR",
-    };
-    // Method 1: JSON string approach
-    const formData = constructFormDataAsFields(updatedData);
+    
+    // Collect all selected inventory items from all matches
+    const allPublishingData = [];
+    
+    Object.keys(selectedRowsByMatch).forEach(matchId => {
+      const selectedRows = selectedRowsByMatch[matchId];
+      const matchInventory = inventoryDataByMatch[matchId];
+      const matchDetails = allMatchDetails.find(m => m.match_id.toString() === matchId);
+      
+      if (selectedRows.length > 0 && matchInventory.length > 0) {
+        const selectedItems = selectedRows.map(rowIndex => ({
+          ...matchInventory[rowIndex],
+          add_pricetype_addlist: matchDetails?.price_type || "EUR",
+          event: "E",
+        }));
+        
+        allPublishingData.push({
+          match_id: matchId,
+          inventoryItems: selectedItems
+        });
+      }
+    });
+
+    if (allPublishingData.length === 0) {
+      toast.error("No items selected for publishing");
+      setLoader(false);
+      return;
+    }
+
+    const formData = constructFormDataForMultipleMatches(allPublishingData);
 
     try {
-      await saveAddListing("", formData);
+      await saveBulkListing("", formData);
       router.push("/my-listings?success=true");
       setLoader(false);
     } catch {
       toast.error("Error in publishing listing");
       setLoader(false);
     }
-   
   };
 
   // Function to create inventory item from filter values
@@ -1333,8 +1403,8 @@ const AddInventoryPage = (props) => {
     return newItem;
   };
 
-  // Modified Add listing function to use filter values
-  const handleAddListing = () => {
+  // Modified add listing function to work with specific match
+  const handleAddListingForMatch = (matchId) => {
     const hasFilterValues = Object.values(filtersApplied).some((value) => {
       if (Array.isArray(value)) {
         return value.length > 0;
@@ -1348,13 +1418,22 @@ const AddInventoryPage = (props) => {
     }
 
     const newListing = createInventoryItemFromFilters();
-    setInventoryData((prevData) => [...prevData, newListing]);
-    setShowTable(true);
+    setInventoryDataByMatch((prevData) => ({
+      ...prevData,
+      [matchId]: [...(prevData[matchId] || []), newListing]
+    }));
+    
+    setShowTableByMatch(prev => ({
+      ...prev,
+      [matchId]: true
+    }));
   };
 
-  // Enhanced Custom Table Component with sticky columns
-  const CustomInventoryTable = () => {
+  // Modified Custom Table Component for specific match
+  const CustomInventoryTable = ({ matchDetails, matchId }) => {
     const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
+    const inventoryData = inventoryDataByMatch[matchId] || [];
+    const selectedRows = selectedRowsByMatch[matchId] || [];
 
     return (
       <div
@@ -1366,7 +1445,9 @@ const AddInventoryPage = (props) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2">
-                <ChevronDown size={14} />
+                <button onClick={() => toggleMatchAccordion(matchId)}>
+                  {expandedMatches[matchId] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </button>
                 <h3 className="font-medium text-sm truncate max-w-xs">
                   {matchDetails?.match_name || "Match Details"}
                 </h3>
@@ -1393,204 +1474,219 @@ const AddInventoryPage = (props) => {
           </div>
         </div>
 
-        {/* Table Content with Sticky Columns */}
-        <div
-          className="w-full bg-white relative"
-          style={{ overflow: "visible" }}
-        >
-          {/* Main scrollable table container */}
-          <div
-            ref={scrollContainerRef}
-            className="w-full overflow-x-auto"
-            style={{ paddingRight: `${stickyColumnsWidth}px` }}
-          >
-            <table
-              ref={mainTableRef}
-              className="w-full border-none"
-              style={{ minWidth: "1200px" }}
-            >
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-2 py-2 text-left text-gray-600 font-medium whitespace-nowrap text-xs w-12">
-                    <input
-                      type="checkbox"
-                      checked={
-                        selectedRows.length === inventoryData.length &&
-                        inventoryData.length > 0
-                      }
-                      onChange={
-                        selectedRows.length > 0
-                          ? handleDeselectAll
-                          : handleSelectAll
-                      }
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                  </th>
-                  {headers.map((header) => (
-                    <th
-                      key={header.key}
-                      className="px-2 py-2 text-left text-gray-600 font-medium whitespace-nowrap text-xs min-w-[120px]"
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="truncate">{header.label}</span>
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {inventoryData.map((row, rowIndex) => {
-                  // Changed: isSelected now checks if rowIndex is in selectedRows array
-                  const isSelected = selectedRows.includes(rowIndex);
+        {/* Collapsible Table Content */}
+        {expandedMatches[matchId] && (
+          <div className="w-full bg-white relative" style={{ overflow: "visible" }}>
+            {/* Add Listings Button for this match */}
+            {inventoryData.length === 0 && (
+              <div className="flex justify-end px-4 py-2 border-b-[1px] border-[#E0E1EA]">
+                <Button
+                  type="blueType"
+                  classNames={{
+                    root: "px-2 md:px-3 py-1.5 md:py-2",
+                    label_: "text-xs md:text-sm font-medium",
+                  }}
+                  onClick={() => handleAddListingForMatch(matchId)}
+                  label="+ Add Listings"
+                />
+              </div>
+            )}
 
-                  return (
-                    <tr
-                      key={row.id}
-                      className={`border-b border-gray-200 transition-colors ${
-                        isSelected ? "bg-blue-50" : "bg-white hover:bg-gray-50"
-                      }`}
-                      onMouseEnter={() => setHoveredRowIndex(rowIndex)}
-                      onMouseLeave={() => setHoveredRowIndex(null)}
-                    >
-                      <td className="py-2 px-2 text-xs whitespace-nowrap w-12">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            // Changed: Now using rowIndex directly
-                            const newSelectedRows = isSelected
-                              ? selectedRows.filter(
-                                  (index) => index !== rowIndex
-                                )
-                              : [...selectedRows, rowIndex];
-                            setSelectedRows(newSelectedRows);
-                          }}
-                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                      </td>
-                      {headers.map((header) => (
-                        <td
-                          key={`${rowIndex}-${header.key}`}
-                          className="py-2 px-2 text-xs whitespace-nowrap overflow-hidden text-ellipsis align-middle min-w-[120px]"
-                        >
-                          {header.editable ? (
-                            renderEditableCell(
-                              row,
-                              header,
-                              rowIndex,
-                              true //hoveredRowIndex === rowIndex
-                            )
-                          ) : (
-                            <span className={header.className || ""}>
-                              {row[header.key]}
-                            </span>
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Sticky right columns */}
-          <div
-            className={`absolute top-0 right-0 h-full bg-white border-l border-gray-200 ${
-              hasScrolled ? "shadow-md" : ""
-            }`}
-            style={{ width: `${stickyColumnsWidth}px` }}
-          >
-            <div className="h-full">
-              <table
-                ref={stickyTableRef}
-                className="w-full h-full border-collapse"
+            {/* Table content - only show if there are inventory items */}
+            {inventoryData.length > 0 && (
+              <div
+                className="w-full bg-white relative"
+                style={{ overflow: "visible" }}
               >
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    {stickyHeaders.map((header, idx) => (
-                      <th
-                        key={`sticky-header-${idx}`}
-                        className="py-2 px-2 text-left text-gray-600 text-xs border-r border-gray-200 font-medium whitespace-nowrap text-center"
-                        style={{ width: "50px" }}
-                      >
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {inventoryData.map((row, rowIndex) => {
-                    const stickyColumns = getStickyColumnsForRow(row, rowIndex);
-
-                    return (
-                      <tr
-                        key={`sticky-${row.id}`}
-                        className="border-b border-gray-200 bg-white hover:bg-gray-50"
-                      >
-                        {stickyColumns.map((column, colIndex) => (
-                          <td
-                            key={`sticky-${rowIndex}-${colIndex}`}
-                            className={`py-2 text-sm align-middle text-center border-r border-gray-200 ${
-                              column?.className || ""
-                            }`}
-                            style={{ width: "50px" }}
+                {/* Main scrollable table container */}
+                <div
+                  ref={scrollContainerRef}
+                  className="w-full overflow-x-auto"
+                  style={{ paddingRight: `${stickyColumnsWidth}px` }}
+                >
+                  <table
+                    ref={mainTableRef}
+                    className="w-full border-none"
+                    style={{ minWidth: "1200px" }}
+                  >
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-200">
+                        <th className="px-2 py-2 text-left text-gray-600 font-medium whitespace-nowrap text-xs w-12">
+                          <input
+                            type="checkbox"
+                            checked={
+                              selectedRows.length === inventoryData.length &&
+                              inventoryData.length > 0
+                            }
+                            onChange={
+                              selectedRows.length > 0
+                                ? () => handleDeselectAllForMatch(matchId)
+                                : () => handleSelectAllForMatch(matchId)
+                            }
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                        </th>
+                        {headers.map((header) => (
+                          <th
+                            key={header.key}
+                            className="px-2 py-2 text-left text-gray-600 font-medium whitespace-nowrap text-xs min-w-[120px]"
                           >
-                            <div className="flex justify-center">
-                              {column.icon}
+                            <div className="flex justify-between items-center">
+                              <span className="truncate">{header.label}</span>
                             </div>
-                          </td>
+                          </th>
                         ))}
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                    </thead>
+                    <tbody>
+                      {inventoryData.map((row, rowIndex) => {
+                        const isSelected = selectedRows.includes(rowIndex);
+
+                        return (
+                          <tr
+                            key={`${matchId}-${rowIndex}`}
+                            className={`border-b border-gray-200 transition-colors ${
+                              isSelected ? "bg-blue-50" : "bg-white hover:bg-gray-50"
+                            }`}
+                            onMouseEnter={() => setHoveredRowIndex(rowIndex)}
+                            onMouseLeave={() => setHoveredRowIndex(null)}
+                          >
+                            <td className="py-2 px-2 text-xs whitespace-nowrap w-12">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  const newSelectedRows = isSelected
+                                    ? selectedRows.filter(index => index !== rowIndex)
+                                    : [...selectedRows, rowIndex];
+                                  setSelectedRowsByMatch(prev => ({
+                                    ...prev,
+                                    [matchId]: newSelectedRows
+                                  }));
+                                }}
+                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                              />
+                            </td>
+                            {headers.map((header) => (
+                              <td
+                                key={`${matchId}-${rowIndex}-${header.key}`}
+                                className="py-2 px-2 text-xs whitespace-nowrap overflow-hidden text-ellipsis align-middle min-w-[120px]"
+                              >
+                                {header.editable ? (
+                                  renderEditableCell(
+                                    row,
+                                    header,
+                                    rowIndex,
+                                    matchId,
+                                    true //hoveredRowIndex === rowIndex
+                                  )
+                                ) : (
+                                  <span className={header.className || ""}>
+                                    {row[header.key]}
+                                  </span>
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Sticky right columns */}
+                <div
+                  className={`absolute top-0 right-0 h-full bg-white border-l border-gray-200 ${
+                    hasScrolled ? "shadow-md" : ""
+                  }`}
+                  style={{ width: `${stickyColumnsWidth}px` }}
+                >
+                  <div className="h-full">
+                    <table
+                      ref={stickyTableRef}
+                      className="w-full h-full border-collapse"
+                    >
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200">
+                          {stickyHeaders.map((header, idx) => (
+                            <th
+                              key={`sticky-header-${idx}`}
+                              className="py-2 px-2 text-left text-gray-600 text-xs border-r border-gray-200 font-medium whitespace-nowrap text-center"
+                              style={{ width: "50px" }}
+                            >
+                              {header}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {inventoryData.map((row, rowIndex) => {
+                          const stickyColumns = getStickyColumnsForRow(row, rowIndex, matchId);
+
+                          return (
+                            <tr
+                              key={`sticky-${matchId}-${rowIndex}`}
+                              className="border-b border-gray-200 bg-white hover:bg-gray-50"
+                            >
+                              {stickyColumns.map((column, colIndex) => (
+                                <td
+                                  key={`sticky-${matchId}-${rowIndex}-${colIndex}`}
+                                  className={`py-2 text-sm align-middle text-center border-r border-gray-200 ${
+                                    column?.className || ""
+                                  }`}
+                                  style={{ width: "50px" }}
+                                >
+                                  <div className="flex justify-center">
+                                    {column.icon}
+                                  </div>
+                                </td>
+                              ))}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* No listings message for this match */}
+            {inventoryData.length === 0 && (
+              <div className="p-2 text-center">
+                
+                 
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No Filters added for this match
+                  </h3>
+                 
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
     );
   };
 
-  const searchedViewComponent = () => {
-    return (
-      <>
-        {searchedEvents?.length > 0 && (
-          <div className="max-h-[300px] overflow-y-auto p-5 flex flex-col gap-3 shadow-sm border border-[#E0E1EA]">
-            {searchedEvents?.map((item, index) => {
-              return (
-                <div
-                  key={index}
-                  onClick={() => handleSearchedEventClick(item)}
-                  className="hover:scale-105 cursor-pointer transition-transform duration-300"
-                >
-                  <SearchedList item={item} />
-                </div>
-              );
-            })}
-          </div>
-        )}
-        {searchEventLoader && (
-          <div className="max-h-[300px] items-center justify-center overflow-y-auto p-5 flex flex-col gap-3 shadow-sm border border-[#E0E1EA]">
-            <Loader2 className="animate-spin" />
-          </div>
-        )}
-      </>
-    );
-  };
   const handleConfirmClick = (data, index) => {
+    const { matchId } = showUploadPopup;
     console.log(index, "indexindexindex");
-    setInventoryData(
-      inventoryData.map((item, i) =>
+    setInventoryDataByMatch(prev => ({
+      ...prev,
+      [matchId]: prev[matchId].map((item, i) =>
         i === index ? { ...item, ...data } : item
       )
-    );
-    setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
+    }));
+    setShowUploadPopup({ show: false, rowData: null, rowIndex: null, matchId: null, matchDetails: null });
   };
 
-  const selectedCount = selectedRows.length;
+  // Calculate total selected items across all matches
+  const getTotalSelectedCount = () => {
+    return Object.values(selectedRowsByMatch).reduce((total, rows) => total + rows.length, 0);
+  };
+
+  const totalSelectedCount = getTotalSelectedCount();
 
   return (
     <div className="bg-[#F5F7FA] w-full h-full relative">
@@ -1599,136 +1695,14 @@ const AddInventoryPage = (props) => {
         onClose={() => setShowViewPopup(false)}
         show={showViewPopup}
       />
+      
       <div className="bg-white">
-        <div className="border-b-[1px] p-4  border-[#E0E1EA] flex justify-between items-center">
-          <div className="w-full flex items-center gap-4">
-            <FloatingLabelInput
-              key="searchMatch"
-              id="searchMatch"
-              name="searchMatch"
-              keyValue={"searchMatch"}
-              value={searchValue}
-              onChange={(e) => handleOnChangeEvents(e)}
-              type="text"
-              showDropdown={true}
-              dropDownComponent={searchedViewComponent()}
-              label="Search Match"
-              className={"!py-[7px] !px-[12px] !text-[#323A70] !text-[14px] "}
-              paddingClassName=""
-              autoComplete="off"
-              showDelete={true}
-              deleteFunction={() => {
-                setSearchValue("");
-                router.push("/add-listings");
-              }}
-              parentClassName="!w-[40%]"
-            />
-            {matchDetails && (
-              <div className="flex gap-3 items-center">
-                <div className="flex gap-1 items-center">
-                  <Calendar1Icon size={14} className="text-[#595c6d]" />
-                  <p className="text-[#3a3c42] text-[13px]">
-                    {matchDetails?.match_date_format}
-                  </p>
-                </div>
-                <div className="flex gap-1 items-center">
-                  <Clock size={14} className="text-[#595c6d]" />
-                  <p className="text-[#3a3c42] text-[13px]">
-                    {matchDetails?.match_time}
-                  </p>
-                </div>
-                <div className="flex gap-1 items-center">
-                  <MapPin size={14} className="text-[#595c6d]" />
-                  <p className="text-[#3a3c42] text-[13px]">
-                    {matchDetails?.stadium_name}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center">
-            {matchDetails && (
-              <p
-                onClick={() => setShowViewPopup(true)}
-                className="text-[12px] whitespace-nowrap font-semibold text-[#0137D5] cursor-pointer hover:underline"
-              >
-                View Map
-              </p>
-            )}
-            {/* Control Icons */}
-            <div className="flex gap-2 ml-4 relative">
-              {/* Filter Icon */}
-              <button
-                ref={filterButtonRef}
-                onClick={() => {
-                  setShowFilterDropdown(!showFilterDropdown);
-                  setShowColumnDropdown(false);
-                }}
-                className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                title="Filter options"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46 22,3" />
-                </svg>
-              </button>
-
-              {/* Column Icon */}
-              <button
-                ref={columnButtonRef}
-                onClick={() => {
-                  setShowColumnDropdown(!showColumnDropdown);
-                  setShowFilterDropdown(false);
-                }}
-                className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                title="Column options"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <rect x="3" y="3" width="6" height="18" />
-                  <rect x="11" y="3" width="6" height="18" />
-                  <rect x="19" y="3" width="2" height="18" />
-                </svg>
-              </button>
-
-              {/* Filter Dropdown */}
-              <FilterDropdown
-                isOpen={showFilterDropdown}
-                onClose={() => setShowFilterDropdown(false)}
-                filterConfig={filterConfig}
-                activeFilters={activeFilters}
-                onFilterToggle={handleFilterToggle}
-              />
-
-              {/* Column Dropdown */}
-              <ColumnDropdown
-                isOpen={showColumnDropdown}
-                onClose={() => setShowColumnDropdown(false)}
-                headers={allHeaders}
-                visibleColumns={visibleColumns}
-                onColumnToggle={handleColumnToggle}
-              />
-            </div>
-          </div>
-        </div>
-        {matchDetails && (
+        {allMatchDetails.length > 0 && (
           <>
-            {/* Filter Section with Control Icons */}
+            {/* Filter Section with Control Icons - Shared across all matches */}
             <div className="border-b-[1px] border-[#DADBE5] p-4">
               <div className="flex items-center justify-between">
-                <div className="flex flex-wrap gap-4 items-center ">
+                <div className="flex flex-wrap gap-4 items-center">
                   <FormFields
                     formFields={getActiveFilters()}
                     filtersApplied={filtersApplied}
@@ -1737,44 +1711,34 @@ const AddInventoryPage = (props) => {
                 </div>
               </div>
             </div>
-
-            {/* Add Listings Button */}
-            {inventoryData.length == 0 && (
-              <div className="flex justify-end px-4 py-2 border-b-[1px] border-[#E0E1EA]">
-                <Button
-                  type="blueType"
-                  classNames={{
-                    root: "px-2 md:px-3 py-1.5 md:py-2",
-                    label_: "text-xs md:text-sm font-medium",
-                  }}
-                  onClick={handleAddListing}
-                  label="+ Add Listings"
-                />
-              </div>
-            )}
           </>
         )}
       </div>
 
-      {/* Main Content Area with Custom Table - Only show when table should be visible */}
-      {matchDetails && showTable && inventoryData.length > 0 && (
+      {/* Main Content Area with Multiple Match Tables */}
+      {allMatchDetails.length > 0 && (
         <div
           className="m-6 bg-white rounded"
           style={{
             marginBottom: "80px",
-            maxHeight: "calc(100vh - 400px)",
             position: "relative",
             overflow: "visible",
           }}
         >
-          <div style={{ maxHeight: "calc(100vh - 400px)", overflowY: "auto" }}>
-            <CustomInventoryTable />
+          <div >
+            {allMatchDetails.map((matchDetails) => (
+              <CustomInventoryTable 
+                key={matchDetails.match_id}
+                matchDetails={matchDetails}
+                matchId={matchDetails.match_id}
+              />
+            ))}
           </div>
         </div>
       )}
 
-      {/* Show message when no listings have been added yet */}
-      {matchDetails && !showTable && (
+      {/* Show message when no matches are available */}
+      {allMatchDetails.length === 0 && (
         <div className="m-6 bg-white rounded p-8 text-center">
           <div className="max-w-md mx-auto">
             <div className="mb-4">
@@ -1793,54 +1757,66 @@ const AddInventoryPage = (props) => {
               </svg>
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No listings added yet
+              No matches available
             </h3>
             <p className="text-gray-500 mb-4">
-              Select your filter preferences above and click "Add Listings" to
-              create your first inventory item.
-            </p>
-            <p className="text-sm text-gray-400">
-              The table will appear once you add your first listing with the
-              selected filter values.
+              There are no matches available for bulk inventory management.
             </p>
           </div>
         </div>
       )}
 
+      {/* Upload Popup */}
       <UploadTickets
         show={showUploadPopup?.show}
         rowData={showUploadPopup?.rowData}
-        matchDetails={matchDetails}
+        matchDetails={showUploadPopup?.matchDetails}
         handleConfirmClick={handleConfirmClick}
         rowIndex={showUploadPopup?.rowIndex}
         onClose={() => {
-          setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
+          setShowUploadPopup({ 
+            show: false, 
+            rowData: null, 
+            rowIndex: null, 
+            matchId: null, 
+            matchDetails: null 
+          });
         }}
       />
 
-      {/* Sticky Bottom Container - Only visible when there are selected rows */}
-      {selectedCount > 0 && inventoryData?.length > 0 && (
+      {/* Sticky Bottom Container - Only visible when there are selected rows across any match */}
+      {totalSelectedCount > 0 && (
         <div
           className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg"
           style={{ zIndex: 9999 }}
         >
           <div className="flex items-center justify-between px-6 py-3">
             <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">
+                {totalSelectedCount} item(s) selected across all matches
+              </span>
               <button
-                onClick={handleDelete}
+                onClick={() => {
+                  Object.keys(selectedRowsByMatch).forEach(matchId => {
+                    const selectedRows = selectedRowsByMatch[matchId];
+                    if (selectedRows.length > 0) {
+                      handleDeleteForMatch(matchId);
+                    }
+                  });
+                }}
                 className="flex items-center space-x-1 text-sm text-gray-700 hover:text-gray-900 px-3 py-1 hover:bg-gray-100 rounded"
               >
                 <Trash2 size={16} />
-                <span>Delete</span>
+                <span>Delete Selected</span>
               </button>
             </div>
             <div className="flex items-center space-x-3">
               <Button
-              loading={loader}
+                loading={loader}
                 onClick={handlePublishLive}
                 className="flex items-center space-x-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium"
               >
-                <span>PUBLISH LIVE</span>
+                <span>PUBLISH LIVE ({totalSelectedCount})</span>
               </Button>
             </div>
           </div>
@@ -1850,4 +1826,4 @@ const AddInventoryPage = (props) => {
   );
 };
 
-export default AddInventoryPage;
+export default BulkInventory;

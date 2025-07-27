@@ -7,6 +7,7 @@ import {
   fetchAddressBookDetails,
   fetchBankAccountDetails,
   fetchBulkListing,
+  fetchBulkListingFilters,
   fetchCountrieList,
   fetchDepositHistoryMonthly,
   FetchHotEvents,
@@ -21,6 +22,9 @@ import {
   getAuthAddress,
   getAuthPhotoId,
   getLinkedCards,
+  getMyListingFilters,
+  getMyListingHistory,
+  getMyListingOverView,
   getPartnerSetting,
   getReferralCode,
   getReferralHistory,
@@ -130,6 +134,23 @@ export const getAddlistingPageData = async (token, matchId) => {
     listing_type: "single",
   });
   return response;
+};
+
+export const getMyListingPageData = async (token) => {
+  const results = await Promise.allSettled([
+    getMyListingOverView(token),
+    getMyListingFilters(token),
+    getMyListingHistory(token),
+  ]);
+
+  const [overview, filters, listingHistory] = results.map((result) =>
+    result.status === "fulfilled" ? result.value : {}
+  );
+  return {
+    overview,
+    filters,
+    listingHistory,
+  };
 };
 
 export const fetchWalletPageDetails = async (token, index) => {
@@ -263,4 +284,13 @@ export const reportHistoryData = async (token) => {
 export const fetchBulkListingData = async (token) => {
   const [bulkListingData] = await Promise.allSettled([fetchBulkListing(token)]);
   return bulkListingData;
+};
+
+export const fetchAddBulkListingData = async (token, matches) => {
+  const [getBulkListingFilters] = await Promise.allSettled([
+    fetchBulkListingFilters(token, { match_id: matches, listing_type: "bulk" }),
+  ]);
+  return getBulkListingFilters?.status === "fulfilled"
+    ? getBulkListingFilters?.value
+    : {};
 };

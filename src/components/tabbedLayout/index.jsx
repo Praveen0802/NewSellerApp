@@ -57,6 +57,8 @@ const TabbedLayout = ({
   hideVisibleColumns = false,
   // New prop to receive transition direction from parent (only for specific components)
   transitionDirection: parentTransitionDirection = null,
+  // New prop to disable transitions entirely
+  disableTransitions = false,
 }) => {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState(initialTab || tabs[0]?.key);
@@ -143,7 +145,7 @@ const TabbedLayout = ({
     }));
   };
 
-  // Handle transitions for list items when they change
+  // Handle transitions for list items when they change - only if transitions are enabled
   useEffect(() => {
     const newItems = getCurrentListItems();
     const currentItemsString = JSON.stringify(
@@ -153,8 +155,13 @@ const TabbedLayout = ({
       newItems.map((item) => ({ name: item.name, value: item.value }))
     );
 
-    // Only trigger transition if the actual content has changed AND we have transition direction
+    // Only trigger transition if:
+    // 1. Transitions are not disabled
+    // 2. The actual content has changed 
+    // 3. We have existing items 
+    // 4. We have transition direction from parent
     if (
+      !disableTransitions &&
       currentItemsString !== newItemsString &&
       currentListItems.length > 0 &&
       parentTransitionDirection
@@ -172,13 +179,14 @@ const TabbedLayout = ({
         setPreviousListItems([]);
       }, 300); // Match CSS transition duration
     } else {
-      // If no transition direction provided, just update without animation
+      // If transitions are disabled or no transition direction provided, just update without animation
       setCurrentListItems(newItems);
     }
   }, [
     JSON.stringify(listItemsConfig[selectedTab]),
     checkboxValues,
     parentTransitionDirection,
+    disableTransitions,
   ]);
 
   // Get all available filters for current tab
@@ -404,8 +412,8 @@ const TabbedLayout = ({
           {/* List Items Section with Transitions */}
           <div className="px-[24px] py-[12px] border-b-[1px] border-[#E0E1EA] overflow-hidden">
             <div className="relative">
-              {/* Previous Items (sliding out) */}
-              {isTransitioning && previousListItems.length > 0 && (
+              {/* Previous Items (sliding out) - only show if transitions are enabled and transitioning */}
+              {!disableTransitions && isTransitioning && previousListItems.length > 0 && (
                 <div
                   className={`
                     ${
@@ -447,18 +455,18 @@ const TabbedLayout = ({
                     currentListItems?.length == 4
                       ? "grid grid-cols-4 gap-4"
                       : "flex gap-4 flex-nowrap overflow-x-scroll"
-                  } min-w-min md:min-w-0 transition-transform duration-300 ease-in-out
+                  } min-w-min md:min-w-0 ${!disableTransitions ? 'transition-transform duration-300 ease-in-out' : ''}
                   ${
-                    isTransitioning
+                    !disableTransitions && isTransitioning
                       ? "transform translate-x-0"
                       : "transform translate-x-0"
                   }
                 `}
                 style={{
-                  transform: isTransitioning
+                  transform: !disableTransitions && isTransitioning
                     ? "translateX(0)"
                     : "translateX(0)",
-                  animation: isTransitioning
+                  animation: !disableTransitions && isTransitioning
                     ? transitionDirection === "next"
                       ? "slideInFromRight 0.3s ease-in-out"
                       : "slideInFromLeft 0.3s ease-in-out"
@@ -477,12 +485,12 @@ const TabbedLayout = ({
                         showCheckbox: item?.showCheckbox,
                         isChecked: item?.isChecked,
                         onCheckChange:
-                          item?.showCheckbox && item?.key && !isTransitioning
+                          item?.showCheckbox && item?.key && (!isTransitioning || disableTransitions)
                             ? () =>
                                 handleCheckboxToggle(item.key, item.isChecked)
                             : undefined,
                         onClick:
-                          item?.showCheckbox && item?.key && !isTransitioning
+                          item?.showCheckbox && item?.key && (!isTransitioning || disableTransitions)
                             ? () =>
                                 handleCheckboxToggle(item.key, item.isChecked)
                             : undefined,
@@ -518,52 +526,54 @@ const TabbedLayout = ({
         </div>
       </div>
 
-      {/* CSS Animations */}
-      <style jsx>{`
-        @keyframes slideInFromRight {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
+      {/* CSS Animations - only include if transitions are not disabled */}
+      {!disableTransitions && (
+        <style jsx>{`
+          @keyframes slideInFromRight {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
           }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
 
-        @keyframes slideInFromLeft {
-          from {
-            transform: translateX(-100%);
-            opacity: 0;
+          @keyframes slideInFromLeft {
+            from {
+              transform: translateX(-100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
           }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
 
-        @keyframes slideOutToLeft {
-          from {
-            transform: translateX(0);
-            opacity: 1;
+          @keyframes slideOutToLeft {
+            from {
+              transform: translateX(0);
+              opacity: 1;
+            }
+            to {
+              transform: translateX(-100%);
+              opacity: 0;
+            }
           }
-          to {
-            transform: translateX(-100%);
-            opacity: 0;
-          }
-        }
 
-        @keyframes slideOutToRight {
-          from {
-            transform: translateX(0);
-            opacity: 1;
+          @keyframes slideOutToRight {
+            from {
+              transform: translateX(0);
+              opacity: 1;
+            }
+            to {
+              transform: translateX(100%);
+              opacity: 0;
+            }
           }
-          to {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-        }
-      `}</style>
+        `}</style>
+      )}
     </div>
   );
 };
