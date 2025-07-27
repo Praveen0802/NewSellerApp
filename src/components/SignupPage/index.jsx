@@ -38,7 +38,7 @@ const SignupFlow = ({ refer_code } = {}) => {
     password: "",
     confirm_password: "",
     user_type: "1",
-    phone_country_code: "+91",
+    phone_country_code: "",
     phone_number: "",
     address: "",
     city: "",
@@ -101,6 +101,7 @@ const SignupFlow = ({ refer_code } = {}) => {
       title: "Complete KYC",
       icon: Shield,
       description: "Verify your identity",
+      tooltip: "After email verification, Login to complete KYC",
     },
   ];
 
@@ -255,6 +256,10 @@ const SignupFlow = ({ refer_code } = {}) => {
       newErrors.confirm_password = "Passwords do not match";
     }
 
+    if (!formData.phone_country_code.trim()) {
+      newErrors.phone_country_code = "Phone country code is required";
+    }
+
     if (!formData.phone_number.trim()) {
       newErrors.phone_number = "Phone number is required";
     }
@@ -277,6 +282,10 @@ const SignupFlow = ({ refer_code } = {}) => {
 
     if (!formData.dob.trim()) {
       newErrors.dob = "Date of birth is required";
+    }
+
+    if (!formData.currency.trim()) {
+      newErrors.currency = "Currency is required";
     }
 
     if (userType === "business" && !formData.business_name.trim()) {
@@ -539,7 +548,7 @@ const SignupFlow = ({ refer_code } = {}) => {
         </div>
 
         <form onSubmit={handleFormSubmit}>
-          <div className="space-y-4 lg:space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+          <div className="space-y-4 lg:space-y-6 max-h-[60vh]  pr-2">
             {userType === "business" && (
               <div ref={(el) => (errorRefs.current.business_name = el)}>
                 <FloatingLabelInput
@@ -678,6 +687,8 @@ const SignupFlow = ({ refer_code } = {}) => {
                 required
                 showError={true}
                 className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                defaultFocus={true} // Focus on this field by default
+                max={new Date().toISOString().split("T")[0]} // Prevent future dates
               />
             </div>
 
@@ -758,6 +769,7 @@ const SignupFlow = ({ refer_code } = {}) => {
                     searchable={true}
                     paddingClassName="px-3 py-[11px]"
                     showError={true}
+                    openUpward={true}
                   />
                 </div>
               </div>
@@ -844,7 +856,11 @@ const SignupFlow = ({ refer_code } = {}) => {
         const IconComponent = step.icon;
 
         return (
-          <div key={step.id} className="flex items-center gap-3">
+          <div
+            key={step.id}
+            className="flex items-center gap-3"
+            title={step.tooltip}
+          >
             <div
               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
                 isCompleted
@@ -1058,7 +1074,7 @@ const SignupFlow = ({ refer_code } = {}) => {
         </div>
 
         {/* Main Content - Scrollable */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-scroll">
           <div className="flex-1 overflow-y-auto">{renderCurrentStep()}</div>
         </div>
 

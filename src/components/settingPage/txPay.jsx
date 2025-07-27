@@ -1,4 +1,4 @@
-import CurrencyOverview from "./CurrencyOverview";
+import WalletOverview from "./subjectDescriptionPopup/Txpay/WalletOverview";
 
 const TXPay = (data) => {
   return (
@@ -8,7 +8,7 @@ const TXPay = (data) => {
       </div>
 
       <div className="p-5">
-        <CurrencyOverview data={data?.txPay} />
+        <WalletOverview {...data} />
       </div>
     </div>
   );

@@ -61,8 +61,6 @@ const FloatingLabelTextarea = ({
 
   return (
     <div className="relative w-full">
-      
-
       <div className="relative">
         <textarea
           id={id}
@@ -76,7 +74,9 @@ const FloatingLabelTextarea = ({
           autoComplete={autoComplete}
           required={required}
           readOnly={readOnly}
-          className={`${baseClasses} ${readOnly && "bg-gray-100"} ${className}`}
+          className={`${baseClasses} ${
+            readOnly && "bg-gray-100 cursor-not-allowed"
+          } ${className}`}
           rows={rows}
           maxLength={maxLength}
         />

@@ -2045,3 +2045,34 @@ export const getReferralHistory = async (token, params) => {
     throw error;
   }
 };
+
+export const addSalesPendingNotes = async (token, data) => {
+  try {
+    const { id } = data ?? {};
+    const response = await makeRequest({
+      url: `${API_ROUTES.ADD_SALES_PENDING_NOTES}${id ? `/${id}` : ""}`,
+      method: "PUT",
+      ...(token && { token: token }),
+      ...(data && { data: data }),
+    });
+    return response?.data?.success ? response?.data : {};
+  } catch (error) {
+    console.log("ERROR in updatingProfileDetails", error);
+    throw error;
+  }
+};
+
+export const addReportsNotes = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.ADD_REPORTS_NOTES}`,
+      method: "POST",
+      ...(token && { token: token }),
+      ...(data && { data: data }),
+    });
+    return response?.data?.success ? response?.data : {};
+  } catch (error) {
+    console.log("ERROR in updatingProfileDetails", error);
+    throw error;
+  }
+};

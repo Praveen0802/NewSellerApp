@@ -299,9 +299,7 @@ const NotificationPage = (props) => {
                 } ${state.activeTab === "activity" ? "ml-0" : ""}`}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  {isPinned && (
-                    <Pin className="w-3 h-3 text-blue-500" />
-                  )}
+                  {isPinned && <Pin className="w-3 h-3 text-blue-500" />}
                   <span
                     className={`inline-block w-2 h-2 rounded-full ${
                       item.status === "new" ? "bg-green-500" : "bg-blue-500"
@@ -479,7 +477,7 @@ const NotificationPage = (props) => {
           {/* End of List Indicator */}
           {!state.hasMore && currentData.length > 0 && !state.isLoading && (
             <div className="p-4 text-center text-gray-500 text-sm border-t border-gray-100">
-              <p>✅ You've reached the end</p>
+              <p> You've reached the end</p>
               <p className="text-xs mt-1 text-gray-400">
                 {currentData.length}{" "}
                 {state.activeTab === "home" ? "notifications" : "activity logs"}{" "}

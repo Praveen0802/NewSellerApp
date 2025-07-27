@@ -140,7 +140,7 @@ const MyReferrals = (props) => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 border-b border-gray-200">
+      {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 border-b border-gray-200">
         {statsCards.map((item, index) => (
           <div
             key={index}
@@ -153,7 +153,7 @@ const MyReferrals = (props) => {
             <div className="text-xs text-gray-600">{item.desc}</div>
           </div>
         ))}
-      </div>
+      </div> */}
 
       {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end border-b border-gray-200 p-4">

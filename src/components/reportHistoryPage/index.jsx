@@ -312,6 +312,7 @@ const RportHistory = (props) => {
     setShowInfoPopup({
       flag: true,
       data: salesData,
+      id: item?.id,
     });
     // setIsLoading(false);
   };
@@ -645,6 +646,12 @@ const RportHistory = (props) => {
     }
   };
 
+  const refreshPopupData = () => {
+    if (showInfoPopup.flag) {
+      getOrderDetails({ id: showInfoPopup?.id });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white">
@@ -682,6 +689,8 @@ const RportHistory = (props) => {
         show={showInfoPopup?.flag}
         data={showInfoPopup?.data}
         onClose={() => setShowInfoPopup({ flag: false, data: [] })}
+        refreshPopupData={refreshPopupData}
+        type="report"
       />
       {/* StickyDataTable section */}
       <div className="p-4">
