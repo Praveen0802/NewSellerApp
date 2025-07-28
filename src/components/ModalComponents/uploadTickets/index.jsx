@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useMemo } from "react";
+import React, { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import {
   Calendar,
   Clock,
@@ -43,7 +43,8 @@ const UploadTickets = ({
   ); // Files in right panel
 
   // State for ETicketsFlow - storing links for each quantity
-  const [ticketLinks, setTicketLinks] = useState(
+  // FIXED: Initialize with proper structure and avoid re-initialization
+  const [ticketLinks, setTicketLinks] = useState(() =>
     Array.from({ length: maxQuantity }, () => ({
       qr_link_android: "",
       qr_link_ios: "",
@@ -51,20 +52,61 @@ const UploadTickets = ({
   );
 
   // State for Paper Ticket Flow - storing courier info
-  const [paperTicketDetails, setPaperTicketDetails] = useState({
+  // FIXED: Use functional initialization
+  const [paperTicketDetails, setPaperTicketDetails] = useState(() => ({
     courier_type: "company",
     courier_company: "",
     tracking_details: "",
-  });
+  }));
 
   // State for additional info
-  const [additionalInfo, setAdditionalInfo] = useState({
+  // FIXED: Use functional initialization
+  const [additionalInfo, setAdditionalInfo] = useState(() => ({
     template: "",
     dynamicContent: "",
-  });
+  }));
 
   const fileInputRef = useRef(null);
 
+  // FIXED: Simplified handlers without useCallback for text inputs
+  const handleLinkChange = (ticketIndex, linkType, value) => {
+    console.log('handleLinkChange called:', { ticketIndex, linkType, value });
+    setTicketLinks((prevLinks) => {
+      const newTicketLinks = [...prevLinks];
+      newTicketLinks[ticketIndex] = {
+        ...newTicketLinks[ticketIndex],
+        [linkType]: value,
+      };
+      console.log('New ticket links:', newTicketLinks);
+      return newTicketLinks;
+    });
+  };
+
+  const handlePaperTicketDetailChange = (field, value) => {
+    console.log('handlePaperTicketDetailChange called:', { field, value });
+    setPaperTicketDetails((prevDetails) => {
+      const newDetails = {
+        ...prevDetails,
+        [field]: value,
+      };
+      console.log('New paper ticket details:', newDetails);
+      return newDetails;
+    });
+  };
+
+  const handleAdditionalInfoChange = (field, value) => {
+    console.log('handleAdditionalInfoChange called:', { field, value });
+    setAdditionalInfo((prevInfo) => {
+      const newInfo = {
+        ...prevInfo,
+        [field]: value,
+      };
+      console.log('New additional info:', newInfo);
+      return newInfo;
+    });
+  };
+
+  // File handling functions - keep these optimized
   const handleBrowseFiles = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
@@ -122,35 +164,18 @@ const UploadTickets = ({
     [transferredFiles.length, maxQuantity]
   );
 
-  // Handle link input changes for ETicketsFlow - FIXED
-  const handleLinkChange = (ticketIndex, linkType, value) => {
-    setTicketLinks((prev) => {
-      // Create a shallow copy of the array
-      const newTicketLinks = [...prev];
-      // Only update the specific ticket object that changed
-      newTicketLinks[ticketIndex] = {
-        ...newTicketLinks[ticketIndex],
-        [linkType]: value,
-      };
-      return newTicketLinks;
-    });
-  };
+  // Debug effect to log state changes
+  useEffect(() => {
+    console.log('TicketLinks state changed:', ticketLinks);
+  }, [ticketLinks]);
 
-  // Handle paper ticket details change - FIXED
-  const handlePaperTicketDetailChange = (field, value) => {
-    setPaperTicketDetails((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  useEffect(() => {
+    console.log('PaperTicketDetails state changed:', paperTicketDetails);
+  }, [paperTicketDetails]);
 
-  // Handle additional info changes - FIXED
-  const handleAdditionalInfoChange = (field, value) => {
-    setAdditionalInfo((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  useEffect(() => {
+    console.log('AdditionalInfo state changed:', additionalInfo);
+  }, [additionalInfo]);
 
   // Common instructions based on flow type - Memoized
   const instructions = useMemo(() => {
@@ -180,332 +205,8 @@ const UploadTickets = ({
     ];
   }, [ETicketsFlow, paperTicketFlow]);
 
-  // Common Match Header Component
-  const MatchHeader = useMemo(() => () => (
-    <div className="bg-[#1E0065] text-xs py-3 rounded-t-md text-white px-4 flex items-center justify-between">
-      <h3 className="font-medium">{matchDetails?.match_name}</h3>
-      <div className="flex items-center gap-2 justify-center">
-        <Calendar className="w-4 h-4" />
-        <span className="text-xs">{matchDetails?.match_date_format}</span>
-      </div>
-      <div className="flex items-center gap-2 justify-center">
-        <Clock className="w-4 h-4" />
-        <span className="text-xs">{matchDetails?.match_time}</span>
-      </div>
-      <div className="flex items-center gap-2 justify-center">
-        <MapPin className="w-4 h-4" />
-        <span className="text-xs">{matchDetails?.stadium_name}</span>
-      </div>
-      <button className="ml-2">
-        <ChevronUp className="w-4 h-4" />
-      </button>
-    </div>
-  ), [matchDetails]);
-
-  // Common Ticket Details Component
-  const TicketDetails = useMemo(() => () => (
-    <div className="border-[1px] border-[#E0E1EA] rounded-b-md flex-shrink-0">
-      <div className="grid grid-cols-4 bg-gray-100 px-3 py-2 border-b border-gray-200">
-        <div className="text-xs font-medium text-[#323A70]">Listing ID</div>
-        <div className="text-xs font-medium text-[#323A70]">Quantity</div>
-        <div className="text-xs font-medium text-[#323A70]">Ticket Details</div>
-        <div className="text-xs font-medium text-[#323A70]">
-          {ETicketsFlow ? "Type" : paperTicketFlow ? "Type" : "Row (Seat)"}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-4 bg-[#F9F9FB] py-2 px-3 border-b border-gray-200">
-        <div className="text-xs truncate">{rowData?.id || "N/A"}</div>
-        <div className="text-xs truncate">{maxQuantity}</div>
-        <div className="text-xs truncate">
-          {rowData?.ticket_category || "N/A"}, {rowData?.ticket_block || ""}
-        </div>
-        <div className="text-xs truncate">
-          {ETicketsFlow ? (
-            "E-Ticket"
-          ) : paperTicketFlow ? (
-            "Paper Ticket"
-          ) : (
-            <div className="flex gap-5 items-center justify-end">
-              <span>{rowData?.row || "0"} (0)</span>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  ), [ETicketsFlow, paperTicketFlow, rowData, maxQuantity]);
-
-  // Common Instructions Component
-  const InstructionsPanel = ({ title, instructions, children }) => (
-    <div className="border-[1px] border-[#E0E1EA] rounded-[6px]">
-      <p className="p-[10px] text-[#323A70] text-[16px] font-semibold border-b-[1px] border-[#E0E1EA]">
-        {title}
-      </p>
-      {instructions && (
-        <ul className="p-[10px] list-decimal pl-[30px] flex flex-col gap-1">
-          {instructions.map((item, index) => (
-            <li className="text-[12px] text-[#323A70]" key={index}>
-              {item}
-            </li>
-          ))}
-        </ul>
-      )}
-      {children}
-    </div>
-  );
-
-  // File Upload Section for Normal Flow
-  const FileUploadSection = useMemo(() => () => (
-    <>
-      {/* Drag and drop area */}
-      <div className="border-1 bg-[#F9F9FB] border-dashed border-[#130061] rounded-lg p-4 flex flex-col gap-1 items-center justify-center h-32">
-        <Image src={uploadImage} width={42} height={42} alt="Upload" />
-        <p className="text-xs text-[#323A70] mb-1">
-          Drag your file(s) to start uploading
-        </p>
-        <p className="text-xs text-gray-500">OR</p>
-        <Button
-          onClick={handleBrowseFiles}
-          classNames={{
-            root: "py-2 border-1 border-[#0137D5] rounded-sm ",
-            label_: "text-[12px] font-medium !text-[#0137D5]",
-          }}
-        >
-          Browse Files
-        </Button>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileUpload}
-          multiple
-          accept=".pdf,.jpg,.jpeg,.png"
-          className="hidden"
-        />
-      </div>
-
-      {/* Uploaded files list */}
-      <div className="flex-1">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-sm font-medium text-[#323A70]">
-            Uploaded Files ({uploadedFiles.length})
-          </h3>
-        </div>
-
-        <div className="max-h-64 overflow-y-auto border border-[#E0E1EA] rounded">
-          {uploadedFiles.length === 0 ? (
-            <div className="p-4 text-center text-gray-500 text-sm">
-              No files uploaded yet
-            </div>
-          ) : (
-            uploadedFiles.map((file) => (
-              <div
-                key={file.id}
-                className="flex items-center justify-between p-2 border-b border-gray-200 last:border-b-0 bg-white"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-700 truncate max-w-32">
-                    {file.name}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    onClick={() => handleTransferSingleFile(file.id)}
-                    disabled={!canTransferFile(file.id)}
-                    classNames={{
-                      root: `py-1 px-2 cursor-pointer rounded-sm text-xs ${
-                        canTransferFile(file.id)
-                          ? "bg-[#0137D5] text-white hover:bg-[#0137D5]/90"
-                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      }`,
-                      label_: "text-[10px] font-medium flex items-center gap-1",
-                    }}
-                  >
-                    Add <ArrowRight className="w-3 h-3" />
-                  </Button>
-                  <button
-                    className="p-1 text-red-500 cursor-pointer hover:text-red-700"
-                    onClick={() => handleDeleteUploaded(file.id)}
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </>
-  ), [uploadedFiles, handleBrowseFiles, handleFileUpload, handleTransferSingleFile, canTransferFile, handleDeleteUploaded]);
-
-  // E-Ticket Info Section
-  const ETicketInfoSection = useMemo(() => () => (
-    <div className="">
-      <div className="">
-        <div className="space-y-3">
-          {instructions.map((instruction, index) => (
-            <div key={index} className="flex items-start gap-2">
-              <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-[13px] text-[#323A70] leading-relaxed">
-                {instruction}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-4 pt-3 border-t border-[#E0E1EA]">
-          <h4 className="text-[13px] font-medium text-[#323A70] mb-2">
-            What if I have any issues at the venue?
-          </h4>
-          <div className="flex items-start gap-2">
-            <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
-            <p className="text-[13px] text-[#323A70] leading-relaxed">
-              If you have experienced issues at the turnstile, please call the
-              emergency contact number. They will be able to fix the issue for
-              you. DO NOT go to the ticket office or seek assistance from the
-              stewards as they will only cancel the tickets and won't replace
-              them for you.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  ), [instructions]);
-
-  // Paper Ticket Info Section
-  const PaperTicketInfoSection = useMemo(() => () => (
-    <div className="">
-      <div className="">
-        <div className="space-y-3">
-          {instructions.map((instruction, index) => (
-            <div key={index} className="flex items-start gap-2">
-              <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-[13px] text-[#323A70] leading-relaxed">
-                {instruction}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-4 pt-3 border-t border-[#E0E1EA]">
-          <h4 className="text-[13px] font-medium text-[#323A70] mb-2">
-            Important Delivery Information
-          </h4>
-          <div className="space-y-2">
-            <div className="flex items-start gap-2">
-              <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-[13px] text-[#323A70] leading-relaxed">
-                Delivery typically takes 3-5 business days. For urgent
-                deliveries, express options may be available at additional cost.
-              </p>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-[13px] text-[#323A70] leading-relaxed">
-                If choosing collection, tickets will be available 24 hours
-                before the event. Bring your booking reference and valid ID.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 pt-3 border-t border-[#E0E1EA]">
-          <h4 className="text-[13px] font-medium text-[#323A70] mb-2">
-            What if I have issues with my paper tickets?
-          </h4>
-          <div className="flex items-start gap-2">
-            <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
-            <p className="text-[13px] text-[#323A70] leading-relaxed">
-              For any issues with paper ticket delivery or collection, contact
-              our customer service team immediately. Have your booking reference
-              ready when calling.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  ), [instructions]);
-
-  // Left Panel Content - Now with independent scrolling
-  const LeftPanelContent = useMemo(() => () => (
-    <div className="w-1/2 border-r border-[#E0E1EA] flex flex-col">
-      <div className="p-3 m-4 flex flex-col gap-4 overflow-y-auto flex-1 max-h-[calc(100vh-150px)]">
-        {ETicketsFlow ? (
-          <ETicketInfoSection />
-        ) : paperTicketFlow ? (
-          <PaperTicketInfoSection />
-        ) : (
-          <>
-            <FileUploadSection />
-            {showInstruction && (
-              <InstructionsPanel
-                title="Upload Instructions"
-                instructions={instructions}
-              />
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  ), [ETicketsFlow, paperTicketFlow, showInstruction, ETicketInfoSection, PaperTicketInfoSection, FileUploadSection, instructions]);
-
-  // Ticket Assignment Section for Normal Flow
-  const TicketAssignmentSection = useMemo(() => () => (
-    <div className="p-3">
-      <div className="flex justify-between items-center mb-2">
-        <h4 className="text-sm font-medium text-[#323A70]">
-          Ticket Assignment ({transferredFiles.length}/{maxQuantity})
-        </h4>
-      </div>
-
-      <div className="max-h-60 overflow-y-auto">
-        {maxQuantity === 0 ? (
-          <div className="p-4 text-center text-gray-500 text-sm border border-gray-200 rounded">
-            No quantity specified
-          </div>
-        ) : (
-          Array.from({ length: maxQuantity }, (_, index) => {
-            const ticketNumber = index + 1;
-            const assignedFile = transferredFiles[index];
-
-            return (
-              <div
-                key={ticketNumber}
-                className="grid grid-cols-2 items-center border-b border-gray-200 last:border-b-0"
-              >
-                <div className="px-3 py-2 text-xs font-medium text-[#323A70]">
-                  Ticket {ticketNumber}
-                </div>
-                <div className="px-3 py-2 flex items-center">
-                  {assignedFile ? (
-                    <div className="flex bg-gray-100 rounded px-2 py-1 items-center justify-between w-full">
-                      <span className="text-xs text-gray-700 truncate max-w-24">
-                        {assignedFile.name}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <button
-                          className="p-1 text-red-500 cursor-pointer hover:text-red-700"
-                          onClick={() => handleRemoveFromSlot(index)}
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-xs text-gray-400 w-full border-[1px] border-dashed border-[#E0E1EA] bg-white rounded-md px-2 py-1">
-                      Waiting for file...
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-    </div>
-  ), [transferredFiles, maxQuantity, handleRemoveFromSlot]);
-
   // QR Links Configuration Section for E-Ticket Flow
-  const QRLinksConfigSection = useMemo(() => () => (
+  const QRLinksConfigSection = () => (
     <div className="border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1">
       <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA]">
         <h4 className="text-sm font-medium text-[#323A70]">
@@ -553,16 +254,14 @@ const UploadTickets = ({
                         Android QR Link
                       </label>
                       <input
+                        key={`android-${index}-${ticketLinks[index]?.qr_link_android}`}
                         type="url"
                         placeholder="Enter Android app/web link"
-                        value={ticketLinks[index]?.qr_link_android || ""}
-                        onChange={(e) =>
-                          handleLinkChange(
-                            index,
-                            "qr_link_android",
-                            e.target.value
-                          )
-                        }
+                        defaultValue={ticketLinks[index]?.qr_link_android || ""}
+                        onChange={(e) => {
+                          console.log('Android input onChange:', e.target.value);
+                          handleLinkChange(index, "qr_link_android", e.target.value);
+                        }}
                         className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
                       />
                     </div>
@@ -573,12 +272,14 @@ const UploadTickets = ({
                         iOS QR Link
                       </label>
                       <input
+                        key={`ios-${index}-${ticketLinks[index]?.qr_link_ios}`}
                         type="url"
                         placeholder="Enter iOS app/web link"
-                        value={ticketLinks[index]?.qr_link_ios || ""}
-                        onChange={(e) =>
-                          handleLinkChange(index, "qr_link_ios", e.target.value)
-                        }
+                        defaultValue={ticketLinks[index]?.qr_link_ios || ""}
+                        onChange={(e) => {
+                          console.log('iOS input onChange:', e.target.value);
+                          handleLinkChange(index, "qr_link_ios", e.target.value);
+                        }}
                         className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
                       />
                     </div>
@@ -590,10 +291,10 @@ const UploadTickets = ({
         )}
       </div>
     </div>
-  ), [ticketLinks, maxQuantity, handleLinkChange]);
+  );
 
-  // Paper Ticket Courier Details Section - For Right Panel
-  const PaperTicketCourierDetailsSection = useMemo(() => () => (
+  // Paper Ticket Courier Details Section
+  const PaperTicketCourierDetailsSection = () => (
     <div className="border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1">
       <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA]">
         <h4 className="text-sm font-medium text-[#323A70]">
@@ -602,7 +303,6 @@ const UploadTickets = ({
       </div>
 
       <div className="p-3 space-y-4">
-        {/* Courier Details */}
         <div className="grid grid-cols-3 gap-3">
           {/* Courier Type */}
           <div>
@@ -611,9 +311,10 @@ const UploadTickets = ({
             </label>
             <select
               value={paperTicketDetails.courier_type || "company"}
-              onChange={(e) =>
-                handlePaperTicketDetailChange("courier_type", e.target.value)
-              }
+              onChange={(e) => {
+                console.log('Courier type onChange:', e.target.value);
+                handlePaperTicketDetailChange("courier_type", e.target.value);
+              }}
               className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
             >
               <option value="company">Company</option>
@@ -628,12 +329,14 @@ const UploadTickets = ({
               Courier Company Name
             </label>
             <input
+              key={`courier-company-${paperTicketDetails.courier_company}`}
               type="text"
               placeholder="FedEx"
-              value={paperTicketDetails.courier_company || ""}
-              onChange={(e) =>
-                handlePaperTicketDetailChange("courier_company", e.target.value)
-              }
+              defaultValue={paperTicketDetails.courier_company || ""}
+              onChange={(e) => {
+                console.log('Courier company onChange:', e.target.value);
+                handlePaperTicketDetailChange("courier_company", e.target.value);
+              }}
               className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
             />
           </div>
@@ -644,15 +347,14 @@ const UploadTickets = ({
               Input Tracking Details
             </label>
             <input
+              key={`tracking-${paperTicketDetails.tracking_details}`}
               type="text"
               placeholder="DSG684864SG56"
-              value={paperTicketDetails.tracking_details || ""}
-              onChange={(e) =>
-                handlePaperTicketDetailChange(
-                  "tracking_details",
-                  e.target.value
-                )
-              }
+              defaultValue={paperTicketDetails.tracking_details || ""}
+              onChange={(e) => {
+                console.log('Tracking details onChange:', e.target.value);
+                handlePaperTicketDetailChange("tracking_details", e.target.value);
+              }}
               className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
             />
           </div>
@@ -745,10 +447,10 @@ const UploadTickets = ({
         )}
       </div>
     </div>
-  ), [paperTicketDetails, maxQuantity, handlePaperTicketDetailChange, handleBrowseFiles, handleFileUpload, uploadedFiles, handleDeleteUploaded]);
+  );
 
-  // Additional Information Section (for Normal Flow and Paper Tickets)
-  const AdditionalInfoSection = useMemo(() => () => (
+  // Additional Information Section
+  const AdditionalInfoSection = () => (
     <div className="border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1">
       <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA]">
         <h4 className="text-sm font-medium text-[#323A70]">
@@ -764,7 +466,10 @@ const UploadTickets = ({
           </label>
           <select 
             value={additionalInfo.template}
-            onChange={(e) => handleAdditionalInfoChange("template", e.target.value)}
+            onChange={(e) => {
+              console.log('Template onChange:', e.target.value);
+              handleAdditionalInfoChange("template", e.target.value);
+            }}
             className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
           >
             <option value="">
@@ -791,8 +496,12 @@ const UploadTickets = ({
             Dynamic Content
           </label>
           <textarea
-            value={additionalInfo.dynamicContent}
-            onChange={(e) => handleAdditionalInfoChange("dynamicContent", e.target.value)}
+            key={`dynamic-content-${additionalInfo.dynamicContent}`}
+            defaultValue={additionalInfo.dynamicContent}
+            onChange={(e) => {
+              console.log('Dynamic content onChange:', e.target.value);
+              handleAdditionalInfoChange("dynamicContent", e.target.value);
+            }}
             className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] resize-none focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
             rows="4"
             placeholder="Enter dynamic content here..."
@@ -800,98 +509,7 @@ const UploadTickets = ({
         </div>
       </div>
     </div>
-  ), [additionalInfo, paperTicketFlow, handleAdditionalInfoChange]);
-
-  // Right Panel Content - Now with independent scrolling
-  const RightPanelContent = useMemo(() => () => (
-    <div className="w-1/2 flex flex-col">
-      <div className="m-4 flex flex-col overflow-y-auto flex-1 max-h-[calc(100vh-150px)]">
-        <MatchHeader />
-        <TicketDetails />
-
-        {ETicketsFlow ? (
-          <>
-            <QRLinksConfigSection />
-            <AdditionalInfoSection />
-          </>
-        ) : paperTicketFlow ? (
-          <>
-            <PaperTicketCourierDetailsSection />
-            <AdditionalInfoSection />
-          </>
-        ) : (
-          <>
-            <div className="border-[1px] border-[#E0E1EA] rounded-b-md flex-shrink-0">
-              <TicketAssignmentSection />
-            </div>
-            <AdditionalInfoSection />
-          </>
-        )}
-      </div>
-    </div>
-  ), [ETicketsFlow, paperTicketFlow, MatchHeader, TicketDetails, QRLinksConfigSection, AdditionalInfoSection, PaperTicketCourierDetailsSection, TicketAssignmentSection]);
-
-  // Calculate completion status for confirm button
-  const getCompletionStatus = useMemo(() => {
-    if (ETicketsFlow) {
-      const completedTickets = ticketLinks.filter(
-        (link) => link.qr_link_android && link.qr_link_ios
-      ).length;
-      return { completed: completedTickets, total: maxQuantity };
-    } else if (paperTicketFlow) {
-      // For paper tickets, check if courier details and files are provided
-      const hasCourierDetails =
-        paperTicketDetails.courier_company !== "" &&
-        paperTicketDetails.tracking_details !== "";
-
-      const isComplete = hasCourierDetails;
-      return { completed: isComplete ? maxQuantity : 0, total: maxQuantity };
-    } else if (normalFlow) {
-      return { completed: transferredFiles.length, total: maxQuantity };
-    }
-    return { completed: 0, total: 0 };
-  }, [ETicketsFlow, paperTicketFlow, normalFlow, ticketLinks, paperTicketDetails, transferredFiles, maxQuantity]);
-
-  const isConfirmDisabled = getCompletionStatus.completed === 0;
-
-  // Get modal title based on flow type
-  const getModalTitle = () => {
-    if (ETicketsFlow) return "Configure E-Tickets";
-    if (paperTicketFlow) return "Configure Paper Tickets";
-    return "Upload Tickets";
-  };
-
-  const getModalSubtitle = () => {
-    if (ETicketsFlow) return ` (${maxQuantity} tickets)`;
-    if (paperTicketFlow) return ` (${maxQuantity} tickets)`;
-    return ` (Max: ${maxQuantity})`;
-  };
-
-  const handleConfirmCtaClick = useCallback(() => {
-    if (normalFlow) {
-      const updatedObject = {
-        upload_tickets: transferredFiles,
-        additional_info: additionalInfo,
-      };
-      handleConfirmClick(updatedObject, rowIndex, rowData);
-    } else if (ETicketsFlow) {
-      const updatedObject = {
-        qr_links: ticketLinks,
-        additional_info: additionalInfo,
-      };
-      handleConfirmClick(updatedObject, rowIndex, rowData);
-    } else if (paperTicketFlow) {
-      const updatedObject = {
-        paper_ticket_details: paperTicketDetails,
-        courier_type: paperTicketDetails.courier_type,
-        courier_name: paperTicketDetails.courier_company,
-        courier_tracking_details: paperTicketDetails.tracking_details,
-        upload_tickets: uploadedFiles,
-        additional_info: additionalInfo,
-      };
-      handleConfirmClick(updatedObject, rowIndex, rowData);
-    }
-  }, [normalFlow, ETicketsFlow, paperTicketFlow, transferredFiles, additionalInfo, ticketLinks, paperTicketDetails, uploadedFiles, handleConfirmClick, rowIndex, rowData]);
+  );
 
   return (
     <div>
@@ -904,18 +522,99 @@ const UploadTickets = ({
           {/* Header */}
           <div className="flex justify-between items-center p-4 border-b border-[#E0E1EA] flex-shrink-0">
             <h2 className="text-lg font-medium text-[#323A70]">
-              {getModalTitle()}
-              {getModalSubtitle()}
+              {ETicketsFlow ? "Configure E-Tickets" : paperTicketFlow ? "Configure Paper Tickets" : "Upload Tickets"}
+              {` (${maxQuantity} tickets)`}
             </h2>
             <button onClick={() => onClose()} className="text-gray-500">
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Main Content - Now with proper flex structure */}
+          {/* Main Content */}
           <div className="flex flex-1 overflow-hidden">
-            <LeftPanelContent />
-            <RightPanelContent />
+            {/* Left Panel - Instructions */}
+            <div className="w-1/2 border-r border-[#E0E1EA] flex flex-col">
+              <div className="p-3 m-4 flex flex-col gap-4 overflow-y-auto flex-1 max-h-[calc(100vh-150px)]">
+                <div className="space-y-3">
+                  {instructions.map((instruction, index) => (
+                    <div key={index} className="flex items-start gap-2">
+                      <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
+                      <p className="text-[13px] text-[#323A70] leading-relaxed">
+                        {instruction}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Panel - Configuration */}
+            <div className="w-1/2 flex flex-col">
+              <div className="m-4 flex flex-col overflow-y-auto flex-1 max-h-[calc(100vh-150px)]">
+                {/* Match Header */}
+                <div className="bg-[#1E0065] text-xs py-3 rounded-t-md text-white px-4 flex items-center justify-between">
+                  <h3 className="font-medium">{matchDetails?.match_name}</h3>
+                  <div className="flex items-center gap-2 justify-center">
+                    <Calendar className="w-4 h-4" />
+                    <span className="text-xs">{matchDetails?.match_date_format}</span>
+                  </div>
+                  <div className="flex items-center gap-2 justify-center">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-xs">{matchDetails?.match_time}</span>
+                  </div>
+                  <div className="flex items-center gap-2 justify-center">
+                    <MapPin className="w-4 h-4" />
+                    <span className="text-xs">{matchDetails?.stadium_name}</span>
+                  </div>
+                </div>
+
+                {/* Ticket Details */}
+                <div className="border-[1px] border-[#E0E1EA] rounded-b-md flex-shrink-0">
+                  <div className="grid grid-cols-4 bg-gray-100 px-3 py-2 border-b border-gray-200">
+                    <div className="text-xs font-medium text-[#323A70]">Listing ID</div>
+                    <div className="text-xs font-medium text-[#323A70]">Quantity</div>
+                    <div className="text-xs font-medium text-[#323A70]">Ticket Details</div>
+                    <div className="text-xs font-medium text-[#323A70]">
+                      {ETicketsFlow ? "Type" : paperTicketFlow ? "Type" : "Row (Seat)"}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 bg-[#F9F9FB] py-2 px-3 border-b border-gray-200">
+                    <div className="text-xs truncate">{rowData?.id || "N/A"}</div>
+                    <div className="text-xs truncate">{maxQuantity}</div>
+                    <div className="text-xs truncate">
+                      {rowData?.ticket_category || "N/A"}, {rowData?.ticket_block || ""}
+                    </div>
+                    <div className="text-xs truncate">
+                      {ETicketsFlow ? (
+                        "E-Ticket"
+                      ) : paperTicketFlow ? (
+                        "Paper Ticket"
+                      ) : (
+                        <div className="flex gap-5 items-center justify-end">
+                          <span>{rowData?.row || "0"} (0)</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Flow-specific sections */}
+                {ETicketsFlow && (
+                  <>
+                    <QRLinksConfigSection />
+                    <AdditionalInfoSection />
+                  </>
+                )}
+
+                {paperTicketFlow && (
+                  <>
+                    <PaperTicketCourierDetailsSection />
+                    <AdditionalInfoSection />
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Footer */}
@@ -928,9 +627,23 @@ const UploadTickets = ({
                 Cancel
               </button>
               <button
-                className="px-4 py-2 bg-green-500 text-white rounded text-sm hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                disabled={isConfirmDisabled}
-                onClick={handleConfirmCtaClick}
+                className="px-4 py-2 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+                onClick={() => {
+                  const updatedObject = ETicketsFlow 
+                    ? { qr_links: ticketLinks, additional_info: additionalInfo }
+                    : paperTicketFlow 
+                    ? { 
+                        paper_ticket_details: paperTicketDetails,
+                        courier_type: paperTicketDetails.courier_type,
+                        courier_name: paperTicketDetails.courier_company,
+                        courier_tracking_details: paperTicketDetails.tracking_details,
+                        upload_tickets: uploadedFiles,
+                        additional_info: additionalInfo,
+                      }
+                    : { upload_tickets: transferredFiles, additional_info: additionalInfo };
+                  
+                  handleConfirmClick(updatedObject, rowIndex, rowData);
+                }}
               >
                 Confirm
               </button>

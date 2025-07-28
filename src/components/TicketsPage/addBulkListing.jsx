@@ -1718,14 +1718,14 @@ console.log(blockDetailsByCategory,'blockDetailsByCategory')
       {/* Main Content Area with Multiple Match Tables */}
       {allMatchDetails.length > 0 && (
         <div
-          className="m-6 bg-white rounded"
+          className="m-6 bg-white rounded "
           style={{
             marginBottom: "80px",
             position: "relative",
             overflow: "visible",
           }}
         >
-          <div >
+          <div className="max-h-[calc(100vh-350px)] overflow-y-auto" >
             {allMatchDetails.map((matchDetails) => (
               <CustomInventoryTable 
                 key={matchDetails.match_id}
