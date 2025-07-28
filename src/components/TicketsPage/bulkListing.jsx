@@ -10,6 +10,7 @@ import { useRouter } from "next/router";
 
 const BulkListings = (props) => {
   const { response } = props;
+  console.log(response, "response from bulk listing");
   const [selectedRows, setSelectedRows] = useState([]);
   const dispatch = useDispatch();
   console.log(selectedRows, "selectedRowsselectedRows");

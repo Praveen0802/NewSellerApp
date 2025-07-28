@@ -2,20 +2,24 @@ import React, { useState, useEffect } from "react";
 
 const EventsTable = ({ events, headers, selectedRows, setSelectedRows }) => {
   const [selectedTeamId, setSelectedTeamId] = useState(null);
+  const [selectedStadium, setSelectedStadium] = useState(null);
 
   // Reset selections when events change
   useEffect(() => {
     setSelectedRows([]);
     setSelectedTeamId(null);
+    setSelectedStadium(null);
   }, [events]);
 
   const handleRowSelection = (m_id) => {
     const clickedEvent = events.find((event) => event.m_id === m_id);
     const clickedTeamId = clickedEvent.team_1;
+    const clickedStadium = clickedEvent.stadium;
 
-    // If no team is selected yet, set the team_1 as the selected team
-    if (selectedTeamId === null) {
+    // If no team is selected yet, set the team_1 and stadium as the selected criteria
+    if (selectedTeamId === null && selectedStadium === null) {
       setSelectedTeamId(clickedTeamId);
+      setSelectedStadium(clickedStadium);
       setSelectedRows([m_id]);
       return;
     }
@@ -27,21 +31,27 @@ const EventsTable = ({ events, headers, selectedRows, setSelectedRows }) => {
       );
       setSelectedRows(newSelectedRows);
 
-      // If no rows are selected anymore, reset the team selection
+      // If no rows are selected anymore, reset the selection criteria
       if (newSelectedRows.length === 0) {
         setSelectedTeamId(null);
+        setSelectedStadium(null);
       }
       return;
     }
 
-    // If the clicked event has the same team_1 as selected team, allow selection
-    if (clickedTeamId === selectedTeamId) {
+    // If the clicked event has the same team_1 AND stadium as selected criteria, allow selection
+    if (
+      clickedTeamId === selectedTeamId &&
+      clickedStadium === selectedStadium
+    ) {
       setSelectedRows([...selectedRows, m_id]);
     }
-    // If different team_1, show some feedback (optional)
+    // If different team_1 or stadium, show some feedback (optional)
     else {
       // You can add a toast notification or visual feedback here
-      console.warn(`Can only select events from team ${selectedTeamId}`);
+      console.warn(
+        `Can only select events from team ${selectedTeamId} at ${selectedStadium}`
+      );
     }
   };
 
@@ -49,56 +59,84 @@ const EventsTable = ({ events, headers, selectedRows, setSelectedRows }) => {
     if (selectedRows.length === getSelectableEvents().length) {
       setSelectedRows([]);
       setSelectedTeamId(null);
+      setSelectedStadium(null);
     } else {
-      // If no team is selected, select all events from the first event's team
-      if (selectedTeamId === null && events.length > 0) {
+      // If no team/stadium is selected, select all events from the first event's team and stadium
+      if (
+        selectedTeamId === null &&
+        selectedStadium === null &&
+        events.length > 0
+      ) {
         const firstTeamId = events[0].team_1;
+        const firstStadium = events[0].stadium;
         setSelectedTeamId(firstTeamId);
+        setSelectedStadium(firstStadium);
         const selectableIds = events
-          .filter((event) => event.team_1 === firstTeamId)
+          .filter(
+            (event) =>
+              event.team_1 === firstTeamId && event.stadium === firstStadium
+          )
           .map((event) => event.m_id);
         setSelectedRows(selectableIds);
       } else {
-        // Select all events with the current selected team
+        // Select all events with the current selected team and stadium
         const selectableIds = events
-          .filter((event) => event.team_1 === selectedTeamId)
+          .filter(
+            (event) =>
+              event.team_1 === selectedTeamId &&
+              event.stadium === selectedStadium
+          )
           .map((event) => event.m_id);
         setSelectedRows(selectableIds);
       }
     }
   };
 
-  // Get events that can be selected based on current team selection
+  // Get events that can be selected based on current team and stadium selection
   const getSelectableEvents = () => {
-    if (selectedTeamId === null) return events;
-    return events.filter((event) => event.team_1 === selectedTeamId);
+    if (selectedTeamId === null && selectedStadium === null) return events;
+    return events.filter(
+      (event) =>
+        event.team_1 === selectedTeamId && event.stadium === selectedStadium
+    );
   };
 
   // Check if a row is selectable
   const isRowSelectable = (event) => {
-    return selectedTeamId === null || event.team_1 === selectedTeamId;
+    return (
+      (selectedTeamId === null && selectedStadium === null) ||
+      (event.team_1 === selectedTeamId && event.stadium === selectedStadium)
+    );
   };
 
   // Check if a row should appear disabled
   const isRowDisabled = (event) => {
-    return selectedTeamId !== null && event.team_1 !== selectedTeamId;
+    return (
+      (selectedTeamId !== null || selectedStadium !== null) &&
+      (event.team_1 !== selectedTeamId || event.stadium !== selectedStadium)
+    );
   };
 
   const selectableEvents = getSelectableEvents();
 
   return (
     <div className="w-full h-full">
-      {/* Show selected team info */}
-      {selectedTeamId && (
+      {/* Show selected team and stadium info */}
+      {(selectedTeamId || selectedStadium) && selectedRows.length > 0 && (
         <div className="bg-blue-50 border border-blue-200 p-2 mb-2 rounded text-sm">
           <span className="text-blue-800">
-            Selected Team ID: <strong>{selectedTeamId}</strong>(
-            {selectedRows.length} of {selectableEvents.length} events selected)
+            Selected: <strong>Team {selectedTeamId}</strong> at{" "}
+            <strong>{selectedStadium}</strong>
+            <span className="ml-2">
+              ({selectedRows.length} of {selectableEvents.length} events
+              selected)
+            </span>
           </span>
           <button
             onClick={() => {
               setSelectedRows([]);
               setSelectedTeamId(null);
+              setSelectedStadium(null);
             }}
             className="ml-2 text-blue-600 hover:text-blue-800 underline"
           >
@@ -143,7 +181,7 @@ const EventsTable = ({ events, headers, selectedRows, setSelectedRows }) => {
 
             return (
               <tr
-                key={event.m_id} // Using m_id as key instead of rowIndex
+                key={event.m_id}
                 onClick={() => isSelectable && handleRowSelection(event.m_id)}
                 className={`border-b border-[#DADBE5] ${
                   isSelectable
@@ -180,6 +218,16 @@ const EventsTable = ({ events, headers, selectedRows, setSelectedRows }) => {
                         }`}
                       >
                         Team {event[header.key]}
+                      </span>
+                    ) : header.key === "stadium" ? (
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${
+                          event.stadium === selectedStadium
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {event[header.key]}
                       </span>
                     ) : (
                       event[header.key]
