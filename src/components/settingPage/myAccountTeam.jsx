@@ -12,7 +12,7 @@ import useCountryCodes from "@/Hooks/useCountryCodes";
 
 const MyAccountTeam = (props) => {
   const { profileDetails } = props;
-
+  console.log(profileDetails, "profileDetailsprofileDetailsprofileDetails");
   const initialValues = {
     firstName: profileDetails?.first_name,
     lastName: profileDetails?.last_name,
@@ -42,7 +42,7 @@ const MyAccountTeam = (props) => {
   };
 
   const [countryCode, setCountryCode] = useState(
-    `${profileDetails?.country_code}`
+    `+${profileDetails?.country_code}`
   );
 
   const handleCountryCodeChange = (code) => {

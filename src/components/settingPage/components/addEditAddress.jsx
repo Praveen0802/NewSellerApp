@@ -36,9 +36,9 @@ const AddEditAddress = ({
     // address_line1 = "",
     company_name = "",
     email = "",
-    phone_code = "",
+    country_code: phone_code = "",
   } = addressDetails;
-
+  console.log(addressDetails, "");
   const editType = type === "edit";
   const [loader, setLoader] = useState(false);
   const [cityOptions, setCityOptions] = useState([]);
@@ -50,7 +50,7 @@ const AddEditAddress = ({
     address_type: address_type,
     email: email,
     mobile_number: mobile_number,
-    phone_code: phone_code,
+    phone_code: `+${phone_code}`,
     address: address,
     address_line_2: address_line2,
     address_line_3: address_line3,
@@ -59,7 +59,7 @@ const AddEditAddress = ({
     zipCode: zip_code,
     is_default: primary_address == 1 ? true : false,
   });
-  console.log(formFieldValues?.country, "iiiiiiii");
+  console.log(formFieldValues,cityOptions , "formFieldValues");
   const fetchCityDetails = async (id) => {
     if (!id) return;
     try {
@@ -126,9 +126,8 @@ const AddEditAddress = ({
   };
 
   const countryList = fetchCountries?.map((list) => {
-    return { value: list?.id, label: list?.name };
+    return { value: `${list?.id}`, label: list?.name };
   });
-
   const fieldStyle =
     "w-full rounded-md border border-gray-300 p-3 text-gray-700 focus:border-indigo-300 focus:ring-1 focus:ring-indigo-300 focus:outline-none transition-all duration-200";
 

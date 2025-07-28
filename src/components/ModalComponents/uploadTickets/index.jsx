@@ -122,8 +122,8 @@ const UploadTickets = ({
     [transferredFiles.length, maxQuantity]
   );
 
-  // Handle link input changes for ETicketsFlow - Fixed with useCallback
-  const handleLinkChange = useCallback((ticketIndex, linkType, value) => {
+  // Handle link input changes for ETicketsFlow - FIXED
+  const handleLinkChange = (ticketIndex, linkType, value) => {
     setTicketLinks((prev) => {
       // Create a shallow copy of the array
       const newTicketLinks = [...prev];
@@ -134,23 +134,23 @@ const UploadTickets = ({
       };
       return newTicketLinks;
     });
-  }, []);
+  };
 
-  // Handle paper ticket details change - Fixed with useCallback
-  const handlePaperTicketDetailChange = useCallback((field, value) => {
+  // Handle paper ticket details change - FIXED
+  const handlePaperTicketDetailChange = (field, value) => {
     setPaperTicketDetails((prev) => ({
       ...prev,
       [field]: value,
     }));
-  }, []);
+  };
 
-  // Handle additional info changes - NEW
-  const handleAdditionalInfoChange = useCallback((field, value) => {
+  // Handle additional info changes - FIXED
+  const handleAdditionalInfoChange = (field, value) => {
     setAdditionalInfo((prev) => ({
       ...prev,
       [field]: value,
     }));
-  }, []);
+  };
 
   // Common instructions based on flow type - Memoized
   const instructions = useMemo(() => {
@@ -320,7 +320,7 @@ const UploadTickets = ({
                       label_: "text-[10px] font-medium flex items-center gap-1",
                     }}
                   >
-                    Transfer <ArrowRight className="w-3 h-3" />
+                    Add <ArrowRight className="w-3 h-3" />
                   </Button>
                   <button
                     className="p-1 text-red-500 cursor-pointer hover:text-red-700"

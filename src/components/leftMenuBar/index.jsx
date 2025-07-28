@@ -1000,6 +1000,7 @@ const LeftMenuBar = () => {
       name: "Sales",
       key: "sales",
       hasSubItems: true,
+      route: "sales/pending",
       subItems: salesSubItems,
     },
     {
@@ -1063,6 +1064,7 @@ const LeftMenuBar = () => {
 
     if (item?.hasSubItems) {
       setSalesExpanded(!salesExpanded);
+       router.push(`/${item?.route}`);
       return;
     }
 
