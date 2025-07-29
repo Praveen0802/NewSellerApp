@@ -20,6 +20,8 @@ const FloatingDateRange = ({
   singleDateMode = false,
   hideLabel = false,
   subParentClassName = "",
+  minDate = null, // New prop: minimum selectable date (YYYY-MM-DD format)
+  maxDate = null, // New prop: maximum selectable date (YYYY-MM-DD format)
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -30,6 +32,22 @@ const FloatingDateRange = ({
   const [tempStartDate, setTempStartDate] = useState(null);
   const [tempEndDate, setTempEndDate] = useState(null);
   const dropdownRef = useRef(null);
+
+  // Helper function to parse a date string in local timezone
+  const parseLocalDate = (dateString) => {
+    if (!dateString) return new Date();
+
+    // Split the date string (assuming YYYY-MM-DD format)
+    const [year, month, day] = dateString.split("-").map(Number);
+
+    // Create a new date using local timezone
+    // Month is 0-indexed in JavaScript Date
+    return new Date(year, month - 1, day);
+  };
+
+  // Convert string dates to Date objects for comparison
+  const minDateObj = minDate ? parseLocalDate(minDate) : null;
+  const maxDateObj = maxDate ? parseLocalDate(maxDate) : null;
 
   // Format and set display value when value prop changes
   useEffect(() => {
@@ -80,18 +98,6 @@ const FloatingDateRange = ({
     };
   }, []);
 
-  // Helper function to parse a date string in local timezone
-  const parseLocalDate = (dateString) => {
-    if (!dateString) return new Date();
-
-    // Split the date string (assuming YYYY-MM-DD format)
-    const [year, month, day] = dateString.split("-").map(Number);
-
-    // Create a new date using local timezone
-    // Month is 0-indexed in JavaScript Date
-    return new Date(year, month - 1, day);
-  };
-
   // Convert a Date object to YYYY-MM-DD string without timezone shift
   const toLocalDateString = (date) => {
     if (!date) return "";
@@ -115,6 +121,26 @@ const FloatingDateRange = ({
     return `${formattedDay}/${formattedMonth}/${formattedYear}`;
   };
 
+  // Check if a date is within the allowed range
+  const isDateInRange = (date) => {
+    const dateToCheck = new Date(date);
+    dateToCheck.setHours(0, 0, 0, 0);
+    
+    if (minDateObj) {
+      const minDateCheck = new Date(minDateObj);
+      minDateCheck.setHours(0, 0, 0, 0);
+      if (dateToCheck < minDateCheck) return false;
+    }
+    
+    if (maxDateObj) {
+      const maxDateCheck = new Date(maxDateObj);
+      maxDateCheck.setHours(0, 0, 0, 0);
+      if (dateToCheck > maxDateCheck) return false;
+    }
+    
+    return true;
+  };
+
   const handleInputClick = () => {
     if (!readOnly) {
       setIsOpen(!isOpen);
@@ -127,7 +153,7 @@ const FloatingDateRange = ({
 
   const handleApply = () => {
     if (singleDateMode) {
-      if (tempStartDate) {
+      if (tempStartDate && isDateInRange(tempStartDate)) {
         const formattedDate = toLocalDateString(tempStartDate);
         setStartDate(formattedDate);
         setDisplayValue(formatDate(formattedDate));
@@ -140,7 +166,8 @@ const FloatingDateRange = ({
         }
       }
     } else {
-      if (tempStartDate && tempEndDate) {
+      if (tempStartDate && tempEndDate && 
+          isDateInRange(tempStartDate) && isDateInRange(tempEndDate)) {
         const formattedStart = toLocalDateString(tempStartDate);
         const formattedEnd = toLocalDateString(tempEndDate);
         setStartDate(formattedStart);
@@ -173,6 +200,11 @@ const FloatingDateRange = ({
   };
 
   const handleDateClick = (date) => {
+    // Check if the date is within allowed range
+    if (!isDateInRange(date)) {
+      return; // Don't allow selection of dates outside range
+    }
+
     if (singleDateMode) {
       // In single date mode, just set the start date and auto-apply
       setTempStartDate(date);
@@ -240,12 +272,15 @@ const FloatingDateRange = ({
         isCurrentMonth: false,
         isSelected: false,
         isInRange: false,
+        isDisabled: true, // Previous month days are always disabled
       });
     }
 
     // Current month days
     for (let i = 1; i <= daysInMonth; i++) {
       const date = new Date(year, month, i);
+      const isDisabled = !isDateInRange(date);
+      
       let isSelected;
 
       if (singleDateMode) {
@@ -276,6 +311,7 @@ const FloatingDateRange = ({
           tempEndDate &&
           date > tempStartDate &&
           date < tempEndDate,
+        isDisabled: isDisabled,
       });
     }
 
@@ -288,6 +324,7 @@ const FloatingDateRange = ({
         isCurrentMonth: false,
         isSelected: false,
         isInRange: false,
+        isDisabled: true, // Next month days are always disabled
       });
     }
 
@@ -329,6 +366,7 @@ const FloatingDateRange = ({
           {days.map((dayObj, index) => {
             const isSelected = dayObj.isSelected;
             const isInRange = dayObj.isInRange;
+            const isDisabled = dayObj.isDisabled;
 
             // Compare just the date parts for "today" check
             const dayDate = new Date(dayObj.date);
@@ -341,15 +379,18 @@ const FloatingDateRange = ({
             return (
               <button
                 key={index}
-                onClick={() => handleDateClick(dayObj.date)}
-                className={`h-6 rounded cursor-pointer text-[10px]
+                onClick={() => !isDisabled && handleDateClick(dayObj.date)}
+                className={`h-6 rounded text-[10px]
                   ${dayObj.isCurrentMonth ? "text-gray-800" : "text-gray-400"}
-                  ${isSelected ? "bg-blue-600 text-white" : ""}
-                  ${isInRange ? "bg-blue-100" : ""}
-                  ${isToday ? "border border-blue-400" : ""}
-                  hover:bg-blue-200
+                  ${isSelected && !isDisabled ? "bg-blue-600 text-white" : ""}
+                  ${isInRange && !isDisabled ? "bg-blue-100" : ""}
+                  ${isToday && !isDisabled ? "border border-blue-400" : ""}
+                  ${isDisabled 
+                    ? "text-gray-300 cursor-not-allowed bg-gray-50" 
+                    : "cursor-pointer hover:bg-blue-200"
+                  }
                 `}
-                disabled={!dayObj.isCurrentMonth}
+                disabled={isDisabled}
               >
                 {dayObj.day}
               </button>
@@ -451,8 +492,13 @@ const FloatingDateRange = ({
                 <div className="flex gap-1">
                   <button
                     onClick={handleApply}
-                    className="px-2 py-1 text-xs cursor-pointer bg-blue-600 text-white rounded hover:bg-blue-700"
-                    disabled={!tempStartDate || !tempEndDate}
+                    className="px-2 py-1 text-xs cursor-pointer bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    disabled={
+                      !tempStartDate || 
+                      !tempEndDate || 
+                      !isDateInRange(tempStartDate) || 
+                      !isDateInRange(tempEndDate)
+                    }
                   >
                     Confirm
                   </button>

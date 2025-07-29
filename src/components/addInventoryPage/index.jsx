@@ -1,4 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import oneHand from "../../../public/onehand.svg";
+import greenHand from "../../../public/greenhand.svg";
+import uploadListing from "../../../public/uploadlisting.svg";
 import Button from "../commonComponents/button";
 import { useDispatch } from "react-redux";
 import { updateWalletPopupFlag } from "@/utils/redux/common/action";
@@ -12,7 +15,7 @@ import FloatingLabelInput from "../floatinginputFields";
 import FloatingSelect from "../floatinginputFields/floatingSelect";
 import FloatingDateRange from "../commonComponents/dateRangeInput";
 import { dateFormat } from "@/utils/helperFunctions";
-import { debounce, entries, filter, set } from "lodash";
+import { debounce, entries, filter, head, max, set } from "lodash";
 import {
   ChevronUp,
   ChevronDown,
@@ -29,6 +32,7 @@ import {
   Upload,
   Check,
   X,
+  SearchIcon,
 } from "lucide-react";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import UploadTickets from "../ModalComponents/uploadTickets";
@@ -37,6 +41,7 @@ import ViewMapPopup from "./ViewMapPopup";
 import {
   fetchBlockDetails,
   FetchEventSearch,
+  FetchPerformerOrVenueListing,
   saveAddListing,
   saveBulkListing,
 } from "@/utils/apiHandler/request";
@@ -44,6 +49,9 @@ import { useRouter } from "next/router";
 import SearchedList from "../tradePage/components/searchedList";
 import FormFields from "../formFieldsComponent";
 import { toast } from "react-toastify";
+import InventorySearchedList from "./inventorySearchList";
+import SearchedViewComponent from "./searchViewComponent";
+import BulkActionBar from "./bulkActionBar";
 
 // Custom MultiSelect Component for table cells
 const MultiSelectEditableCell = ({
@@ -52,6 +60,7 @@ const MultiSelectEditableCell = ({
   onSave,
   className = "",
   isRowHovered = false,
+  disabled = false,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -63,7 +72,6 @@ const MultiSelectEditableCell = ({
     if (!val) return [];
     if (Array.isArray(val)) return val;
     if (typeof val === "string") {
-      // If it's a comma-separated string, split it
       return val.includes(",") ? val.split(",").map((v) => v.trim()) : [val];
     }
     return [val];
@@ -73,6 +81,12 @@ const MultiSelectEditableCell = ({
   useEffect(() => {
     setEditValue(normalizeValue(value));
   }, [value]);
+
+  // Prevent editing if disabled
+  const handleClick = () => {
+    if (disabled) return;
+    setIsEditing(true);
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -187,7 +201,7 @@ const MultiSelectEditableCell = ({
     return normalizedValue.length;
   };
 
-  if (isEditing) {
+  if (isEditing && !disabled) {
     return (
       <div className="relative w-full" ref={dropdownRef}>
         <div
@@ -306,12 +320,9 @@ const MultiSelectEditableCell = ({
     );
   }
 
-  if (isRowHovered) {
+  if (isRowHovered && !disabled) {
     return (
-      <div
-        className={`cursor-pointer ${className}`}
-        onClick={() => setIsEditing(true)}
-      >
+      <div className={`cursor-pointer ${className}`} onClick={handleClick}>
         <div className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer">
           <div className="flex justify-between items-center">
             <span className="truncate">{getDisplayValue()}</span>
@@ -324,10 +335,14 @@ const MultiSelectEditableCell = ({
 
   return (
     <div
-      className={`cursor-pointer ${className}`}
-      onClick={() => setIsEditing(true)}
+      className={`${
+        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+      } ${className}`}
+      onClick={handleClick}
     >
-      <span className="text-xs truncate">{getDisplayValue()}</span>
+      <span className={`text-xs truncate ${disabled ? "text-gray-400" : ""}`}>
+        {getDisplayValue()}
+      </span>
     </div>
   );
 };
@@ -340,6 +355,7 @@ const SimpleEditableCell = ({
   onSave,
   className = "",
   isRowHovered = false,
+  disabled = false,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -348,6 +364,11 @@ const SimpleEditableCell = ({
   useEffect(() => {
     setEditValue(value);
   }, [value]);
+
+  const handleClick = () => {
+    if (disabled) return;
+    setIsEditing(true);
+  };
 
   const handleSave = () => {
     if (editValue !== value) {
@@ -393,7 +414,7 @@ const SimpleEditableCell = ({
     return value || "";
   };
 
-  if (isEditing) {
+  if (isEditing && !disabled) {
     return (
       <div className="w-full">
         {type === "select" ? (
@@ -437,17 +458,14 @@ const SimpleEditableCell = ({
     );
   }
 
-  if (isRowHovered) {
+  if (isRowHovered && !disabled) {
     return (
-      <div
-        className={`cursor-pointer ${className}`}
-        onClick={() => setIsEditing(true)}
-      >
+      <div className={`cursor-pointer ${className}`} onClick={handleClick}>
         {type === "select" ? (
           <select
             value={editValue}
             className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer"
-            onClick={() => setIsEditing(true)}
+            onClick={handleClick}
             readOnly
           >
             <option>{getDisplayValue()}</option>
@@ -458,7 +476,7 @@ const SimpleEditableCell = ({
               type="checkbox"
               checked={editValue}
               className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded cursor-pointer"
-              onClick={() => setIsEditing(true)}
+              onClick={handleClick}
               readOnly
             />
           </div>
@@ -467,7 +485,7 @@ const SimpleEditableCell = ({
             type={type}
             value={editValue}
             className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer"
-            onClick={() => setIsEditing(true)}
+            onClick={handleClick}
             readOnly
           />
         )}
@@ -477,11 +495,78 @@ const SimpleEditableCell = ({
 
   return (
     <div
-      className={`cursor-pointer ${className}`}
-      onClick={() => setIsEditing(true)}
+      className={`${
+        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+      } ${className}`}
+      onClick={handleClick}
     >
-      <span className="text-xs">{getDisplayValue()}</span>
+      <span className={`text-xs ${disabled ? "text-gray-400" : ""}`}>
+        {getDisplayValue()}
+      </span>
     </div>
+  );
+};
+
+// Modified table row rendering with disabled state
+const tableRowRendering = (row, rowIndex) => {
+  const isSelected = selectedRows.includes(rowIndex);
+  const isRowDisabled = isEditMode && editingRowIndex !== rowIndex;
+
+  return (
+    <tr
+      key={row.id || rowIndex}
+      className={`border-b border-gray-200 transition-colors ${
+        isSelected ? "bg-blue-50" : "bg-white hover:bg-gray-50"
+      } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
+      onMouseEnter={() => !isRowDisabled && setHoveredRowIndex(rowIndex)}
+      onMouseLeave={() => setHoveredRowIndex(null)}
+    >
+      <td className="py-2 px-3 text-xs whitespace-nowrap w-12 border border-r-1 border-gray-200">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          disabled={isRowDisabled}
+          onChange={(e) => {
+            if (isRowDisabled) return;
+            e.stopPropagation();
+            const newSelectedRows = isSelected
+              ? selectedRows.filter((index) => index !== rowIndex)
+              : [...selectedRows, rowIndex];
+            setSelectedRows(newSelectedRows);
+          }}
+          className={`w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 ${
+            isRowDisabled ? "cursor-not-allowed opacity-50" : ""
+          }`}
+        />
+      </td>
+      {headers.map((header) => (
+        <td
+          key={`${rowIndex}-${header.key}`}
+          className={`py-2 px-3 text-xs ${
+            header?.increasedWidth ? header?.increasedWidth : "min-w-[140px]"
+          } whitespace-nowrap overflow-hidden text-ellipsis align-middle min-w-[140px] border-r border-gray-200 ${
+            isRowDisabled ? "bg-gray-50" : ""
+          }`}
+        >
+          {header.editable ? (
+            renderEditableCell(
+              row,
+              header,
+              rowIndex,
+              hoveredRowIndex === rowIndex && !isRowDisabled
+            )
+          ) : (
+            <span
+              className={`${header.className || ""} ${
+                isRowDisabled ? "text-gray-400" : ""
+              }`}
+            >
+              {row[header.key]}
+            </span>
+          )}
+        </td>
+      ))}
+    </tr>
   );
 };
 
@@ -618,7 +703,8 @@ const ColumnDropdown = ({
 
 const AddInventoryPage = (props) => {
   const { matchId, response } = props;
-  console.log(response, "responseresponseresponse");
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const {
     block_data = {},
@@ -684,10 +770,11 @@ const AddInventoryPage = (props) => {
   const scrollContainerRef = useRef(null);
   const mainTableRef = useRef(null);
   const stickyTableRef = useRef(null);
-
+  const [editingRowIndex, setEditingRowIndex] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   // State for tracking scroll and shadows
   const [hasScrolled, setHasScrolled] = useState(false);
-
+  console.log(matchDetails, "matchDetails?.currencymatchDetails?.currency");
   // Define filters array with complete configuration
   const filters = [
     {
@@ -695,6 +782,7 @@ const AddInventoryPage = (props) => {
       name: "ticket_types",
       label: "Ticket Types",
       value: filtersApplied?.ticket_types,
+      mandatory: true,
       options: [
         ...(ticket_types?.map((note) => ({
           value: note.id.toString(),
@@ -711,6 +799,7 @@ const AddInventoryPage = (props) => {
       type: "select",
       name: "add_qty_addlist",
       label: "Quantity",
+      mandatory: true,
       value: filtersApplied?.add_qty_addlist,
       options: [
         { value: "1", label: "1" },
@@ -728,7 +817,8 @@ const AddInventoryPage = (props) => {
     {
       type: "select",
       name: "split_type",
-      label: "Split Types",
+      label: "Split Type",
+      mandatory: true,
       value: filtersApplied?.split_type,
       options: [
         ...(split_types?.map((note) => ({
@@ -744,23 +834,9 @@ const AddInventoryPage = (props) => {
     },
     {
       type: "select",
-      name: "home_town",
-      label: "Fan Area",
-      value: filtersApplied?.home_town,
-      options: Object.entries(home_town || {}).map(([key, value]) => ({
-        value: key,
-        label: value,
-      })),
-      parentClassName: "!w-[180px]",
-      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, home_town: value })),
-    },
-    {
-      type: "select",
       name: "ticket_category",
-      label: "Category",
+      label: "Seat Category",
+      increasedWidth: "!w-[220px] !min-w-[220px]",
       value: filtersApplied?.ticket_category,
       options: Object.entries(block_data || {}).map(([key, value]) => ({
         value: key,
@@ -790,22 +866,32 @@ const AddInventoryPage = (props) => {
         setFiltersApplied((prev) => ({ ...prev, ticket_block: value })),
     },
     {
-      type: "text",
-      name: "add_price_addlist",
-      label: "Price",
-      value: filtersApplied?.add_price_addlist,
+      type: "select",
+      name: "home_town",
+      label: "Fan Area",
+      value: filtersApplied?.home_town,
+      options: Object.entries(home_town || {}).map(([key, value]) => ({
+        value: key,
+        label: value,
+      })),
       parentClassName: "!w-[180px]",
-      iconBefore: (
-        <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
-          <p className="text-xs ">{matchDetails?.price_type || "$"}</p>
-        </div>
-      ),
+      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      labelClassName: "!text-[11px]",
+      onChange: (value) =>
+        setFiltersApplied((prev) => ({ ...prev, home_town: value })),
+    },
+    {
+      type: "text",
+      name: "row",
+      label: "Row",
+      value: filtersApplied?.row,
+      parentClassName: "!w-[180px]",
       className: "!py-[6px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
-          add_price_addlist: e?.target?.value,
+          row: e?.target?.value,
         })),
     },
     {
@@ -830,7 +916,7 @@ const AddInventoryPage = (props) => {
       parentClassName: "!w-[180px]",
       iconBefore: (
         <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
-          <p className="text-xs ">{matchDetails?.price_type || "$"}</p>
+          <p className="text-xs ">{matchDetails?.currency_icon?.[0] || "$"}</p>
         </div>
       ),
       className: "!py-[6px] w-full mobile:text-xs",
@@ -843,13 +929,13 @@ const AddInventoryPage = (props) => {
     },
     {
       type: "text",
-      name: "payout_price",
-      label: "Payout Price",
-      value: filtersApplied?.payout_price,
+      name: "add_price_addlist",
+      label: "Processed Price",
+      value: filtersApplied?.add_price_addlist,
       parentClassName: "!w-[180px]",
       iconBefore: (
         <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
-          <p className="text-xs ">{matchDetails?.price_type || "$"}</p>
+          <p className="text-xs ">{matchDetails?.currency_icon?.[0] || "$"}</p>
         </div>
       ),
       className: "!py-[6px] w-full mobile:text-xs",
@@ -857,44 +943,8 @@ const AddInventoryPage = (props) => {
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
-          payout_price: e?.target?.value,
+          add_price_addlist: e?.target?.value,
         })),
-    },
-    {
-      type: "text",
-      name: "row",
-      label: "Row",
-      value: filtersApplied?.row,
-      parentClassName: "!w-[180px]",
-      className: "!py-[6px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
-      onChange: (e) =>
-        setFiltersApplied((prev) => ({
-          ...prev,
-          row: e?.target?.value,
-        })),
-    },
-    {
-      type: "select",
-      name: "notes",
-      label: "Listing Notes",
-      value: filtersApplied?.notes,
-      parentClassName: "!w-[180px]",
-      multiselect: true,
-      options: [
-        ...(notes_left?.map((note) => ({
-          value: note.id.toString(),
-          label: note.name,
-        })) || []),
-        ...(notes_right?.map((note) => ({
-          value: note.id.toString(),
-          label: note.name,
-        })) || []),
-      ],
-      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, notes: value })),
     },
     {
       type: "select",
@@ -917,6 +967,28 @@ const AddInventoryPage = (props) => {
       labelClassName: "!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, restrictions: value })),
+    },
+    {
+      type: "select",
+      name: "notes",
+      label: "Listing Notes",
+      value: filtersApplied?.notes,
+      parentClassName: "!w-[180px]",
+      multiselect: true,
+      options: [
+        ...(notes_left?.map((note) => ({
+          value: note.id.toString(),
+          label: note.name,
+        })) || []),
+        ...(notes_right?.map((note) => ({
+          value: note.id.toString(),
+          label: note.name,
+        })) || []),
+      ],
+      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      labelClassName: "!text-[11px]",
+      onChange: (value) =>
+        setFiltersApplied((prev) => ({ ...prev, notes: value })),
     },
     {
       type: "select",
@@ -943,7 +1015,13 @@ const AddInventoryPage = (props) => {
       type: "date",
       name: "ship_date",
       label: "Date to Ship",
-      value: filtersApplied?.ship_date,
+      value: filtersApplied?.ship_date || {
+        startDate: matchDetails?.ship_date,
+        endDate: matchDetails?.ship_date,
+      },
+      // Convert Date object to YYYY-MM-DD string format
+      minDate: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
+      maxDate: matchDetails?.ship_date, // Assuming this is already in YYYY-MM-DD format
       parentClassName: "!w-[180px]",
       singleDateMode: true,
       className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
@@ -970,11 +1048,13 @@ const AddInventoryPage = (props) => {
   // Generate allHeaders dynamically from filters array only
   const allHeaders = filters.map((filter) => {
     const baseHeader = {
+      increasedWidth: filter.increasedWidth || "",
       key: filter.name,
       label: filter.label,
       editable: true,
       type: filter.type || "text",
       options: filter.options || [],
+      showIcon: filter?.showIcon,
     };
 
     if (filter.multiselect) {
@@ -990,28 +1070,34 @@ const AddInventoryPage = (props) => {
       {
         key: "",
         icon: (
-          <Hand
-            size={14}
-            className={`${
-              rowData?.tickets_in_hand ? "text-green-500" : "text-gray-400"
-            } hover:text-green-500 cursor-pointer transition-colors`}
-            onClick={() => handleHandAction(rowData, rowIndex)}
-          />
+          <>
+            <Image
+              src={rowData?.tickets_in_hand ? greenHand : oneHand}
+              alt="tick"
+              width={16}
+              height={16}
+              className={`${
+                rowData?.tickets_in_hand ? "text-green-500" : "text-gray-400"
+              } cursor-pointer hover:text-blue-500 transition-colors`}
+              onClick={() => handleHandAction(rowData, rowIndex)}
+            />
+          </>
         ),
         className: "py-2 text-center border-r border-[#E0E1EA]",
       },
       {
         key: "",
         icon: (
-          <Upload
-            size={16}
-            className={`${
-              rowData?.upload_tickets && rowData.upload_tickets.length > 0
-                ? "text-green-500"
-                : "text-gray-400"
-            } cursor-pointer hover:text-blue-500 transition-colors`}
-            onClick={() => handleUploadAction(rowData, rowIndex)}
-          />
+          <>
+            <Image
+              src={uploadListing}
+              alt="tick"
+              width={16}
+              height={16}
+              className={` cursor-pointer hover:text-blue-500 transition-colors`}
+              onClick={() => handleUploadAction(rowData, rowIndex)}
+            />
+          </>
         ),
         className: "py-2 text-center",
       },
@@ -1153,38 +1239,67 @@ const AddInventoryPage = (props) => {
     }
   }, [inventoryData]);
 
-  const fetchApiCall = async (query) => {
-    if (!query.trim()) return;
-
+  const fetchApiCall = async (query, isInitialLoad = false) => {
     try {
       setSearchEventLoader(true);
       setSearchedEvents([]);
-      const response = await FetchEventSearch("", { query });
-      setSearchedEvents(response?.events || []);
+      setHasSearched(true);
+
+      // For initial load or empty query, send empty string to get default/popular results
+      const searchQuery = isInitialLoad ? "" : query ? query.trim() : "";
+
+      console.log("Making API call with searchQuery:", searchQuery); // Debug log
+
+      const response = await FetchPerformerOrVenueListing("", {
+        query: searchQuery,
+      });
+
+      console.log("Search response:", response);
+      setSearchedEvents(response?.data || []);
       setSearchEventLoader(false);
+      setShowSearchDropdown(true);
     } catch (error) {
       setSearchEventLoader(false);
       console.error("Search error:", error);
       setSearchedEvents([]);
+      setShowSearchDropdown(true);
     }
   };
 
   // Create debounced version of the API call
   const debouncedFetchApiCall = useCallback(
     debounce((query) => {
-      fetchApiCall(query);
+      if (query.trim()) {
+        fetchApiCall(query);
+      }
     }, 300),
     []
   );
 
-  const handleSearchedEventClick = (event) => {
-    router.push(`/add-listings/${event?.m_id}`);
+  const handleSearchFocus = (e) => {
+    if (!searchValue || searchValue.trim() === "") {
+      // First time focus without any search value - call with empty query
+      fetchApiCall("", true);
+    } else if (searchValue && searchValue.trim()) {
+      // If there's already a search value, show existing results
+      setShowSearchDropdown(true);
+    }
   };
 
   const handleOnChangeEvents = (e) => {
     const newValue = e.target.value;
     setSearchValue(newValue);
-    debouncedFetchApiCall(newValue);
+
+    if (newValue.trim()) {
+      debouncedFetchApiCall(newValue);
+    } else {
+      // If search is cleared, fetch initial results
+      fetchApiCall("", true);
+    }
+  };
+
+  const handleSearchedEventClick = (event) => {
+    router.push(`/add-listings/${event?.m_id}`);
   };
 
   // Handle filter toggle from dropdown
@@ -1231,8 +1346,109 @@ const AddInventoryPage = (props) => {
     );
   };
 
-  // Custom cell renderer that handles both regular and multiselect types
-  const renderEditableCell = (row, header, rowIndex, isRowHovered) => {
+  const handleEdit = () => {
+    if (selectedRows.length === 0) {
+      toast.error("Please select a row to edit");
+      return;
+    }
+  
+    if (selectedRows.length > 1) {
+      toast.error("Please select only one row to edit");
+      return;
+    }
+  
+    const rowIndex = selectedRows[0];
+    setEditingRowIndex(rowIndex);
+    setIsEditMode(true);
+    toast.success("Edit mode activated for selected row");
+  };
+  
+  // Function to save edit changes
+  const handleSaveEdit = () => {
+    setEditingRowIndex(null);
+    setIsEditMode(false);
+    setSelectedRows([]);
+    toast.success("Changes saved successfully");
+  };
+  
+  // Function to cancel edit
+  const handleCancelEdit = () => {
+    // Optionally restore original values here if you want to implement undo functionality
+    setEditingRowIndex(null);
+    setIsEditMode(false);
+    setSelectedRows([]);
+    toast.info("Edit cancelled");
+  };
+
+
+  const renderTableRow = (row, rowIndex) => {
+    const isSelected = selectedRows.includes(rowIndex);
+    const isRowDisabled = isEditMode && editingRowIndex !== rowIndex;
+  
+    return (
+      <tr
+        key={row.id || rowIndex}
+        className={`border-b border-gray-200 transition-colors ${
+          isSelected ? "bg-blue-50" : "bg-white hover:bg-gray-50"
+        } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
+        onMouseEnter={() => !isRowDisabled && setHoveredRowIndex(rowIndex)}
+        onMouseLeave={() => setHoveredRowIndex(null)}
+      >
+        <td className="py-2 px-3 text-xs whitespace-nowrap w-12 border border-r-1 border-gray-200">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            disabled={isRowDisabled}
+            onChange={(e) => {
+              if (isRowDisabled) return;
+              e.stopPropagation();
+              const newSelectedRows = isSelected
+                ? selectedRows.filter((index) => index !== rowIndex)
+                : [...selectedRows, rowIndex];
+              setSelectedRows(newSelectedRows);
+            }}
+            className={`w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 ${
+              isRowDisabled ? "cursor-not-allowed opacity-50" : ""
+            }`}
+          />
+        </td>
+        {headers.map((header) => (
+          <td
+            key={`${rowIndex}-${header.key}`}
+            className={`py-2 px-3 text-xs ${
+              header?.increasedWidth ? header?.increasedWidth : "min-w-[140px]"
+            } whitespace-nowrap overflow-hidden text-ellipsis align-middle min-w-[140px] border-r border-gray-200 ${
+              isRowDisabled ? "bg-gray-50" : ""
+            }`}
+          >
+            {header.editable ? (
+              renderEditableCell(
+                row,
+                header,
+                rowIndex,
+                hoveredRowIndex === rowIndex && !isRowDisabled,
+                isRowDisabled
+              )
+            ) : (
+              <span
+                className={`${header.className || ""} ${
+                  isRowDisabled ? "text-gray-400" : ""
+                }`}
+              >
+                {row[header.key]}
+              </span>
+            )}
+          </td>
+        ))}
+      </tr>
+    );
+  };
+
+  const renderEditableCell = (row, header, rowIndex, isRowHovered, isDisabled = false) => {
+    // Check if this row is editable
+    const isRowEditable = !isEditMode || editingRowIndex === rowIndex;
+    const shouldShowAsEditable = isRowEditable && (isRowHovered || (isEditMode && editingRowIndex === rowIndex));
+  
     if (header.type === "multiselect") {
       return (
         <MultiSelectEditableCell
@@ -1240,12 +1456,12 @@ const AddInventoryPage = (props) => {
           options={header.options || []}
           onSave={(value) => handleCellEdit(rowIndex, header.key, value)}
           className={header.className || ""}
-          // isRowHovered={isRowHovered}
-          isRowHovered={true}
+          isRowHovered={shouldShowAsEditable}
+          disabled={!isRowEditable || isDisabled}
         />
       );
     }
-
+  
     return (
       <SimpleEditableCell
         value={row[header.key]}
@@ -1253,11 +1469,14 @@ const AddInventoryPage = (props) => {
         options={header.options || []}
         onSave={(value) => handleCellEdit(rowIndex, header.key, value)}
         className={header.className || ""}
-        // isRowHovered={isRowHovered}
-        isRowHovered={true}
+        isRowHovered={shouldShowAsEditable}
+        disabled={!isRowEditable || isDisabled}
       />
     );
   };
+
+  // Custom cell renderer that handles both regular and multiselect types
+
 
   // Handle select all functionality
   const handleSelectAll = () => {
@@ -1268,7 +1487,7 @@ const AddInventoryPage = (props) => {
   const handleDeselectAll = () => {
     setSelectedRows([]);
   };
-
+  console.log(filtersApplied?.ship_date, "lllllllllll");
   // Enhanced function to construct FormData dynamically for multiple rows
   const constructFormDataAsFields = (publishingDataArray) => {
     const formData = new FormData();
@@ -1348,7 +1567,7 @@ const AddInventoryPage = (props) => {
       );
       formData.append(
         `data[${index}][ship_date]`,
-        publishingData.ship_date || ""
+        publishingData.ship_date?.startDate || ""
       );
       formData.append(
         `data[${index}][tickets_in_hand]`,
@@ -1383,7 +1602,10 @@ const AddInventoryPage = (props) => {
           detail
         );
       });
-      formData.append(`data[${index}][ticket_details1]`,publishingData.split_details);
+      formData.append(
+        `data[${index}][ticket_details1]`,
+        publishingData.split_details
+      );
       // Add ticket_details1 (split_details)
       // if (publishingData.split_details) {
       //   publishingData.split_details.forEach((detail, detailIndex) => {
@@ -1556,6 +1778,7 @@ const AddInventoryPage = (props) => {
       }
       return value && value.toString().trim() !== "";
     });
+    setSelectedRows([0]);
 
     if (!hasFilterValues) {
       toast.error(
@@ -1567,13 +1790,12 @@ const AddInventoryPage = (props) => {
     const newListing = createInventoryItemFromFilters();
     setInventoryData((prevData) => [...prevData, newListing]);
     setShowTable(true);
-    toast.success("New listing added successfully");
   };
 
   // Enhanced Custom Table Component with sticky columns
   const CustomInventoryTable = () => {
     const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
-
+  
     return (
       <div
         ref={containerRef}
@@ -1587,6 +1809,11 @@ const AddInventoryPage = (props) => {
                 <h3 className="font-medium text-sm truncate max-w-xs">
                   {matchDetails?.match_name || "Match Details"}
                 </h3>
+                {isEditMode && (
+                  <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs">
+                    EDIT MODE
+                  </span>
+                )}
               </div>
               <div className="flex items-center space-x-4 text-xs">
                 <div className="flex items-center space-x-1">
@@ -1611,7 +1838,7 @@ const AddInventoryPage = (props) => {
             <ChevronDown size={16} />
           </div>
         </div>
-
+  
         {/* Table Content with Sticky Columns */}
         <div
           className="w-full bg-white relative"
@@ -1630,25 +1857,32 @@ const AddInventoryPage = (props) => {
             >
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-3 py-3 text-left text-gray-600 font-medium whitespace-nowrap text-xs w-12">
+                  <th className="px-3 py-2 text-left text-gray-600 font-medium whitespace-nowrap text-xs w-12 border border-r-1 border-gray-200">
                     <input
                       type="checkbox"
                       checked={
                         selectedRows.length === inventoryData.length &&
                         inventoryData.length > 0
                       }
+                      disabled={isEditMode}
                       onChange={
                         selectedRows.length > 0
                           ? handleDeselectAll
                           : handleSelectAll
                       }
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      className={`w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 ${
+                        isEditMode ? "cursor-not-allowed opacity-50" : ""
+                      }`}
                     />
                   </th>
                   {headers.map((header) => (
                     <th
                       key={header.key}
-                      className="px-3 py-3 text-left text-gray-600 font-medium whitespace-nowrap text-xs min-w-[140px]"
+                      className={`px-3 py-3 ${
+                        header?.increasedWidth
+                          ? header?.increasedWidth
+                          : "min-w-[140px]"
+                      } text-left text-gray-600 font-medium whitespace-nowrap text-xs border border-r-1 border-gray-200`}
                     >
                       <div className="flex justify-between items-center">
                         <span className="truncate">{header.label}</span>
@@ -1660,46 +1894,60 @@ const AddInventoryPage = (props) => {
               <tbody>
                 {inventoryData.map((row, rowIndex) => {
                   const isSelected = selectedRows.includes(rowIndex);
-
+                  const isRowDisabled = isEditMode && editingRowIndex !== rowIndex;
+  
                   return (
                     <tr
                       key={row.id || rowIndex}
                       className={`border-b border-gray-200 transition-colors ${
                         isSelected ? "bg-blue-50" : "bg-white hover:bg-gray-50"
-                      }`}
-                      onMouseEnter={() => setHoveredRowIndex(rowIndex)}
+                      } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
+                      onMouseEnter={() => !isRowDisabled && setHoveredRowIndex(rowIndex)}
                       onMouseLeave={() => setHoveredRowIndex(null)}
                     >
-                      <td className="py-3 px-3 text-xs whitespace-nowrap w-12">
+                      <td className="py-2 px-3 text-xs whitespace-nowrap w-12 border border-r-1 border-gray-200">
                         <input
                           type="checkbox"
                           checked={isSelected}
+                          disabled={isRowDisabled}
                           onChange={(e) => {
+                            if (isRowDisabled) return;
                             e.stopPropagation();
                             const newSelectedRows = isSelected
-                              ? selectedRows.filter(
-                                  (index) => index !== rowIndex
-                                )
+                              ? selectedRows.filter((index) => index !== rowIndex)
                               : [...selectedRows, rowIndex];
                             setSelectedRows(newSelectedRows);
                           }}
-                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          className={`w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 ${
+                            isRowDisabled ? "cursor-not-allowed opacity-50" : ""
+                          }`}
                         />
                       </td>
                       {headers.map((header) => (
                         <td
                           key={`${rowIndex}-${header.key}`}
-                          className="py-3 px-3 text-xs whitespace-nowrap overflow-hidden text-ellipsis align-middle min-w-[140px]"
+                          className={`py-2 px-3 text-xs ${
+                            header?.increasedWidth
+                              ? header?.increasedWidth
+                              : "min-w-[140px]"
+                          } whitespace-nowrap overflow-hidden text-ellipsis align-middle min-w-[140px] border-r border-gray-200 ${
+                            isRowDisabled ? "bg-gray-50" : ""
+                          }`}
                         >
                           {header.editable ? (
                             renderEditableCell(
                               row,
                               header,
                               rowIndex,
-                              hoveredRowIndex === rowIndex
+                              true,//hoveredRowIndex === rowIndex && !isRowDisabled,
+                              isRowDisabled
                             )
                           ) : (
-                            <span className={header.className || ""}>
+                            <span
+                              className={`${header.className || ""} ${
+                                isRowDisabled ? "text-gray-400" : ""
+                              }`}
+                            >
                               {row[header.key]}
                             </span>
                           )}
@@ -1711,8 +1959,8 @@ const AddInventoryPage = (props) => {
               </tbody>
             </table>
           </div>
-
-          {/* Sticky right columns */}
+  
+          {/* Sticky right columns - also need to handle disabled state */}
           <div
             className={`absolute top-0 right-0 h-full bg-white border-l border-gray-200 ${
               hasScrolled ? "shadow-md" : ""
@@ -1729,7 +1977,7 @@ const AddInventoryPage = (props) => {
                     {stickyHeaders.map((header, idx) => (
                       <th
                         key={`sticky-header-${idx}`}
-                        className="py-3 px-2 text-left text-gray-600 text-xs border-r border-gray-200 font-medium whitespace-nowrap text-center"
+                        className="py-2 px-2 text-left text-gray-600 text-xs border-r border-gray-200 font-medium whitespace-nowrap text-center"
                         style={{ width: "50px" }}
                       >
                         {header}
@@ -1740,18 +1988,21 @@ const AddInventoryPage = (props) => {
                 <tbody>
                   {inventoryData.map((row, rowIndex) => {
                     const stickyColumns = getStickyColumnsForRow(row, rowIndex);
-
+                    const isRowDisabled = isEditMode && editingRowIndex !== rowIndex;
+  
                     return (
                       <tr
                         key={`sticky-${row.id || rowIndex}`}
-                        className="border-b border-gray-200 bg-white hover:bg-gray-50"
+                        className={`border-b border-gray-200 bg-white hover:bg-gray-50 ${
+                          isRowDisabled ? "opacity-60 bg-gray-50" : ""
+                        }`}
                       >
                         {stickyColumns.map((column, colIndex) => (
                           <td
                             key={`sticky-${rowIndex}-${colIndex}`}
-                            className={`py-3 text-sm align-middle text-center border-r border-gray-200 ${
+                            className={`py-2 text-sm align-middle text-center border-r border-gray-200 ${
                               column?.className || ""
-                            }`}
+                            } ${isRowDisabled ? "pointer-events-none" : ""}`}
                             style={{ width: "50px" }}
                           >
                             <div className="flex justify-center">
@@ -1771,31 +2022,11 @@ const AddInventoryPage = (props) => {
     );
   };
 
-  const searchedViewComponent = () => {
-    return (
-      <>
-        {searchedEvents?.length > 0 && (
-          <div className="max-h-[300px] overflow-y-auto p-5 flex flex-col gap-3 shadow-sm border border-[#E0E1EA]">
-            {searchedEvents?.map((item, index) => {
-              return (
-                <div
-                  key={index}
-                  onClick={() => handleSearchedEventClick(item)}
-                  className="hover:scale-105 cursor-pointer transition-transform duration-300"
-                >
-                  <SearchedList item={item} />
-                </div>
-              );
-            })}
-          </div>
-        )}
-        {searchEventLoader && (
-          <div className="max-h-[300px] items-center justify-center overflow-y-auto p-5 flex flex-col gap-3 shadow-sm border border-[#E0E1EA]">
-            <Loader2 className="animate-spin" />
-          </div>
-        )}
-      </>
-    );
+  const handleSearchBlur = () => {
+    // Delay hiding dropdown to allow for clicks
+    setTimeout(() => {
+      setShowSearchDropdown(false);
+    }, 150);
   };
 
   // This comes right after searchedViewComponent()
@@ -1827,20 +2058,34 @@ const AddInventoryPage = (props) => {
               keyValue={"searchMatch"}
               value={searchValue}
               onChange={(e) => handleOnChangeEvents(e)}
+              onFocus={handleSearchFocus}
+              onBlur={handleSearchBlur}
               type="text"
-              showDropdown={true}
-              dropDownComponent={searchedViewComponent()}
+              showDropdown={showSearchDropdown}
+              iconBefore={<SearchIcon size={16} />}
+              iconBeforeTooltip="Search" // Pass tooltip text here
+              dropDownComponent={
+                <SearchedViewComponent
+                  searchEventLoader={searchEventLoader}
+                  searchedEvents={searchedEvents}
+                  hasSearched={hasSearched}
+                  searchValue={searchValue}
+                  handleSearchedEventClick={handleSearchedEventClick}
+                />
+              }
               label="Search Match"
-              className={"!py-[8px] !px-[14px] !text-[#323A70] !text-[14px] "}
+              className={"!py-[8px] !pl-[44px] !text-[#323A70] !text-[14px]"}
               paddingClassName=""
               autoComplete="off"
               showDelete={true}
               deleteFunction={() => {
                 setSearchValue("");
-                router.push("/add-listings");
+                setShowSearchDropdown(false);
+                setHasSearched(false);
               }}
-              parentClassName="!w-[40%]"
+              parentClassName="!w-[450px]"
             />
+
             {matchDetails && (
               <div className="flex gap-4 items-center">
                 <div className="flex gap-2 items-center">
@@ -1875,71 +2120,7 @@ const AddInventoryPage = (props) => {
               </p>
             )}
             {/* Control Icons */}
-            <div className="flex gap-3 relative">
-              {/* Filter Icon */}
-              <button
-                ref={filterButtonRef}
-                onClick={() => {
-                  setShowFilterDropdown(!showFilterDropdown);
-                  setShowColumnDropdown(false);
-                }}
-                className="p-2.5 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                title="Filter options"
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46 22,3" />
-                </svg>
-              </button>
-
-              {/* Column Icon */}
-              <button
-                ref={columnButtonRef}
-                onClick={() => {
-                  setShowColumnDropdown(!showColumnDropdown);
-                  setShowFilterDropdown(false);
-                }}
-                className="p-2.5 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-                title="Column options"
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <rect x="3" y="3" width="6" height="18" />
-                  <rect x="11" y="3" width="6" height="18" />
-                  <rect x="19" y="3" width="2" height="18" />
-                </svg>
-              </button>
-
-              {/* Filter Dropdown */}
-              <FilterDropdown
-                isOpen={showFilterDropdown}
-                onClose={() => setShowFilterDropdown(false)}
-                filterConfig={filterConfig}
-                activeFilters={activeFilters}
-                onFilterToggle={handleFilterToggle}
-              />
-
-              {/* Column Dropdown */}
-              <ColumnDropdown
-                isOpen={showColumnDropdown}
-                onClose={() => setShowColumnDropdown(false)}
-                headers={allHeaders}
-                visibleColumns={visibleColumns}
-                onColumnToggle={handleColumnToggle}
-              />
-            </div>
+           
           </div>
         </div>
         {matchDetails && (
@@ -1959,7 +2140,7 @@ const AddInventoryPage = (props) => {
 
             {/* Add Listings Button */}
             {inventoryData.length === 0 && (
-              <div className="flex justify-end px-5 py-3 border-b-[1px] border-[#E0E1EA]">
+              <div className="flex justify-end px-5 py-2 border-b-[1px] border-[#E0E1EA]">
                 <Button
                   type="blueType"
                   classNames={{
@@ -2038,104 +2219,23 @@ const AddInventoryPage = (props) => {
       />
 
       {/* Enhanced Sticky Bottom Container - Only visible when there are selected rows */}
-      {selectedCount > 0 && inventoryData?.length > 0 && (
-        <div
-          className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50"
-          style={{ zIndex: 9999 }}
-        >
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center space-x-1">
-              {/* Select All Button */}
-              <button
-                onClick={handleSelectAll}
-                disabled={selectedRows.length === inventoryData.length}
-                className={`flex items-center space-x-2 text-sm px-3 py-2 rounded-md transition-colors ${
-                  selectedRows.length === inventoryData.length
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                }`}
-              >
-                <Check size={16} />
-                <span>Select all</span>
-              </button>
-
-              {/* Deselect All Button */}
-              <button
-                onClick={handleDeselectAll}
-                className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-800 px-3 py-2 hover:bg-gray-100 rounded-md transition-colors"
-              >
-                <X size={16} />
-                <span>Deselect all</span>
-              </button>
-
-              {/* Clone Button */}
-              <button
-                onClick={handleClone}
-                className="flex items-center space-x-2 text-sm text-gray-700 hover:text-gray-900 px-3 py-2 hover:bg-gray-100 rounded-md transition-colors"
-              >
-                <Copy size={16} />
-                <span>Clone</span>
-              </button>
-
-              {/* Edit Button */}
-              <button
-                onClick={() => {
-                  // Placeholder for edit functionality
-                  toast.info("Edit functionality coming soon");
-                }}
-                className="flex items-center space-x-2 text-sm text-gray-700 hover:text-gray-900 px-3 py-2 hover:bg-gray-100 rounded-md transition-colors"
-              >
-                <Edit size={16} />
-                <span>Edit</span>
-              </button>
-
-              {/* Delete Button */}
-              <button
-                onClick={handleDelete}
-                className="flex items-center space-x-2 text-sm text-red-600 hover:text-red-800 px-3 py-2 hover:bg-red-50 rounded-md transition-colors"
-              >
-                <Trash2 size={16} />
-                <span>Delete</span>
-              </button>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              {/* Selection Counter */}
-              <span className="text-sm text-gray-600 font-medium">
-                {selectedCount} of {inventoryData.length} selected
-              </span>
-
-              {/* Cancel Button */}
-              <button
-                onClick={handleDeselectAll}
-                className="px-4 py-2 text-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium"
-              >
-                Cancel
-              </button>
-
-              {/* Publish Live Button */}
-              <button
-                onClick={handlePublishLive}
-                disabled={loader}
-                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                  loader
-                    ? "bg-gray-400 text-white cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-700 text-white"
-                }`}
-              >
-                {loader ? (
-                  <div className="flex items-center space-x-2">
-                    <Loader2 size={16} className="animate-spin" />
-                    <span>PUBLISHING...</span>
-                  </div>
-                ) : (
-                  "PUBLISH LIVE"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {
+         <BulkActionBar
+         selectedCount={selectedCount}
+         totalCount={inventoryData.length}
+         onSelectAll={handleSelectAll}
+         onDeselectAll={handleDeselectAll}
+         onClone={handleClone}
+         onEdit={handleEdit}
+         onDelete={handleDelete}
+         onPublishLive={handlePublishLive}
+         onSaveEdit={handleSaveEdit}
+         onCancelEdit={handleCancelEdit}
+         loading={loader}
+         disabled={!(selectedCount > 0 && inventoryData?.length > 0)}
+         isEditMode={isEditMode}
+       />
+      }
     </div>
   );
 };

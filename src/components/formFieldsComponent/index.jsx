@@ -150,6 +150,8 @@ const FormFields = ({ formFields }) => {
                 className={className}
                 hideLabel={hideLabel}
                 value={value}
+                minDate={field?.minDate}
+                maxDate={field?.maxDate}
                 hideCalendarIcon={hideCalendarIcon}
                 labelClassName={labelClassName}
                 onChange={onChange}

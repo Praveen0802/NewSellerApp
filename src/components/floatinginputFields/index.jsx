@@ -26,6 +26,7 @@ const FloatingLabelInput = ({
   error = "",
   rightIcon = null,
   iconBefore = null, // New prop for left icon
+  iconBeforeTooltip = "", // New prop for tooltip text
   autoFocus = false,
   showError = false,
   showDelete = false,
@@ -36,16 +37,17 @@ const FloatingLabelInput = ({
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   // Update focus state when value changes
   useEffect(() => {
     setIsFocused(value ? true : false);
   }, [value]);
 
-  const handleFocus = () => {
+  const handleFocus = (e) => {
     setIsFocused(true);
     if (onFocus) {
-      onFocus();
+      onFocus(e); // Pass the event to the parent
     }
   };
 
@@ -113,7 +115,7 @@ const FloatingLabelInput = ({
 
   // Determine left padding based on iconBefore
   const getLeftPadding = () => {
-    return iconBefore ? "pl-10" : "px-3";
+    return iconBefore ? "pl-12" : "px-3"; // Increased from pl-10 to pl-12
   };
 
   // Determine right padding based on what icons are shown
@@ -137,13 +139,13 @@ const FloatingLabelInput = ({
     <div className={`relative w-full ${parentClassName}`}>
       {!hideLabel && (
         <FloatingPlaceholder
-          className={`${labelClassName} ${iconBefore && "!left-14"} `}
+          className={`${labelClassName} ${iconBefore && "!left-12"} `} // Changed from !left-14 to !left-12
           isFocused={isFocused}
           hasError={!!error}
         >
           <span
             style={{ fontSize: isFocused ? "11px" : "13px" }}
-            className={`${labelClassName}   ${
+            className={`${labelClassName} ${
               error ? "text-red-500" : "text-[#808082]"
             }`}
           >
@@ -154,10 +156,23 @@ const FloatingLabelInput = ({
       )}
 
       <div className="relative">
-        {/* Left icon - iconBefore */}
+        {/* Left icon - iconBefore with tooltip */}
         {iconBefore && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+          <div 
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer hover:text-blue-600 transition-colors"
+            onMouseEnter={() => iconBeforeTooltip && setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+          >
             {typeof iconBefore === "function" ? iconBefore() : iconBefore}
+            
+            {/* Tooltip */}
+            {iconBeforeTooltip && showTooltip && (
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg whitespace-nowrap z-50">
+                {iconBeforeTooltip}
+                {/* Tooltip arrow */}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-800"></div>
+              </div>
+            )}
           </div>
         )}
 
