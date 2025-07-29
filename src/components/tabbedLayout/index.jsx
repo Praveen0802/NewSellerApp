@@ -6,6 +6,7 @@ import SelectListItem from "../tradePage/components/selectListItem";
 import ActiveFiltersBox from "./ActiveFilterBoxs";
 import { FilterSection } from "./filterSection";
 import HeaderV2 from "./HeaderV2";
+import DropdownList from "./DropdownList";
 
 // Mock icons - replace with your actual icons
 const FilterIcon = ({ className }) => (
