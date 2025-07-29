@@ -1,3 +1,4 @@
+import SubjectDescriptionPopup from "@/components/settingPage/subjectDescriptionPopup";
 import { useState } from "react";
 
 const { default: InventorySearchedList } = require("../inventorySearchList");
@@ -8,9 +9,11 @@ const SearchedViewComponent = ({
   hasSearched,
   searchValue,
   handleSearchedEventClick,
+  show,
+  handleBulkNavigateClick,
+  setShow,
 }) => {
-  
-
+    console.log(show,'showshow')
   if (searchEventLoader) {
     return (
       <div className="max-h-[300px] overflow-y-auto p-3 flex justify-center items-center shadow-sm border border-[#E0E1EA]">
@@ -49,7 +52,14 @@ const SearchedViewComponent = ({
           </h3>
           <p className="text-xs text-gray-500">
             If your event not found ?{" "}
-            <span onClick={() => setShowPopup(true)} className="text-blue-600"> click here</span> to request.
+            <span
+              onClick={() => setShow(true)}
+              className="text-blue-600 cursor-pointer"
+            >
+              {" "}
+              click here
+            </span>{" "}
+            to request.
           </p>
         </div>
       </div>
@@ -83,6 +93,7 @@ const SearchedViewComponent = ({
           {searchedEvents.performers.map((item, index) => (
             <p
               key={index}
+              onClick={() => handleBulkNavigateClick(`?team_id=${item?.team_id}`)}
               className="border border-[#E0E1EA] px-2 rounded-md py-1 text-[13px] text-[#343432] cursor-pointer transition-all duration-200 hover:border-blue-300 hover:bg-blue-50"
             >
               {item?.team_name}
@@ -97,6 +108,7 @@ const SearchedViewComponent = ({
           {searchedEvents.venues.map((item, index) => (
             <p
               key={index}
+              onClick={() => handleBulkNavigateClick(`?venue=${item?.stadium_id}`)}
               className="border border-[#E0E1EA] px-2 rounded-md py-1 text-[13px] text-[#343432] cursor-pointer transition-all duration-200 hover:border-blue-300 hover:bg-blue-50"
             >
               {item?.stadium}
@@ -104,7 +116,7 @@ const SearchedViewComponent = ({
           ))}
         </div>
       )}
-     
+      
     </div>
   );
 };

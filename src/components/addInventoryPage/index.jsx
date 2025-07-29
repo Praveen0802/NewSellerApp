@@ -52,6 +52,10 @@ import { toast } from "react-toastify";
 import InventorySearchedList from "./inventorySearchList";
 import SearchedViewComponent from "./searchViewComponent";
 import BulkActionBar from "./bulkActionBar";
+import RightViewModal from "../commonComponents/rightViewModal";
+import TicketListingQuality from "../TicketInfoPopup";
+import CompactInfoCard from "../CompactInfoCard";
+import SubjectDescriptionPopup from "../settingPage/subjectDescriptionPopup";
 
 // Custom MultiSelect Component for table cells
 const MultiSelectEditableCell = ({
@@ -741,6 +745,7 @@ const AddInventoryPage = (props) => {
   const columnButtonRef = useRef(null);
 
   const [inventoryData, setInventoryData] = useState([]);
+  const [showTicketInfoPopup, setShowTicketInfoPopup] = useState(false);
 
   const getBlockDetails = async () => {
     try {
@@ -1351,18 +1356,18 @@ const AddInventoryPage = (props) => {
       toast.error("Please select a row to edit");
       return;
     }
-  
+
     if (selectedRows.length > 1) {
       toast.error("Please select only one row to edit");
       return;
     }
-  
+
     const rowIndex = selectedRows[0];
     setEditingRowIndex(rowIndex);
     setIsEditMode(true);
     toast.success("Edit mode activated for selected row");
   };
-  
+
   // Function to save edit changes
   const handleSaveEdit = () => {
     setEditingRowIndex(null);
@@ -1370,7 +1375,7 @@ const AddInventoryPage = (props) => {
     setSelectedRows([]);
     toast.success("Changes saved successfully");
   };
-  
+
   // Function to cancel edit
   const handleCancelEdit = () => {
     // Optionally restore original values here if you want to implement undo functionality
@@ -1380,11 +1385,10 @@ const AddInventoryPage = (props) => {
     toast.info("Edit cancelled");
   };
 
-
   const renderTableRow = (row, rowIndex) => {
     const isSelected = selectedRows.includes(rowIndex);
     const isRowDisabled = isEditMode && editingRowIndex !== rowIndex;
-  
+
     return (
       <tr
         key={row.id || rowIndex}
@@ -1444,11 +1448,19 @@ const AddInventoryPage = (props) => {
     );
   };
 
-  const renderEditableCell = (row, header, rowIndex, isRowHovered, isDisabled = false) => {
+  const renderEditableCell = (
+    row,
+    header,
+    rowIndex,
+    isRowHovered,
+    isDisabled = false
+  ) => {
     // Check if this row is editable
     const isRowEditable = !isEditMode || editingRowIndex === rowIndex;
-    const shouldShowAsEditable = isRowEditable && (isRowHovered || (isEditMode && editingRowIndex === rowIndex));
-  
+    const shouldShowAsEditable =
+      isRowEditable &&
+      (isRowHovered || (isEditMode && editingRowIndex === rowIndex));
+
     if (header.type === "multiselect") {
       return (
         <MultiSelectEditableCell
@@ -1461,7 +1473,7 @@ const AddInventoryPage = (props) => {
         />
       );
     }
-  
+
     return (
       <SimpleEditableCell
         value={row[header.key]}
@@ -1476,7 +1488,6 @@ const AddInventoryPage = (props) => {
   };
 
   // Custom cell renderer that handles both regular and multiselect types
-
 
   // Handle select all functionality
   const handleSelectAll = () => {
@@ -1552,10 +1563,7 @@ const AddInventoryPage = (props) => {
         `data[${index}][face_value]`,
         publishingData.face_value || ""
       );
-      formData.append(
-        `data[${index}][payout_price]`,
-        publishingData.payout_price || ""
-      );
+      
       formData.append(
         `data[${index}][first_seat]`,
         publishingData.first_seat || ""
@@ -1565,9 +1573,10 @@ const AddInventoryPage = (props) => {
         `data[${index}][split_type]`,
         publishingData.split_type || ""
       );
+      console.log(publishingData.ship_date?.startDate,'publishingData.ship_date?.startDatepublishingData.ship_date?.startDate')
       formData.append(
         `data[${index}][ship_date]`,
-        publishingData.ship_date?.startDate || ""
+        publishingData.ship_date?.startDate || matchDetails?.ship_date || ""
       );
       formData.append(
         `data[${index}][tickets_in_hand]`,
@@ -1721,9 +1730,9 @@ const AddInventoryPage = (props) => {
       // Construct FormData for multiple rows
       const formData = constructFormDataAsFields(selectedRowsData);
       // if (selectedRows?.length > 1) {
-      await saveBulkListing("", formData);
+      // await saveBulkListing("", formData);
       // } else {
-      //   await saveAddListing("", formData);
+        await saveAddListing("", formData);
       // }
 
       router.push("/my-listings?success=true");
@@ -1795,7 +1804,7 @@ const AddInventoryPage = (props) => {
   // Enhanced Custom Table Component with sticky columns
   const CustomInventoryTable = () => {
     const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
-  
+
     return (
       <div
         ref={containerRef}
@@ -1838,7 +1847,7 @@ const AddInventoryPage = (props) => {
             <ChevronDown size={16} />
           </div>
         </div>
-  
+
         {/* Table Content with Sticky Columns */}
         <div
           className="w-full bg-white relative"
@@ -1894,15 +1903,18 @@ const AddInventoryPage = (props) => {
               <tbody>
                 {inventoryData.map((row, rowIndex) => {
                   const isSelected = selectedRows.includes(rowIndex);
-                  const isRowDisabled = isEditMode && editingRowIndex !== rowIndex;
-  
+                  const isRowDisabled =
+                    isEditMode && editingRowIndex !== rowIndex;
+
                   return (
                     <tr
                       key={row.id || rowIndex}
                       className={`border-b border-gray-200 transition-colors ${
                         isSelected ? "bg-blue-50" : "bg-white hover:bg-gray-50"
                       } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
-                      onMouseEnter={() => !isRowDisabled && setHoveredRowIndex(rowIndex)}
+                      onMouseEnter={() =>
+                        !isRowDisabled && setHoveredRowIndex(rowIndex)
+                      }
                       onMouseLeave={() => setHoveredRowIndex(null)}
                     >
                       <td className="py-2 px-3 text-xs whitespace-nowrap w-12 border border-r-1 border-gray-200">
@@ -1914,7 +1926,9 @@ const AddInventoryPage = (props) => {
                             if (isRowDisabled) return;
                             e.stopPropagation();
                             const newSelectedRows = isSelected
-                              ? selectedRows.filter((index) => index !== rowIndex)
+                              ? selectedRows.filter(
+                                  (index) => index !== rowIndex
+                                )
                               : [...selectedRows, rowIndex];
                             setSelectedRows(newSelectedRows);
                           }}
@@ -1939,7 +1953,7 @@ const AddInventoryPage = (props) => {
                               row,
                               header,
                               rowIndex,
-                              true,//hoveredRowIndex === rowIndex && !isRowDisabled,
+                              true, //hoveredRowIndex === rowIndex && !isRowDisabled,
                               isRowDisabled
                             )
                           ) : (
@@ -1959,7 +1973,7 @@ const AddInventoryPage = (props) => {
               </tbody>
             </table>
           </div>
-  
+
           {/* Sticky right columns - also need to handle disabled state */}
           <div
             className={`absolute top-0 right-0 h-full bg-white border-l border-gray-200 ${
@@ -1988,8 +2002,9 @@ const AddInventoryPage = (props) => {
                 <tbody>
                   {inventoryData.map((row, rowIndex) => {
                     const stickyColumns = getStickyColumnsForRow(row, rowIndex);
-                    const isRowDisabled = isEditMode && editingRowIndex !== rowIndex;
-  
+                    const isRowDisabled =
+                      isEditMode && editingRowIndex !== rowIndex;
+
                     return (
                       <tr
                         key={`sticky-${row.id || rowIndex}`}
@@ -2041,6 +2056,21 @@ const AddInventoryPage = (props) => {
 
   const selectedCount = selectedRows.length;
 
+  const handleCloseTicketInfoPopup = () => {
+    setShowTicketInfoPopup(false);
+  };
+
+  const handleOpenTicketInfoPopup = () => {
+    setShowTicketInfoPopup(true);
+  };
+
+
+  const handleBulkNavigateClick =(route)=>{
+    router.push(`/bulk-listings${route}` )
+  }
+
+  const [showRequestPopup, setShowRequestPopup] = useState(false);
+
   return (
     <div className="bg-[#F5F7FA] w-full h-full relative min-h-screen">
       {/* Header with selected match info */}
@@ -2071,6 +2101,9 @@ const AddInventoryPage = (props) => {
                   hasSearched={hasSearched}
                   searchValue={searchValue}
                   handleSearchedEventClick={handleSearchedEventClick}
+                  show={showRequestPopup}
+                  setShow={setShowRequestPopup}
+                  handleBulkNavigateClick={handleBulkNavigateClick}
                 />
               }
               label="Search Match"
@@ -2083,26 +2116,26 @@ const AddInventoryPage = (props) => {
                 setShowSearchDropdown(false);
                 setHasSearched(false);
               }}
-              parentClassName="!w-[450px]"
+              parentClassName="!w-[500px]"
             />
 
             {matchDetails && (
               <div className="flex gap-4 items-center">
                 <div className="flex gap-2 items-center">
                   <Calendar1Icon size={16} className="text-[#595c6d]" />
-                  <p className="text-[#3a3c42] text-[14px]">
+                  <p className="text-[#3a3c42] truncate text-[14px]">
                     {matchDetails?.match_date_format}
                   </p>
                 </div>
                 <div className="flex gap-2 items-center">
                   <Clock size={16} className="text-[#595c6d]" />
-                  <p className="text-[#3a3c42] text-[14px]">
+                  <p className="text-[#3a3c42] truncate text-[14px]">
                     {matchDetails?.match_time}
                   </p>
                 </div>
                 <div className="flex gap-2 items-center">
                   <MapPin size={16} className="text-[#595c6d]" />
-                  <p className="text-[#3a3c42] text-[14px]">
+                  <p className="text-[#3a3c42] truncate text-[14px]">
                     {matchDetails?.stadium_name} , {matchDetails?.country_name}{" "}
                     , {matchDetails?.city_name}
                   </p>
@@ -2119,8 +2152,14 @@ const AddInventoryPage = (props) => {
                 View Map
               </p>
             )}
+            <CompactInfoCard
+              title="Listing Visibility"
+              progress={20}
+              segments={5}
+              tooltipText="Click to learn more"
+              handleClick={handleOpenTicketInfoPopup}
+            />
             {/* Control Icons */}
-           
           </div>
         </div>
         {matchDetails && (
@@ -2158,16 +2197,8 @@ const AddInventoryPage = (props) => {
 
       {/* Main Content Area with Custom Table - Only show when table should be visible */}
       {matchDetails && showTable && inventoryData.length > 0 && (
-        <div
-          className="m-6 bg-white rounded-lg shadow-sm"
-          style={{
-            marginBottom: "100px",
-            maxHeight: "calc(100vh - 400px)",
-            position: "relative",
-            overflow: "visible",
-          }}
-        >
-          <div style={{ maxHeight: "calc(100vh - 400px)", overflowY: "auto" }}>
+        <div className="m-6 bg-white rounded-lg shadow-sm">
+          <div style={{ maxHeight: "calc(100vh - 450px)", overflowY: "auto" }}>
             <CustomInventoryTable />
           </div>
         </div>
@@ -2218,24 +2249,39 @@ const AddInventoryPage = (props) => {
         }}
       />
 
+      {showTicketInfoPopup && (
+        <RightViewModal
+          show={showTicketInfoPopup}
+          onClose={handleCloseTicketInfoPopup}
+        >
+          <TicketListingQuality onClose={handleCloseTicketInfoPopup} />
+        </RightViewModal>
+      )}
+
       {/* Enhanced Sticky Bottom Container - Only visible when there are selected rows */}
       {
-         <BulkActionBar
-         selectedCount={selectedCount}
-         totalCount={inventoryData.length}
-         onSelectAll={handleSelectAll}
-         onDeselectAll={handleDeselectAll}
-         onClone={handleClone}
-         onEdit={handleEdit}
-         onDelete={handleDelete}
-         onPublishLive={handlePublishLive}
-         onSaveEdit={handleSaveEdit}
-         onCancelEdit={handleCancelEdit}
-         loading={loader}
-         disabled={!(selectedCount > 0 && inventoryData?.length > 0)}
-         isEditMode={isEditMode}
-       />
+        <BulkActionBar
+          selectedCount={selectedCount}
+          totalCount={inventoryData.length}
+          onSelectAll={handleSelectAll}
+          onDeselectAll={handleDeselectAll}
+          onClone={handleClone}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onPublishLive={handlePublishLive}
+          onSaveEdit={handleSaveEdit}
+          onCancelEdit={handleCancelEdit}
+          loading={loader}
+          disabled={!(selectedCount > 0 && inventoryData?.length > 0)}
+          isEditMode={isEditMode}
+        />
       }
+      {showRequestPopup && (
+        <SubjectDescriptionPopup
+          show={showRequestPopup}
+          onClose={() => setShowRequestPopup(false)}
+        />
+      )}
     </div>
   );
 };
