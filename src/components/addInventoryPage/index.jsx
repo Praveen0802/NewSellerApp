@@ -1383,16 +1383,16 @@ const AddInventoryPage = (props) => {
           detail
         );
       });
-
+      formData.append(`data[${index}][ticket_details1]`,publishingData.split_details);
       // Add ticket_details1 (split_details)
-      if (publishingData.split_details) {
-        publishingData.split_details.forEach((detail, detailIndex) => {
-          formData.append(
-            `data[${index}][ticket_details1][${detailIndex}]`,
-            detail
-          );
-        });
-      }
+      // if (publishingData.split_details) {
+      //   publishingData.split_details.forEach((detail, detailIndex) => {
+      //     formData.append(
+      //       `data[${index}][ticket_details1][${detailIndex}]`,
+      //       detail
+      //     );
+      //   });
+      // }
 
       // Add transformed QR links
       const qrLinksTransformed = transformQRLinks(publishingData.qr_links);
@@ -1499,7 +1499,7 @@ const AddInventoryPage = (props) => {
       // Construct FormData for multiple rows
       const formData = constructFormDataAsFields(selectedRowsData);
       // if (selectedRows?.length > 1) {
-        await saveBulkListing("", formData);
+      await saveBulkListing("", formData);
       // } else {
       //   await saveAddListing("", formData);
       // }
@@ -1602,7 +1602,8 @@ const AddInventoryPage = (props) => {
                 <div className="flex items-center space-x-1">
                   <MapPin size={12} />
                   <span className="truncate max-w-xs">
-                    {matchDetails?.stadium_name} , {matchDetails?.country_name} , {matchDetails?.city_name}
+                    {matchDetails?.stadium_name} , {matchDetails?.country_name}{" "}
+                    , {matchDetails?.city_name}
                   </span>
                 </div>
               </div>
@@ -1857,7 +1858,8 @@ const AddInventoryPage = (props) => {
                 <div className="flex gap-2 items-center">
                   <MapPin size={16} className="text-[#595c6d]" />
                   <p className="text-[#3a3c42] text-[14px]">
-                    {matchDetails?.stadium_name} , {matchDetails?.country_name} , {matchDetails?.city_name}
+                    {matchDetails?.stadium_name} , {matchDetails?.country_name}{" "}
+                    , {matchDetails?.city_name}
                   </p>
                 </div>
               </div>
