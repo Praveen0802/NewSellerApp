@@ -24,14 +24,21 @@ import {
   Hand,
   Upload,
   Eye,
+  ChevronLeft,
+  ChevronRight,
+  X,
 } from "lucide-react";
 import {
+  FetchEventSearch,
   getMyListingHistory,
   getViewDetailsPopup,
   updateMyListing,
 } from "@/utils/apiHandler/request";
 import UploadTickets from "../ModalComponents/uploadTickets";
 import InventoryLogsInfo from "../inventoryLogsInfo";
+import FloatingLabelInput from "../floatinginputFields";
+import { debounce, set } from "lodash";
+import SearchedList from "../tradePage/components/searchedList";
 
 const ShimmerCard = () => (
   <div className="border border-gray-200 rounded-lg mb-4 overflow-hidden animate-pulse">
@@ -90,24 +97,6 @@ const ShimmerLoader = () => (
     ))}
   </div>
 );
-
-// Add this CSS for shimmer animation (you can add this to your global CSS or styled-components)
-const shimmerStyles = `
-  @keyframes shimmer {
-    0% {
-      background-position: -200px 0;
-    }
-    100% {
-      background-position: calc(200px + 100%) 0;
-    }
-  }
-  
-  .shimmer {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200px 100%;
-    animation: shimmer 1.5s infinite;
-  }
-`;
 
 // Custom MultiSelect Component for table cells
 const MultiSelectEditableCell = ({
@@ -397,7 +386,6 @@ const MultiSelectEditableCell = ({
 };
 
 // Simple Editable Cell Component (fallback for non-multiselect)
-// Fixed SimpleEditableCell Component
 const SimpleEditableCell = ({
   value,
   type = "text",
@@ -544,6 +532,169 @@ const SimpleEditableCell = ({
   );
 };
 
+const ActiveFilterPills = ({
+  activeFilters,
+  filterConfig,
+  onFilterChange,
+  onClearAllFilters,
+  currentTab,
+}) => {
+  const getFilterDisplayValue = (filterKey, value, config) => {
+    if (!value) return null;
+
+    const filterConfig = config?.find((f) => f.name === filterKey);
+    if (!filterConfig) return null;
+
+    if (filterConfig.type === "select" && filterConfig.options) {
+      const option = filterConfig.options.find((opt) => opt.value === value);
+      return option ? option.label : value;
+    }
+
+    return value;
+  };
+
+  const getActiveFilterEntries = () => {
+    const entries = [];
+    Object.entries(activeFilters).forEach(([key, value]) => {
+      if (key === "page" || !value || value === "") return;
+
+      const displayValue = getFilterDisplayValue(
+        key,
+        value,
+        filterConfig[currentTab]
+      );
+      if (displayValue) {
+        entries.push({ key, value, displayValue });
+      }
+    });
+    return entries;
+  };
+
+  const activeEntries = getActiveFilterEntries();
+
+  if (activeEntries.length === 0) return null;
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      {activeEntries.map(({ key, value, displayValue }) => (
+        <div
+          key={key}
+          className="inline-flex items-center gap-1 px-3 py-1 border-1 border-gray-300  rounded-sm text-sm"
+        >
+          <span className="font-medium capitalize">
+            {key.replace(/_/g, " ")}:
+          </span>
+          <span>{displayValue}</span>
+          <button
+            onClick={() => onFilterChange(key, "", activeFilters, currentTab)}
+            className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      ))}
+
+      {activeEntries.length > 1 && (
+        <button
+          onClick={onClearAllFilters}
+          className="px-2 py-1 text-xs text-red-600 hover:text-red-800 underline"
+        >
+          Clear All
+        </button>
+      )}
+    </div>
+  );
+};
+
+// Pagination Component
+const Pagination = ({
+  currentPage = 1,
+  totalPages = 1,
+  itemsPerPage = 50,
+  totalItems = 3,
+  onPageChange,
+  onItemsPerPageChange,
+  activeFilters,
+  filterConfig,
+  onFilterChange,
+  onClearAllFilters,
+  currentTab,
+}) => {
+  return (
+    <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-gray-200">
+      {/* Left side - Total items count */}
+      <div className="flex items-center gap-4 text-sm text-gray-700">
+        <span className="font-medium">{totalItems} Events</span>
+        <ActiveFilterPills
+          activeFilters={activeFilters}
+          filterConfig={filterConfig}
+          onFilterChange={onFilterChange}
+          onClearAllFilters={onClearAllFilters}
+          currentTab="tickets"
+        />
+      </div>
+
+      {/* Right side - View selector, page info and navigation */}
+      <div className="flex items-center space-x-6">
+        {/* View selector */}
+        <div className="flex items-center space-x-2 text-sm text-gray-700">
+          <span>View</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) =>
+              onItemsPerPageChange &&
+              onItemsPerPageChange(parseInt(e.target.value))
+            }
+            className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500 bg-white"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+        </div>
+
+        {/* Page info */}
+        <div className="flex items-center space-x-2 text-sm text-gray-700">
+          <span>Page</span>
+          <span className="font-medium">{currentPage}</span>
+          <span>of</span>
+          <span className="font-medium">{totalPages}</span>
+        </div>
+
+        {/* Navigation buttons */}
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={() => onPageChange && onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`p-1.5 rounded border ${
+              currentPage === 1
+                ? "border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50"
+                : "border-gray-300 text-gray-600 hover:bg-gray-50 bg-white"
+            }`}
+            title="Previous page"
+          >
+            <ChevronLeft size={16} />
+          </button>
+
+          <button
+            onClick={() => onPageChange && onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`p-1.5 rounded border ${
+              currentPage === totalPages
+                ? "border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50"
+                : "border-gray-300 text-gray-600 hover:bg-gray-50 bg-white"
+            }`}
+            title="Next page"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const TicketsPage = (props) => {
   const { success = "", response } = props;
   console.log(response, "responseresponse");
@@ -558,11 +709,27 @@ const TicketsPage = (props) => {
     response?.listingHistory
   );
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
   // Mock data based on your JSON structure - you would replace this with actual API calls
   const mockListingHistory = useMemo(
-    () => listingHistoryData || [],
+    () => listingHistoryData?.data || [],
     [listingHistoryData]
   );
+
+  // Update pagination info when data changes
+  useEffect(() => {
+    if (listingHistoryData?.pagination) {
+      setCurrentPage(listingHistoryData.pagination.current_page);
+      setTotalItems(listingHistoryData.pagination.total);
+      setTotalPages(listingHistoryData.pagination.last_page);
+      setItemsPerPage(listingHistoryData.pagination.per_page);
+    }
+  }, [listingHistoryData]);
 
   const [filtersApplied, setFiltersApplied] = useState({
     page: 1,
@@ -630,7 +797,7 @@ const TicketsPage = (props) => {
     setTicketsData(transformedData);
   }, [mockListingHistory]);
 
-  // Define table headers with editable configuration
+  // Define table headers with editable configuration - matching AddInventory headers
   const headers = [
     { key: "match_name", label: "Match Name", editable: false },
     { key: "venue", label: "Venue", editable: false },
@@ -790,7 +957,7 @@ const TicketsPage = (props) => {
     console.log("Hand action clicked for row:", rowData, rowIndex);
     handleCellEdit(
       rowData?.matchIndex,
-      rowIndex,
+      rowData?.id,
       "tickets_in_hand",
       !rowData?.tickets_in_hand,
       rowData
@@ -962,6 +1129,7 @@ const TicketsPage = (props) => {
         {
           name: "Published Listings",
           value: overViewData.published_listings || 0,
+          showCheckbox: true,
           key: "total_tickets",
         },
         {
@@ -994,9 +1162,9 @@ const TicketsPage = (props) => {
         },
         {
           type: "select",
-          name: "ticket_category",
-          label: "ticket_category",
-          value: filtersApplied?.ticket_category,
+          name: "seat_category",
+          label: "Seat Category",
+          value: filtersApplied?.seat_category,
           options:
             response?.filters?.ticket_category?.map((category) => ({
               value: category?.id,
@@ -1008,9 +1176,9 @@ const TicketsPage = (props) => {
         },
         {
           type: "select",
-          name: "ticket_types",
-          label: "ticket_types",
-          value: filtersApplied?.ticket_types,
+          name: "ticket_type",
+          label: "Ticket Type",
+          value: filtersApplied?.ticket_type,
           options:
             response?.filters?.ticket_types?.map((category) => ({
               value: category?.id,
@@ -1036,9 +1204,9 @@ const TicketsPage = (props) => {
         },
         {
           type: "select",
-          name: "user_info",
-          label: "user_info",
-          value: filtersApplied?.user_info,
+          name: "Team Members",
+          label: "team_member",
+          value: filtersApplied?.team_member,
           options:
             response?.filters?.user_info?.map((category) => ({
               value: category?.id,
@@ -1091,22 +1259,43 @@ const TicketsPage = (props) => {
     const updatedFilters = {
       ...filtersApplied,
       ...params,
-      page: 1,
+      page: 1, // Reset to first page when filters change
     };
-    setIsLoading(true);
-    const handleApiCall = await getMyListingHistory("", {
-      ...updatedFilters,
-    });
-    setListingHistoryData(handleApiCall);
-    console.log(handleApiCall, "handleApiCallhandleApiCall");
-    setFiltersApplied(updatedFilters);
-    setIsLoading(false);
 
+    await fetchData(updatedFilters);
+  };
+
+  // Handle pagination changes
+  const handlePageChange = async (newPage) => {
+    const updatedFilters = {
+      ...filtersApplied,
+      page: newPage,
+    };
+    await fetchData(updatedFilters);
+  };
+
+  const handleItemsPerPageChange = async (newItemsPerPage) => {
+    const updatedFilters = {
+      ...filtersApplied,
+      page: 1, // Reset to first page when changing items per page
+      per_page: newItemsPerPage,
+    };
+    await fetchData(updatedFilters);
+  };
+
+  // Unified data fetching function
+  const fetchData = async (filters) => {
+    setIsLoading(true);
     try {
-      // Implement your filter API call here
-      console.log("Applying filters:", updatedFilters);
+      const handleApiCall = await getMyListingHistory("", filters);
+      setListingHistoryData(handleApiCall);
+      setFiltersApplied(filters);
+      console.log(handleApiCall, "handleApiCallhandleApiCall");
     } catch (error) {
       console.error("Filter change error:", error);
+      toast.error("Error fetching data");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -1134,8 +1323,6 @@ const TicketsPage = (props) => {
   };
 
   // Enhanced Custom Table Component for each match with accordion functionality
-  // Enhanced Custom Table Component with proper alignment
-  // Enhanced Custom Table Component with proper alignment
   const CustomMatchTable = ({ matchData }) => {
     const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
     const [isExpanded, setIsExpanded] = useState(true);
@@ -1184,7 +1371,7 @@ const TicketsPage = (props) => {
                 <div className="flex items-center space-x-1">
                   <MapPin size={11} />
                   <span className="truncate max-w-xs">
-                    {matchInfo?.stadium_name || "TBD"}
+                    {`${matchInfo?.stadium_name} , ${matchInfo?.country_name} , ${matchInfo?.city_name}` || "TBD"}
                   </span>
                 </div>
               </div>
@@ -1284,7 +1471,8 @@ const TicketsPage = (props) => {
                                 renderEditableCell(
                                   ticket,
                                   header,
-                                  hoveredRowIndex === rowIndex
+                                  true
+                                  // hoveredRowIndex === rowIndex
                                 )
                               ) : (
                                 <span className="text-xs">
@@ -1373,8 +1561,105 @@ const TicketsPage = (props) => {
     setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
   };
 
+  const [searchValue, setSearchValue] = useState("");
+  const [searchedEvents, setSearchedEvents] = useState([]);
+  const [searchEventLoader, setSearchEventLoader] = useState(false);
+
+  const fetchApiCall = async (query) => {
+    if (!query.trim()) return;
+
+    try {
+      setSearchEventLoader(true);
+      setSearchedEvents([]);
+      const response = await FetchEventSearch("", { query });
+      setSearchedEvents(response?.events || []);
+      setSearchEventLoader(false);
+    } catch (error) {
+      setSearchEventLoader(false);
+      console.error("Search error:", error);
+      setSearchedEvents([]);
+    }
+  };
+
+  const debouncedFetchApiCall = useCallback(
+    debounce((query) => {
+      fetchApiCall(query);
+    }, 300),
+    []
+  );
+
+  const handleOnChangeEvents = (e) => {
+    const newValue = e.target.value;
+    setSearchValue(newValue);
+    debouncedFetchApiCall(newValue);
+  };
+
+  const handleSearchedEventClick = (event) => {
+    handleFilterChange("match_id", event?.m_id);
+    setSearchedEvents([]);
+  };
+
+  const searchedViewComponent = () => {
+    return (
+      <>
+        {searchedEvents?.length > 0 && (
+          <div className="max-h-[300px] overflow-y-auto p-5 flex flex-col gap-3 shadow-sm border border-[#E0E1EA]">
+            {searchedEvents?.map((item, index) => {
+              return (
+                <div
+                  key={index}
+                  onClick={() => handleSearchedEventClick(item)}
+                  className="hover:scale-105 cursor-pointer transition-transform duration-300"
+                >
+                  <SearchedList item={item} />
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {searchEventLoader && (
+          <div className="max-h-[300px] items-center justify-center overflow-y-auto p-5 flex flex-col gap-3 shadow-sm border border-[#E0E1EA]">
+            <Loader2 className="animate-spin" />
+          </div>
+        )}
+      </>
+    );
+  };
+
+  const filterSearch = () => {
+    return (
+      <div className="m-4">
+        <FloatingLabelInput
+          key="searchMatch"
+          id="searchMatch"
+          name="searchMatch"
+          keyValue={"searchMatch"}
+          value={searchValue}
+          onChange={(e) => handleOnChangeEvents(e)}
+          type="text"
+          showDropdown={true}
+          dropDownComponent={searchedViewComponent()}
+          label="Search Match"
+          className={"!py-[8px] !px-[14px] !text-[#323A70] !text-[14px] "}
+          paddingClassName=""
+          autoComplete="off"
+          showDelete={true}
+          deleteFunction={() => {
+            setSearchValue("");
+          }}
+          parentClassName="!w-[40%]"
+        />
+      </div>
+    );
+  };
+
+  const handleClearAllFilters = () => {
+    const clearedFilters = { page: 1 }; // Keep only page
+    fetchData(clearedFilters);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 ">
+    <div className="min-h-screen bg-gray-50">
       <div className="bg-white">
         <TabbedLayout
           tabs={[]} // No tabs needed as per your requirement
@@ -1382,58 +1667,83 @@ const TicketsPage = (props) => {
           listItemsConfig={listItemsConfig}
           filterConfig={filterConfig}
           onTabChange={() => {}}
+          customComponent={filterSearch}
           onColumnToggle={handleColumnToggle}
           visibleColumns={visibleColumns}
           onFilterChange={handleFilterChange}
           currentFilterValues={{ ...filtersApplied, page: "" }}
-          showSelectedFilterPills={true}
+          showSelectedFilterPills={false}
           onCheckboxToggle={() => {}}
           hideVisibleColumns={false} // Show column controls
           disableTransitions={true} // New prop to disable transitions
         />
+
+        {/* Pagination Component - Positioned below filters */}
+        {groupedTicketsData.length > 0 && (
+          <div className="border-t border-gray-200">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              itemsPerPage={itemsPerPage}
+              totalItems={totalItems}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
+              activeFilters={filtersApplied}
+              filterConfig={filterConfig}
+              onFilterChange={handleFilterChange}
+              onClearAllFilters={handleClearAllFilters}
+              currentTab="tickets"
+            />
+          </div>
+        )}
       </div>
 
       {/* Main Content Area with Custom Tables */}
       {isLoading ? (
         <ShimmerLoader />
       ) : (
-        <div className="m-6 max-h-[calc(100vh-300px)] overflow-y-auto">
-          {groupedTicketsData.length > 0 ? (
-            groupedTicketsData.map((matchData, index) => (
-              <CustomMatchTable
-                key={`match-${matchData.matchIndex}`}
-                matchData={matchData}
-              />
-            ))
-          ) : (
-            <div className="bg-white rounded p-8 text-center">
-              <div className="max-w-md mx-auto">
-                <div className="mb-4">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                    />
-                  </svg>
+        <>
+          <div className="m-6 max-h-[calc(100vh-400px)] overflow-y-auto">
+            {groupedTicketsData.length > 0 ? (
+              groupedTicketsData.map((matchData, index) => (
+                <CustomMatchTable
+                  key={`match-${matchData.matchIndex}`}
+                  matchData={matchData}
+                />
+              ))
+            ) : (
+              <div className="bg-white rounded p-8 text-center">
+                <div className="max-w-md mx-auto">
+                  <div className="mb-4">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No tickets found
+                  </h3>
+                  <p className="text-gray-500 mb-4">
+                    There are no tickets to display at the moment.
+                  </p>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No tickets found
-                </h3>
-                <p className="text-gray-500 mb-4">
-                  There are no tickets to display at the moment.
-                </p>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+
+          {/* Remove the pagination from bottom since it's now in the header area */}
+        </>
       )}
+
       <UploadTickets
         show={showUploadPopup?.show}
         rowData={showUploadPopup?.rowData}

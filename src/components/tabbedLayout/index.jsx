@@ -55,6 +55,7 @@ const TabbedLayout = ({
   onClearAllFilters,
   showSelectedFilterPills = false,
   hideVisibleColumns = false,
+  customComponent = () => {},
   // New prop to receive transition direction from parent (only for specific components)
   transitionDirection: parentTransitionDirection = null,
   // New prop to disable transitions entirely
@@ -454,7 +455,7 @@ const TabbedLayout = ({
                   ${
                     currentListItems?.length == 4
                       ? "grid grid-cols-4 gap-4"
-                      : "flex gap-4 flex-nowrap overflow-x-scroll"
+                      : "flex gap-4 flex-nowrap overflow-x-scroll hideScrollbar"
                   } min-w-min md:min-w-0 ${!disableTransitions ? 'transition-transform duration-300 ease-in-out' : ''}
                   ${
                     !disableTransitions && isTransitioning
@@ -504,6 +505,8 @@ const TabbedLayout = ({
 
           {/* Filter Section - Only show filters that are active */}
           {showFilters && getVisibleFilters().length > 0 && (
+            <div>
+              {customComponent && customComponent()}
             <FilterSection
               filterConfig={getVisibleFilters()}
               currentTab={selectedTab}
@@ -511,6 +514,7 @@ const TabbedLayout = ({
               containerClassName="md:flex flex-wrap gap-3 items-center  p-3"
               initialValues={currentFilterValues}
             />
+            </div>
           )}
 
           {showSelectedFilterPills && (

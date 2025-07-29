@@ -133,7 +133,7 @@ const FloatingLabelInput = ({
     <div className={`relative w-full ${parentClassName}`}>
       {!hideLabel && (
         <FloatingPlaceholder
-          className={`${labelClassName} ${iconBefore && '!left-10'} `}
+          className={`${labelClassName} ${iconBefore && '!left-14'} `}
           isFocused={isFocused}
           hasError={!!error}
         >

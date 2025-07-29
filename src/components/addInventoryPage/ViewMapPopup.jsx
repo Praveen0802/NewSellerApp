@@ -4,11 +4,12 @@ import TicketCategories from "./categoriesComponent";
 import viewMap from "../../../public/viewMap.svg";
 import Image from "next/image";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
+import RightViewModal from "../commonComponents/rightViewModal";
 
 const ViewMapPopup = ({ show, onClose }) => {
   return (
-    <CustomModal show={show} onClose={onClose}>
-      <div className="bg-white p-2 rounded-md  w-[550px]">
+    <RightViewModal show={show} onClose={onClose} className="w-[650px]">
+      <div className="bg-white p-2 rounded-md ">
         <div className="flex justify-between items-center p-2 border-b-[1px]  border-[#DADBE5]">
           <p className="text-[18px] font-semibold">Old Trafford</p>
           <IconStore.close
@@ -27,7 +28,7 @@ const ViewMapPopup = ({ show, onClose }) => {
           <TicketCategories />
         </div>
       </div>
-    </CustomModal>
+    </RightViewModal>
   );
 };
 
