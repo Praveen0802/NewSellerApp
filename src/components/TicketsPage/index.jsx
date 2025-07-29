@@ -868,6 +868,8 @@ const TicketsPage = (props) => {
     return grouped;
   }, [ticketsData]);
 
+  console.log("groupedTicketsData", groupedTicketsData);
+
   const handleCellEdit = (matchIndex, ticketId, columnKey, value, ticket) => {
     console.log("Cell edited:", {
       matchIndex,
@@ -1097,9 +1099,11 @@ const TicketsPage = (props) => {
     createInitialVisibleColumns()
   );
 
-  const filteredHeaders = headers.filter(
-    (header) => visibleColumns[header.key]
-  );
+  const [columnOrder, setColumnOrder] = useState([]);
+
+  // const filteredHeaders = headers.filter(
+  //   (header) => visibleColumns[header.key]
+  // );
 
   const handleColumnToggle = (columnKey) => {
     setVisibleColumns((prev) => ({
@@ -1107,6 +1111,46 @@ const TicketsPage = (props) => {
       [columnKey]: !prev[columnKey],
     }));
   };
+
+  // NEW: Memoized function to get filtered headers in the correct order
+  const getFilteredHeadersInOrder = useMemo(() => {
+    // First, filter headers based on visibility
+    const visibleHeadersMap = new Map();
+    headers.forEach((header) => {
+      if (visibleColumns[header.key]) {
+        visibleHeadersMap.set(header.key, header);
+      }
+    });
+
+    // If we have a custom column order, apply it
+    if (columnOrder.length > 0) {
+      const orderedHeaders = [];
+      const usedKeys = new Set();
+
+      // Add headers in the custom order (only if they're visible)
+      columnOrder.forEach((columnKey) => {
+        const header = visibleHeadersMap.get(columnKey);
+        if (header) {
+          orderedHeaders.push(header);
+          usedKeys.add(columnKey);
+        }
+      });
+
+      // Add any new visible headers that weren't in the ordered list
+      Array.from(visibleHeadersMap.values()).forEach((header) => {
+        if (!usedKeys.has(header.key)) {
+          orderedHeaders.push(header);
+        }
+      });
+
+      return orderedHeaders;
+    }
+
+    // Fallback to original order if no custom order exists
+    return headers.filter((header) => visibleColumns[header.key]);
+  }, [headers, visibleColumns, columnOrder]);
+
+  const filteredHeaders = getFilteredHeadersInOrder;
 
   // Memoize the configuration for list items (stats cards)
   const listItemsConfig = useMemo(
@@ -1665,6 +1709,36 @@ const TicketsPage = (props) => {
     router.push("/add-listings");
   };
 
+  const handleColumnsReorder = (newColumns) => {
+    setColumnOrder(newColumns);
+
+    // Persist to localStorage for user preferences
+    // localStorage.setItem("ticketsPageColumnOrder", JSON.stringify(newColumns));
+  };
+
+  // Initialize column order when headers change
+  useEffect(() => {
+    if (headers.length > 0 && columnOrder.length === 0) {
+      const initialOrder = headers.map((header) => header.key);
+      setColumnOrder(initialOrder);
+    }
+  }, [headers, columnOrder.length]);
+
+  // Load saved column order from localStorage on component mount
+  // useEffect(() => {
+  //   const savedOrder = localStorage.getItem("ticketsPageColumnOrder");
+  //   if (savedOrder) {
+  //     try {
+  //       const parsedOrder = JSON.parse(savedOrder);
+  //       if (Array.isArray(parsedOrder) && parsedOrder.length > 0) {
+  //         setColumnOrder(parsedOrder);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error loading saved column order:", error);
+  //     }
+  //   }
+  // }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white">
@@ -1685,6 +1759,12 @@ const TicketsPage = (props) => {
           disableTransitions={true} // New prop to disable transitions
           useHeaderV2={true}
           onAddInventory={handleAddInventory}
+          addInventoryText="Add Inventory"
+          isDraggableColumns={true}
+          isDraggableFilters={true}
+          showColumnSearch={true}
+          showFilterSearch={false}
+          onColumnsReorder={handleColumnsReorder}
         />
 
         {/* Pagination Component - Positioned below filters */}

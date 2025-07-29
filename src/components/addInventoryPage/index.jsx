@@ -44,6 +44,9 @@ import { useRouter } from "next/router";
 import SearchedList from "../tradePage/components/searchedList";
 import FormFields from "../formFieldsComponent";
 import { toast } from "react-toastify";
+import RightViewModal from "../commonComponents/rightViewModal";
+import TicketListingQuality from "../TicketInfoPopup";
+import CompactInfoCard from "../CompactInfoCard";
 
 // Custom MultiSelect Component for table cells
 const MultiSelectEditableCell = ({
@@ -655,6 +658,7 @@ const AddInventoryPage = (props) => {
   const columnButtonRef = useRef(null);
 
   const [inventoryData, setInventoryData] = useState([]);
+  const [showTicketInfoPopup, setShowTicketInfoPopup] = useState(false);
 
   const getBlockDetails = async () => {
     try {
@@ -1383,7 +1387,10 @@ const AddInventoryPage = (props) => {
           detail
         );
       });
-      formData.append(`data[${index}][ticket_details1]`,publishingData.split_details);
+      formData.append(
+        `data[${index}][ticket_details1]`,
+        publishingData.split_details
+      );
       // Add ticket_details1 (split_details)
       // if (publishingData.split_details) {
       //   publishingData.split_details.forEach((detail, detailIndex) => {
@@ -1810,6 +1817,14 @@ const AddInventoryPage = (props) => {
 
   const selectedCount = selectedRows.length;
 
+  const handleCloseTicketInfoPopup = () => {
+    setShowTicketInfoPopup(false);
+  };
+
+  const handleOpenTicketInfoPopup = () => {
+    setShowTicketInfoPopup(true);
+  };
+
   return (
     <div className="bg-[#F5F7FA] w-full h-full relative min-h-screen">
       {/* Header with selected match info */}
@@ -1973,6 +1988,13 @@ const AddInventoryPage = (props) => {
             )}
           </>
         )}
+        <CompactInfoCard
+          title="Listing Visibility"
+          progress={20}
+          segments={5}
+          tooltipText="Click to learn more"
+          handleClick={handleOpenTicketInfoPopup}
+        />
       </div>
 
       {/* Main Content Area with Custom Table - Only show when table should be visible */}
@@ -2036,6 +2058,15 @@ const AddInventoryPage = (props) => {
           setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
         }}
       />
+
+      {showTicketInfoPopup && (
+        <RightViewModal
+          show={showTicketInfoPopup}
+          onClose={handleCloseTicketInfoPopup}
+        >
+          <TicketListingQuality onClose={handleCloseTicketInfoPopup} />
+        </RightViewModal>
+      )}
 
       {/* Enhanced Sticky Bottom Container - Only visible when there are selected rows */}
       {selectedCount > 0 && inventoryData?.length > 0 && (

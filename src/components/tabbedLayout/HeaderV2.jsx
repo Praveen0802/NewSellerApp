@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
+import DropdownList from "./DropdownList";
 
 // Simple chevron icons - filled with black
 const ChevronDownIcon = ({ className }) => (
@@ -33,18 +34,43 @@ const HeaderV2 = ({
   columnDropdownRef,
   getAvailableFilters,
   handleFilterToggle,
-  visibleColumns,
+  getAvailableColumns,
   handleColumnToggle,
+  handleColumnsReorder, // New prop for column reordering
+  handleFiltersReorder, // New prop for filter reordering
   hideVisibleColumns,
   onAddInventory,
   addInventoryText = "Add Inventory",
   showListItems = true,
   onToggleListItems,
+  // New props for enhanced functionality
+  isDraggableColumns = false,
+  isDraggableFilters = false,
+  showColumnSearch = false,
+  showFilterSearch = false,
 }) => {
-  const handleBulkActions = () => {
-    // Handle bulk actions
-    alert("Handle bulk actions in process");
-  };
+  // Simple chevron icons - filled with black
+  const ChevronDownIcon = ({ className }) => (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+      <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
+    </svg>
+  );
+
+  const PlusIcon = ({ className }) => (
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 4v16m8-8H4"
+      />
+    </svg>
+  );
 
   return (
     <div className="flex items-center justify-between w-full px-6 py-2 bg-white border-b border-gray-200">
@@ -68,36 +94,16 @@ const HeaderV2 = ({
               />
             </button>
 
-            {showFilterDropdown && (
-              <div className="absolute left-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                <div className="p-3 border-b border-gray-200">
-                  <h3 className="text-sm font-medium text-gray-900">Filters</h3>
-                </div>
-                <div className="max-h-64 overflow-y-auto">
-                  {getAvailableFilters().map((filter) => (
-                    <label
-                      key={filter.key}
-                      className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={filter.isActive}
-                        onChange={() => handleFilterToggle(filter.key)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        {filter.label}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                {getAvailableFilters().length === 0 && (
-                  <div className="px-3 py-4 text-sm text-gray-500 text-center">
-                    No filters available
-                  </div>
-                )}
-              </div>
-            )}
+            <DropdownList
+              isOpen={showFilterDropdown}
+              title="Filters"
+              items={getAvailableFilters()}
+              onItemChange={handleFilterToggle}
+              onItemsReorder={handleFiltersReorder}
+              emptyMessage="No filters available"
+              isDraggable={isDraggableFilters}
+              showSearch={showFilterSearch}
+            />
           </div>
         )}
 
@@ -119,55 +125,18 @@ const HeaderV2 = ({
               />
             </button>
 
-            {showColumnDropdown && (
-              <div className="absolute left-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                <div className="p-3 border-b border-gray-200">
-                  <h3 className="text-sm font-medium text-gray-900">Columns</h3>
-                </div>
-                <div className="max-h-64 overflow-y-auto">
-                  {visibleColumns &&
-                    Object.entries(visibleColumns).map(
-                      ([columnKey, isVisible]) => (
-                        <label
-                          key={columnKey}
-                          className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isVisible}
-                            onChange={() => handleColumnToggle(columnKey)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                          />
-                          <span className="ml-2 text-sm text-gray-700 capitalize">
-                            {columnKey
-                              .replace(/([A-Z])/g, " $1")
-                              .replace(/^./, (str) => str.toUpperCase())}
-                          </span>
-                        </label>
-                      )
-                    )}
-                </div>
-                {(!visibleColumns ||
-                  Object.keys(visibleColumns).length === 0) && (
-                  <div className="px-3 py-4 text-sm text-gray-500 text-center">
-                    No columns available
-                  </div>
-                )}
-              </div>
-            )}
+            <DropdownList
+              isOpen={showColumnDropdown}
+              title="Columns"
+              items={getAvailableColumns()}
+              onItemChange={handleColumnToggle}
+              onItemsReorder={handleColumnsReorder}
+              emptyMessage="No columns available"
+              isDraggable={isDraggableColumns}
+              showSearch={showColumnSearch}
+            />
           </div>
         )}
-
-        {/* Bulk Actions Dropdown */}
-        {/* <div className="relative">
-          <button
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            onClick={handleBulkActions}
-          >
-            Bulk actions
-            <ChevronDownIcon className="w-4 h-4" />
-          </button>
-        </div> */}
       </div>
 
       {/* Right side - Add Inventory Button and Toggle Icon */}
