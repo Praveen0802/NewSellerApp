@@ -6,4 +6,3 @@ const AddInventory = () => {
 };
 
 export default AddInventory;
-

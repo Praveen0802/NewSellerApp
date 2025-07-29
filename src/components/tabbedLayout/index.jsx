@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+// Complete TabbedLayout component with the updated logic
 import { useRouter } from "next/router";
-import SelectListItem from "../tradePage/components/selectListItem";
+import { useEffect, useRef, useState } from "react";
 import AvailableList from "../tradePage/components/availableList";
-import { FilterSection } from "./filterSection";
+import SelectListItem from "../tradePage/components/selectListItem";
 import ActiveFiltersBox from "./ActiveFilterBoxs";
+import { FilterSection } from "./filterSection";
 import HeaderV2 from "./HeaderV2";
 
 // Mock icons - replace with your actual icons
@@ -65,6 +66,13 @@ const TabbedLayout = ({
   useHeaderV2 = false,
   onAddInventory = () => {},
   addInventoryText = "Add Inventory",
+  // New props for enhanced functionality
+  isDraggableColumns = false,
+  isDraggableFilters = false,
+  showColumnSearch = false,
+  showFilterSearch = false,
+  onColumnsReorder,
+  onFiltersReorder,
 }) => {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState(initialTab || tabs[0]?.key);
@@ -80,6 +88,10 @@ const TabbedLayout = ({
   const [transitionDirection, setTransitionDirection] = useState("next");
   const [previousListItems, setPreviousListItems] = useState([]);
   const [currentListItems, setCurrentListItems] = useState([]);
+
+  // State for managing ordered items
+  const [orderedColumns, setOrderedColumns] = useState([]);
+  const [orderedFilters, setOrderedFilters] = useState({});
 
   // Initialize activeFilters with all filters checked by default
   const [activeFilters, setActiveFilters] = useState(() => {
@@ -101,6 +113,149 @@ const TabbedLayout = ({
   // NEW: Handler for toggling list items visibility
   const handleToggleListItems = () => {
     setShowListItems(!showListItems);
+  };
+
+  // Enhanced function to get available columns with ordering
+  const getAvailableColumns = () => {
+    if (!visibleColumns) return [];
+
+    const baseColumns = Object.entries(visibleColumns).map(
+      ([columnKey, isVisible]) => ({
+        key: columnKey,
+        label: columnKey
+          .replace(/([A-Z])/g, " $1")
+          .replace(/^./, (str) => str.toUpperCase()),
+        isVisible: isVisible,
+      })
+    );
+
+    // If we have ordered columns, use that order, otherwise use original order
+    if (orderedColumns.length > 0) {
+      const orderedItems = [];
+      const usedKeys = new Set();
+
+      // Add items in the ordered sequence
+      orderedColumns.forEach((orderedKey) => {
+        const item = baseColumns.find((col) => col.key === orderedKey);
+        if (item) {
+          orderedItems.push(item);
+          usedKeys.add(orderedKey);
+        }
+      });
+
+      // Add any remaining items that weren't in the ordered list
+      baseColumns.forEach((item) => {
+        if (!usedKeys.has(item.key)) {
+          orderedItems.push(item);
+        }
+      });
+
+      return orderedItems;
+    }
+
+    return baseColumns;
+  };
+
+  // Enhanced function to get available filters with ordering
+  const getAvailableFilters = () => {
+    if (!filterConfig || !filterConfig[selectedTab]) return [];
+
+    const baseFilters = filterConfig[selectedTab].map((filter) => ({
+      key: filter.name,
+      label: filter.label,
+      type: filter.type,
+      isActive: activeFilters.has(filter.name),
+    }));
+
+    // If we have ordered filters for this tab, use that order
+    const tabOrderedFilters = orderedFilters[selectedTab];
+    if (tabOrderedFilters && tabOrderedFilters.length > 0) {
+      const orderedItems = [];
+      const usedKeys = new Set();
+
+      // Add items in the ordered sequence
+      tabOrderedFilters.forEach((orderedKey) => {
+        const item = baseFilters.find((filter) => filter.key === orderedKey);
+        if (item) {
+          orderedItems.push(item);
+          usedKeys.add(orderedKey);
+        }
+      });
+
+      // Add any remaining items that weren't in the ordered list
+      baseFilters.forEach((item) => {
+        if (!usedKeys.has(item.key)) {
+          orderedItems.push(item);
+        }
+      });
+
+      return orderedItems;
+    }
+
+    return baseFilters;
+  };
+
+  // UPDATED: Enhanced getVisibleFilters function that respects custom order
+  const getVisibleFilters = () => {
+    if (!filterConfig || !filterConfig[selectedTab]) return [];
+
+    // Get all filters for the current tab that are active
+    const allFilters = filterConfig[selectedTab]?.filter((filter) =>
+      activeFilters.has(filter.name)
+    );
+
+    // If we have a custom order for this tab, apply it
+    const tabOrderedFilters = orderedFilters[selectedTab];
+    if (tabOrderedFilters && tabOrderedFilters.length > 0) {
+      const orderedItems = [];
+      const usedKeys = new Set();
+
+      // Add filters in the custom order (only if they're active)
+      tabOrderedFilters.forEach((orderedKey) => {
+        const filter = allFilters.find((f) => f.name === orderedKey);
+        if (filter) {
+          orderedItems.push(filter);
+          usedKeys.add(orderedKey);
+        }
+      });
+
+      // Add any new active filters that weren't in the ordered list
+      allFilters.forEach((filter) => {
+        if (!usedKeys.has(filter.name)) {
+          orderedItems.push(filter);
+        }
+      });
+
+      return orderedItems;
+    }
+
+    return allFilters;
+  };
+
+  // Handle columns reordering
+  const handleColumnsReorder = (reorderedItems) => {
+    const newOrder = reorderedItems.map((item) => item.key);
+    setOrderedColumns(newOrder);
+
+    // Call parent callback if provided
+    if (onColumnsReorder) {
+      onColumnsReorder(newOrder, reorderedItems);
+    }
+  };
+
+  const handleFiltersReorder = (reorderedItems) => {
+    const newOrder = reorderedItems.map((item) => item.key);
+
+    // Store the new order for the current tab
+    setOrderedFilters((prev) => ({
+      ...prev,
+      [selectedTab]: newOrder,
+    }));
+
+    // Call parent callback if provided
+    if (onFiltersReorder) {
+      onFiltersReorder(selectedTab, newOrder, reorderedItems);
+    }
   };
 
   // Initialize checkbox values from config
@@ -203,18 +358,6 @@ const TabbedLayout = ({
     disableTransitions,
   ]);
 
-  // Get all available filters for current tab
-  const getAvailableFilters = () => {
-    if (!filterConfig || !filterConfig[selectedTab]) return [];
-
-    return filterConfig[selectedTab].map((filter) => ({
-      key: filter.name,
-      label: filter.label,
-      type: filter.type,
-      isActive: activeFilters.has(filter.name),
-    }));
-  };
-
   const handleTabChange = (tab) => {
     setSelectedTab(tab.key);
     if (tab.route) {
@@ -271,14 +414,6 @@ const TabbedLayout = ({
     onColumnToggle?.(columnKey);
   };
 
-  // Get visible filters based on activeFilters
-  const getVisibleFilters = () => {
-    if (!filterConfig || !filterConfig[selectedTab]) return [];
-    return filterConfig[selectedTab].filter((filter) =>
-      activeFilters.has(filter.name)
-    );
-  };
-
   // Handle clearing all filters
   const handleClearAllFilters = () => {
     if (onClearAllFilters) {
@@ -315,62 +450,50 @@ const TabbedLayout = ({
           columnDropdownRef={columnDropdownRef}
           getAvailableFilters={getAvailableFilters}
           handleFilterToggle={handleFilterToggle}
-          visibleColumns={visibleColumns}
+          getAvailableColumns={getAvailableColumns}
           handleColumnToggle={handleColumnToggle}
+          handleColumnsReorder={handleColumnsReorder}
+          handleFiltersReorder={handleFiltersReorder}
           hideVisibleColumns={hideVisibleColumns}
           onAddInventory={onAddInventory}
           addInventoryText={addInventoryText}
-          // NEW: Pass the list items visibility state and toggle handler
           showListItems={showListItems}
           onToggleListItems={handleToggleListItems}
+          isDraggableColumns={isDraggableColumns}
+          isDraggableFilters={isDraggableFilters}
+          showColumnSearch={showColumnSearch}
+          showFilterSearch={showFilterSearch}
         />
       ) : (
-        /* Original Top Right Controls */
+        /* Original Top Right Controls - Also updated to use enhanced DropdownList */
         <div className="absolute top-6 right-6 flex gap-2 z-50">
           {/* Filter Control */}
-          <div className="relative" ref={filterDropdownRef}>
-            <button
-              onClick={() => {
-                setShowFilterDropdown(!showFilterDropdown);
-                setShowColumnDropdown(false);
-              }}
-              className="p-2 bg-white border cursor-pointer border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
-              title="Filters"
-            >
-              <FilterIcon className="w-5 h-5 text-gray-600" />
-            </button>
+          {showFilters && (
+            <div className="relative" ref={filterDropdownRef}>
+              <button
+                onClick={() => {
+                  setShowFilterDropdown(!showFilterDropdown);
+                  setShowColumnDropdown(false);
+                }}
+                className="p-2 bg-white border cursor-pointer border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
+                title="Filters"
+              >
+                <FilterIcon className="w-5 h-5 text-gray-600" />
+              </button>
 
-            {showFilterDropdown && (
-              <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                <div className="p-3 border-b border-gray-200">
-                  <h3 className="text-sm font-medium text-gray-900">Filters</h3>
-                </div>
-                <div className="max-h-64 overflow-y-auto">
-                  {getAvailableFilters().map((filter) => (
-                    <label
-                      key={filter.key}
-                      className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={filter.isActive}
-                        onChange={() => handleFilterToggle(filter.key)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        {filter.label}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                {getAvailableFilters().length === 0 && (
-                  <div className="px-3 py-4 text-sm text-gray-500 text-center">
-                    No filters available
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+              <DropdownList
+                isOpen={showFilterDropdown}
+                title="Filters"
+                items={getAvailableFilters()}
+                onItemChange={handleFilterToggle}
+                onItemsReorder={handleFiltersReorder}
+                emptyMessage="No filters available"
+                className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+                isDraggable={isDraggableFilters}
+                showSearch={showFilterSearch}
+              />
+            </div>
+          )}
 
           {/* Column Control */}
           {!hideVisibleColumns && (
@@ -386,44 +509,17 @@ const TabbedLayout = ({
                 <ColumnsIcon className="w-5 h-5 text-gray-600" />
               </button>
 
-              {showColumnDropdown && (
-                <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                  <div className="p-3 border-b border-gray-200">
-                    <h3 className="text-sm font-medium text-gray-900">
-                      Columns
-                    </h3>
-                  </div>
-                  <div className="max-h-64 overflow-y-auto">
-                    {visibleColumns &&
-                      Object.entries(visibleColumns).map(
-                        ([columnKey, isVisible]) => (
-                          <label
-                            key={columnKey}
-                            className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isVisible}
-                              onChange={() => handleColumnToggle(columnKey)}
-                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                            />
-                            <span className="ml-2 text-sm text-gray-700 capitalize">
-                              {columnKey
-                                .replace(/([A-Z])/g, " $1")
-                                .replace(/^./, (str) => str.toUpperCase())}
-                            </span>
-                          </label>
-                        )
-                      )}
-                  </div>
-                  {(!visibleColumns ||
-                    Object.keys(visibleColumns).length === 0) && (
-                    <div className="px-3 py-4 text-sm text-gray-500 text-center">
-                      No columns available
-                    </div>
-                  )}
-                </div>
-              )}
+              <DropdownList
+                isOpen={showColumnDropdown}
+                title="Columns"
+                items={getAvailableColumns()}
+                onItemChange={handleColumnToggle}
+                onItemsReorder={handleColumnsReorder}
+                emptyMessage="No columns available"
+                className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+                isDraggable={isDraggableColumns}
+                showSearch={showColumnSearch}
+              />
             </div>
           )}
         </div>
@@ -562,13 +658,13 @@ const TabbedLayout = ({
               </div>
             </div>
           </div>
-          {/* )} */}
-          {/* Filter Section - Only show filters that are active */}
+
+          {/* Filter Section - Only show filters that are active AND IN CUSTOM ORDER */}
           {showFilters && getVisibleFilters().length > 0 && (
             <div>
               {customComponent && customComponent()}
               <FilterSection
-                filterConfig={getVisibleFilters()}
+                filterConfig={getVisibleFilters()} // This now returns filters in custom order
                 currentTab={selectedTab}
                 onFilterChange={handleFilterChange}
                 containerClassName="md:flex flex-wrap gap-3 items-center  p-3"
@@ -634,6 +730,15 @@ const TabbedLayout = ({
               transform: translateX(100%);
               opacity: 0;
             }
+          }
+
+          .hideScrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+
+          .hideScrollbar::-webkit-scrollbar {
+            display: none;
           }
         `}</style>
       )}
