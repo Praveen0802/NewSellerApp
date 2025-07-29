@@ -4,6 +4,7 @@ import SelectListItem from "../tradePage/components/selectListItem";
 import AvailableList from "../tradePage/components/availableList";
 import { FilterSection } from "./filterSection";
 import ActiveFiltersBox from "./ActiveFilterBoxs";
+import HeaderV2 from "./HeaderV2";
 
 // Mock icons - replace with your actual icons
 const FilterIcon = ({ className }) => (
@@ -60,12 +61,19 @@ const TabbedLayout = ({
   transitionDirection: parentTransitionDirection = null,
   // New prop to disable transitions entirely
   disableTransitions = false,
+  // NEW: Header V2 flag and related props
+  useHeaderV2 = false,
+  onAddInventory = () => {},
+  addInventoryText = "Add Inventory",
 }) => {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState(initialTab || tabs[0]?.key);
   const [checkboxValues, setCheckboxValues] = useState({});
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
+
+  // NEW: State for controlling list items visibility
+  const [showListItems, setShowListItems] = useState(true);
 
   // New states for transition handling
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -89,6 +97,11 @@ const TabbedLayout = ({
 
   const filterDropdownRef = useRef(null);
   const columnDropdownRef = useRef(null);
+
+  // NEW: Handler for toggling list items visibility
+  const handleToggleListItems = () => {
+    setShowListItems(!showListItems);
+  };
 
   // Initialize checkbox values from config
   useEffect(() => {
@@ -158,8 +171,8 @@ const TabbedLayout = ({
 
     // Only trigger transition if:
     // 1. Transitions are not disabled
-    // 2. The actual content has changed 
-    // 3. We have existing items 
+    // 2. The actual content has changed
+    // 3. We have existing items
     // 4. We have transition direction from parent
     if (
       !disableTransitions &&
@@ -290,110 +303,139 @@ const TabbedLayout = ({
 
   return (
     <div className={className}>
-      {/* Top Right Controls */}
-      <div className="absolute top-6 right-6 flex gap-2 z-50">
-        {/* Filter Control */}
-        <div className="relative" ref={filterDropdownRef}>
-          <button
-            onClick={() => {
-              setShowFilterDropdown(!showFilterDropdown);
-              setShowColumnDropdown(false);
-            }}
-            className="p-2 bg-white border cursor-pointer border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
-            title="Filters"
-          >
-            <FilterIcon className="w-5 h-5 text-gray-600" />
-          </button>
-
-          {showFilterDropdown && (
-            <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-              <div className="p-3 border-b border-gray-200">
-                <h3 className="text-sm font-medium text-gray-900">Filters</h3>
-              </div>
-              <div className="max-h-64 overflow-y-auto">
-                {getAvailableFilters().map((filter) => (
-                  <label
-                    key={filter.key}
-                    className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filter.isActive}
-                      onChange={() => handleFilterToggle(filter.key)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">
-                      {filter.label}
-                    </span>
-                  </label>
-                ))}
-              </div>
-              {getAvailableFilters().length === 0 && (
-                <div className="px-3 py-4 text-sm text-gray-500 text-center">
-                  No filters available
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Column Control */}
-        {!hideVisibleColumns && (
-          <div className="relative" ref={columnDropdownRef}>
+      {/* Header V2 or Original Top Right Controls */}
+      {useHeaderV2 ? (
+        <HeaderV2
+          showFilters={showFilters}
+          showFilterDropdown={showFilterDropdown}
+          setShowFilterDropdown={setShowFilterDropdown}
+          setShowColumnDropdown={setShowColumnDropdown}
+          showColumnDropdown={showColumnDropdown}
+          filterDropdownRef={filterDropdownRef}
+          columnDropdownRef={columnDropdownRef}
+          getAvailableFilters={getAvailableFilters}
+          handleFilterToggle={handleFilterToggle}
+          visibleColumns={visibleColumns}
+          handleColumnToggle={handleColumnToggle}
+          hideVisibleColumns={hideVisibleColumns}
+          onAddInventory={onAddInventory}
+          addInventoryText={addInventoryText}
+          // NEW: Pass the list items visibility state and toggle handler
+          showListItems={showListItems}
+          onToggleListItems={handleToggleListItems}
+        />
+      ) : (
+        /* Original Top Right Controls */
+        <div className="absolute top-6 right-6 flex gap-2 z-50">
+          {/* Filter Control */}
+          <div className="relative" ref={filterDropdownRef}>
             <button
               onClick={() => {
-                setShowColumnDropdown(!showColumnDropdown);
-                setShowFilterDropdown(false);
+                setShowFilterDropdown(!showFilterDropdown);
+                setShowColumnDropdown(false);
               }}
-              className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
-              title="Columns"
+              className="p-2 bg-white border cursor-pointer border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
+              title="Filters"
             >
-              <ColumnsIcon className="w-5 h-5 text-gray-600" />
+              <FilterIcon className="w-5 h-5 text-gray-600" />
             </button>
 
-            {showColumnDropdown && (
+            {showFilterDropdown && (
               <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                 <div className="p-3 border-b border-gray-200">
-                  <h3 className="text-sm font-medium text-gray-900">Columns</h3>
+                  <h3 className="text-sm font-medium text-gray-900">Filters</h3>
                 </div>
                 <div className="max-h-64 overflow-y-auto">
-                  {visibleColumns &&
-                    Object.entries(visibleColumns).map(
-                      ([columnKey, isVisible]) => (
-                        <label
-                          key={columnKey}
-                          className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isVisible}
-                            onChange={() => handleColumnToggle(columnKey)}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                          />
-                          <span className="ml-2 text-sm text-gray-700 capitalize">
-                            {columnKey
-                              .replace(/([A-Z])/g, " $1")
-                              .replace(/^./, (str) => str.toUpperCase())}
-                          </span>
-                        </label>
-                      )
-                    )}
+                  {getAvailableFilters().map((filter) => (
+                    <label
+                      key={filter.key}
+                      className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={filter.isActive}
+                        onChange={() => handleFilterToggle(filter.key)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">
+                        {filter.label}
+                      </span>
+                    </label>
+                  ))}
                 </div>
-                {(!visibleColumns ||
-                  Object.keys(visibleColumns).length === 0) && (
+                {getAvailableFilters().length === 0 && (
                   <div className="px-3 py-4 text-sm text-gray-500 text-center">
-                    No columns available
+                    No filters available
                   </div>
                 )}
               </div>
             )}
           </div>
-        )}
-      </div>
+
+          {/* Column Control */}
+          {!hideVisibleColumns && (
+            <div className="relative" ref={columnDropdownRef}>
+              <button
+                onClick={() => {
+                  setShowColumnDropdown(!showColumnDropdown);
+                  setShowFilterDropdown(false);
+                }}
+                className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
+                title="Columns"
+              >
+                <ColumnsIcon className="w-5 h-5 text-gray-600" />
+              </button>
+
+              {showColumnDropdown && (
+                <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                  <div className="p-3 border-b border-gray-200">
+                    <h3 className="text-sm font-medium text-gray-900">
+                      Columns
+                    </h3>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto">
+                    {visibleColumns &&
+                      Object.entries(visibleColumns).map(
+                        ([columnKey, isVisible]) => (
+                          <label
+                            key={columnKey}
+                            className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isVisible}
+                              onChange={() => handleColumnToggle(columnKey)}
+                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <span className="ml-2 text-sm text-gray-700 capitalize">
+                              {columnKey
+                                .replace(/([A-Z])/g, " $1")
+                                .replace(/^./, (str) => str.toUpperCase())}
+                            </span>
+                          </label>
+                        )
+                      )}
+                  </div>
+                  {(!visibleColumns ||
+                    Object.keys(visibleColumns).length === 0) && (
+                    <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                      No columns available
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Desktop tabs */}
       {tabs?.length > 0 && (
-        <div className="hidden md:flex gap-[4px] w-[70%] px-[24px] pt-[24px]">
+        <div
+          className={`hidden md:flex gap-[4px] w-[70%] px-[24px] ${
+            useHeaderV2 ? "pt-0" : "pt-[24px]"
+          }`}
+        >
           {tabs?.map((tab, index) => {
             const selectedIndex = tab?.key === selectedTab;
             return (
@@ -410,68 +452,82 @@ const TabbedLayout = ({
 
       <div className={containerClassName}>
         <div className="bg-white">
-          {/* List Items Section with Transitions */}
-          <div className="px-[24px] py-[12px] border-b-[1px] border-[#E0E1EA] overflow-hidden">
+          {/* List Items Section with Transitions - NOW WITH SHOW/HIDE ANIMATION */}
+          <div
+            className={`transition-all duration-300 ease-in-out overflow-hidden border-b-[1px] border-[#E0E1EA] ${
+              showListItems
+                ? "max-h-[500px] opacity-100 px-[24px] py-[12px]"
+                : "max-h-0 opacity-0 px-[24px] py-0"
+            }`}
+          >
             <div className="relative">
               {/* Previous Items (sliding out) - only show if transitions are enabled and transitioning */}
-              {!disableTransitions && isTransitioning && previousListItems.length > 0 && (
-                <div
-                  className={`
-                    ${
-                      previousListItems?.length == 4
-                        ? "grid grid-cols-4 gap-4"
-                        : "flex gap-4 flex-nowrap"
-                    } min-w-min md:min-w-0 absolute inset-0 transition-transform overflow-scroll duration-300 ease-in-out z-10
-                    ${
-                      transitionDirection === "next"
-                        ? "transform -translate-x-full"
-                        : "transform translate-x-full"
-                    }
-                  `}
-                >
-                  {previousListItems?.map((item, index) => (
-                    <div
-                      key={`previous-${item.key || index}-${Date.now()}`}
-                      className="min-w-[200px]"
-                    >
-                      <AvailableList
-                        list={{
-                          name: item?.name,
-                          value: item?.value,
-                          showCheckbox: item?.showCheckbox,
-                          isChecked: item?.isChecked,
-                          onCheckChange: undefined, // Disable interactions during transition
-                          onClick: undefined,
-                        }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
+              {!disableTransitions &&
+                isTransitioning &&
+                previousListItems.length > 0 && (
+                  <div
+                    className={`
+                      ${
+                        previousListItems?.length == 4
+                          ? "grid grid-cols-4 gap-4"
+                          : "flex gap-4 flex-nowrap"
+                      } min-w-min md:min-w-0 absolute inset-0 transition-transform overflow-scroll duration-300 ease-in-out z-10
+                      ${
+                        transitionDirection === "next"
+                          ? "transform -translate-x-full"
+                          : "transform translate-x-full"
+                      }
+                    `}
+                  >
+                    {previousListItems?.map((item, index) => (
+                      <div
+                        key={`previous-${item.key || index}-${Date.now()}`}
+                        className="min-w-[200px]"
+                      >
+                        <AvailableList
+                          list={{
+                            name: item?.name,
+                            value: item?.value,
+                            showCheckbox: item?.showCheckbox,
+                            isChecked: item?.isChecked,
+                            onCheckChange: undefined, // Disable interactions during transition
+                            onClick: undefined,
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
 
               {/* Current Items */}
               <div
                 className={`
-                  ${
-                    currentListItems?.length == 4
-                      ? "grid grid-cols-4 gap-4"
-                      : "flex gap-4 flex-nowrap overflow-x-scroll hideScrollbar"
-                  } min-w-min md:min-w-0 ${!disableTransitions ? 'transition-transform duration-300 ease-in-out' : ''}
-                  ${
-                    !disableTransitions && isTransitioning
-                      ? "transform translate-x-0"
-                      : "transform translate-x-0"
-                  }
-                `}
+                    ${
+                      currentListItems?.length == 4
+                        ? "grid grid-cols-4 gap-4"
+                        : "flex gap-4 flex-nowrap overflow-x-scroll hideScrollbar"
+                    } min-w-min md:min-w-0 ${
+                  !disableTransitions
+                    ? "transition-transform duration-300 ease-in-out"
+                    : ""
+                }
+                    ${
+                      !disableTransitions && isTransitioning
+                        ? "transform translate-x-0"
+                        : "transform translate-x-0"
+                    }
+                  `}
                 style={{
-                  transform: !disableTransitions && isTransitioning
-                    ? "translateX(0)"
-                    : "translateX(0)",
-                  animation: !disableTransitions && isTransitioning
-                    ? transitionDirection === "next"
-                      ? "slideInFromRight 0.3s ease-in-out"
-                      : "slideInFromLeft 0.3s ease-in-out"
-                    : "none",
+                  transform:
+                    !disableTransitions && isTransitioning
+                      ? "translateX(0)"
+                      : "translateX(0)",
+                  animation:
+                    !disableTransitions && isTransitioning
+                      ? transitionDirection === "next"
+                        ? "slideInFromRight 0.3s ease-in-out"
+                        : "slideInFromLeft 0.3s ease-in-out"
+                      : "none",
                 }}
               >
                 {currentListItems?.map((item, index) => (
@@ -486,12 +542,16 @@ const TabbedLayout = ({
                         showCheckbox: item?.showCheckbox,
                         isChecked: item?.isChecked,
                         onCheckChange:
-                          item?.showCheckbox && item?.key && (!isTransitioning || disableTransitions)
+                          item?.showCheckbox &&
+                          item?.key &&
+                          (!isTransitioning || disableTransitions)
                             ? () =>
                                 handleCheckboxToggle(item.key, item.isChecked)
                             : undefined,
                         onClick:
-                          item?.showCheckbox && item?.key && (!isTransitioning || disableTransitions)
+                          item?.showCheckbox &&
+                          item?.key &&
+                          (!isTransitioning || disableTransitions)
                             ? () =>
                                 handleCheckboxToggle(item.key, item.isChecked)
                             : undefined,
@@ -502,21 +562,20 @@ const TabbedLayout = ({
               </div>
             </div>
           </div>
-
+          {/* )} */}
           {/* Filter Section - Only show filters that are active */}
           {showFilters && getVisibleFilters().length > 0 && (
             <div>
               {customComponent && customComponent()}
-            <FilterSection
-              filterConfig={getVisibleFilters()}
-              currentTab={selectedTab}
-              onFilterChange={handleFilterChange}
-              containerClassName="md:flex flex-wrap gap-3 items-center  p-3"
-              initialValues={currentFilterValues}
-            />
+              <FilterSection
+                filterConfig={getVisibleFilters()}
+                currentTab={selectedTab}
+                onFilterChange={handleFilterChange}
+                containerClassName="md:flex flex-wrap gap-3 items-center  p-3"
+                initialValues={currentFilterValues}
+              />
             </div>
           )}
-
           {showSelectedFilterPills && (
             <div className="px-[20px]  border-t-1 border-gray-200 ">
               <ActiveFiltersBox

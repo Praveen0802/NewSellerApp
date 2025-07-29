@@ -39,6 +39,7 @@ import InventoryLogsInfo from "../inventoryLogsInfo";
 import FloatingLabelInput from "../floatinginputFields";
 import { debounce, set } from "lodash";
 import SearchedList from "../tradePage/components/searchedList";
+import { useRouter } from "next/router";
 
 const ShimmerCard = () => (
   <div className="border border-gray-200 rounded-lg mb-4 overflow-hidden animate-pulse">
@@ -1371,7 +1372,8 @@ const TicketsPage = (props) => {
                 <div className="flex items-center space-x-1">
                   <MapPin size={11} />
                   <span className="truncate max-w-xs">
-                    {`${matchInfo?.stadium_name} , ${matchInfo?.country_name} , ${matchInfo?.city_name}` || "TBD"}
+                    {`${matchInfo?.stadium_name} , ${matchInfo?.country_name} , ${matchInfo?.city_name}` ||
+                      "TBD"}
                   </span>
                 </div>
               </div>
@@ -1658,6 +1660,11 @@ const TicketsPage = (props) => {
     fetchData(clearedFilters);
   };
 
+  const router = useRouter();
+  const handleAddInventory = () => {
+    router.push("/add-listings");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white">
@@ -1676,6 +1683,8 @@ const TicketsPage = (props) => {
           onCheckboxToggle={() => {}}
           hideVisibleColumns={false} // Show column controls
           disableTransitions={true} // New prop to disable transitions
+          useHeaderV2={true}
+          onAddInventory={handleAddInventory}
         />
 
         {/* Pagination Component - Positioned below filters */}

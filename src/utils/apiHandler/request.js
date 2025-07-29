@@ -2076,3 +2076,18 @@ export const addReportsNotes = async (token, data) => {
     throw error;
   }
 };
+
+export const FetchPerformerOrVenueListing = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_EVENT_LISTING,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data : {};
+  } catch (error) {
+    console.log("ERROR in FetchPerformerOrVenueListing", error);
+    return {};
+  }
+};

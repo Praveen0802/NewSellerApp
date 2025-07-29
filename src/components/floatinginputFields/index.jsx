@@ -32,6 +32,7 @@ const FloatingLabelInput = ({
   deleteFunction = () => {},
   defaultFocus = false,
   max,
+  onFocus = () => {},
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -43,6 +44,9 @@ const FloatingLabelInput = ({
 
   const handleFocus = () => {
     setIsFocused(true);
+    if (onFocus) {
+      onFocus();
+    }
   };
 
   useEffect(() => {
@@ -106,7 +110,7 @@ const FloatingLabelInput = ({
 
   // Check if we should show delete button
   const shouldShowDelete = showDelete && value && value.length > 0;
-  
+
   // Determine left padding based on iconBefore
   const getLeftPadding = () => {
     return iconBefore ? "pl-10" : "px-3";
@@ -133,7 +137,7 @@ const FloatingLabelInput = ({
     <div className={`relative w-full ${parentClassName}`}>
       {!hideLabel && (
         <FloatingPlaceholder
-          className={`${labelClassName} ${iconBefore && '!left-14'} `}
+          className={`${labelClassName} ${iconBefore && "!left-14"} `}
           isFocused={isFocused}
           hasError={!!error}
         >
