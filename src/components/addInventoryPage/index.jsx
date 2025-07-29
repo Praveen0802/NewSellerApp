@@ -941,15 +941,15 @@ const AddInventoryPage = (props) => {
     },
     {
       type: "date",
-      name: "date_to_ship",
+      name: "ship_date",
       label: "Date to Ship",
-      value: filtersApplied?.date_to_ship,
+      value: filtersApplied?.ship_date,
       parentClassName: "!w-[180px]",
       singleDateMode: true,
       className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, date_to_ship: value })),
+        setFiltersApplied((prev) => ({ ...prev, ship_date: value })),
     },
     {
       type: "checkbox",
@@ -1347,8 +1347,8 @@ const AddInventoryPage = (props) => {
         publishingData.split_type || ""
       );
       formData.append(
-        `data[${index}][date_to_ship]`,
-        publishingData.date_to_ship || ""
+        `data[${index}][ship_date]`,
+        publishingData.ship_date || ""
       );
       formData.append(
         `data[${index}][tickets_in_hand]`,
