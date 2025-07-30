@@ -779,7 +779,6 @@ const AddInventoryPage = (props) => {
   const [isEditMode, setIsEditMode] = useState(false);
   // State for tracking scroll and shadows
   const [hasScrolled, setHasScrolled] = useState(false);
-  console.log(matchDetails, "matchDetails?.currencymatchDetails?.currency");
   // Define filters array with complete configuration
   const filters = [
     {
