@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import Button from "../commonComponents/button";
 import { useDispatch } from "react-redux";
 import { updateWalletPopupFlag } from "@/utils/redux/common/action";
@@ -7,22 +7,72 @@ import FloatingSelect from "../floatinginputFields/floatingSelect";
 import FloatingDateRange from "../commonComponents/dateRangeInput";
 import EventsTable from "./eventsTable";
 import { useRouter } from "next/router";
+import { fetchBulkListing } from "@/utils/apiHandler/request";
+import { ChevronDown, Filter, X } from "lucide-react";
+
+// Debounce hook
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
 
 const BulkListings = (props) => {
   const { response } = props;
-  console.log(response, "response from bulk listing");
   const [selectedRows, setSelectedRows] = useState([]);
+  const [filtersApplied, setFiltersApplied] = useState({});
+  const [eventDate, setEventDate] = useState("");
+  const [eventsData, setEventsData] = useState(
+    response?.bulkListingData?.value?.events
+  );
+  const [searchValue, setSearchValue] = useState("");
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [visibleFilters, setVisibleFilters] = useState({
+    search: true,
+    tournament: true,
+    venue: true,
+    eventDate: true,
+  });
+  
   const dispatch = useDispatch();
-  console.log(selectedRows, "selectedRowsselectedRows");
+  const [loader, setLoader] = useState(false);
   const router = useRouter();
 
-  const handleOpenAddWalletPopup = () => {
-    dispatch(
-      updateWalletPopupFlag({
-        flag: true,
-      })
-    );
-  };
+  // Debounce search value
+  const debouncedSearchValue = useDebounce(searchValue, 500);
+
+  // Available filters configuration
+  const filterOptions = [
+    { key: 'search', label: 'Search', component: 'input' },
+    { key: 'tournament', label: 'Tournament', component: 'select' },
+    { key: 'venue', label: 'Venue', component: 'select' },
+    { key: 'eventDate', label: 'Event Date', component: 'dateRange' },
+  ];
+
+  // Effect for debounced search
+  useEffect(() => {
+    if (debouncedSearchValue !== undefined && debouncedSearchValue !== filtersApplied.searchValue) {
+      const params = {
+        ...filtersApplied,
+        searchValue: debouncedSearchValue,
+        page: 1,
+      };
+      setFiltersApplied(prev => ({ ...prev, searchValue: debouncedSearchValue }));
+      if (debouncedSearchValue || Object.keys(filtersApplied).length > 0) {
+        fetchApiCall(params);
+      }
+    }
+  }, [debouncedSearchValue]);
 
   const handleAddticket = () => {
     if (selectedRows?.length == 1) {
@@ -42,75 +92,236 @@ const BulkListings = (props) => {
     { title: "Total Fare", key: "ticket_fare_from" },
   ];
 
-  // ✅ FIX: Memoize eventListViews to prevent unnecessary re-renders
+  const handleDateChange = (dateRange, key) => {
+    let params = {};
+    if (key == "eventDate") {
+      setEventDate(dateRange);
+      params = {
+        ...filtersApplied,
+        event_date_from: dateRange?.startDate,
+        event_date_to: dateRange?.endDate,
+        page: 1,
+      };
+      fetchApiCall(params);
+    }
+  };
+
+  const fetchApiCall = async (params) => {
+    setLoader(true);
+    try {
+      const response = await fetchBulkListing(params);
+      setEventsData(response?.events);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setEventsData([]);
+    } finally {
+      setLoader(false);
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e?.target?.value;
+    setSearchValue(value);
+  };
+
+  const handleSelectChange = async (value, key) => {
+    const params = {
+      ...filtersApplied,
+      [key]: value,
+      page: 1,
+    };
+    setFiltersApplied({
+      ...filtersApplied,
+      [key]: value,
+    });
+    await fetchApiCall(params);
+  };
+
+  const handleFilterToggle = (filterKey) => {
+    setVisibleFilters(prev => ({
+      ...prev,
+      [filterKey]: !prev[filterKey]
+    }));
+  };
+
+  const clearAllFilters = () => {
+    setFiltersApplied({});
+    setSearchValue("");
+    setEventDate("");
+    setEventsData(response?.bulkListingData?.value?.events);
+  };
+
+  // Memoize eventListViews to prevent unnecessary re-renders
   const eventListViews = useMemo(() => {
     return (
-      response?.value?.events?.map((list) => ({
+      eventsData?.map((list) => ({
         ...list,
       })) || []
     );
-  }, [response?.value?.events]);
+  }, [eventsData]);
+
+  const activeFiltersCount = Object.values(visibleFilters).filter(Boolean).length;
 
   return (
     <div className="bg-[#F5F7FA] w-full h-full relative">
       <div className="flex bg-white items-center py-2 md:py-2 justify-between px-4 md:px-6 border-b border-[#eaeaf1]">
-        <p>Filter</p>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Button
+              type="outlined"
+              classNames={{
+                root: "px-3 py-2 border border-[#D1D5DB] flex items-center gap-2",
+                label_: "text-sm font-medium",
+              }}
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+              label={
+                <div className="flex items-center gap-2">
+                  <Filter size={16} />
+                  <span>Filters ({activeFiltersCount})</span>
+                  <ChevronDown size={16} />
+                </div>
+              }
+            />
+            
+            {showFilterDropdown && (
+              <div className="absolute top-full left-0 mt-1 bg-white border border-[#D1D5DB] rounded-md shadow-lg z-50 min-w-[200px]">
+                <div className="p-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-[#323A70]">Show Filters</span>
+                    <button
+                      onClick={() => setShowFilterDropdown(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                  
+                  {filterOptions.map((filter) => (
+                    <label key={filter.key} className="flex items-center gap-2 py-2 cursor-pointer hover:bg-gray-50 px-2 rounded">
+                      <input
+                        type="checkbox"
+                        checked={visibleFilters[filter.key]}
+                        onChange={() => handleFilterToggle(filter.key)}
+                        className="h-4 w-4 text-blue-600"
+                      />
+                      <span className="text-sm text-[#323A70]">{filter.label}</span>
+                    </label>
+                  ))}
+                  
+                  <div className="border-t border-gray-200 mt-3 pt-3">
+                    <button
+                      onClick={clearAllFilters}
+                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      Clear All Filters
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        
         <Button
           type="blueType"
           classNames={{
             root: "px-2 md:px-3 py-1.5 md:py-2",
             label_: "text-xs md:text-sm font-medium",
           }}
-          onClick={() => {
-            handleOpenAddWalletPopup();
-          }}
-          label="+ Add Deposit"
+          onClick={handleAddticket}
+          disabled={selectedRows.length === 0}
+          label="+ Add Tickets"
         />
       </div>
+
+      {/* Dynamic Filters Section */}
       <div className="border-b-[1px] bg-white border-[#DADBE5] p-4">
-        <div className="flex gap-4 items-center w-[80%]">
-          <FloatingLabelInput
-            id="selectedMatch"
-            name="selectedMatch"
-            keyValue={"selectedMatch"}
-            type="text"
-            label="Search Match Event"
-            className={"!py-[7px] !px-[12px] !text-[#323A70] !text-[14px] "}
-            paddingClassName=""
-            autoComplete="off"
-          />
-          <FloatingSelect
-            label={"Ticket Status"}
-            options={[
-              { value: "fulfilled", label: "Fulfilled" },
-              { value: "incomplete", label: "Incomplete" },
-            ]}
-            keyValue="ticket_status"
-            className=""
-            paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
-          />
-          <FloatingSelect
-            label={"Booking Status"}
-            keyValue="booking_status"
-            className=""
-            paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
-          />
-          <FloatingDateRange
-            id="eventDate"
-            name="eventDate"
-            keyValue="eventDate"
-            parentClassName=""
-            label="Event Date"
-            subParentClassName=""
-            className="!py-[8px] !px-[16px] mobile:text-xs"
-          />
+        <div className="flex gap-4 items-center ">
+          {visibleFilters.search && (
+            <div className="w-[40%] min-w-[300px]">
+              <FloatingLabelInput
+                id="selectedMatch"
+                name="selectedMatch"
+                keyValue={"selectedMatch"}
+                value={searchValue}
+                type="text"
+                onChange={handleSearchChange}
+                label="Search by Tournament, Event, Venue"
+                parentClassName=""
+                className={"!py-[7px] !px-[12px] !text-[#323A70] !text-[14px] "}
+                paddingClassName=""
+                autoComplete="off"
+              />
+            </div>
+          )}
+          
+          {visibleFilters.tournament && (
+            <div className="w-[20%] min-w-[150px]">
+              <FloatingSelect
+                label={"Tournament"}
+                value={filtersApplied?.tournament_id}
+                options={response?.tournamentsList?.value?.map((list) => {
+                  return {
+                    label: list.tournament_name,
+                    value: list.tournament_id,
+                  };
+                })}
+                onSelect={(e) => {
+                  handleSelectChange(e, "tournament_id");
+                }}
+                parentClassName="w-full"
+                paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
+                keyValue="tournament_id"
+                className=""
+              />
+            </div>
+          )}
+          
+          {visibleFilters.venue && (
+            <div className="w-[20%] min-w-[150px]">
+              <FloatingSelect
+                label={"Venue"}
+                value={filtersApplied?.venue}
+                onSelect={(e) => {
+                  handleSelectChange(e, "venue");
+                }}
+                options={response?.venueList?.value?.map((list) => {
+                  return {
+                    label: list.stadium_name,
+                    value: list.stadium_id,
+                  };
+                })}
+                parentClassName="w-full"
+                paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
+                keyValue="venue"
+                className=""
+              />
+            </div>
+          )}
+          
+          {visibleFilters.eventDate && (
+            <div className="w-[20%] ">
+              <FloatingDateRange
+                id="eventDate"
+                name="eventDate"
+                keyValue="eventDate"
+                label="Event Date"
+                subParentClassName="w-full"
+                className="!py-[8px] !px-[16px] mobile:text-xs"
+                value={eventDate}
+                onChange={(dateValue) => handleDateChange(dateValue, "eventDate")}
+              />
+            </div>
+          )}
         </div>
       </div>
+
       <div className="border-b-[1px] bg-white border-[#DADBE5] flex items-center">
         <p className="text-[14px] p-4 text-[#323A70] font-medium border-r-[1px] border-[#DADBE5] w-fit">
-          {eventListViews.length} Events
+          {loader ? "Loading..." : `${eventListViews.length} Events`}
         </p>
       </div>
+
       <div
         className={`m-6 bg-white rounded max-h-[calc(100vh-300px)] overflow-scroll ${
           selectedRows?.length > 0 ? "mb-20" : ""
@@ -122,6 +333,7 @@ const BulkListings = (props) => {
             headers={headers}
             selectedRows={selectedRows}
             setSelectedRows={setSelectedRows}
+            loader={loader}
           />
         </div>
       </div>
@@ -131,7 +343,9 @@ const BulkListings = (props) => {
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E5E7EB] shadow-lg z-50">
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-4">
-              <span className="text-sm text-[#323A70] font-medium"></span>
+              <span className="text-sm text-[#323A70] font-medium">
+                {selectedRows.length} event{selectedRows.length > 1 ? 's' : ''} selected
+              </span>
             </div>
             <div className="flex items-center gap-3">
               <Button
@@ -149,9 +363,7 @@ const BulkListings = (props) => {
                   root: "px-4 py-2",
                   label_: "text-sm font-medium",
                 }}
-                onClick={() => {
-                    handleAddticket();
-                }}
+                onClick={handleAddticket}
                 label="Add Tickets"
               />
             </div>

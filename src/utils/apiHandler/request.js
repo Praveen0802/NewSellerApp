@@ -83,6 +83,21 @@ export const fetchBulkListing = async (token, params = {}) => {
   }
 };
 
+export const fetchVenueList = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.VENUE_LIST,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchVenueList", error);
+    return {};
+  }
+};
+
 export const fetchBulkListingFilters = async (token, params = {}) => {
   try {
     const response = await makeRequest({

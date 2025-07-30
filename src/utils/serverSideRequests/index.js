@@ -19,6 +19,7 @@ import {
   fetchTournamentsList,
   fetchTransactionHistoryMonthly,
   fetchUserDetails,
+  fetchVenueList,
   getAuthAddress,
   getAuthPhotoId,
   getLinkedCards,
@@ -282,8 +283,13 @@ export const reportHistoryData = async (token) => {
 };
 
 export const fetchBulkListingData = async (token) => {
-  const [bulkListingData] = await Promise.allSettled([fetchBulkListing(token)]);
-  return bulkListingData;
+  const [bulkListingData, venueList, tournamentsList] =
+    await Promise.allSettled([
+      fetchBulkListing(token),
+      fetchVenueList(token),
+      fetchTournamentsList(token),
+    ]);
+  return { bulkListingData, venueList, tournamentsList };
 };
 
 export const fetchAddBulkListingData = async (token, matches) => {

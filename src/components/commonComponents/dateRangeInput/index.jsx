@@ -382,12 +382,12 @@ const FloatingDateRange = ({
                 onClick={() => !isDisabled && handleDateClick(dayObj.date)}
                 className={`h-6 rounded text-[10px]
                   ${dayObj.isCurrentMonth ? "text-gray-800" : "text-gray-400"}
-                  ${isSelected && !isDisabled ? "bg-blue-600 text-white" : ""}
+                  ${isSelected && !isDisabled ? "bg-green-500 text-white" : ""}
                   ${isInRange && !isDisabled ? "bg-blue-100" : ""}
-                  ${isToday && !isDisabled ? "border border-blue-400" : ""}
+                  ${isToday && !isDisabled ? "border border-green-400" : ""}
                   ${isDisabled 
                     ? "text-gray-300 cursor-not-allowed bg-gray-50" 
-                    : "cursor-pointer hover:bg-blue-200"
+                    : "cursor-pointer hover:bg-green-200"
                   }
                 `}
                 disabled={isDisabled}
