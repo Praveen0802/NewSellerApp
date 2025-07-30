@@ -126,4 +126,5 @@ export const API_ROUTES = {
   ADD_REPORTS_NOTES: "/reports/save-notes",
   GET_EVENT_LISTING: "/my-listings/events-search",
   GET_LMT_PAY_PREFILL: "/settings/lmt-pay/linked-accounts",
+  GET_PAYOUT_DETAILS: "/payouts/payout-details",
 };

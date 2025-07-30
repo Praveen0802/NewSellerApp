@@ -131,9 +131,27 @@ const PayoutPage = (props) => {
   };
 
   const handleEyeClick = async (item) => {
+    console.log("item", item);
+
     try {
       const payload = { id: item?.id };
 
+      setEyeViewPopup({
+        flag: true,
+        isLoading: true,
+      });
+      if (selectedTab === "order") {
+        const params = {
+          booking_id: Number(item?.bookingNo?.replace("1BX", "")), //TODO :Hardcoded here
+        };
+        const resp = await getPayoutDetails("", params);
+        setEyeViewPopup({
+          flag: true,
+          data: { ...resp, transactionType: selectedTab },
+        });
+        console.log("resp", resp);
+        return;
+      }
       setEyeViewPopup({
         flag: true,
         data: { ...item, transactionType: selectedTab },
@@ -143,6 +161,8 @@ const PayoutPage = (props) => {
       setEyeViewPopup({
         flag: true,
         data: { ...item, transactionType: selectedTab },
+      }).finally(() => {
+        setEyeViewPopup((prev) => ({ ...prev, isLoading: false }));
       });
     }
   };
@@ -176,6 +196,8 @@ const PayoutPage = (props) => {
         return "text-gray-600";
     }
   };
+
+  console.log("currentHistoryData", currentHistoryData);
 
   // Transform history data for CollapsablePaymentTable based on selected tab
   const getTransformedData = () => {
