@@ -113,19 +113,37 @@ const SalesPage = (props) => {
 
   const getOrderDetails = async (item) => {
     // setPageLoader(true);
+
+    setShowInfoPopup((prev) => {
+      return {
+        ...prev,
+        flag: true,
+        isLoading: true,
+      };
+    });
+
     const salesData = await fetchSalesOrderDetails("", {
       booking_id: item?.bg_id,
     });
     setShowInfoPopup({
       flag: true,
-      data: salesData,
+      data: salesData?.map((list) => ({
+        ...list,
+        order_id_label: item?.booking_no ?? null,
+      })),
       bg_id: item?.bg_id,
+      isLoading: false,
     });
     // setPageLoader(false);
   };
 
   const getLogDetailsDetails = async (item) => {
     // setPageLoader(true);
+    setShowLogDetailsModal((prev) => ({
+      ...prev,
+      flag: true,
+      isLoading: true,
+    }));
     const orderLogs = await fetchSalesOrderLogs("", {
       booking_id: item?.bg_id,
     });
@@ -136,6 +154,7 @@ const SalesPage = (props) => {
       flag: true,
       orderLogs: orderLogs,
       inventoryLogs: inventoryLogs,
+      isLoading: false,
     });
     // setPageLoader(false);
   };
@@ -380,6 +399,7 @@ const SalesPage = (props) => {
         }
         orderLogs={showLogDetailsModal?.orderLogs}
         inventoryLogs={showLogDetailsModal?.inventoryLogs}
+        showShimmer={showLogDetailsModal?.isLoading}
       />
       <OrderInfo
         show={showInfoPopup?.flag}
@@ -387,6 +407,7 @@ const SalesPage = (props) => {
         onClose={() => setShowInfoPopup({ flag: false, data: [] })}
         refreshPopupData={refreshPopupData}
         type="sales"
+        showShimmer={showInfoPopup?.isLoading}
       />
 
       {/* StickyDataTable section */}
