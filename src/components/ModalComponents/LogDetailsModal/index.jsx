@@ -250,7 +250,7 @@ const LogDetailsModal = ({
   return (
     <RightViewModal className={"!w-[670px]"} show={show} onClose={onClose}>
       <div className="w-2xl bg-white rounded-lg">
-        <div className="flex justify-between items-center p-4 border-b border-gray-200">
+        <div className="flex justify-between items-center p-4 border-b border-gray-200 sticky top-0 bg-white z-99">
           <p className="text-lg font-medium text-gray-800">Log Details</p>
           <div onClick={() => onClose()} className="cursor-pointer">
             <IconStore.close />
@@ -344,7 +344,10 @@ const LogDetailsModal = ({
                           <div className="p-3 text-sm truncate text-gray-600">
                             {item.key}
                           </div>
-                          <div className="p-3 text-sm truncate text-gray-800 font-medium">
+                          <div
+                            className="p-3 text-sm truncate text-gray-800 font-medium"
+                            title={item.value || ""}
+                          >
                             {item.value || "-"}
                           </div>
                         </div>

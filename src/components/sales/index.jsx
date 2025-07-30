@@ -81,10 +81,15 @@ const SalesPage = (props) => {
 
     setPageLoader(false);
   };
+
+  const hideColumnKeys = ["tournament_id", "match_id", "row"];
   // Dynamically create initial visible columns state from allHeaders
   const createInitialVisibleColumns = () => {
     return allHeaders.reduce((acc, header) => {
       acc[header.key] = true; // Set all columns as visible by default
+      if (hideColumnKeys.includes(header.key)) {
+        acc[header.key] = false;
+      }
       return acc;
     }, {});
   };
