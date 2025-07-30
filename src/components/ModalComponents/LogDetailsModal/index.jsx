@@ -9,8 +9,13 @@ const IconStore = {
   chevronUp: () => <ChevronUp className="w-5 h-5" />,
 };
 
-
-const LogDetailsModal = ({ show, onClose, orderLogs = [], inventoryLogs = [] }) => {
+const LogDetailsModal = ({
+  show,
+  onClose,
+  orderLogs = [],
+  inventoryLogs = [],
+  showShimmer = false,
+}) => {
   const [expandedSections, setExpandedSections] = useState([0]);
   const [activeTab, setActiveTab] = useState("order");
 
@@ -26,7 +31,7 @@ const LogDetailsModal = ({ show, onClose, orderLogs = [], inventoryLogs = [] }) 
   const formatOrderLogData = (log) => {
     const bookingData = log.json_payload.booking_data || {};
     const paymentData = log.json_payload.payment_data || {};
-    
+
     return {
       title: `Order Action - Ticket ID: ${log.ticket_id}`,
       date: bookingData.created_at || bookingData.updated_at || "N/A",
@@ -46,8 +51,18 @@ const LogDetailsModal = ({ show, onClose, orderLogs = [], inventoryLogs = [] }) 
         { key: "Booking Status:", value: bookingData.booking_status || "-" },
         { key: "Seller ID:", value: bookingData.seller_id || "-" },
         { key: "User ID:", value: bookingData.user_id || "-" },
-        { key: "Total Amount:", value: `${bookingData.total_amount || 0} ${bookingData.currency_type || ""}` },
-        { key: "Ticket Amount:", value: `${bookingData.ticket_amount || 0} ${bookingData.currency_type || ""}` },
+        {
+          key: "Total Amount:",
+          value: `${bookingData.total_amount || 0} ${
+            bookingData.currency_type || ""
+          }`,
+        },
+        {
+          key: "Ticket Amount:",
+          value: `${bookingData.ticket_amount || 0} ${
+            bookingData.currency_type || ""
+          }`,
+        },
         { key: "Payment Status:", value: paymentData.payment_status || "-" },
         { key: "Transaction ID:", value: paymentData.transcation_id || "-" },
         { key: "Payment Date:", value: paymentData.payment_date || "-" },
@@ -60,7 +75,7 @@ const LogDetailsModal = ({ show, onClose, orderLogs = [], inventoryLogs = [] }) 
   // Function to format inventory log data for display
   const formatInventoryLogData = (log) => {
     const payload = log.json_payload || {};
-    
+
     return {
       title: `Inventory Action - Ticket ID: ${log.ticket_id}`,
       date: new Date().toLocaleString(), // You might want to add timestamp to inventory logs
@@ -78,14 +93,36 @@ const LogDetailsModal = ({ show, onClose, orderLogs = [], inventoryLogs = [] }) 
       ],
       rightColumns: [
         { key: "Match ID:", value: payload.match_id || "-" },
-        { key: "Mobile Link Status:", value: payload.mobile_link_status || "-" },
-        { key: "PKPass Link Status:", value: payload.pkpass_link_status || "-" },
+        {
+          key: "Mobile Link Status:",
+          value: payload.mobile_link_status || "-",
+        },
+        {
+          key: "PKPass Link Status:",
+          value: payload.pkpass_link_status || "-",
+        },
         { key: "File Type:", value: payload.additional_file_type || "-" },
-        { key: "Dynamic Content:", value: payload.additional_dynamic_content || "-" },
-        { key: "QR Android:", value: payload.qr_link_android ? "Available" : "-" },
+        {
+          key: "Dynamic Content:",
+          value: payload.additional_dynamic_content || "-",
+        },
+        {
+          key: "QR Android:",
+          value: payload.qr_link_android ? "Available" : "-",
+        },
         { key: "QR iOS:", value: payload.qr_link_ios ? "Available" : "-" },
-        { key: "Upload Tickets:", value: payload.upload_tickets ? `${payload.upload_tickets.length} files` : "-" },
-        { key: "Ticket Details:", value: payload.ticket_details ? payload.ticket_details.join(", ") : "-" },
+        {
+          key: "Upload Tickets:",
+          value: payload.upload_tickets
+            ? `${payload.upload_tickets.length} files`
+            : "-",
+        },
+        {
+          key: "Ticket Details:",
+          value: payload.ticket_details
+            ? payload.ticket_details.join(", ")
+            : "-",
+        },
         { key: "Ticket Details1:", value: payload.ticket_details1 || "-" },
       ],
     };
@@ -101,6 +138,114 @@ const LogDetailsModal = ({ show, onClose, orderLogs = [], inventoryLogs = [] }) 
   };
 
   const currentLogEntries = getCurrentLogData();
+
+  // Shimmer loading component
+  const ShimmerLoader = () => (
+    <div className="w-2xl bg-white rounded-lg animate-pulse">
+      {/* Header Shimmer */}
+      <div className="flex justify-between items-center p-4 border-b border-gray-200">
+        <div className="h-6 bg-gray-200 rounded w-24"></div>
+        <div className="h-5 w-5 bg-gray-200 rounded"></div>
+      </div>
+
+      {/* Tab Navigation Shimmer */}
+      <div className="flex border-b border-gray-200">
+        <div className="px-6 py-3">
+          <div className="h-4 bg-blue-200 rounded w-24"></div>
+        </div>
+        <div className="px-6 py-3">
+          <div className="h-4 bg-gray-200 rounded w-28"></div>
+        </div>
+      </div>
+
+      {/* Log Content Shimmer */}
+      <div className="max-h-[90vh] overflow-y-auto p-4">
+        {/* Multiple log entry shimmers */}
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div
+            key={index}
+            className="mb-4 border border-blue-200 rounded-lg overflow-hidden"
+          >
+            {/* Log Header Shimmer */}
+            <div className="bg-[#130061] flex justify-between items-center px-4 py-3">
+              <div className="h-4 bg-gray-300 rounded w-48"></div>
+              <div className="flex items-center">
+                <div className="h-4 bg-gray-300 rounded w-32"></div>
+                <div className="pl-4 ml-2 border-l border-gray-400">
+                  <div className="h-5 w-5 bg-gray-300 rounded"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Expanded Content Shimmer - Show for first item */}
+            {index === 0 && (
+              <div className="grid grid-cols-2 p-4 gap-4">
+                {/* Left Column Shimmer */}
+                <div className="col-span-1 border border-blue-100 rounded-md">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div
+                      key={`left-${i}`}
+                      className="grid grid-cols-2 border-b border-blue-100 last:border-b-0"
+                    >
+                      <div className="p-3">
+                        <div className="h-3 bg-gray-200 rounded w-20"></div>
+                      </div>
+                      <div className="p-3">
+                        <div className="h-3 bg-gray-200 rounded w-16"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Right Column Shimmer */}
+                <div className="col-span-1 border border-blue-100 rounded-md">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div
+                      key={`right-${i}`}
+                      className="grid grid-cols-2 border-b border-blue-100 last:border-b-0"
+                    >
+                      <div className="p-3">
+                        <div className="h-3 bg-gray-200 rounded w-24"></div>
+                      </div>
+                      <div className="p-3">
+                        <div className="h-3 bg-gray-200 rounded w-20"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Additional collapsed log entries */}
+        {Array.from({ length: 2 }).map((_, index) => (
+          <div
+            key={`collapsed-${index}`}
+            className="mb-4 border border-blue-200 rounded-lg overflow-hidden"
+          >
+            <div className="bg-[#130061] flex justify-between items-center px-4 py-3">
+              <div className="h-4 bg-gray-300 rounded w-52"></div>
+              <div className="flex items-center">
+                <div className="h-4 bg-gray-300 rounded w-28"></div>
+                <div className="pl-4 ml-2 border-l border-gray-400">
+                  <div className="h-5 w-5 bg-gray-300 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  if (showShimmer) {
+    return (
+      <RightViewModal className={"!w-[670px]"} show={show} onClose={onClose}>
+        <ShimmerLoader />
+      </RightViewModal>
+    );
+  }
 
   return (
     <RightViewModal className={"!w-[670px]"} show={show} onClose={onClose}>
@@ -158,7 +303,9 @@ const LogDetailsModal = ({ show, onClose, orderLogs = [], inventoryLogs = [] }) 
                   className="bg-[#130061] flex justify-between items-center px-4 py-3 cursor-pointer"
                   onClick={() => toggleSection(index)}
                 >
-                  <p className="text-white text-sm font-medium">{entry.title}</p>
+                  <p className="text-white text-sm font-medium">
+                    {entry.title}
+                  </p>
                   <div className="flex items-center">
                     <p className="text-white text-sm">{entry.date}</p>
                     <div className="pl-4 ml-2 border-l border-gray-400 text-white">

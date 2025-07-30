@@ -10,8 +10,9 @@ import {
 import { toast } from "react-toastify";
 import TopPopupModal from "../walletPage/components/topPopupModal";
 import FooterButton from "../footerButton";
+import { useRouter } from "next/router";
 
-const AddDepositSummary = ({ onClose }) => {
+const AddDepositSummary = ({ onClose } = {}) => {
   const [loader, setLoader] = useState(false);
   const [currencyDetails, setCurrencyDetails] = useState([]);
   const [bankAccountDetails, setBankAccountDetails] = useState();
@@ -25,12 +26,9 @@ const AddDepositSummary = ({ onClose }) => {
 
   const handleChange = (e, key, type) => {
     const selectType = type === "select";
-    const fileType = type === "file";
     let value;
     if (selectType) {
       value = e;
-    } else if (fileType) {
-      value = e.target.files ? e.target.files[0] : null; // Fixed to get the file object
     } else {
       value = e.target.value;
     }
@@ -142,6 +140,12 @@ const AddDepositSummary = ({ onClose }) => {
     ],
   ];
 
+  const router = useRouter();
+
+  const handleRefresh = () => {
+    router.reload();
+  };
+
   const handleSubmit = async () => {
     setLoader(true);
     const payload = new FormData();
@@ -157,6 +161,7 @@ const AddDepositSummary = ({ onClose }) => {
       await sendDepositRequest(payload);
       toast.success("Deposit details saved successfully");
       onClose();
+      handleRefresh?.();
     } catch (error) {
       console.error("Error saving deposit details", error);
       toast.error("Error saving deposit details");

@@ -72,12 +72,12 @@ const Tooltip = ({ children, content, position = "right" }) => {
   useEffect(() => {
     const trigger = triggerRef.current;
     if (trigger) {
-      trigger.addEventListener('mouseenter', showTooltip);
-      trigger.addEventListener('mouseleave', hideTooltip);
-      
+      trigger.addEventListener("mouseenter", showTooltip);
+      trigger.addEventListener("mouseleave", hideTooltip);
+
       return () => {
-        trigger.removeEventListener('mouseenter', showTooltip);
-        trigger.removeEventListener('mouseleave', hideTooltip);
+        trigger.removeEventListener("mouseenter", showTooltip);
+        trigger.removeEventListener("mouseleave", hideTooltip);
       };
     }
   }, [showTooltip, hideTooltip]);
@@ -117,9 +117,9 @@ const Tooltip = ({ children, content, position = "right" }) => {
       <div ref={triggerRef} className="w-full">
         {children}
       </div>
-      
+
       {/* Portal-like tooltip rendered at document body level */}
-      {isVisible && content && typeof document !== 'undefined' && (
+      {isVisible && content && typeof document !== "undefined" && (
         <div
           ref={tooltipRef}
           className={`fixed z-[99999] px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap pointer-events-none ${getTransformClass()}`}
@@ -1017,7 +1017,7 @@ const LeftMenuBar = () => {
     },
     {
       image: Bulkticket,
-      name: "TX Trade",
+      name: "SB Trade",
       key: "tx-trade",
       route: "trade/home",
     },
@@ -1064,7 +1064,7 @@ const LeftMenuBar = () => {
 
     if (item?.hasSubItems) {
       setSalesExpanded(!salesExpanded);
-       router.push(`/${item?.route}`);
+      router.push(`/${item?.route}`);
       return;
     }
 

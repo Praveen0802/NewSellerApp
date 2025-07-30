@@ -16,6 +16,7 @@ import {
   fetchDepositHistoryMonthly,
   fetchTransactionHistoryMonthly,
   getDepositDetails,
+  getLMTPayPrefill,
   getTransactionDetails,
 } from "@/utils/apiHandler/request";
 import { useDispatch } from "react-redux";
@@ -26,6 +27,7 @@ import FloatingDateRange from "../commonComponents/dateRangeInput";
 import { getAuthToken } from "@/utils/helperFunctions";
 import SelectListItem from "../tradePage/components/selectListItem";
 import { useRouter } from "next/router";
+import { toast } from "react-toastify";
 
 const ReportsPage = (props) => {
   const { apiData } = props;
@@ -65,8 +67,16 @@ const ReportsPage = (props) => {
   });
   const router = useRouter();
   const [tabSwitchLoader, setTabSwitchLoader] = useState(false);
-  const [payOutPopup, setPayOutPopup] = useState({ flag: false, data: "" });
-  const [eyeViewPopup, setEyeViewPopup] = useState({ flag: false, data: "" });
+  const [payOutPopup, setPayOutPopup] = useState({
+    flag: false,
+    data: "",
+    isLoading: false,
+  });
+  const [eyeViewPopup, setEyeViewPopup] = useState({
+    flag: false,
+    data: "",
+    isLoading: false,
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [transactionType, setTransactionType] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
@@ -99,22 +109,29 @@ const ReportsPage = (props) => {
   };
 
   const handleWalletPlusClick = async (item) => {
-    //     const currency = item?.keys?.currency;
-    // const response = await fetchBankAccountDetails("", "", "GET", "", {
-    //   currency: currency,
-    // });
-    // setPayOutPopup({
-    //   flag: true,
-    //   data: { ...response[0], currency: currency },
-    // });
-    const { bank_account = [], currency } = item ?? {};
-    setPayOutPopup({
-      flag: true,
-      data: { ...bank_account?.[0], currency: currency },
-    });
+    const { currency } = item ?? {};
+    setPayOutPopup((prev) => ({ ...prev, flag: true, isLoading: true }));
+    await getLMTPayPrefill("", "", "GET", "", {
+      currency,
+    })
+      .then((response) => {
+        setPayOutPopup((prev) => ({
+          ...prev,
+          data: { ...response?.bank_account?.[0], currency: currency },
+          isLoading: false,
+        }));
+      })
+      .catch(() => {
+        toast.error("Failed to get payout account details. Please try again.");
+      })
+      .finally(() => {
+        setPayOutPopup((prev) => ({ ...prev, isLoading: false }));
+      });
   };
 
   const handleEyeClick = async (item, transactionType) => {
+    setEyeViewPopup((prev) => ({ ...prev, flag: true, isLoading: true }));
+
     try {
       const payload = { id: item?.id };
       const response =
@@ -125,12 +142,14 @@ const ReportsPage = (props) => {
       setEyeViewPopup({
         flag: true,
         data: { ...response, transactionType: transactionType },
+        isLoading: false,
       });
     } catch (error) {
       console.log("ERROR in handleEyeClick", error);
       setEyeViewPopup({
         flag: true,
         data: { ...item, transactionType: transactionType },
+        isLoading: false,
       });
     }
   };
@@ -388,7 +407,7 @@ const ReportsPage = (props) => {
             </div>
 
             {/* Table Section */}
-            <div className="flex-grow">
+            <div className="flex-grow  mb-[10%]">
               {tabSwitchLoader ? (
                 <div className="flex w-full h-full justify-center items-center">
                   <Spinner />
@@ -417,12 +436,14 @@ const ReportsPage = (props) => {
         }}
         item={payOutPopup?.data}
         countriesList={countriesList}
+        showShimmer={payOutPopup?.isLoading}
       />
       <OrderViewPopup
         show={eyeViewPopup?.flag}
         onClose={() => setEyeViewPopup({ flag: false, data: "" })}
         data={eyeViewPopup?.data}
         outSideClickClose={false}
+        showShimmer={eyeViewPopup?.isLoading}
       />
     </div>
   );

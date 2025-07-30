@@ -16,6 +16,7 @@ import {
   reportsOverview,
 } from "@/utils/apiHandler/request";
 import useTeamMembersDetails from "@/Hooks/useTeamMembersDetails";
+import { toast } from "react-toastify";
 
 // Currency Slider Component
 const CurrencySlider = ({
@@ -306,31 +307,72 @@ const RportHistory = (props) => {
 
   const getOrderDetails = async (item) => {
     // setIsLoading(true);
+    setShowInfoPopup((prev) => {
+      return {
+        ...prev,
+        flag: true,
+        isLoading: true,
+      };
+    });
     const salesData = await fetchReportsOrderDetails("", {
       booking_id: item?.id,
     });
+
     setShowInfoPopup({
       flag: true,
-      data: salesData,
+      data: salesData.map((list) => ({
+        ...list,
+        order_id_label: item?.order_id,
+      })),
       id: item?.id,
+      isLoading: false,
     });
     // setIsLoading(false);
   };
 
+  const loadLogData = async (item) => {
+    try {
+      const results = await Promise.allSettled([
+        fetchReportsOrderLogs("", { booking_id: item?.id }),
+        fetchReportsInventoryLogs("", { ticket_id: item?.id }),
+      ]);
+
+      // Extract results, handling both fulfilled and rejected promises
+      const orderLogs =
+        results[0].status === "fulfilled" ? results[0].value : [];
+      const inventoryLogs =
+        results[1].status === "fulfilled" ? results[1].value : [];
+
+      // Optional: Log any errors
+      results.forEach((result, index) => {
+        if (result.status === "rejected") {
+          const logType = index === 0 ? "Order" : "Inventory";
+          console.error(`${logType} logs failed to load:`, result.reason);
+        }
+      });
+
+      return { orderLogs, inventoryLogs };
+    } catch (error) {
+      console.error("Unexpected error loading log data:", error);
+      toast.error("Unexpected error loading log data");
+      throw error;
+    }
+  };
+
   const getLogDetailsDetails = async (item) => {
-    // setIsLoading(true);
-    const orderLogs = await fetchReportsOrderLogs("", {
-      booking_id: item?.id,
-    });
-    const inventoryLogs = await fetchReportsInventoryLogs("", {
-      ticket_id: item?.id,
-    });
+    setShowLogDetailsModal((prev) => ({
+      ...prev,
+      flag: true,
+      isLoading: true,
+    }));
+    const { orderLogs, inventoryLogs } = await loadLogData(item);
     setShowLogDetailsModal({
       flag: true,
       orderLogs: orderLogs,
       inventoryLogs: inventoryLogs,
+      id: item?.id,
+      isLoading: false,
     });
-    // setIsLoading(false);
   };
 
   // Create right sticky columns with action buttons
@@ -684,6 +726,7 @@ const RportHistory = (props) => {
         }
         orderLogs={showLogDetailsModal?.orderLogs}
         inventoryLogs={showLogDetailsModal?.inventoryLogs}
+        showShimmer={showLogDetailsModal?.isLoading}
       />
       <OrderInfo
         show={showInfoPopup?.flag}
@@ -691,6 +734,7 @@ const RportHistory = (props) => {
         onClose={() => setShowInfoPopup({ flag: false, data: [] })}
         refreshPopupData={refreshPopupData}
         type="report"
+        showShimmer={showInfoPopup?.isLoading}
       />
       {/* StickyDataTable section */}
       <div className="p-4">

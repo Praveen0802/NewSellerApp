@@ -3,7 +3,7 @@ import { IconStore } from "@/utils/helperFunctions/iconStore";
 import React from "react";
 import DisplayValues from "./displayValues";
 
-const OrderValues = ({ orderObject }) => {
+const OrderValues = ({ orderObject, order_id_label = null }) => {
   return (
     <div className="border-[1px] border-[#E0E1EA] rounded-md">
       <p className="px-[16px] py-[12px] text-[16px] font-semibold text-[#343432] border-b-[1px] border-[#E0E1EA]">
@@ -21,7 +21,7 @@ const OrderValues = ({ orderObject }) => {
               orderStatusKey={orderStatusKey}
               orderObject={orderObject}
               deliveryKey={deliveryKey}
-              value={value}
+              value={key === "order_id" ? order_id_label || value : value}
               key={index}
             />
           );

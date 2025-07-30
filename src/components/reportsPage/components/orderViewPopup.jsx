@@ -5,8 +5,14 @@ import React from "react";
 import TransactionPopup from "./transactionPopup";
 import DepositPopup from "./depositPopup";
 
-const OrderViewPopup = ({ show, onClose, outSideClickClose, data }) => {
-  if (!data) return null;
+const OrderViewPopup = ({
+  show,
+  onClose,
+  outSideClickClose,
+  data,
+  showShimmer = false,
+}) => {
+  // if (!data && !showShimmer) return null;
 
   return (
     <RightViewModal
@@ -16,9 +22,13 @@ const OrderViewPopup = ({ show, onClose, outSideClickClose, data }) => {
       className={"w-[500px]"}
     >
       {data?.transactionType == "wallet" ? (
-        <DepositPopup data={data} onClose={onClose} />
+        <DepositPopup data={data} onClose={onClose} showShimmer={showShimmer} />
       ) : (
-        <TransactionPopup data={data} onClose={onClose} />
+        <TransactionPopup
+          data={data}
+          onClose={onClose}
+          showShimmer={showShimmer}
+        />
       )}
     </RightViewModal>
   );

@@ -2091,3 +2091,18 @@ export const FetchPerformerOrVenueListing = async (token, params = {}) => {
     return {};
   }
 };
+
+export const getLMTPayPrefill = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_LMT_PAY_PREFILL,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getLMTPayPrefill", error);
+    throw error;
+  }
+};

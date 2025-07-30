@@ -32,6 +32,8 @@ const NotificationPage = (props) => {
     activityData: [],
     pinnedItems: [],
     viewedItems: [],
+    all_notification_count: 0,
+    all_activity_count: 0,
   });
 
   const [filtersApplied, setFiltersApplied] = useState({
@@ -131,6 +133,9 @@ const NotificationPage = (props) => {
           ? meta.current_page < meta.last_page || meta.next_page_url !== null
           : true,
         isInitialLoad: false,
+        all_notification_count:
+          initialApiData?.data?.all_notification_count || 0,
+        all_activity_count: initialApiData?.data?.all_activity_count || 0,
       }));
 
       // Update refs
@@ -399,17 +404,12 @@ const NotificationPage = (props) => {
       {/* List View Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 mx-4 mt-4 mb-24">
         {/* List Header */}
-        <div className="px-4 py-3 border-b border-gray-200 sticky top-0 bg-white z-10">
+        {/* <div className="px-4 py-3 border-b border-gray-200 sticky top-0 bg-white z-10">
           <h3 className="text-sm font-medium text-gray-900">
             {currentData.length}{" "}
             {state.activeTab === "home" ? "Notifications" : "Activity Logs"}
-            {/* {state.hasMore && (
-              <span className="text-xs text-gray-500 ml-2">
-                (Scroll down for more)
-              </span>
-            )} */}
           </h3>
-        </div>
+        </div> */}
 
         {/* Scrollable Content Container */}
         <div

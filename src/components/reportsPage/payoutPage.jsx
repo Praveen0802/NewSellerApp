@@ -13,13 +13,15 @@ import AddPayOutPopup from "./components/addPayOutPopup";
 import OrderViewPopup from "./components/orderViewPopup";
 import {
   fetchBankAccountDetails,
-  fetchPayoutHistoryMonthly, // You'll need to create this API function
+  fetchPayoutHistoryMonthly,
+  getLMTPayPrefill, // You'll need to create this API function
   getPayoutDetails, // You'll need to create this API function
 } from "@/utils/apiHandler/request";
 import Button from "../commonComponents/button";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import FloatingDateRange from "../commonComponents/dateRangeInput";
 import { getAuthToken } from "@/utils/helperFunctions";
+import { toast } from "react-toastify";
 
 const PayoutPage = (props) => {
   const { apiData } = props;
@@ -41,8 +43,16 @@ const PayoutPage = (props) => {
   const [currentHistoryData, setCurrentHistoryData] = useState(
     payoutHistory?.payout_history || []
   );
-  const [payOutPopup, setPayOutPopup] = useState({ flag: false, data: "" });
-  const [eyeViewPopup, setEyeViewPopup] = useState({ flag: false, data: "" });
+  const [payOutPopup, setPayOutPopup] = useState({
+    flag: false,
+    data: "",
+    isLoading: false,
+  });
+  const [eyeViewPopup, setEyeViewPopup] = useState({
+    flag: false,
+    data: "",
+    isLoading: false,
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [paymentReference, setPaymentReference] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -79,31 +89,51 @@ const PayoutPage = (props) => {
     };
   });
 
+  // const handleRequestPayout = async (item) => {
+  //   const currency = item?.keys?.currency;
+  //   setPayOutPopup((prev) => ({ ...prev, flag: true, isLoading: true }));
+  //   const response = await fetchBankAccountDetails("", "", "GET", "", {
+  //     currency: currency,
+  //   })
+  //     .then((response) => {
+  //       setPayOutPopup({
+  //         flag: true,
+  //         data: { ...response[0], currency: currency },
+  //       });
+  //     })
+  //     .catch(() => {
+  //       toast.error("Failed to get payout account details. Please try again.");
+  //     })
+  //     .finally(() => {
+  //       setPayOutPopup((prev) => ({ ...prev, isLoading: false }));
+  //     });
+  // };
+
   const handleRequestPayout = async (item) => {
     const currency = item?.keys?.currency;
-
-    const response = await fetchBankAccountDetails("", "", "GET", "", {
-      currency: currency,
-    });
-    console.log("response", item, payout_overview);
-
-    setPayOutPopup({
-      flag: true,
-      data: { ...response[0], currency: currency },
-    });
+    setPayOutPopup((prev) => ({ ...prev, flag: true, isLoading: true }));
+    await getLMTPayPrefill("", "", "GET", "", {
+      currency,
+    })
+      .then((response) => {
+        setPayOutPopup((prev) => ({
+          ...prev,
+          data: { ...response?.bank_account?.[0], currency: currency },
+          isLoading: false,
+        }));
+      })
+      .catch(() => {
+        toast.error("Failed to get payout account details. Please try again.");
+      })
+      .finally(() => {
+        setPayOutPopup((prev) => ({ ...prev, isLoading: false }));
+      });
   };
 
   const handleEyeClick = async (item) => {
     try {
       const payload = { id: item?.id };
-      // Uncomment when API is ready
-      // const response = await getPayoutDetails(getAuthToken(), payload);
-      // setEyeViewPopup({
-      //   flag: true,
-      //   data: { ...response, transactionType: selectedTab },
-      // });
 
-      // For now, using the item data directly
       setEyeViewPopup({
         flag: true,
         data: { ...item, transactionType: selectedTab },
@@ -409,7 +439,7 @@ const PayoutPage = (props) => {
             </div>
 
             {/* Table Section */}
-            <div className="flex-grow">
+            <div className="flex-grow mb-[8%]">
               <CollapsablePaymentTable
                 sections={getTransformedData()}
                 selectedTab={selectedTab}
@@ -430,12 +460,14 @@ const PayoutPage = (props) => {
         }}
         item={payOutPopup?.data}
         countriesList={countriesList}
+        showShimmer={payOutPopup?.isLoading}
       />
       <OrderViewPopup
         show={eyeViewPopup?.flag}
         onClose={() => setEyeViewPopup({ flag: false, data: "" })}
         data={eyeViewPopup?.data}
         outSideClickClose={false}
+        showShimmer={eyeViewPopup?.isLoading}
       />
     </div>
   );
