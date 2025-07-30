@@ -1,8 +1,9 @@
+import useS3Download from "@/Hooks/useS3Download";
 import { formatDateTime } from "@/utils/helperFunctions";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import React from "react";
 
-const DepositPopup = ({ onClose, data }) => {
+const DepositPopup = ({ onClose, data, showShimmer = false }) => {
   const formatDescription = (desc) => {
     if (!desc) return "";
 
@@ -64,13 +65,134 @@ const DepositPopup = ({ onClose, data }) => {
     }
   };
 
+  const { downloadFile, isDownloading } = useS3Download();
   // Download proof function
-  const handleDownloadProof = () => {
-    const createdAnchor = document.createElement("a");
-    createdAnchor.href = data?.proof;
-    createdAnchor.download = "Download";
-    createdAnchor.click();
+  const handleDownloadProof = async () => {
+    if (data?.proof) {
+      await downloadFile(
+        data.proof,
+        `${data?.reference_no}_${data?.amount}_${data?.currency}_deposit-proof`
+      );
+    }
   };
+
+  // Shimmer loading component
+  const ShimmerLoader = () => (
+    <div className="flex flex-col h-full animate-pulse">
+      {/* Header Shimmer */}
+      <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+        <div>
+          <div className="h-6 bg-gray-200 rounded w-40 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-32"></div>
+        </div>
+        <div className="h-9 w-9 bg-gray-200 rounded-full"></div>
+      </div>
+
+      {/* Content Shimmer */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Amount Card Shimmer */}
+        <div className="mx-6 my-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-3">
+          <div className="flex justify-between mb-2">
+            <div className="h-4 bg-gray-200 rounded w-16"></div>
+            <div className="h-6 bg-gray-200 rounded w-20"></div>
+          </div>
+          <div className="flex items-baseline">
+            <div className="h-8 bg-gray-200 rounded w-32"></div>
+            <div className="h-4 bg-gray-200 rounded w-12 ml-2"></div>
+          </div>
+          <div className="h-3 bg-gray-200 rounded w-36 mt-2"></div>
+        </div>
+
+        {/* Transaction Details Shimmer */}
+        <div className="mx-6 mb-4 bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-200">
+            <div className="h-5 bg-gray-200 rounded w-36"></div>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {/* Reference Number */}
+            <div className="flex justify-between items-center px-4 py-3">
+              <div className="h-4 bg-gray-200 rounded w-28"></div>
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+            </div>
+            {/* Amount */}
+            <div className="flex justify-between items-center px-4 py-3">
+              <div className="h-4 bg-gray-200 rounded w-16"></div>
+              <div className="h-4 bg-gray-200 rounded w-20"></div>
+            </div>
+            {/* Transaction Type */}
+            <div className="flex justify-between items-center px-4 py-3">
+              <div className="h-4 bg-gray-200 rounded w-28"></div>
+              <div className="h-4 bg-gray-200 rounded w-16"></div>
+            </div>
+            {/* Status */}
+            <div className="flex justify-between items-center px-4 py-3">
+              <div className="h-4 bg-gray-200 rounded w-12"></div>
+              <div className="h-6 bg-gray-200 rounded w-18"></div>
+            </div>
+            {/* Payment Method */}
+            <div className="flex justify-between items-center px-4 py-3">
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+              <div className="h-4 bg-gray-200 rounded w-20"></div>
+            </div>
+            {/* Created Date */}
+            <div className="flex justify-between items-center px-4 py-3">
+              <div className="h-4 bg-gray-200 rounded w-20"></div>
+              <div className="h-4 bg-gray-200 rounded w-32"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Proof Document Shimmer */}
+        <div className="mx-6 mb-4 bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-200">
+            <div className="h-5 bg-gray-200 rounded w-24"></div>
+          </div>
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-center w-full py-2 px-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="h-4 w-4 bg-gray-200 rounded mr-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-40"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Information Shimmer */}
+        <div className="mx-6 mb-4 bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-200">
+            <div className="h-5 bg-gray-200 rounded w-36"></div>
+          </div>
+          {/* Notes Section */}
+          <div className="px-4 py-3 border-b border-gray-100">
+            <div className="h-4 bg-gray-200 rounded w-12 mb-2"></div>
+            <div className="bg-gray-50 p-3 rounded border border-gray-100">
+              <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+            </div>
+          </div>
+          {/* Description Section */}
+          <div className="px-4 py-3 border-b border-gray-100">
+            <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+            <div className="bg-gray-50 p-3 rounded border border-gray-100">
+              <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-4/5 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            </div>
+          </div>
+          {/* Reason Section */}
+          <div className="px-4 py-3">
+            <div className="h-4 bg-gray-200 rounded w-16 mb-2"></div>
+            <div className="bg-gray-50 p-3 rounded border border-gray-100">
+              <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (showShimmer) {
+    return <ShimmerLoader />;
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -80,7 +202,9 @@ const DepositPopup = ({ onClose, data }) => {
           <h2 className="text-xl font-semibold text-gray-800">
             Transaction Details
           </h2>
-          <p className="text-sm text-gray-500 mt-1">Ref: {data?.reference_no}</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Ref: {data?.reference_no}
+          </p>
         </div>
         <button
           onClick={onClose}
@@ -111,7 +235,9 @@ const DepositPopup = ({ onClose, data }) => {
               {data?.price_with_currency || data?.amount}
             </h1>
             {data?.currency && !data?.price_with_currency && (
-              <span className="text-sm text-gray-600 ml-2">{data?.currency}</span>
+              <span className="text-sm text-gray-600 ml-2">
+                {data?.currency}
+              </span>
             )}
           </div>
           <p className="text-xs text-gray-500 mt-2">
@@ -136,7 +262,8 @@ const DepositPopup = ({ onClose, data }) => {
             <div className="flex justify-between items-center px-4 py-3">
               <span className="text-sm text-gray-600">Amount</span>
               <span className="text-sm font-medium text-gray-800">
-                {data?.price_with_currency || `${data?.amount} ${data?.currency}`}
+                {data?.price_with_currency ||
+                  `${data?.amount} ${data?.currency}`}
               </span>
             </div>
             <div className="flex justify-between items-center px-4 py-3">
@@ -183,7 +310,7 @@ const DepositPopup = ({ onClose, data }) => {
               >
                 <IconStore.download className="size-4 mr-2" />
                 <span className="text-sm font-medium">
-                  Download Proof Document
+                  {isDownloading ? "Downloading..." : "Download Proof Document"}
                 </span>
               </button>
             </div>

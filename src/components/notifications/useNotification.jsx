@@ -148,18 +148,18 @@ const useNotification = ({
     return { total, unread };
   }, [state.notifyData]);
 
-  const getActivityCounts = useMemo(() => {
-    const total = state.notifyData?.data?.activity_count || 0;
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
+  // const getActivityCounts = useMemo(() => {
+  //   const total = state.notifyData?.data?.activity_count || 0;
+  //   const weekAgo = new Date();
+  //   weekAgo.setDate(weekAgo.getDate() - 7);
 
-    const recent = state.activityData.filter((item) => {
-      const itemDate = new Date(item.rawTimestamp * 1000);
-      return itemDate > weekAgo;
-    }).length;
+  //   const recent = state.activityData.filter((item) => {
+  //     const itemDate = new Date(item.rawTimestamp * 1000);
+  //     return itemDate > weekAgo;
+  //   }).length;
 
-    return { total, recent };
-  }, [state.notifyData, state.activityData]);
+  //   return { total, recent };
+  // }, [state.notifyData, state.activityData]);
 
   // Memoized configurations
   const tabsConfig = [
@@ -181,27 +181,35 @@ const useNotification = ({
   const listItemsConfig = useMemo(
     () => ({
       home: [
-        { name: "Notifications", value: getNotificationCounts.total },
+        {
+          name: "Notifications",
+          value: state?.all_notification_count ?? 0,
+        },
         {
           name: "New Notifications",
-          value: getNotificationCounts.unread,
+          value: getNotificationCounts.unread ?? 0,
           showCheckbox: true,
-          key: "upcomming",
+          key: "new_notification",
           isChecked: false,
         },
       ],
       activity: [
-        { name: "Activity Logs", value: getActivityCounts.total },
-        // {
-        //   name: "Recent Activity",
-        //   value: getActivityCounts.recent,
-        //   showCheckbox: false,
-        //   key: "expired",
-        //   isChecked: false,
-        // },
+        { name: "Activity Logs", value: state?.all_activity_count || 0 },
+        {
+          name: "New Activity",
+          value: notificationCountData?.activity || 0,
+          showCheckbox: true,
+          key: "new_activity",
+          isChecked: false,
+        },
       ],
     }),
-    [getNotificationCounts, getActivityCounts]
+    [
+      getNotificationCounts,
+      state?.all_notification_count,
+      state?.all_activity_count,
+      notificationCountData,
+    ]
   );
 
   const filterConfig = useMemo(
@@ -570,9 +578,10 @@ const useNotification = ({
     async (checkboxKey, isChecked, allCheckboxValues) => {
       const updatedParams = {
         ...filtersApplied,
-        upcomming: allCheckboxValues?.upcomming ? 1 : 0,
-        expired: allCheckboxValues?.expired ? 1 : 0,
+        // upcomming: allCheckboxValues?.upcomming ? 1 : 0,
+        // expired: allCheckboxValues?.expired ? 1 : 0,
         page: 1,
+        [checkboxKey]: isChecked ? 1 : 0,
       };
 
       setFiltersApplied(updatedParams);

@@ -9,7 +9,13 @@ import { IconStore } from "@/utils/helperFunctions/iconStore";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-const AddPayOutPopup = ({ show, onClose, item = {}, countriesList }) => {
+const AddPayOutPopup = ({
+  show,
+  onClose,
+  item = {},
+  countriesList,
+  showShimmer = false,
+}) => {
   const [formData, setFormData] = useState(() => {
     return {
       beneficiary_name: item.beneficiary_name || "",
@@ -215,7 +221,6 @@ const AddPayOutPopup = ({ show, onClose, item = {}, countriesList }) => {
   const handleSubmit = async () => {
     // Validate form before submission
     if (!validateForm()) {
-      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -237,46 +242,77 @@ const AddPayOutPopup = ({ show, onClose, item = {}, countriesList }) => {
     }
   };
 
+  // Shimmer loading component
+  const ShimmerLoader = () => (
+    <div className="animate-pulse">
+      {/* Header shimmer */}
+      <div className="flex px-4 md:px-[24px] py-3 md:py-[16px] border-b-[1px] border-[#E0E1EA] justify-between items-center">
+        <div className="h-5 bg-gray-200 rounded w-32"></div>
+        <div className="h-5 w-5 bg-gray-200 rounded"></div>
+      </div>
+
+      {/* Form shimmer */}
+      <div className="flex flex-col gap-4 p-4 md:p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Array.from({ length: 10 }).map((_, index) => (
+            <div key={index} className="space-y-2">
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+              <div className="h-10 bg-gray-200 rounded"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Buttons shimmer */}
+        <div className="flex gap-3 md:gap-4 items-center justify-end">
+          <div className="h-10 bg-gray-200 rounded w-20"></div>
+          <div className="h-10 bg-gray-200 rounded w-20"></div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <CustomModal show={show} onClose={onClose} outSideClickClose={false}>
       <div className="bg-white rounded-lg w-full max-md:w-[320px] md:w-[600px] max-w-full">
-        <div className="flex px-4 md:px-[24px] py-3 md:py-[16px] border-b-[1px] border-[#E0E1EA] justify-between items-center">
-          <p className="text-[16px] md:text-[18px] text-[#343432] font-semibold">
-            {editType ? "Update" : "Add"} Accounts
-          </p>
-          <div onClick={onClose} className="cursor-pointer">
-            <IconStore.close className="size-5 stroke-[#323A70]" />
-          </div>
-        </div>
-        <div className="flex flex-col gap-4 p-4 md:p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormFields formFields={formFields} />
-          </div>
-          {Object.keys(errors).length > 0 && (
-            <div className="text-red-500 text-sm">
-              * All fields are required
+        {showShimmer ? (
+          <ShimmerLoader />
+        ) : (
+          <>
+            <div className="flex px-4 md:px-[24px] py-3 md:py-[16px] border-b-[1px] border-[#E0E1EA] justify-between items-center">
+              <p className="text-[16px] md:text-[18px] text-[#343432] font-semibold">
+                {editType ? "Update" : "Add"} Accounts
+              </p>
+              <div onClick={onClose} className="cursor-pointer">
+                <IconStore.close className="size-5 stroke-[#323A70]" />
+              </div>
             </div>
-          )}
-          <div className="flex gap-3 md:gap-4 items-center justify-end">
-            <Button
-              type="secondary"
-              label="Cancel"
-              onClick={onClose}
-              classNames={{
-                root: "px-[10px] justify-center w-[80px] py-[8px]",
-              }}
-            />
-            <Button
-              type="primary"
-              label={editType ? "Update" : "Add"}
-              loading={submitLoader}
-              onClick={handleSubmit}
-              classNames={{
-                root: "w-[80px] justify-center py-[8px] bg-[#0137D5]",
-              }}
-            />
-          </div>
-        </div>
+            <div className="flex flex-col gap-4 p-4 md:p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormFields formFields={formFields} />
+              </div>
+
+              <div className="flex gap-3 md:gap-4 items-center justify-end">
+                <Button
+                  type="secondary"
+                  label="Cancel"
+                  onClick={onClose}
+                  classNames={{
+                    root: "px-[10px] justify-center w-[80px] py-[8px]",
+                  }}
+                />
+                <Button
+                  type="primary"
+                  label={editType ? "Update" : "Add"}
+                  loading={submitLoader}
+                  onClick={handleSubmit}
+                  classNames={{
+                    root: "w-[80px] justify-center py-[8px] bg-[#0137D5]",
+                  }}
+                />
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </CustomModal>
   );

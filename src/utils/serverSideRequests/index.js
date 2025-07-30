@@ -93,7 +93,7 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
     } else if (profile == "ticketDelivery") {
       const partnerDetails = await getPartnerSetting(token);
       return { partnerDetails };
-    } else if (profile === "txPay") {
+    } else if (profile === "sbPay") {
       const txPay = await fetchSettingsTxPay(token);
       return { txPay };
     } else if (profile === "kyc") {

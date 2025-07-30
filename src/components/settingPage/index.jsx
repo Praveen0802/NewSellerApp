@@ -52,8 +52,8 @@ const SettingsPage = (props) => {
 
     {
       icon: <IconStore.password className={IconclassName} />,
-      title: "TX Pay",
-      key: "txPay",
+      title: "SB Pay",
+      key: "sbPay",
     },
     {
       icon: <IconStore.myContacts className={IconclassName} />,
@@ -113,7 +113,7 @@ const SettingsPage = (props) => {
     myTeam: <MyTeamView {...apiData} />,
     linkedCards: <LinkedCards {...apiData} />,
     ticketDelivery: <TicketDelivery {...apiData} />,
-    txPay: <TXPay {...apiData} />,
+    sbPay: <TXPay {...apiData} />,
   };
 
   // Toggle mobile menu

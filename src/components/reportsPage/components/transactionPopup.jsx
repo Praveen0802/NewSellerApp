@@ -2,15 +2,70 @@ import { formatDateTime } from "@/utils/helperFunctions";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import React from "react";
 
-const TransactionPopup = ({ data, onClose }) => {
-
-
+const TransactionPopup = ({ data, onClose, showShimmer = false }) => {
   const renderDetailItem = (label, value) => (
     <div className="flex justify-between items-center py-2 border-b border-gray-100">
       <span className="text-gray-500 text-sm">{label}</span>
       <span className="text-[#343432] font-medium text-sm">{value}</span>
     </div>
   );
+
+  // Shimmer loading component
+  const ShimmerLoader = () => (
+    <div className="m-4 border border-gray-200 rounded-md shadow-sm animate-pulse">
+      {/* Header Shimmer */}
+      <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200 bg-gray-50">
+        <div>
+          <div className="h-5 bg-gray-200 rounded w-36 mb-1"></div>
+          <div className="h-3 bg-gray-200 rounded w-32"></div>
+        </div>
+        <div className="h-7 w-7 bg-gray-200 rounded-full"></div>
+      </div>
+
+      {/* Transaction Type and Amount Section Shimmer */}
+      <div className="p-4 bg-[#f8f9fd]">
+        <div className="flex justify-between items-center mb-1">
+          <div className="h-4 bg-gray-200 rounded w-28"></div>
+          <div className="bg-gray-200 rounded-full h-6 w-16"></div>
+        </div>
+        <div className="h-7 bg-gray-200 rounded w-32 mb-1"></div>
+        <div className="h-3 bg-gray-200 rounded w-36"></div>
+      </div>
+
+      {/* Transaction Information Shimmer */}
+      <div className="p-4">
+        <div className="h-5 bg-gray-200 rounded w-40 mb-3"></div>
+
+        {/* Detail Items Shimmer */}
+        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+          <div className="h-4 bg-gray-200 rounded w-28"></div>
+          <div className="h-4 bg-gray-200 rounded w-24"></div>
+        </div>
+        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+          <div className="h-4 bg-gray-200 rounded w-16"></div>
+          <div className="h-4 bg-gray-200 rounded w-20"></div>
+        </div>
+        <div className="flex justify-between items-center py-2 border-b border-gray-100">
+          <div className="h-4 bg-gray-200 rounded w-16"></div>
+          <div className="h-4 bg-gray-200 rounded w-12"></div>
+        </div>
+
+        {/* Description Section Shimmer */}
+        <div className="mt-4">
+          <div className="h-5 bg-gray-200 rounded w-20 mb-2"></div>
+          <div className="bg-gray-50 p-3 rounded-md border border-gray-100">
+            <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded w-4/5 mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (showShimmer) {
+    return <ShimmerLoader />;
+  }
 
   return (
     <div className="m-4 border border-gray-200 rounded-md shadow-sm">
@@ -58,8 +113,6 @@ const TransactionPopup = ({ data, onClose }) => {
           </p>
         </div>
       </div>
-
- 
 
       {/* Mobile-specific styling */}
       <style jsx>{`

@@ -29,7 +29,13 @@ const ViewComponent = ({ item, onClick, hidePlus = false }) => {
             onClick={() => onClick(item)}
             className="p-[8px] cursor-pointer rounded-md bg-[#F2F5FD]"
           >
-            <Image src={plus} width={18} height={18} alt="plus" />
+            <Image
+              src={plus}
+              width={18}
+              height={18}
+              alt="plus"
+              loading={"eager"}
+            />
           </div>
         )}
       </div>
