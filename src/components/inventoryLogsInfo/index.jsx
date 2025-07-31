@@ -61,35 +61,38 @@ const InventoryLogsInfo = ({ show, onClose, data = [] }) => {
             return (
               <div
                 key={index}
-                className="mb-3 border border-blue-200 rounded-lg overflow-hidden"
+                className="mb-3 border border-[#E0E1EA] rounded-lg overflow-hidden"
               >
                 <div
                   onClick={() => toggleLog(index)}
-                  className="bg-[#4c63d2] flex justify-between items-center px-3 py-2 cursor-pointer hover:bg-[#5a70d8] transition-colors duration-150"
+                  className={`${isExpanded ? "bg-[#130061]" :"bg-[#FFFFFF]"} flex justify-between items-center px-3 cursor-pointer`}
                 >
-                  <div className="flex-1">
+                  <div className="flex-1 py-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-white">
+                      <span className={`text-sm font-medium ${isExpanded ? "text-white":"text-[#323A70]"}`}>
                         Log #{index + 1}
                       </span>
                       <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
                         Ticket ID: {logEntry.ticket_id}
                       </span>
                     </div>
+                    
+                  </div>
+                  <div className="flex items-center gap-1">
                     {hasPayload && (
-                      <div className="mt-1 text-xs text-gray-200">
+                      <div className={`mt-1 text-xs py-3 ${isExpanded ? "text-white":"text-[#323A70]"}`}>
                         {payloadKeys.length} change
                         {payloadKeys.length !== 1 ? "s" : ""} recorded
                       </div>
                     )}
-                  </div>
-                  <div className="flex items-center">
-                    <div className="pl-3 ml-2 border-l border-gray-300 text-white">
+                    <div className={`pl-3 ml-2 h-full border-l-[1px] py-3 ${isExpanded ? "border-l-[#51428E]":" border-l-[#E0E1EA]"}`}>
+                      <div className={`h-6 w-6 flex items-center justify-center rounded-full  ${isExpanded ? "bg-[#362679]":"bg-[#DADBE54D]"}`}>
                       {isExpanded ? (
-                        <ChevronUp className="w-4 h-4" />
+                        <ChevronUp className="w-4 h-4 text-white" />
                       ) : (
-                        <ChevronDown className="w-4 h-4" />
+                        <ChevronDown className="w-4 h-4 text-[#323A70]" />
                       )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -102,21 +105,30 @@ const InventoryLogsInfo = ({ show, onClose, data = [] }) => {
                         <h4 className="text-sm font-medium text-gray-700 mb-2">
                           Changes Made:
                         </h4>
-                        <div className="grid grid-cols-1 gap-2">
+                        <div className={`grid gap-1 ${Object.entries(logEntry.json_payload).length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                           {Object.entries(logEntry.json_payload).map(
                             ([key, value], payloadIndex) => (
                               <div
                                 key={payloadIndex}
-                                className="border border-blue-100 rounded-md"
+                                className="border border-blue-100 "
                               >
-                                <div className="grid grid-cols-2">
+                                <div className="grid grid-cols-2 content-stretch h-full">
                                   <div className="p-2 text-sm text-gray-600 border-r border-blue-100">
                                     {formatKeyName(key)}
                                   </div>
                                   <div className="p-2 text-sm text-gray-800 font-medium">
-                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                                    {key?.includes('link') ? (
+                                      <a
+                                        href={value}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 cursor-pointer"
+                                      >{'Click here'}
+                                      </a>
+                                    ):
+                                    (<span className="inline-flex items-center px-2 py-1 rounded-full text-xs">
                                       {formatValue(value)}
-                                    </span>
+                                    </span>)}
                                   </div>
                                 </div>
                               </div>
