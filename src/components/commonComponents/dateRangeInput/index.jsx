@@ -116,7 +116,7 @@ const FloatingDateRange = ({
     // Format as DD/MM/YY using local parts
     const formattedDay = String(day).padStart(2, "0");
     const formattedMonth = String(month).padStart(2, "0");
-    const formattedYear = String(year).slice(-2);
+    const formattedYear = String(year); // removed the slicing
 
     return `${formattedDay}/${formattedMonth}/${formattedYear}`;
   };

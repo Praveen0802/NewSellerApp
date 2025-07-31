@@ -115,7 +115,7 @@ const FloatingLabelInput = ({
 
   // Determine left padding based on iconBefore
   const getLeftPadding = () => {
-    return iconBefore ? "pl-12" : "px-3"; // Increased from pl-10 to pl-12
+    return (value.length<=3 && iconBefore) ? "pl-12" : "px-3"; // Increased from pl-10 to pl-12
   };
 
   // Determine right padding based on what icons are shown
@@ -125,7 +125,7 @@ const FloatingLabelInput = ({
     return iconBefore ? "pr-3" : ""; // Only right padding when we have left icon
   };
 
-  const baseClasses = `block w-full ${getLeftPadding()} py-[14px] text-[14px] rounded border-[1px] focus:outline-none ${
+  const baseClasses = `block w-full ${getLeftPadding()} py-[14px] font-medium text-[14px] rounded border-[1px] focus:outline-none ${
     error ? "border-red-500" : "border-[#DADBE5]"
   } text-[#231F20] caret-[#022B50] ${
     error
@@ -139,7 +139,7 @@ const FloatingLabelInput = ({
     <div className={`relative w-full ${parentClassName}`}>
       {!hideLabel && (
         <FloatingPlaceholder
-          className={`${labelClassName} ${iconBefore && "!left-12"} `} // Changed from !left-14 to !left-12
+          className={`${labelClassName} ${value.length<=3 && iconBefore && "!left-12"} `} // Changed from !left-14 to !left-12
           isFocused={isFocused}
           hasError={!!error}
         >
@@ -157,7 +157,7 @@ const FloatingLabelInput = ({
 
       <div className="relative">
         {/* Left icon - iconBefore with tooltip */}
-        {iconBefore && (
+        {value.length<=3 &&iconBefore && (
           <div 
             className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer hover:text-blue-600 transition-colors"
             onMouseEnter={() => iconBeforeTooltip && setShowTooltip(true)}
