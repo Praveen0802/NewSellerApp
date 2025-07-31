@@ -2,7 +2,12 @@ import { formatDateTime } from "@/utils/helperFunctions";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import React from "react";
 
-const TransactionPopup = ({ data, onClose, showShimmer = false }) => {
+const TransactionPopup = ({
+  data,
+  onClose,
+  showShimmer = false,
+  isPayout = false,
+}) => {
   const renderDetailItem = (label, value) => (
     <div className="flex justify-between items-center py-2 border-b border-gray-100">
       <span className="text-gray-500 text-sm">{label}</span>
@@ -67,6 +72,8 @@ const TransactionPopup = ({ data, onClose, showShimmer = false }) => {
     return <ShimmerLoader />;
   }
 
+  console.log("data", data);
+
   return (
     <div className="m-4 border border-gray-200 rounded-md shadow-sm">
       <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200 bg-gray-50">
@@ -75,7 +82,7 @@ const TransactionPopup = ({ data, onClose, showShimmer = false }) => {
             Transaction Details
           </p>
           <p className="text-xs text-gray-500">
-            {formatDateTime(data?.created_date_time)}
+            {data?.created_date_time && formatDateTime(data?.created_date_time)}
           </p>
         </div>
         <button
@@ -89,9 +96,11 @@ const TransactionPopup = ({ data, onClose, showShimmer = false }) => {
       <div className="p-4 bg-[#f8f9fd]">
         <div className="flex justify-between items-center mb-1">
           <p className="text-sm text-gray-500">Transaction Type</p>
-          <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
-            {data?.credit_depit}
-          </div>
+          {(data?.credit_depit || data?.status_label) && (
+            <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
+              {data?.credit_depit || data?.status_label}
+            </div>
+          )}
         </div>
         <p className="text-[24px] text-[#343432] font-bold mb-1">
           {data?.price_with_currency}
@@ -106,12 +115,14 @@ const TransactionPopup = ({ data, onClose, showShimmer = false }) => {
         {renderDetailItem("Reference Number", data?.reference_no)}
         {renderDetailItem("Amount", data?.amount)}
         {renderDetailItem("Currency", data?.currency)}
-        <div className="mt-4">
-          <p className="font-medium text-[#343432] mb-2">Description</p>
-          <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-100">
-            {data?.description}
-          </p>
-        </div>
+        {data?.description && (
+          <div className="mt-4">
+            <p className="font-medium text-[#343432] mb-2">Description</p>
+            <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-100">
+              {data?.description}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Mobile-specific styling */}
