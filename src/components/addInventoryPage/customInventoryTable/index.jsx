@@ -399,8 +399,13 @@ const CommonInventoryTable = ({
                 <div className="flex items-center space-x-2 py-4 pr-4">
                   <MapPin size={14} className="text-white" />
                   <span className="text-white max-w-xs truncate">
-                    {matchDetails?.stadium_name}, {matchDetails?.country_name},{" "}
-                    {matchDetails?.city_name}
+                    {matchDetails?.stadium_name}
+                    {matchDetails?.country_name
+                      ? `${matchDetails?.country_name},`
+                      : ""}
+                    {matchDetails?.city_name
+                      ? `${matchDetails?.city_name}`
+                      : ""}
                   </span>
                 </div>
               </div>

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
+import { debounce } from 'lodash';
 
 const MultiSelectEditableCell = ({
   value,
@@ -14,7 +15,12 @@ const MultiSelectEditableCell = ({
   const [editValue, setEditValue] = useState(value);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, showAbove: false });
+  const [dropdownPosition, setDropdownPosition] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+    showAbove: false,
+  });
   const dropdownRef = useRef(null);
 
   // Convert string value to array if needed
@@ -41,14 +47,14 @@ const MultiSelectEditableCell = ({
     const viewportHeight = window.innerHeight;
     const spaceBelow = viewportHeight - rect.bottom;
     const spaceAbove = rect.top;
-    
+
     // Decide whether to show above or below
     const showAbove = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
-    
+
     const position = {
       left: rect.left + window.scrollX,
       width: rect.width,
-      showAbove
+      showAbove,
     };
 
     if (showAbove) {
@@ -66,18 +72,18 @@ const MultiSelectEditableCell = ({
   useEffect(() => {
     if (isDropdownOpen) {
       calculateDropdownPosition();
-      
+
       // Recalculate on scroll or resize
       const handleReposition = () => {
         calculateDropdownPosition();
       };
 
-      window.addEventListener('scroll', handleReposition, true);
-      window.addEventListener('resize', handleReposition);
-      
+      window.addEventListener("scroll", handleReposition, true);
+      window.addEventListener("resize", handleReposition);
+
       return () => {
-        window.removeEventListener('scroll', handleReposition, true);
-        window.removeEventListener('resize', handleReposition);
+        window.removeEventListener("scroll", handleReposition, true);
+        window.removeEventListener("resize", handleReposition);
       };
     }
   }, [isDropdownOpen, calculateDropdownPosition]);
@@ -158,6 +164,13 @@ const MultiSelectEditableCell = ({
     setIsDropdownOpen(false);
   };
 
+  const debouncedOnSave = useCallback(
+    debounce((newValue) => {
+      onSave(newValue);
+    }, 500), // 500ms delay
+    [onSave]
+  );
+
   const handleOptionToggle = (optionValue) => {
     const currentValues = normalizeValue(editValue);
     let newValues;
@@ -169,6 +182,9 @@ const MultiSelectEditableCell = ({
     }
 
     setEditValue(newValues);
+
+    // Call debounced save function
+    debouncedOnSave(newValues);
   };
 
   const handleSelectAll = () => {
@@ -237,7 +253,7 @@ const MultiSelectEditableCell = ({
           <div
             data-multiselect-dropdown
             className={`fixed bg-white border border-[#DADBE5] rounded shadow-lg max-h-48 overflow-y-auto ${
-              dropdownPosition.showAbove ? 'shadow-lg' : 'shadow-lg'
+              dropdownPosition.showAbove ? "shadow-lg" : "shadow-lg"
             }`}
             style={{
               zIndex: 9999,

@@ -9,6 +9,8 @@ import EventsTable from "./eventsTable";
 import { useRouter } from "next/router";
 import { fetchBulkListing } from "@/utils/apiHandler/request";
 import { ChevronDown, Filter, X } from "lucide-react";
+import reloadIcon from "../../../public/reload.svg";
+import Image from "next/image";
 
 // Debounce hook
 const useDebounce = (value, delay) => {
@@ -30,7 +32,7 @@ const useDebounce = (value, delay) => {
 const BulkListings = (props) => {
   const { response, filters={} } = props;
   const [selectedRows, setSelectedRows] = useState([]);
-  const [filtersApplied, setFiltersApplied] = useState({venue: filters?.venue, searchValue: filters?.query});
+  const [filtersApplied, setFiltersApplied] = useState({venue: filters?.venue, searchValue: filters?.query ||""});
   const [eventDate, setEventDate] = useState("");
   const [eventsData, setEventsData] = useState(
     response?.bulkListingData?.value?.events
@@ -44,7 +46,7 @@ const BulkListings = (props) => {
     venue: true,
     eventDate: true,
   });
-
+const [activeFilters, setActiveFilters] = useState({});
   const dispatch = useDispatch();
   const [loader, setLoader] = useState(false);
   const router = useRouter();
@@ -54,10 +56,10 @@ const BulkListings = (props) => {
 
   // Available filters configuration
   const filterOptions = [
-    { key: "search", label: "Search", component: "input" },
-    { key: "tournament", label: "Tournament", component: "select" },
-    { key: "venue", label: "Venue", component: "select" },
-    { key: "eventDate", label: "Event Date", component: "dateRange" },
+    { key: "search", label: "Search", component: "input", name: "Search" },
+    { key: "tournament", label: "Tournament", component: "select", name: "Tournament" },
+    { key: "venue", label: "Venue", component: "select", name: "Venue" },
+    { key: "eventDate", label: "Event Date", component: "dateRange", name: "Event Date" },
   ];
 
   // Effect for debounced search
@@ -68,12 +70,12 @@ const BulkListings = (props) => {
     ) {
       const params = {
         ...filtersApplied,
-        searchValue: debouncedSearchValue,
+        query: debouncedSearchValue,
         page: 1,
       };
       setFiltersApplied((prev) => ({
         ...prev,
-        searchValue: debouncedSearchValue,
+        query: debouncedSearchValue,
       }));
       if (debouncedSearchValue || Object.keys(filtersApplied).length > 0) {
         fetchApiCall(params);
@@ -105,8 +107,8 @@ const BulkListings = (props) => {
       setEventDate(dateRange);
       params = {
         ...filtersApplied,
-        event_date_from: dateRange?.startDate,
-        event_date_to: dateRange?.endDate,
+        start_date: dateRange?.startDate,
+        end_date: dateRange?.endDate,
         page: 1,
       };
       fetchApiCall(params);
@@ -114,9 +116,19 @@ const BulkListings = (props) => {
   };
 
   const fetchApiCall = async (params) => {
+    function filterPresentKeys(obj) {
+    const result = {};
+    for (const [key, value] of Object.entries(obj)) {
+        if (value !== null && value !== undefined && value !== "") {
+            result[key] = value;
+        }
+    }
+    return result;
+}
+  let values = filterPresentKeys(params);
     setLoader(true);
     try {
-      const response = await fetchBulkListing(params);
+      const response = await fetchBulkListing("",values);
       setEventsData(response?.events);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -170,6 +182,113 @@ const BulkListings = (props) => {
   const activeFiltersCount =
     Object.values(visibleFilters).filter(Boolean).length;
 
+
+  const onFilterChange = async (filterKey, value) => {
+  const params = { ...filtersApplied, [filterKey]: value };
+
+  switch (filterKey) {
+    case "search":
+      params.query = "";
+      setSearchValue("");
+      break;
+    case "tournament":
+      params.tournament_id = "";
+      delete params.tournament;
+      break;
+    case "venue":
+      delete params.venue; 
+      break;
+    case "eventDate":
+      delete params.eventDate;
+      setEventDate("");
+      break;
+    default:
+      break;
+  }
+
+  setFiltersApplied(params);
+  setActiveFilters((prev) => ({
+    ...prev,
+    [filterKey]: value,
+  }));
+
+  await fetchApiCall(params);
+};
+
+  const onClearAllFilters = async() =>{
+  const params = { query:filtersApplied?.query };
+
+    setActiveFilters({})
+    setFiltersApplied((prev)=>({
+      ...prev,
+      tournament_id: "",
+      venue: "",
+    }))
+    await fetchApiCall(params);
+  }
+  const ActiveFilterPills = ({
+  activeFilters,
+  filterConfig,
+  onFilterChange,
+  onClearAllFilters,
+  currentTab,
+}) => {
+  const getFilterDisplayValue = (filterKey, value, config) => {
+    if (!value) return null;
+
+    const filterConfig = config?.find((f) => f.key === filterKey);
+    if (!filterConfig) return null;
+
+    if (filterConfig.component === "select" && filterConfig.options) {
+      const option = filterConfig.options.find((opt) => opt.value === value);
+      return option ? option.label : value;
+    }
+
+    return typeof value === "object" ? `${value.startDate} - ${value.endDate}` : value;
+  };
+
+  const getActiveFilterEntries = () => {
+    const entries = [];
+    Object.entries(activeFilters).forEach(([key, value]) => {
+      if (key === "page" || !value || value === "") return; 
+      const displayValue = getFilterDisplayValue(
+        key,
+        value,
+        filterConfig
+      );
+      if (displayValue) {
+        entries.push({ key, value, displayValue });
+      }
+    });
+    return entries;
+  };
+
+  const activeEntries = getActiveFilterEntries();
+  if (activeEntries.length === 0) return null;
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap px-3">
+      {activeEntries.length > 1 && <Image onClick={onClearAllFilters} src={reloadIcon} width={30} height={30} alt="image-logo" />}
+      {activeEntries.map(({ key, value, displayValue }) => (
+        <div
+          key={key}
+          className="inline-flex items-center gap-1 px-3 py-1 border-1 border-gray-300  rounded-sm text-sm"
+        >
+          <span className="font-medium capitalize">
+            {key.replace(/_/g, " ")}:
+          </span>
+          <span>{displayValue}</span>
+          <button
+            onClick={() => onFilterChange(key, "", activeFilters, currentTab)}
+            className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+};
   return (
     <div className="bg-[#F5F7FA] w-full h-full relative">
       <div className="flex bg-white items-center py-2 md:py-2 justify-between px-4 md:px-6 border-b border-[#eaeaf1]">
@@ -274,7 +393,7 @@ const BulkListings = (props) => {
             <div className="w-[20%] min-w-[150px]">
               <FloatingSelect
                 label={"Tournament"}
-                value={filtersApplied?.tournament_id}
+                selectedValue={filtersApplied?.tournament_id}
                 options={response?.tournamentsList?.value?.map((list) => {
                   return {
                     label: list.tournament_name,
@@ -282,6 +401,15 @@ const BulkListings = (props) => {
                   };
                 })}
                 onSelect={(e) => {
+                  let obj = response?.tournamentsList?.value?.find(
+                    (r) => r.tournament_id == e
+                  )
+                  setActiveFilters((prev) => {
+                    return {
+                      ...prev,
+                      tournament: obj?.tournament_name,
+                    };
+                  })
                   handleSelectChange(e, "tournament_id");
                 }}
                 parentClassName="w-full"
@@ -296,8 +424,18 @@ const BulkListings = (props) => {
             <div className="w-[20%] min-w-[150px]">
               <FloatingSelect
                 label={"Venue"}
-                value={filtersApplied?.venue}
+                selectedValue={filtersApplied?.venue}
                 onSelect={(e) => {
+                  setActiveFilters((prev) => {
+                    let obj = response?.venueList?.value?.find(
+                    (r) => r.stadium_id == e
+                  )
+                    return {
+                      ...prev,
+                      venue: obj?.stadium_name,
+                    };
+                  })
+                  
                   handleSelectChange(e, "venue");
                 }}
                 options={response?.venueList?.value?.map((list) => {
@@ -324,8 +462,15 @@ const BulkListings = (props) => {
                 subParentClassName="w-full"
                 className="!py-[8px] !px-[16px] mobile:text-xs"
                 value={eventDate}
-                onChange={(dateValue) =>
+                onChange={(dateValue) =>{
+                  setActiveFilters((prev) => {
+                    return {
+                      ...prev,
+                      eventDate: dateValue,
+                    };
+                  })
                   handleDateChange(dateValue, "eventDate")
+                }
                 }
               />
             </div>
@@ -337,6 +482,13 @@ const BulkListings = (props) => {
         <p className="text-[14px] p-4 text-[#323A70] font-medium border-r-[1px] border-[#DADBE5] w-fit">
           {loader ? "Loading..." : `${eventListViews.length} Events`}
         </p>
+        <ActiveFilterPills
+          activeFilters={activeFilters}
+          filterConfig={filterOptions}
+          onFilterChange={onFilterChange}
+          onClearAllFilters={onClearAllFilters}
+          currentTab="tickets"
+        />
       </div>
 
       <div

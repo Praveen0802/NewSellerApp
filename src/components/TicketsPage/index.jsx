@@ -27,9 +27,11 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  SearchIcon,
 } from "lucide-react";
 import {
   FetchEventSearch,
+  FetchPerformerOrVenueListing,
   getMyListingHistory,
   getViewDetailsPopup,
   updateMyListing,
@@ -41,6 +43,10 @@ import FloatingLabelInput from "../floatinginputFields";
 import { debounce, set } from "lodash";
 import SearchedList from "../tradePage/components/searchedList";
 import { useRouter } from "next/router";
+import reloadIcon from "../../../public/reload.svg";
+import Image from "next/image";
+import SearchedViewComponent from "../addInventoryPage/searchViewComponent";
+
 import {
   constructTicketsPageHeaders,
   getMatchSpecificFilters,
@@ -152,6 +158,7 @@ const ActiveFilterPills = ({
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
+      {activeEntries.length > 1 && <Image onClick={onClearAllFilters} src={reloadIcon} width={30} height={30} alt="image-logo" />}
       {activeEntries.map(({ key, value, displayValue }) => (
         <div
           key={key}
@@ -169,15 +176,6 @@ const ActiveFilterPills = ({
           </button>
         </div>
       ))}
-
-      {activeEntries.length > 1 && (
-        <button
-          onClick={onClearAllFilters}
-          className="px-2 py-1 text-xs text-red-600 hover:text-red-800 underline"
-        >
-          Clear All
-        </button>
-      )}
     </div>
   );
 };
@@ -197,10 +195,11 @@ const Pagination = ({
   currentTab,
 }) => {
   return (
-    <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-gray-200">
+    <div className="flex items-center justify-between px-6 bg-white ">
       {/* Left side - Total items count */}
-      <div className="flex items-center gap-4 text-sm text-gray-700">
-        <span className="font-medium">{totalItems} Events</span>
+      <div className="flex items-center gap-4">
+        <div className="py-3 pr-4 border-r-[1px] border-r-[#E0E1EA] text-sm text-[#323A70] font-medium">{totalItems} Events</div>
+        <div className="flex items-center gap-4">
         <ActiveFilterPills
           activeFilters={activeFilters}
           filterConfig={filterConfig}
@@ -208,10 +207,11 @@ const Pagination = ({
           onClearAllFilters={onClearAllFilters}
           currentTab="tickets"
         />
+        </div>
       </div>
 
       {/* Right side - View selector, page info and navigation */}
-      <div className="flex items-center space-x-6">
+      <div className="flex items-center space-x-6 py-3 border-l-[1px] border-l-[#E0E1EA] pl-4">
         {/* View selector */}
         <div className="flex items-center space-x-2 text-sm text-gray-700">
           <span>View</span>
@@ -1129,24 +1129,24 @@ console.log(ticketsToDelete,'ticketsToDeleteticketsToDelete')
               value: category?.id,
               label: category?.name,
             })) || [],
-          parentClassName: "!w-[15%]",
-          className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+          parentClassName: "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
+          className: "!py-[6px] !px-[12px] mobile:text-xs",
           labelClassName: "!text-[11px]",
         },
-        {
-          type: "select",
-          name: "seat_category",
-          label: "Seat Category",
-          value: filtersApplied?.seat_category,
-          options:
-            response?.filters?.ticket_category?.map((category) => ({
-              value: category?.id,
-              label: category?.name,
-            })) || [],
-          parentClassName: "!w-[15%]",
-          className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
-          labelClassName: "!text-[11px]",
-        },
+        // {
+        //   type: "select",
+        //   name: "seat_category",
+        //   label: "Seat Category",
+        //   value: filtersApplied?.seat_category,
+        //   options:
+        //     response?.filters?.ticket_category?.map((category) => ({
+        //       value: category?.id,
+        //       label: category?.name,
+        //     })) || [],
+        //   parentClassName: "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
+        //   className: "!py-[6px] !px-[12px] max-md:text-xs",
+        //   labelClassName: "!text-[11px]",
+        // },
         {
           type: "select",
           name: "ticket_type",
@@ -1157,36 +1157,36 @@ console.log(ticketsToDelete,'ticketsToDeleteticketsToDelete')
               value: category?.id,
               label: category?.name,
             })) || [],
-          parentClassName: "!w-[15%]",
-          className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
+          parentClassName: "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
+          className: "!py-[6px] !px-[12px] max-md:text-xs",
           labelClassName: "!text-[11px]",
         },
         {
           type: "select",
           name: "tournament",
-          label: "tournament",
+          label: "Tournament",
           value: filtersApplied?.tournament,
           options:
             response?.filters?.tournament?.map((category) => ({
               value: category?.id,
               label: category?.name,
             })) || [],
-          parentClassName: "!w-[15%]",
-          className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
+          parentClassName: "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
+          className: "!py-[6px] !px-[12px] max-md:text-xs",
           labelClassName: "!text-[11px]",
         },
         {
           type: "select",
-          name: "Team Members",
-          label: "team_member",
+          name: "team_member",
+          label: "Team Members",
           value: filtersApplied?.team_member,
           options:
             response?.filters?.user_info?.map((category) => ({
               value: category?.id,
               label: category?.first_name,
             })) || [],
-          parentClassName: "!w-[15%]",
-          className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
+          parentClassName: "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
+          className: "!py-[6px] !px-[12px] max-md:text-xs",
           labelClassName: "!text-[11px]",
         },
       ],
@@ -1289,6 +1289,9 @@ console.log(ticketsToDelete,'ticketsToDeleteticketsToDelete')
   const [searchValue, setSearchValue] = useState("");
   const [searchedEvents, setSearchedEvents] = useState([]);
   const [searchEventLoader, setSearchEventLoader] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [showRequestPopup, setShowRequestPopup] = useState(false);
 
   const fetchApiCall = async (query) => {
     if (!query.trim()) return;
@@ -1308,7 +1311,7 @@ console.log(ticketsToDelete,'ticketsToDeleteticketsToDelete')
 
   const debouncedFetchApiCall = useCallback(
     debounce((query) => {
-      fetchApiCall(query);
+      fetchSearchResults(query);
     }, 300),
     []
   );
@@ -1316,10 +1319,17 @@ console.log(ticketsToDelete,'ticketsToDeleteticketsToDelete')
   const handleOnChangeEvents = (e) => {
     const newValue = e.target.value;
     setSearchValue(newValue);
-    debouncedFetchApiCall(newValue);
+console.log(newValue,'oooooo')
+    if (newValue.trim()) {
+      debouncedFetchApiCall(newValue);
+    } else {
+      // If search is cleared, fetch initial results
+      fetchSearchResults("", true);
+    }
   };
 
   const handleSearchedEventClick = (event) => {
+    setSearchValue(event?.match_name)
     handleFilterChange("match_id", event?.m_id);
     setSearchedEvents([]);
   };
@@ -1350,11 +1360,61 @@ console.log(ticketsToDelete,'ticketsToDeleteticketsToDelete')
       </>
     );
   };
+  const fetchSearchResults = async (query, isInitialLoad = false) => {
+      try {
+        setSearchEventLoader(true);
+        setSearchedEvents([]);
+        setHasSearched(true);
+  
+        // For initial load or empty query, send empty string to get default/popular results
+        const searchQuery = isInitialLoad ? "" : query ? query.trim() : "";
+  
+        console.log("Making API call with searchQuery:", searchQuery); // Debug log
+  
+        let response = await FetchPerformerOrVenueListing("", {
+          query: searchQuery,
+        });
+        delete response?.data?.venues;
+        delete response?.data?.performers;
+        console.log("Search response:", response);
+        setSearchedEvents(response?.data || []);
+        setSearchEventLoader(false);
+        setShowSearchDropdown(true);
+      } catch (error) {
+        setSearchEventLoader(false);
+        console.error("Search error:", error);
+        setSearchedEvents([]);
+        setShowSearchDropdown(true);
+      }
+    };
+
+    const handleSearchFocus = (e) => {
+    if (!searchValue || searchValue.trim() === "") {
+      // First time focus without any search value - call with empty query
+      fetchSearchResults("", true);
+    } else if (
+      searchedEvents?.length == 0 &&
+      searchValue &&
+      searchValue.trim()
+    ) {
+      setShowSearchDropdown(false);
+    } else if (searchValue && searchValue.trim()) {
+      // If there's already a search value, show existing results
+      setShowSearchDropdown(true);
+    }
+  };
+  const handleSearchBlur = () => {
+    // Delay hiding dropdown to allow for clicks
+    setTimeout(() => {
+      setShowSearchDropdown(false);
+    }, 150);
+  };
+  
 
   const filterSearch = () => {
     return (
-      <div className="m-4">
-        <FloatingLabelInput
+      <div className="pb-4">
+        {/* <FloatingLabelInput
           key="searchMatch"
           id="searchMatch"
           name="searchMatch"
@@ -1373,7 +1433,48 @@ console.log(ticketsToDelete,'ticketsToDeleteticketsToDelete')
             setSearchValue("");
           }}
           parentClassName="!w-[40%]"
-        />
+        /> */}
+        <FloatingLabelInput
+              key="searchMatch"
+              id="searchMatch"
+              name="searchMatch"
+              keyValue={"searchMatch"}
+              value={searchValue}
+              checkLength={true}
+              onChange={(e) => handleOnChangeEvents(e)}
+              onFocus={handleSearchFocus}
+              onBlur={handleSearchBlur}
+              type="text"
+              showDropdown={showSearchDropdown}
+              iconBefore={<SearchIcon size={16} />}
+              iconBeforeTooltip="Search" // Pass tooltip text here
+              dropDownComponent={
+                <SearchedViewComponent
+                  searchEventLoader={searchEventLoader}
+                  searchedEvents={searchedEvents}
+                  hasSearched={hasSearched}
+                  searchValue={searchValue}
+                  handleSearchedEventClick={handleSearchedEventClick}
+                  show={showRequestPopup}
+                  setShow={setShowRequestPopup}
+                  // handleBulkNavigateClick={handleBulkNavigateClick}
+                />
+              }
+              label="Choose Match Event"
+              className={`!py-[8px] !text-[#323A70] !text-[14px] ${
+                searchValue.length <= 3 && "!pl-[44px]"
+              }`}
+              paddingClassName=""
+              autoComplete="off"
+              showDelete={true}
+              deleteFunction={async() => {
+                setSearchValue("");
+                await fetchData({...filtersApplied,match_id:''});
+                setShowSearchDropdown(false);
+                setHasSearched(false);
+              }}
+              parentClassName="!w-[550px]"
+            />
       </div>
     );
   };
@@ -1510,7 +1611,7 @@ console.log(ticketsToDelete,'ticketsToDeleteticketsToDelete')
 
         {/* Pagination Component - Positioned below filters */}
         {groupedTicketsData.length > 0 && (
-          <div className="border-t border-gray-200">
+          <div className="border-[1px] border-[#E0E1EA]">
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
