@@ -12,6 +12,8 @@ export const API_ROUTES = {
   GET_TEAM_MEMBERS: `/settings/my-teams`,
   EDIT_USER_ID: `/settings/edit-my-team`,
   SAVE_ADD_LISTING: `/add-listing/save-listing`,
+  UPDATE_TICKETS_PRICE: `/my-listings/update-ticket-price`,
+  MARKETING_INSIGHTS:`/my-listings/market-insights`,
   SAVE_BULK_LISTING: `/bulk-listing/save-bulk-listing`,
   DELETE_TEAM_MEMBERS: `/settings/delete-my-team`,
   ADD_TEAM_MEMBERS: `/settings/add-my-team`,

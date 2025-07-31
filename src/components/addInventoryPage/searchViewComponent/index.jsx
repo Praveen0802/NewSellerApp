@@ -93,7 +93,7 @@ const SearchedViewComponent = ({
           {searchedEvents.performers.map((item, index) => (
             <p
               key={index}
-              onClick={() => handleBulkNavigateClick(`?team_id=${item?.team_id}`)}
+              onClick={() => handleBulkNavigateClick(`?query=${item?.team_name}`)}
               className="border border-[#E0E1EA] px-2 rounded-md py-1 text-[13px] text-[#343432] cursor-pointer transition-all duration-200 hover:border-blue-300 hover:bg-blue-50"
             >
               {item?.team_name}

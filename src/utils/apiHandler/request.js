@@ -904,6 +904,36 @@ export const saveBulkListing = async (token, data) => {
   }
 };
 
+export const updateTicketsPrice = async (token, data, params) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.UPDATE_TICKETS_PRICE}`,
+      method: "POST",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in updateTicketsPrice", error);
+    throw error;
+  }
+};
+
+export const getmarketingInsights = async (token,  params) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.MARKETING_INSIGHTS}`,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in updateTicketsPrice", error);
+    
+  }
+};
+
 export const DeleteUserDetails = async (
   token,
   id,

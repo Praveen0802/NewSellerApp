@@ -60,14 +60,14 @@ import CompactInfoCard from "../CompactInfoCard";
 import SubjectDescriptionPopup from "../settingPage/subjectDescriptionPopup";
 import { MultiSelectEditableCell, SimpleEditableCell } from "./selectCell";
 import CommonInventoryTable from "./customInventoryTable";
-
+import ListingsMarketplace from "../ModalComponents/listSalesModal";
 
 const AddInventoryPage = (props) => {
   const { matchId, response } = props;
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   console.log("response", response);
-  
+
   // Extract the original response structure (KEEP EXACTLY THE SAME)
   const {
     block_data = {},
@@ -85,6 +85,7 @@ const AddInventoryPage = (props) => {
   const dispatch = useDispatch();
   const matchDetails = response?.match_data?.[0];
   const [selectedRows, setSelectedRows] = useState([]);
+  const [showMarketPlaceModal, setShowMarketPlaceModal] = useState(false);
   const [searchEventLoader, setSearchEventLoader] = useState(false);
   const [searchedEvents, setSearchedEvents] = useState([]);
   const [showUploadPopup, setShowUploadPopup] = useState(false);
@@ -630,7 +631,12 @@ const AddInventoryPage = (props) => {
   // Action handlers for sticky columns
   const handleHandAction = (rowData, rowIndex) => {
     console.log("Hand action clicked for row:", rowData, rowIndex);
-    handleCellEdit(rowIndex, "tickets_in_hand", !rowData?.tickets_in_hand, rowData);
+    handleCellEdit(
+      rowIndex,
+      "tickets_in_hand",
+      !rowData?.tickets_in_hand,
+      rowData
+    );
   };
 
   const handleUploadAction = (rowData, rowIndex) => {
@@ -948,7 +954,11 @@ const AddInventoryPage = (props) => {
 
       // Construct FormData for multiple rows
       const formData = constructFormDataAsFields(selectedRowsData);
-      await saveAddListing("", formData);
+      if (selectedRows?.length > 1) {
+        await saveBulkListing("", formData);
+      } else {
+        await saveAddListing("", formData);
+      }
 
       router.push("/my-listings?success=true");
       toast.success(`${selectedRows.length} listing(s) published successfully`);
@@ -1104,7 +1114,7 @@ const AddInventoryPage = (props) => {
   };
 
   const [showRequestPopup, setShowRequestPopup] = useState(false);
-  
+
   return (
     <div className="bg-[#F5F7FA] w-full h-full relative min-h-screen">
       {/* Header with selected match info */}
@@ -1314,6 +1324,15 @@ const AddInventoryPage = (props) => {
           setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
         }}
       />
+      {showMarketPlaceModal && (
+        <ListingsMarketplace
+          show={showMarketPlaceModal}
+          onClose={() =>
+            setShowMarketPlaceModal(false)
+          }
+          matchInfo={matchDetails}
+        />
+      )}
 
       {showTicketInfoPopup && (
         <RightViewModal
