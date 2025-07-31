@@ -83,6 +83,20 @@ export const fetchBulkListing = async (token, params = {}) => {
   }
 };
 
+export const myListingUploadTickets = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.SAVE_BULK_LISTING}`,
+      method: "POST",
+      ...(token && { token: token }),
+      ...(data && { formData: data }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in myListingUploadTickets", error);
+  }
+};
+
 export const fetchVenueList = async (token, params = {}) => {
   try {
     const response = await makeRequest({
@@ -919,7 +933,7 @@ export const updateTicketsPrice = async (token, data, params) => {
   }
 };
 
-export const getmarketingInsights = async (token,  params) => {
+export const getmarketingInsights = async (token, params) => {
   try {
     const response = await makeRequest({
       url: `${API_ROUTES.MARKETING_INSIGHTS}`,
@@ -930,7 +944,6 @@ export const getmarketingInsights = async (token,  params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in updateTicketsPrice", error);
-    
   }
 };
 

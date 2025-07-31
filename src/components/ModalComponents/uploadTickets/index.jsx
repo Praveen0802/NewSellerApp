@@ -15,6 +15,7 @@ import Image from "next/image";
 import Button from "@/components/commonComponents/button";
 import RightViewContainer from "@/components/dashboardPage/reportViewContainer/rightViewContainer";
 import RightViewModal from "@/components/commonComponents/rightViewModal";
+import { myListingUploadTickets } from "@/utils/apiHandler/request";
 
 const UploadTickets = ({
   show,
@@ -24,17 +25,19 @@ const UploadTickets = ({
   matchDetails,
   rowIndex,
   handleConfirmClick,
+  myListingPage = false,
 }) => {
   const ticketTypes = !isNaN(parseInt(rowData?.ticket_type))
     ? rowData?.ticket_type
-    : rowData?.ticket_types || rowData?.rawTicketData?.ticket_type_id;
+    : rowData?.ticket_types || rowData?.ticket_type_id;
   const ETicketsFlow = [2, 4]?.includes(parseInt(ticketTypes));
   const paperTicketFlow = parseInt(ticketTypes) === 3;
   const normalFlow = !ETicketsFlow && !paperTicketFlow;
-
   // Get the quantity limit from rowData
   const maxQuantity =
     parseInt(rowData?.add_qty_addlist || rowData?.quantity) || 0;
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const [showAssigned, setShowAssigned] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]); // Files in left panel
@@ -878,6 +881,118 @@ const UploadTickets = ({
     if (paperTicketFlow) return ` (${maxQuantity} tickets)`;
     return ` (Max: ${maxQuantity})`;
   };
+  const handleTicketsPageApiCall = async (updatedObject) => {
+    setIsLoading(true);
+    const constructTicketFormData = (updatedObject) => {
+      const formData = new FormData();
+      const index = 0; // Since we're dealing with a single row
+      formData.append(`data[0][ticket_id]`, rowData?.rawTicketData?.s_no);
+      formData.append(
+        `data[0][ticket_types]`,
+        rowData?.rawTicketData?.ticket_type_id
+      );
+      formData.append(`data[0][match_id]`, rowData?.rawMatchData?.m_id);
+      // Common additional info fields for all flows
+      if (updatedObject.additional_info) {
+        formData.append(
+          `data[${index}][additional_file_type]`,
+          updatedObject.additional_info.template || ""
+        );
+        formData.append(
+          `data[${index}][additional_dynamic_content]`,
+          updatedObject.additional_info.dynamicContent || ""
+        );
+      }
+
+      // Handle Normal Flow - upload_tickets
+      if (
+        updatedObject.upload_tickets &&
+        updatedObject.upload_tickets.length > 0
+      ) {
+        updatedObject.upload_tickets.forEach((ticket, ticketIndex) => {
+          if (ticket.file && ticket.file instanceof File) {
+            formData.append(
+              `data[${index}][upload_tickets][${ticketIndex}]`,
+              ticket.file,
+              ticket.name
+            );
+          }
+        });
+      }
+
+      // Handle E-Ticket Flow - qr_links
+      if (updatedObject.qr_links && updatedObject.qr_links.length > 0) {
+        const androidLinks = [];
+        const iosLinks = [];
+
+        updatedObject.qr_links.forEach((link) => {
+          if (link.qr_link_android) {
+            androidLinks.push(link.qr_link_android);
+          }
+          if (link.qr_link_ios) {
+            iosLinks.push(link.qr_link_ios);
+          }
+        });
+
+        if (androidLinks.length > 0) {
+          formData.append(
+            `data[${index}][qr_link_android]`,
+            androidLinks.join(",")
+          );
+        }
+        if (iosLinks.length > 0) {
+          formData.append(`data[${index}][qr_link_ios]`, iosLinks.join(","));
+        }
+      }
+
+      // Handle Paper Ticket Flow - courier details and upload_tickets
+      if (updatedObject.courier_type) {
+        formData.append(
+          `data[${index}][courier_type]`,
+          updatedObject.courier_type
+        );
+      }
+      if (updatedObject.courier_name) {
+        formData.append(
+          `data[${index}][courier_name]`,
+          updatedObject.courier_name
+        );
+      }
+      if (updatedObject.courier_tracking_details) {
+        formData.append(
+          `data[${index}][courier_tracking_details]`,
+          updatedObject.courier_tracking_details
+        );
+      }
+
+      // Add row ID if available
+      if (rowData?.id) {
+        formData.append(`data[${index}][id]`, rowData.id);
+      }
+
+      return formData;
+    };
+
+    try {
+      const formData = constructTicketFormData(updatedObject);
+
+      // Call the API with the constructed FormData
+      const response = await myListingUploadTickets("", formData);
+
+      // Handle response
+      if (response.success) {
+        // Handle success - maybe close modal, show success message, etc.
+        onClose();
+      } else {
+        // Handle error
+        console.error("Upload failed:", response.message);
+      }
+    } catch (error) {
+      console.error("API call failed:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleConfirmCtaClick = useCallback(() => {
     if (normalFlow) {
@@ -885,13 +1000,21 @@ const UploadTickets = ({
         upload_tickets: transferredFiles,
         additional_info: additionalInfo,
       };
-      handleConfirmClick(updatedObject, rowIndex, rowData);
+      if (myListingPage) {
+        handleTicketsPageApiCall(updatedObject);
+      } else {
+        handleConfirmClick(updatedObject, rowIndex, rowData);
+      }
     } else if (ETicketsFlow) {
       const updatedObject = {
         qr_links: ticketLinks,
         additional_info: additionalInfo,
       };
-      handleConfirmClick(updatedObject, rowIndex, rowData);
+      if (myListingPage) {
+        handleTicketsPageApiCall(updatedObject);
+      } else {
+        handleConfirmClick(updatedObject, rowIndex, rowData);
+      }
     } else if (paperTicketFlow) {
       const updatedObject = {
         paper_ticket_details: paperTicketDetails,
@@ -901,7 +1024,11 @@ const UploadTickets = ({
         upload_tickets: uploadedFiles,
         additional_info: additionalInfo,
       };
-      handleConfirmClick(updatedObject, rowIndex, rowData);
+      if (myListingPage) {
+        handleTicketsPageApiCall(updatedObject);
+      } else {
+        handleConfirmClick(updatedObject, rowIndex, rowData);
+      }
     }
   }, [
     normalFlow,
@@ -951,13 +1078,14 @@ const UploadTickets = ({
               >
                 Cancel
               </button>
-              <button
+              <Button
                 className="px-4 py-2 bg-green-500 text-white rounded text-sm hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 disabled={isConfirmDisabled}
+                loading={isLoading}
                 onClick={handleConfirmCtaClick}
               >
                 Confirm
-              </button>
+              </Button>
             </div>
           </div>
         </div>

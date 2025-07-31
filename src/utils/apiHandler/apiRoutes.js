@@ -26,6 +26,7 @@ export const API_ROUTES = {
   SALES_INVENTORY_LOG: `/sales/inventory-logs`,
   VENUE_LIST:`/events/venue-list`,
   FETCH_BULK_LISTING: `/my-listings/events-search`,
+  MY_LISTING_UPLOAD_TICKETS:`/my-listings/upload-ticket`,
   GET_BULK_LISTING_FILTERS: `/bulk-listing/get-bulk-listing-event`,
   GET_BLOCKS_BY_CATEGORY: `/my-listings/get-block-details`,
   TOURNAMENTS_LIST: `/events/tournament-list`,

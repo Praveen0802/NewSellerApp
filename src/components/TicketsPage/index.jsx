@@ -1327,6 +1327,7 @@ const TicketsPage = (props) => {
         rowData={showUploadPopup?.rowData}
         matchDetails={showUploadPopup?.matchDetails}
         handleConfirmClick={handleConfirmClick}
+        myListingPage={true}
         rowIndex={showUploadPopup?.rowIndex}
         onClose={() => {
           setShowUploadPopup({ show: false, rowData: null, rowIndex: null });

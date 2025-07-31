@@ -66,7 +66,6 @@ const AddInventoryPage = (props) => {
   const { matchId, response } = props;
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  console.log("response", response);
 
   // Extract the original response structure (KEEP EXACTLY THE SAME)
   const {
@@ -785,6 +784,10 @@ const AddInventoryPage = (props) => {
         publishingData.ticket_block || ""
       );
       formData.append(
+        `data[${index}][ticket_block]`,
+        publishingData.ticket_block || ""
+      );
+      formData.append(
         `data[${index}][add_price_addlist]`,
         publishingData.add_price_addlist || ""
       );
@@ -870,6 +873,38 @@ const AddInventoryPage = (props) => {
           qrLinksTransformed.qr_link_ios
         );
       }
+
+
+      if (publishingData.additional_info) {
+        formData.append(
+          `data[${index}][additional_file_type]`,
+          publishingData.additional_info.template || ""
+        );
+        formData.append(
+          `data[${index}][additional_dynamic_content]`,
+          publishingData.additional_info.dynamicContent || ""
+        );
+      }
+
+      if (publishingData.courier_type) {
+        formData.append(
+          `data[${index}][courier_type]`,
+          publishingData.courier_type
+        );
+      }
+      if (publishingData.courier_name) {
+        formData.append(
+          `data[${index}][courier_name]`,
+          publishingData.courier_name
+        );
+      }
+      if (publishingData.courier_tracking_details) {
+        formData.append(
+          `data[${index}][courier_tracking_details]`,
+          publishingData.courier_tracking_details
+        );
+      }
+
 
       // Handle file uploads
       if (
@@ -1253,8 +1288,8 @@ const AddInventoryPage = (props) => {
 
       {/* Main Content Area with Common Table - Only show when table should be visible */}
       {matchDetails && showTable && inventoryData.length > 0 && (
-        <div className="m-6 bg-white rounded-lg shadow-sm">
-          <div style={{ maxHeight: "calc(100vh - 450px)", overflowY: "auto" }}>
+        <div style={{ maxHeight: "calc(100vh - 450px)", overflowY: "auto" }} className="m-6 pb-[100px] bg-white rounded-lg shadow-sm">
+          <div >
             <CommonInventoryTable
               inventoryData={inventoryData}
               headers={headers}
