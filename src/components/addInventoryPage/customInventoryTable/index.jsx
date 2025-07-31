@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import {
   ChevronDown,
@@ -7,11 +7,13 @@ import {
   Calendar1Icon,
   Clock,
   MapPin,
+  ChartLine,
 } from "lucide-react";
 import oneHand from "../../../../public/onehand.svg";
 import greenHand from "../../../../public/greenhand.svg";
 import uploadListing from "../../../../public/uploadlisting.svg";
 import { MultiSelectEditableCell, SimpleEditableCell } from "../selectCell";
+import { fetchBlockDetails } from "@/utils/apiHandler/request";
 
 const CommonInventoryTable = ({
   inventoryData,
@@ -46,6 +48,7 @@ const CommonInventoryTable = ({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
+  const [showMarketPlaceModal, setShowMarketPlaceModal] = useState(false);
 
   // Refs for sticky table functionality
   const containerRef = useRef(null);
@@ -90,7 +93,8 @@ const CommonInventoryTable = ({
   };
 
   // Use provided getStickyColumnsForRow or default one
-  const getStickyColumns = getStickyColumnsForRow || getDefaultStickyColumnsForRow;
+  const getStickyColumns =
+    getStickyColumnsForRow || getDefaultStickyColumnsForRow;
 
   // Function to check scroll capabilities and update state
   const checkScrollCapabilities = () => {
@@ -232,6 +236,8 @@ const CommonInventoryTable = ({
     isRowHovered,
     isDisabled = false
   ) => {
+    const [dynamicOptions, setDynamicOptions] = useState({});
+
     // Check if this row is editable
     const isRowEditable =
       !isEditMode ||
@@ -276,12 +282,55 @@ const CommonInventoryTable = ({
       return "Enter...";
     };
 
+    const fetchDynamicOptions = useCallback(async () => {
+      if (!header.dynamicOptions) return;
+      switch (header.key) {
+        case "block":
+          const matchId = row.rawTicketData.match_id;
+          const categoryId = row.ticket_category_id;
+          if (
+            !matchId ||
+            !categoryId ||
+            (categoryId === dynamicOptions?.block?.categoryId &&
+              matchId === dynamicOptions?.block?.matchId)
+          ) {
+            return;
+          }
+          const options = await fetchBlockDetails("", {
+            match_id: matchId,
+            category_id: categoryId,
+          }).then((res) =>
+            res && Array.isArray(res)
+              ? res.map((item) => ({ label: item.block_id, value: item.id }))
+              : []
+          );
+          setDynamicOptions((prev) => ({
+            ...prev,
+            [header.key]: { matchId, categoryId, options },
+          }));
+          break;
+        default:
+          break;
+      }
+    }, [row]);
+
+    useEffect(() => {
+      fetchDynamicOptions();
+    }, [row]);
+
+    const fetchOptions = () =>
+      (header.dynamicOptions
+        ? dynamicOptions[header.key]?.options
+        : header.options) || [];
+
     if (header.type === "multiselect") {
       return (
         <MultiSelectEditableCell
           value={row[header.key]}
           options={header.options || []}
-          onSave={(value) => handleCellEdit(rowIndex, header.key, value, row, matchIndex)}
+          onSave={(value) =>
+            handleCellEdit(rowIndex, header.key, value, row, matchIndex)
+          }
           className={header.className || ""}
           isRowHovered={shouldShowAsEditable}
           disabled={!isRowEditable || isDisabled}
@@ -294,8 +343,10 @@ const CommonInventoryTable = ({
       <SimpleEditableCell
         value={row[header.key]}
         type={header.type || "text"}
-        options={header.options || []}
-        onSave={(value) => handleCellEdit(rowIndex, header.key, value, row, matchIndex)}
+        options={fetchOptions()}
+        onSave={(value) =>
+          handleCellEdit(rowIndex, header.key, value, row, matchIndex)
+        }
         className={header.className || ""}
         isRowHovered={shouldShowAsEditable}
         disabled={!isRowEditable || isDisabled}
@@ -311,34 +362,21 @@ const CommonInventoryTable = ({
     >
       {/* Accordion Header - Always show when showAccordion is true */}
       {showAccordion && (
-        <div
-          className="bg-[#343432] cursor-pointer"
-          onClick={onToggleCollapse}
-        >
+        <div className="bg-[#343432] cursor-pointer" onClick={onToggleCollapse}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
               {/* Radio button for single mode, chevron for multiple mode */}
-              <div className="flex w-[50px] justify-center py-4 border-r-[1px] border-[#51428E] items-center">
-                {mode === "single" ? (
+              {mode === "single" ? (
+                <div className="flex w-[50px] justify-center py-4 border-r-[1px] border-[#51428E] items-center">
                   <div className="w-4 h-4 border-2 border-white rounded-full flex items-center justify-center">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                   </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className={`transform transition-transform duration-200 ${
-                        isCollapsed ? "rotate-180" : ""
-                      }`}
-                    >
-                      <ChevronDown size={14} className="text-white" />
-                    </div>
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : null}
 
               {/* Match name with pipe separator */}
-              <div className="flex items-center space-x-4 py-4 pr-4 border-r-[1px] border-[#51428E]">
-                <h3 className="font-medium text-sm text-white">
+              <div className="flex items-center space-x-4 py-4 px-4 border-r-[1px] border-[#51428E] w-[280px]">
+                <h3 className="font-medium text-sm text-white truncate">
                   {matchDetails?.match_name || "Match Details"}
                 </h3>
               </div>
@@ -352,12 +390,12 @@ const CommonInventoryTable = ({
                   </span>
                 </div>
 
-                <div className="flex items-center space-x-2 py-4 pr-4 border-r-[1px] border-[#51428E]">
+                <div className="flex items-center space-x-2 py-4 pr-4 border-r-[1px] border-[#51428E] w-[90px]">
                   <Clock size={14} className="text-white" />
                   <span className="text-white">{matchDetails?.match_time}</span>
                 </div>
 
-                <div className="flex items-center space-x-2 py-4 pr-4 border-r-[1px] border-[#51428E]">
+                <div className="flex items-center space-x-2 py-4 pr-4">
                   <MapPin size={14} className="text-white" />
                   <span className="text-white max-w-xs truncate">
                     {matchDetails?.stadium_name}, {matchDetails?.country_name},{" "}
@@ -368,17 +406,24 @@ const CommonInventoryTable = ({
             </div>
 
             <div className="flex items-center space-x-4 pr-4">
+              <button
+                onClick={() => setShowMarketPlaceModal(true)}
+                className="flex items-center gap-1 bg-[#FFFFFF26] border border-[#FFFFFF3A] text-[#FFFFFF] text-sm p-2 rounded-md cursor-pointer"
+              >
+                <ChartLine size={16} className="text-[#64EAA5]" />
+                Market Data
+              </button>
+
               {/* Show ticket count for multiple mode */}
               {mode === "multiple" && totalTicketsCount && (
-                <span className="text-gray-300 text-xs">
+                <span className="text-gray-300 text-xs text-right w-[60px]">
                   {totalTicketsCount} ticket{totalTicketsCount !== 1 ? "s" : ""}
                 </span>
               )}
-              
-              {/* Accordion Toggle - Always show when accordion is enabled */}
+
               <div className="bg-[#FFFFFF26] p-2 rounded-full cursor-pointer">
                 <ChevronDown
-                  size={18}
+                  size={14}
                   className={`text-white transition-transform duration-200 ${
                     isCollapsed ? "rotate-180" : ""
                   }`}
@@ -596,47 +641,54 @@ const CommonInventoryTable = ({
                         key={`sticky-header-${index}`}
                         className="py-2 px-2 text-left text-[#7D82A4] text-xs border-r border-[#DADBE5] font-medium whitespace-nowrap text-center"
                         style={{
-                          width: `${stickyColumnsWidth / stickyHeaders.length}px`,
-                          minWidth: `${stickyColumnsWidth / stickyHeaders.length}px`,
-                          maxWidth: `${stickyColumnsWidth / stickyHeaders.length}px`,
+                          width: `${
+                            stickyColumnsWidth / stickyHeaders.length
+                          }px`,
+                          minWidth: `${
+                            stickyColumnsWidth / stickyHeaders.length
+                          }px`,
+                          maxWidth: `${
+                            stickyColumnsWidth / stickyHeaders.length
+                          }px`,
                         }}
                       >
                         <div className="flex items-center justify-center">
                           {/* CONDITIONAL: Only show scroll buttons if not hiding chevron down */}
-                          {!hideChevronDown && index === stickyHeaders.length - 1 && (
-                            <div className="flex items-center justify-center space-x-1">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  scrollLeft();
-                                }}
-                                disabled={!canScrollLeft}
-                                className={`p-1 rounded transition-colors ${
-                                  canScrollLeft
-                                    ? "text-[#7D82A4] hover:bg-gray-200 cursor-pointer"
-                                    : "text-gray-300 cursor-not-allowed"
-                                }`}
-                                title="Scroll Left"
-                              >
-                                <ChevronLeft size={12} />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  scrollRight();
-                                }}
-                                disabled={!canScrollRight}
-                                className={`p-1 rounded transition-colors ${
-                                  canScrollRight
-                                    ? "text-[#7D82A4] hover:bg-gray-200 cursor-pointer"
-                                    : "text-gray-300 cursor-not-allowed"
-                                }`}
-                                title="Scroll Right"
-                              >
-                                <ChevronRight size={12} />
-                              </button>
-                            </div>
-                          )}
+                          {!hideChevronDown &&
+                            index === stickyHeaders.length - 1 && (
+                              <div className="flex items-center justify-center space-x-1">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    scrollLeft();
+                                  }}
+                                  disabled={!canScrollLeft}
+                                  className={`p-1 rounded transition-colors ${
+                                    canScrollLeft
+                                      ? "text-[#7D82A4] hover:bg-gray-200 cursor-pointer"
+                                      : "text-gray-300 cursor-not-allowed"
+                                  }`}
+                                  title="Scroll Left"
+                                >
+                                  <ChevronLeft size={12} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    scrollRight();
+                                  }}
+                                  disabled={!canScrollRight}
+                                  className={`p-1 rounded transition-colors ${
+                                    canScrollRight
+                                      ? "text-[#7D82A4] hover:bg-gray-200 cursor-pointer"
+                                      : "text-gray-300 cursor-not-allowed"
+                                  }`}
+                                  title="Scroll Right"
+                                >
+                                  <ChevronRight size={12} />
+                                </button>
+                              </div>
+                            )}
                         </div>
                       </th>
                     ))}
@@ -668,15 +720,19 @@ const CommonInventoryTable = ({
                               colIndex < stickyColumns.length - 1
                                 ? "border-r border-[#DADBE5]"
                                 : ""
-                            } ${
-                              isRowDisabled ? "pointer-events-none" : ""
-                            } ${isSelected ? "bg-[#EEF1FD]" : ""} ${
-                              column.className || ""
-                            }`}
+                            } ${isRowDisabled ? "pointer-events-none" : ""} ${
+                              isSelected ? "bg-[#EEF1FD]" : ""
+                            } ${column.className || ""}`}
                             style={{
-                              width: `${stickyColumnsWidth / stickyHeaders.length}px`,
-                              minWidth: `${stickyColumnsWidth / stickyHeaders.length}px`,
-                              maxWidth: `${stickyColumnsWidth / stickyHeaders.length}px`,
+                              width: `${
+                                stickyColumnsWidth / stickyHeaders.length
+                              }px`,
+                              minWidth: `${
+                                stickyColumnsWidth / stickyHeaders.length
+                              }px`,
+                              maxWidth: `${
+                                stickyColumnsWidth / stickyHeaders.length
+                              }px`,
                             }}
                             onClick={column.onClick}
                           >
