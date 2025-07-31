@@ -271,7 +271,7 @@ const FloatingSelect = ({
           />
         ) : (
           <span
-            className={`block truncate ${selectedClassName} ${
+            className={`block ${selectedClassName} ${   //removed truncate to show full option content
               !selected || (multiselect && selected.length === 0)
                 ? "text-gray-400"
                 : ""
@@ -381,7 +381,7 @@ const FloatingSelect = ({
                         </div>
                       )}
                       <span
-                        className={`block truncate ${
+                        className={`block  ${ //removed truncate to show full option content
                           isSelectedOption ? "font-medium" : "font-normal"
                         }`}
                       >

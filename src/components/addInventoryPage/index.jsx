@@ -793,7 +793,7 @@ const AddInventoryPage = (props) => {
           label: note.name,
         })) || []),
       ],
-      parentClassName: "!w-[180px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
@@ -812,7 +812,7 @@ const AddInventoryPage = (props) => {
         { value: "4", label: "4" },
         { value: "5", label: "5" },
       ],
-      parentClassName: "!w-[180px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
@@ -830,7 +830,7 @@ const AddInventoryPage = (props) => {
           label: note.name,
         })) || []),
       ],
-      parentClassName: "!w-[180px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
@@ -846,7 +846,7 @@ const AddInventoryPage = (props) => {
         value: key,
         label: value,
       })),
-      parentClassName: "!w-[180px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
@@ -863,7 +863,7 @@ const AddInventoryPage = (props) => {
       value: filtersApplied?.ticket_block,
       options: blockDetails,
       disabled: !filtersApplied?.ticket_category,
-      parentClassName: "!w-[180px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
@@ -878,7 +878,7 @@ const AddInventoryPage = (props) => {
         value: key,
         label: value,
       })),
-      parentClassName: "!w-[180px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
@@ -889,7 +889,7 @@ const AddInventoryPage = (props) => {
       name: "row",
       label: "Row",
       value: filtersApplied?.row,
-      parentClassName: "!w-[180px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[6px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (e) =>
@@ -903,7 +903,7 @@ const AddInventoryPage = (props) => {
       name: "first_seat",
       label: "First Seat",
       value: filtersApplied?.first_seat,
-      parentClassName: "!w-[180px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[6px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (e) =>
@@ -917,7 +917,7 @@ const AddInventoryPage = (props) => {
       name: "face_value",
       label: "Face Value",
       value: filtersApplied?.face_value,
-      parentClassName: "!w-[180px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       iconBefore: (
         <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
           <p className="text-xs ">{matchDetails?.currency_icon?.[0] || "$"}</p>
@@ -936,7 +936,7 @@ const AddInventoryPage = (props) => {
       name: "add_price_addlist",
       label: "Processed Price",
       value: filtersApplied?.add_price_addlist,
-      parentClassName: "!w-[180px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       iconBefore: (
         <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
           <p className="text-xs ">{matchDetails?.currency_icon?.[0] || "$"}</p>
@@ -966,7 +966,7 @@ const AddInventoryPage = (props) => {
           label: note.name,
         })) || []),
       ],
-      parentClassName: "!w-[180px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
@@ -977,7 +977,7 @@ const AddInventoryPage = (props) => {
       name: "notes",
       label: "Listing Notes",
       value: filtersApplied?.notes,
-      parentClassName: "!w-[180px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       multiselect: true,
       options: [
         ...(notes_left?.map((note) => ({
@@ -997,7 +997,7 @@ const AddInventoryPage = (props) => {
     {
       type: "select",
       name: "split_details",
-      label: "Split Details",
+      label: "Seating Arrangement",
       value: filtersApplied?.split_details,
       options: [
         ...(split_details_left?.map((note) => ({
@@ -1009,7 +1009,7 @@ const AddInventoryPage = (props) => {
           label: note.name,
         })) || []),
       ],
-      parentClassName: "!w-[180px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
@@ -1026,7 +1026,7 @@ const AddInventoryPage = (props) => {
       // Convert Date object to YYYY-MM-DD string format
       minDate: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
       maxDate: matchDetails?.ship_date, // Assuming this is already in YYYY-MM-DD format
-      parentClassName: "!w-[180px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       singleDateMode: true,
       className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
@@ -1038,7 +1038,7 @@ const AddInventoryPage = (props) => {
       name: "tickets_in_hand",
       label: "Tickets In Hand",
       value: filtersApplied?.tickets_in_hand || false,
-      parentClassName: "!w-[180px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (e) =>
@@ -1284,6 +1284,8 @@ const AddInventoryPage = (props) => {
     if (!searchValue || searchValue.trim() === "") {
       // First time focus without any search value - call with empty query
       fetchApiCall("", true);
+    } else if(searchedEvents?.length==0 && searchValue && searchValue.trim()){
+      setShowSearchDropdown(false) ;
     } else if (searchValue && searchValue.trim()) {
       // If there's already a search value, show existing results
       setShowSearchDropdown(true);
@@ -2105,8 +2107,8 @@ const AddInventoryPage = (props) => {
                   handleBulkNavigateClick={handleBulkNavigateClick}
                 />
               }
-              label="Search Match"
-              className={"!py-[8px] !pl-[44px] !text-[#323A70] !text-[14px]"}
+              label="Choose Match Event"
+              className={`!py-[8px] !text-[#323A70] !text-[14px] ${searchValue.length<=3 && '!pl-[44px]'}`}
               paddingClassName=""
               autoComplete="off"
               showDelete={true}
@@ -2120,13 +2122,13 @@ const AddInventoryPage = (props) => {
 
             {matchDetails && (
               <div className="flex gap-4 items-center">
-                <div className="flex gap-2 items-center">
+                <div className="flex gap-2 items-center pr-4 border-r-[1px] border-[#DADBE5]">
                   <Calendar1Icon size={16} className="text-[#595c6d]" />
                   <p className="text-[#3a3c42] truncate text-[14px]">
                     {matchDetails?.match_date_format}
                   </p>
                 </div>
-                <div className="flex gap-2 items-center">
+                <div className="flex gap-2 items-center pr-4 border-r-[1px] border-[#DADBE5]">
                   <Clock size={16} className="text-[#595c6d]" />
                   <p className="text-[#3a3c42] truncate text-[14px]">
                     {matchDetails?.match_time}
