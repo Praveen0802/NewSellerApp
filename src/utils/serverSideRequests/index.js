@@ -282,13 +282,14 @@ export const reportHistoryData = async (token) => {
   return { reportsOverviewData, reportHistoryData };
 };
 
-export const fetchBulkListingData = async (token) => {
+export const fetchBulkListingData = async (token, params) => {
   const [bulkListingData, venueList, tournamentsList] =
     await Promise.allSettled([
-      fetchBulkListing(token),
+      fetchBulkListing(token, params),
       fetchVenueList(token),
       fetchTournamentsList(token),
     ]);
+    console.log(bulkListingData,'bulkListingDatabulkListingDatabulkListingData')
   return { bulkListingData, venueList, tournamentsList };
 };
 

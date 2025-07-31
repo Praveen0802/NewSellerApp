@@ -28,14 +28,15 @@ const useDebounce = (value, delay) => {
 };
 
 const BulkListings = (props) => {
-  const { response } = props;
+  const { response, filters={} } = props;
   const [selectedRows, setSelectedRows] = useState([]);
-  const [filtersApplied, setFiltersApplied] = useState({});
+  const [filtersApplied, setFiltersApplied] = useState({venue: filters?.venue, searchValue: filters?.query});
   const [eventDate, setEventDate] = useState("");
   const [eventsData, setEventsData] = useState(
     response?.bulkListingData?.value?.events
   );
-  const [searchValue, setSearchValue] = useState("");
+
+  const [searchValue, setSearchValue] = useState(filters?.query ||"");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [visibleFilters, setVisibleFilters] = useState({
     search: true,
@@ -43,7 +44,7 @@ const BulkListings = (props) => {
     venue: true,
     eventDate: true,
   });
-  
+
   const dispatch = useDispatch();
   const [loader, setLoader] = useState(false);
   const router = useRouter();
@@ -53,21 +54,27 @@ const BulkListings = (props) => {
 
   // Available filters configuration
   const filterOptions = [
-    { key: 'search', label: 'Search', component: 'input' },
-    { key: 'tournament', label: 'Tournament', component: 'select' },
-    { key: 'venue', label: 'Venue', component: 'select' },
-    { key: 'eventDate', label: 'Event Date', component: 'dateRange' },
+    { key: "search", label: "Search", component: "input" },
+    { key: "tournament", label: "Tournament", component: "select" },
+    { key: "venue", label: "Venue", component: "select" },
+    { key: "eventDate", label: "Event Date", component: "dateRange" },
   ];
 
   // Effect for debounced search
   useEffect(() => {
-    if (debouncedSearchValue !== undefined && debouncedSearchValue !== filtersApplied.searchValue) {
+    if (
+      debouncedSearchValue !== undefined &&
+      debouncedSearchValue !== filtersApplied.searchValue
+    ) {
       const params = {
         ...filtersApplied,
         searchValue: debouncedSearchValue,
         page: 1,
       };
-      setFiltersApplied(prev => ({ ...prev, searchValue: debouncedSearchValue }));
+      setFiltersApplied((prev) => ({
+        ...prev,
+        searchValue: debouncedSearchValue,
+      }));
       if (debouncedSearchValue || Object.keys(filtersApplied).length > 0) {
         fetchApiCall(params);
       }
@@ -138,9 +145,9 @@ const BulkListings = (props) => {
   };
 
   const handleFilterToggle = (filterKey) => {
-    setVisibleFilters(prev => ({
+    setVisibleFilters((prev) => ({
       ...prev,
-      [filterKey]: !prev[filterKey]
+      [filterKey]: !prev[filterKey],
     }));
   };
 
@@ -160,7 +167,8 @@ const BulkListings = (props) => {
     );
   }, [eventsData]);
 
-  const activeFiltersCount = Object.values(visibleFilters).filter(Boolean).length;
+  const activeFiltersCount =
+    Object.values(visibleFilters).filter(Boolean).length;
 
   return (
     <div className="bg-[#F5F7FA] w-full h-full relative">
@@ -182,12 +190,14 @@ const BulkListings = (props) => {
                 </div>
               }
             />
-            
+
             {showFilterDropdown && (
               <div className="absolute top-full left-0 mt-1 bg-white border border-[#D1D5DB] rounded-md shadow-lg z-50 min-w-[200px]">
                 <div className="p-3">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-[#323A70]">Show Filters</span>
+                    <span className="text-sm font-medium text-[#323A70]">
+                      Show Filters
+                    </span>
                     <button
                       onClick={() => setShowFilterDropdown(false)}
                       className="text-gray-400 hover:text-gray-600"
@@ -195,19 +205,24 @@ const BulkListings = (props) => {
                       <X size={16} />
                     </button>
                   </div>
-                  
+
                   {filterOptions.map((filter) => (
-                    <label key={filter.key} className="flex items-center gap-2 py-2 cursor-pointer hover:bg-gray-50 px-2 rounded">
+                    <label
+                      key={filter.key}
+                      className="flex items-center gap-2 py-2 cursor-pointer hover:bg-gray-50 px-2 rounded"
+                    >
                       <input
                         type="checkbox"
                         checked={visibleFilters[filter.key]}
                         onChange={() => handleFilterToggle(filter.key)}
                         className="h-4 w-4 text-blue-600"
                       />
-                      <span className="text-sm text-[#323A70]">{filter.label}</span>
+                      <span className="text-sm text-[#323A70]">
+                        {filter.label}
+                      </span>
                     </label>
                   ))}
-                  
+
                   <div className="border-t border-gray-200 mt-3 pt-3">
                     <button
                       onClick={clearAllFilters}
@@ -221,7 +236,7 @@ const BulkListings = (props) => {
             )}
           </div>
         </div>
-        
+
         <Button
           type="blueType"
           classNames={{
@@ -254,7 +269,7 @@ const BulkListings = (props) => {
               />
             </div>
           )}
-          
+
           {visibleFilters.tournament && (
             <div className="w-[20%] min-w-[150px]">
               <FloatingSelect
@@ -276,7 +291,7 @@ const BulkListings = (props) => {
               />
             </div>
           )}
-          
+
           {visibleFilters.venue && (
             <div className="w-[20%] min-w-[150px]">
               <FloatingSelect
@@ -298,7 +313,7 @@ const BulkListings = (props) => {
               />
             </div>
           )}
-          
+
           {visibleFilters.eventDate && (
             <div className="w-[20%] ">
               <FloatingDateRange
@@ -309,7 +324,9 @@ const BulkListings = (props) => {
                 subParentClassName="w-full"
                 className="!py-[8px] !px-[16px] mobile:text-xs"
                 value={eventDate}
-                onChange={(dateValue) => handleDateChange(dateValue, "eventDate")}
+                onChange={(dateValue) =>
+                  handleDateChange(dateValue, "eventDate")
+                }
               />
             </div>
           )}
@@ -344,7 +361,8 @@ const BulkListings = (props) => {
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-4">
               <span className="text-sm text-[#323A70] font-medium">
-                {selectedRows.length} event{selectedRows.length > 1 ? 's' : ''} selected
+                {selectedRows.length} event{selectedRows.length > 1 ? "s" : ""}{" "}
+                selected
               </span>
             </div>
             <div className="flex items-center gap-3">

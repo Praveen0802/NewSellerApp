@@ -46,6 +46,13 @@ import reloadIcon from "../../../public/reload.svg";
 import Image from "next/image";
 import SearchedViewComponent from "../addInventoryPage/searchViewComponent";
 
+import {
+  constructTicketsPageHeaders,
+  getMatchSpecificFilters,
+  createUnifiedFiltersFromMatches,
+  constructHeadersFromFilters,
+} from "../addInventoryPage/customInventoryTable/utils";
+import CommonInventoryTable from "../addInventoryPage/customInventoryTable";
 
 const ShimmerCard = () => (
   <div className="border border-gray-200 rounded-lg mb-4 overflow-hidden animate-pulse">
@@ -104,440 +111,6 @@ const ShimmerLoader = () => (
     ))}
   </div>
 );
-
-// Custom MultiSelect Component for table cells
-const MultiSelectEditableCell = ({
-  value,
-  options = [],
-  onSave,
-  className = "",
-  isRowHovered = false,
-}) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  // Convert string value to array if needed
-  const normalizeValue = (val) => {
-    if (!val) return [];
-    if (Array.isArray(val)) return val;
-    if (typeof val === "string") {
-      // If it's a comma-separated string, split it
-      return val.includes(",") ? val.split(",").map((v) => v.trim()) : [val];
-    }
-    return [val];
-  };
-
-  // Update editValue when value prop changes
-  useEffect(() => {
-    setEditValue(normalizeValue(value));
-  }, [value]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        const dropdown = document.querySelector("[data-multiselect-dropdown]");
-        if (dropdown && dropdown.contains(event.target)) {
-          return;
-        }
-        setIsDropdownOpen(false);
-      }
-    };
-
-    const handleScroll = (event) => {
-      if (isDropdownOpen) {
-        const dropdown = document.querySelector("[data-multiselect-dropdown]");
-        if (dropdown && dropdown.contains(event.target)) {
-          return;
-        }
-
-        let currentElement = event.target;
-        while (currentElement && currentElement !== document) {
-          if (
-            currentElement.hasAttribute &&
-            currentElement.hasAttribute("data-multiselect-dropdown")
-          ) {
-            return;
-          }
-          currentElement = currentElement.parentElement;
-        }
-
-        setIsDropdownOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape" && isDropdownOpen) {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    if (isDropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("scroll", handleScroll, true);
-      document.addEventListener("keydown", handleKeyDown);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("scroll", handleScroll, true);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isDropdownOpen]);
-
-  const handleSave = () => {
-    const normalizedCurrent = normalizeValue(value);
-    const normalizedEdit = normalizeValue(editValue);
-
-    if (JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedEdit)) {
-      onSave(normalizedEdit);
-    }
-    setIsEditing(false);
-    setIsDropdownOpen(false);
-  };
-
-  const handleCancel = () => {
-    setEditValue(normalizeValue(value));
-    setIsEditing(false);
-    setIsDropdownOpen(false);
-  };
-
-  const handleOptionToggle = (optionValue) => {
-    const currentValues = normalizeValue(editValue);
-    let newValues;
-
-    if (currentValues.includes(optionValue)) {
-      newValues = currentValues.filter((val) => val !== optionValue);
-    } else {
-      newValues = [...currentValues, optionValue];
-    }
-
-    setEditValue(newValues);
-  };
-
-  const handleSelectAll = () => {
-    setEditValue(options.map((opt) => opt.value));
-  };
-
-  const handleDeselectAll = () => {
-    setEditValue([]);
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSave();
-    } else if (e.key === "Escape") {
-      handleCancel();
-    }
-  };
-
-  const getDisplayValue = () => {
-    const normalizedValue = normalizeValue(value);
-    if (normalizedValue.length === 0) return "Select options...";
-
-    return `${normalizedValue.length} item${
-      normalizedValue.length !== 1 ? "s" : ""
-    } selected`;
-  };
-
-  const getSelectedCount = () => {
-    const normalizedValue = normalizeValue(editValue);
-    return normalizedValue.length;
-  };
-
-  if (isEditing) {
-    return (
-      <div className="relative w-full" ref={dropdownRef}>
-        <div
-          className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 bg-white w-full cursor-pointer"
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          onKeyDown={handleKeyPress}
-          tabIndex={0}
-        >
-          <div className="flex justify-between items-center">
-            <span className="truncate">
-              {getSelectedCount() > 0
-                ? `${getSelectedCount()} selected`
-                : "Select options..."}
-            </span>
-            <ChevronDown
-              size={12}
-              className={`transform transition-transform ${
-                isDropdownOpen ? "rotate-180" : ""
-              }`}
-            />
-          </div>
-        </div>
-
-        {isDropdownOpen && (
-          <div
-            data-multiselect-dropdown
-            className="fixed bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto"
-            style={{
-              zIndex: 9999,
-              top:
-                dropdownRef.current?.getBoundingClientRect()?.bottom +
-                window.scrollY +
-                4,
-              left:
-                dropdownRef.current?.getBoundingClientRect()?.left +
-                window.scrollX,
-              width: dropdownRef.current?.getBoundingClientRect()?.width,
-              minWidth: "200px",
-            }}
-            onScroll={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            <div className="border-b border-gray-200 p-2">
-              <div className="flex justify-between">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSelectAll();
-                  }}
-                  className="text-xs px-2 py-1 text-blue-600 hover:text-blue-800"
-                >
-                  Select All
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeselectAll();
-                  }}
-                  className="text-xs px-2 py-1 text-red-600 hover:text-red-800"
-                >
-                  Deselect All
-                </button>
-              </div>
-            </div>
-
-            {options.map((option) => {
-              const isSelected = normalizeValue(editValue).includes(
-                option.value
-              );
-              return (
-                <div
-                  key={option.value}
-                  className={`px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center space-x-2 ${
-                    isSelected ? "bg-blue-50" : ""
-                  }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleOptionToggle(option.value);
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => {}}
-                    className="w-3 h-3 text-blue-600"
-                  />
-                  <span className="text-xs">{option.label}</span>
-                </div>
-              );
-            })}
-
-            <div className="border-t border-gray-200 p-2 flex justify-end space-x-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCancel();
-                }}
-                className="text-xs px-2 py-1 text-gray-600 hover:text-gray-800"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSave();
-                }}
-                className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  if (isRowHovered) {
-    return (
-      <div
-        className={`cursor-pointer ${className}`}
-        onClick={() => setIsEditing(true)}
-      >
-        <div className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer">
-          <div className="flex justify-between items-center">
-            <span className="truncate">{getDisplayValue()}</span>
-            <ChevronDown size={12} />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={`cursor-pointer ${className}`}
-      onClick={() => setIsEditing(true)}
-    >
-      <span className="text-xs truncate">{getDisplayValue()}</span>
-    </div>
-  );
-};
-
-// Simple Editable Cell Component (fallback for non-multiselect)
-const SimpleEditableCell = ({
-  value,
-  type = "text",
-  options = [],
-  onSave,
-  className = "",
-  isRowHovered = false,
-}) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    setEditValue(value);
-  }, [value]);
-
-  const handleSave = () => {
-    // Ensure we're saving the actual value, not the label
-    let valueToSave = editValue;
-
-    // For select fields, make sure we're getting the value
-    if (type === "select" && options.length > 0) {
-      // If editValue is already a value from options, use it directly
-      const existingOption = options.find((opt) => opt.value === editValue);
-      if (existingOption) {
-        valueToSave = editValue;
-      } else {
-        // If somehow we have a label, convert it back to value
-        const optionByLabel = options.find((opt) => opt.label === editValue);
-        valueToSave = optionByLabel ? optionByLabel.value : editValue;
-      }
-    }
-
-    if (valueToSave !== value) {
-      onSave(valueToSave); // Always save the value, not the label
-    }
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setEditValue(value);
-    setIsEditing(false);
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSave();
-    } else if (e.key === "Escape") {
-      handleCancel();
-    }
-  };
-
-  const handleBlur = () => {
-    handleSave();
-  };
-
-  const handleSelectChange = (e) => {
-    // Always store the value, not the label
-    setEditValue(e.target.value);
-  };
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      if (inputRef.current.select && type !== "select") {
-        inputRef.current.select();
-      }
-    }
-  }, [isEditing, type]);
-
-  const getDisplayValue = () => {
-    if (type === "select" && options.length > 0) {
-      const option = options.find((opt) => opt.value === value);
-      return option ? option.label : value;
-    }
-    return value || "";
-  };
-
-  if (isEditing) {
-    return (
-      <div className="w-full">
-        {type === "select" ? (
-          <select
-            ref={inputRef}
-            value={editValue || ""} // Ensure we're using the value
-            onChange={handleSelectChange}
-            onKeyDown={handleKeyPress}
-            onBlur={handleBlur}
-            className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 bg-white w-full"
-          >
-            <option value="">Select option...</option>
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <input
-            ref={inputRef}
-            type={type}
-            value={editValue || ""}
-            onChange={(e) => setEditValue(e.target.value)}
-            onKeyDown={handleKeyPress}
-            onBlur={handleBlur}
-            className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 w-full bg-white"
-          />
-        )}
-      </div>
-    );
-  }
-
-  if (isRowHovered) {
-    return (
-      <div
-        className={`cursor-pointer ${className}`}
-        onClick={() => setIsEditing(true)}
-      >
-        {type === "select" ? (
-          <div className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer flex justify-between items-center">
-            <span>{getDisplayValue()}</span>
-            <ChevronDown size={12} />
-          </div>
-        ) : (
-          <input
-            type={type}
-            value={getDisplayValue()}
-            className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer"
-            onClick={() => setIsEditing(true)}
-            readOnly
-          />
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={`cursor-pointer ${className}`}
-      onClick={() => setIsEditing(true)}
-    >
-      <span className="text-xs">{getDisplayValue()}</span>
-    </div>
-  );
-};
 
 const ActiveFilterPills = ({
   activeFilters,
@@ -605,7 +178,7 @@ const ActiveFilterPills = ({
   );
 };
 
-// Pagination Component
+// Pagination Component - keep the same as before
 const Pagination = ({
   currentPage = 1,
   totalPages = 1,
@@ -716,7 +289,7 @@ const TicketsPage = (props) => {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Mock data based on your JSON structure - you would replace this with actual API calls
+  // Mock data based on your JSON structure
   const mockListingHistory = useMemo(
     () => listingHistoryData?.data || [],
     [listingHistoryData]
@@ -742,9 +315,11 @@ const TicketsPage = (props) => {
     rowData: null,
   });
 
-  // State for tickets data - this will hold the editable data
+  // State for tickets data
   const [ticketsData, setTicketsData] = useState([]);
   const [showUploadPopup, setShowUploadPopup] = useState(false);
+  const [collapsedMatches, setCollapsedMatches] = useState({});
+
   // Debounce timer ref
   const debounceTimer = useRef(null);
 
@@ -774,7 +349,9 @@ const TicketsPage = (props) => {
             new Date(matchInfo.match_date).toLocaleDateString() || "N/A",
           match_time: matchInfo.match_time || "N/A",
           ticket_type: ticket.ticket_type || "N/A",
+          ticket_type_id: ticket.ticket_type_id || "",
           ticket_category: ticket.ticket_category || "N/A",
+          ticket_category_id: ticket.ticket_category_id || "",
           quantity: ticket.quantity || 0,
           price: ticket.price || 0,
           price_currency: ticket.price_type || "GBP",
@@ -787,6 +364,13 @@ const TicketsPage = (props) => {
           sell_date: ticket.sell_date || "N/A",
           row: ticket.row || "N/A",
           block: ticket.ticket_block || "N/A",
+          first_seat: ticket.first_seat || "N/A",
+          face_value: ticket.face_value || "N/A",
+          home_town: ticket.home_town || "N/A",
+          split_type: ticket.split?.name || "N/A",
+          split_type_id: ticket.split?.id || "",
+          ship_date: ticket.ship_date || "N/A",
+          tickets_in_hand: ticket.ticket_in_hand || false,
           listing_notes:
             ticket.listing_note?.map((note) => note.name).join(", ") || "N/A",
           rawTicketData: ticket,
@@ -798,48 +382,187 @@ const TicketsPage = (props) => {
     setTicketsData(transformedData);
   }, [mockListingHistory]);
 
-  // Define table headers with editable configuration - matching AddInventory headers
-  const headers = [
-    { key: "match_name", label: "Match Name", editable: false },
-    { key: "venue", label: "Venue", editable: false },
-    { key: "tournament", label: "Tournament", editable: false },
-    { key: "match_date", label: "Match Date", editable: false },
-    {
-      key: "ticket_type",
-      label: "Ticket Type",
-      editable: true,
-      type: "select",
-      options:
-        response?.filters?.ticket_types?.map((category) => ({
-          value: category?.id,
-          label: category?.name,
-        })) || [],
-    },
-    {
-      key: "ticket_category",
-      label: "Category",
-      editable: true,
-      type: "select",
-      options:
-        response?.filters?.ticket_category?.map((category) => ({
-          value: category?.id,
-          label: category?.name,
-        })) || [],
-    },
-    { key: "quantity", label: "Quantity", editable: true, type: "number" },
-    { key: "price", label: "Price", editable: true, type: "number" },
-    {
-      key: "status",
-      label: "Status",
-      editable: false,
-      type: "select",
-    },
-    { key: "sell_date", label: "Listed Date", editable: false },
-    { key: "row", label: "Row", editable: true, type: "text" },
-    { key: "block", label: "Block", editable: true, type: "text" },
-  ];
+  // NEW: Construct headers dynamically from filters
+  const constructHeadersFromListingHistory = useMemo(() => {
+    if (!mockListingHistory || mockListingHistory.length === 0) return [];
 
-  // Group tickets by match for the accordion-style display
+    // Get all unique filters from all matches
+    const allFilters = mockListingHistory
+      .map((match) => match.filter)
+      .filter(Boolean);
+
+    // Create headers based on the structure you want
+    const headers = [
+      { key: "match_name", label: "Match Name", editable: false },
+      { key: "venue", label: "Venue", editable: false },
+      { key: "tournament", label: "Tournament", editable: false },
+      { key: "match_date", label: "Match Date", editable: false },
+      { key: "match_time", label: "Match Time", editable: false },
+      {
+        key: "ticket_type_id",
+        label: "Ticket Type",
+        editable: true,
+        type: "select",
+        options: [],
+      },
+      {
+        key: "quantity",
+        label: "Quantity",
+        editable: true,
+        type: "select",
+        options: [
+          { value: "1", label: "1" },
+          { value: "2", label: "2" },
+          { value: "3", label: "3" },
+          { value: "4", label: "4" },
+          { value: "5", label: "5" },
+        ],
+      },
+      {
+        key: "split_type_id",
+        label: "Split Type",
+        editable: true,
+        type: "select",
+        options: [],
+      },
+      {
+        key: "home_town",
+        label: "Fan Area",
+        editable: true,
+        type: "select",
+        options: [],
+      },
+      {
+        key: "ticket_category_id",
+        label: "Seating Category",
+        editable: true,
+        type: "select",
+        options: [],
+      },
+      {
+        key: "block",
+        label: "Section/Block",
+        editable: true,
+        type: "text",
+      },
+      {
+        key: "row",
+        label: "Row",
+        editable: true,
+        type: "text",
+      },
+      {
+        key: "first_seat",
+        label: "First Seat",
+        editable: true,
+        type: "text",
+      },
+      {
+        key: "face_value",
+        label: "Face Value",
+        editable: true,
+        type: "text",
+      },
+      {
+        key: "price",
+        label: "Price",
+        editable: true,
+        type: "text",
+      },
+      {
+        key: "ship_date",
+        label: "Date to Ship",
+        editable: true,
+        type: "date",
+      },
+      {
+        key: "status",
+        label: "Status",
+        editable: false,
+      },
+      {
+        key: "sell_date",
+        label: "Listed Date",
+        editable: false,
+      },
+    ];
+
+    // Populate options for select fields from filters
+    if (allFilters.length > 0) {
+      // Get all unique options across all matches
+      const allTicketTypes = new Map();
+      const allSplitTypes = new Map();
+      const allHomeTowns = new Map();
+      const allTicketCategories = new Map();
+
+      allFilters.forEach((filter) => {
+        // Ticket Types
+        if (filter.ticket_types) {
+          filter.ticket_types.forEach((type) => {
+            allTicketTypes.set(type.id.toString(), type.name);
+          });
+        }
+
+        // Split Types
+        if (filter.split_types) {
+          filter.split_types.forEach((type) => {
+            allSplitTypes.set(type.id.toString(), type.name);
+          });
+        }
+
+        // Home Towns
+        if (filter.home_town) {
+          Object.entries(filter.home_town).forEach(([key, value]) => {
+            allHomeTowns.set(key, value);
+          });
+        }
+
+        // Block Data (Ticket Categories)
+        if (filter.block_data) {
+          Object.entries(filter.block_data).forEach(([key, value]) => {
+            allTicketCategories.set(key, value);
+          });
+        }
+      });
+
+      // Update headers with options
+      headers.forEach((header) => {
+        if (header.key === "ticket_type_id") {
+          header.options = Array.from(allTicketTypes.entries()).map(
+            ([value, label]) => ({
+              value,
+              label,
+            })
+          );
+        } else if (header.key === "split_type_id") {
+          header.options = Array.from(allSplitTypes.entries()).map(
+            ([value, label]) => ({
+              value,
+              label,
+            })
+          );
+        } else if (header.key === "home_town") {
+          header.options = Array.from(allHomeTowns.entries()).map(
+            ([value, label]) => ({
+              value,
+              label,
+            })
+          );
+        } else if (header.key === "ticket_category_id") {
+          header.options = Array.from(allTicketCategories.entries()).map(
+            ([value, label]) => ({
+              value,
+              label,
+            })
+          );
+        }
+      });
+    }
+
+    return headers;
+  }, [mockListingHistory]);
+
+  // Group tickets by match for the accordion-style display using CommonInventoryTable
   const groupedTicketsData = useMemo(() => {
     const grouped = [];
 
@@ -851,6 +574,7 @@ const TicketsPage = (props) => {
           matchIndex,
           matchInfo: ticket.rawMatchData,
           tickets: [],
+          filters: mockListingHistory[matchIndex]?.filter,
         };
       }
       acc[matchIndex].tickets.push(ticket);
@@ -866,22 +590,25 @@ const TicketsPage = (props) => {
     });
 
     return grouped;
-  }, [ticketsData]);
+  }, [ticketsData, mockListingHistory]);
 
   console.log("groupedTicketsData", groupedTicketsData);
 
-  const handleCellEdit = (matchIndex, ticketId, columnKey, value, ticket) => {
+  // Enhanced handleCellEdit to work with multiple matches and use match-specific filters
+  const handleCellEdit = (rowIndex, columnKey, value, ticket, matchIndex) => {
     console.log("Cell edited:", {
-      matchIndex,
-      ticketId,
+      rowIndex,
       columnKey,
       value,
       valueType: typeof value,
       ticket: ticket?.rawTicketData?.s_no,
+      matchIndex,
     });
 
     // Find the header configuration for this column
-    const headerConfig = headers.find((h) => h.key === columnKey);
+    const headerConfig = constructHeadersFromListingHistory.find(
+      (h) => h.key === columnKey
+    );
 
     // For select fields, ensure we're working with the value, not label
     let processedValue = value;
@@ -906,10 +633,10 @@ const TicketsPage = (props) => {
 
     // Update local state
     setTicketsData((prevData) =>
-      prevData.map((ticket) =>
-        ticket.id === ticketId
-          ? { ...ticket, [columnKey]: processedValue }
-          : ticket
+      prevData.map((ticketItem) =>
+        ticketItem.id === ticket.id
+          ? { ...ticketItem, [columnKey]: processedValue }
+          : ticketItem
       )
     );
 
@@ -959,62 +686,19 @@ const TicketsPage = (props) => {
   const handleHandAction = (rowData, rowIndex) => {
     console.log("Hand action clicked for row:", rowData, rowIndex);
     handleCellEdit(
-      rowData?.matchIndex,
-      rowData?.id,
+      rowIndex,
       "tickets_in_hand",
       !rowData?.tickets_in_hand,
-      rowData
-    );
-    // Implement your hand action logic here (e.g., drag/move functionality)
-  };
-
-  // Custom cell renderer that handles both regular and multiselect types
-  const renderEditableCell = (ticket, header, isRowHovered) => {
-    if (header.type === "multiselect") {
-      return (
-        <MultiSelectEditableCell
-          value={ticket[header.key]}
-          options={header.options || []}
-          onSave={(value) =>
-            handleCellEdit(
-              ticket.matchIndex,
-              ticket.id,
-              header.key,
-              value,
-              ticket
-            )
-          }
-          className={header.className || ""}
-          isRowHovered={isRowHovered}
-        />
-      );
-    }
-
-    return (
-      <SimpleEditableCell
-        value={ticket[header.key]}
-        type={header.type || "text"}
-        options={header.options || []}
-        onSave={(value) =>
-          handleCellEdit(
-            ticket.matchIndex,
-            ticket.id,
-            header.key,
-            value,
-            ticket
-          )
-        }
-        className={header.className || ""}
-        isRowHovered={isRowHovered}
-      />
+      rowData,
+      rowData?.matchIndex
     );
   };
 
-  // Create sticky columns configuration for each row
+  // Custom sticky columns configuration for TicketsPage (HIDE CHEVRON DOWN)
   const getStickyColumnsForRow = (rowData, rowIndex) => {
     return [
       {
-        key: "",
+        key: "hand",
         icon: (
           <Hand
             size={14}
@@ -1047,17 +731,13 @@ const TicketsPage = (props) => {
         tooltipPosition: "top",
         onClick: () => handleViewDetails(rowData),
       },
+      // REMOVED THE CHEVRON DOWN FROM HERE
     ];
   };
-
-  // Sticky column headers
-  const stickyHeaders = ["", "", ""];
-  const stickyColumnsWidth = 150;
 
   // Action handlers for sticky columns
   const handleUploadAction = (rowData, rowIndex) => {
     console.log("Upload action clicked for row:", rowData, rowIndex);
-    // Implement your upload action logic here
     setShowUploadPopup({
       show: true,
       rowData: rowData,
@@ -1075,7 +755,6 @@ const TicketsPage = (props) => {
       show: true,
       rowData: fetchViewDetailsPopup,
     });
-    // Implement view details logic
   };
 
   const handleEditListing = (item) => {
@@ -1089,21 +768,17 @@ const TicketsPage = (props) => {
   };
 
   const createInitialVisibleColumns = useCallback(() => {
-    return headers.reduce((acc, header) => {
+    return constructHeadersFromListingHistory.reduce((acc, header) => {
       acc[header.key] = true;
       return acc;
     }, {});
-  }, [headers]);
+  }, [constructHeadersFromListingHistory]);
 
   const [visibleColumns, setVisibleColumns] = useState(
     createInitialVisibleColumns()
   );
 
   const [columnOrder, setColumnOrder] = useState([]);
-
-  // const filteredHeaders = headers.filter(
-  //   (header) => visibleColumns[header.key]
-  // );
 
   const handleColumnToggle = (columnKey) => {
     setVisibleColumns((prev) => ({
@@ -1116,7 +791,7 @@ const TicketsPage = (props) => {
   const getFilteredHeadersInOrder = useMemo(() => {
     // First, filter headers based on visibility
     const visibleHeadersMap = new Map();
-    headers.forEach((header) => {
+    constructHeadersFromListingHistory.forEach((header) => {
       if (visibleColumns[header.key]) {
         visibleHeadersMap.set(header.key, header);
       }
@@ -1147,8 +822,10 @@ const TicketsPage = (props) => {
     }
 
     // Fallback to original order if no custom order exists
-    return headers.filter((header) => visibleColumns[header.key]);
-  }, [headers, visibleColumns, columnOrder]);
+    return constructHeadersFromListingHistory.filter(
+      (header) => visibleColumns[header.key]
+    );
+  }, [constructHeadersFromListingHistory, visibleColumns, columnOrder]);
 
   const filteredHeaders = getFilteredHeadersInOrder;
 
@@ -1367,241 +1044,6 @@ const TicketsPage = (props) => {
     setSelectedRows([]);
   };
 
-  // Enhanced Custom Table Component for each match with accordion functionality
-  const CustomMatchTable = ({ matchData }) => {
-    const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
-    const [isExpanded, setIsExpanded] = useState(true);
-    const { matchInfo, tickets } = matchData;
-
-    const toggleExpanded = () => {
-      setIsExpanded(!isExpanded);
-    };
-
-    return (
-      <div className="border border-gray-200 rounded-lg mb-4 overflow-hidden relative">
-        {/* Clickable Table Header with Accordion */}
-        <div
-          className="bg-[#343432] text-white px-3 py-2.5 cursor-pointer"
-          onClick={toggleExpanded}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2">
-                <div
-                  className={`transform transition-transform duration-200 ${
-                    isExpanded ? "rotate-180" : ""
-                  }`}
-                >
-                  <ChevronDown size={14} />
-                </div>
-                <h3 className="font-medium text-sm truncate max-w-xs">
-                  {matchInfo?.match_name || "Match Details"}
-                </h3>
-              </div>
-              <div className="flex items-center space-x-3 text-xs">
-                <div className="flex items-center space-x-1">
-                  <Calendar1Icon size={11} />
-                  <span className="truncate">
-                    {matchInfo?.match_date
-                      ? new Date(matchInfo.match_date).toLocaleDateString()
-                      : "TBD"}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Clock size={11} />
-                  <span className="truncate">
-                    {matchInfo?.match_time || "TBD"}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <MapPin size={11} />
-                  <span className="truncate max-w-xs">
-                    {`${matchInfo?.stadium_name} , ${matchInfo?.country_name} , ${matchInfo?.city_name}` ||
-                      "TBD"}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4 text-xs">
-              <span className="text-gray-300">
-                {tickets.length} ticket{tickets.length !== 1 ? "s" : ""}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Collapsible Table Content with Sticky Columns */}
-        {isExpanded && (
-          <div className="w-full bg-white relative transition-all duration-300 ease-in-out">
-            {/* Main scrollable table container */}
-            <div className="relative">
-              {/* Main Table */}
-              <div
-                className="w-full overflow-x-auto"
-                style={{ paddingRight: `${stickyColumnsWidth}px` }}
-              >
-                <table
-                  className="w-full border-none"
-                  style={{ minWidth: "1200px" }}
-                >
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="px-2 py-3 text-left text-gray-600 font-medium whitespace-nowrap text-xs w-12">
-                        <input
-                          type="checkbox"
-                          checked={
-                            selectedRows.length === tickets.length &&
-                            tickets.length > 0
-                          }
-                          onChange={
-                            selectedRows.length > 0
-                              ? handleDeselectAll
-                              : handleSelectAll
-                          }
-                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                        />
-                      </th>
-                      {filteredHeaders.map((header) => (
-                        <th
-                          key={header.key}
-                          className="px-2 py-3 text-left text-gray-600 font-medium whitespace-nowrap text-xs min-w-[120px]"
-                        >
-                          <div className="flex justify-between items-center">
-                            <span className="truncate">{header.label}</span>
-                          </div>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tickets.map((ticket, rowIndex) => {
-                      const globalRowIndex = ticketsData.findIndex(
-                        (t) => t.id === ticket.id
-                      );
-                      const isSelected = selectedRows.includes(globalRowIndex);
-
-                      return (
-                        <tr
-                          key={ticket.id}
-                          className={`border-b border-gray-200 transition-colors ${
-                            isSelected
-                              ? "bg-blue-50"
-                              : "bg-white hover:bg-gray-50"
-                          }`}
-                          onMouseEnter={() => setHoveredRowIndex(rowIndex)}
-                          onMouseLeave={() => setHoveredRowIndex(null)}
-                          style={{ height: "48px" }} // Fixed row height
-                        >
-                          <td className="py-3 px-2 text-xs whitespace-nowrap w-12 align-middle">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                const newSelectedRows = isSelected
-                                  ? selectedRows.filter(
-                                      (index) => index !== globalRowIndex
-                                    )
-                                  : [...selectedRows, globalRowIndex];
-                                setSelectedRows(newSelectedRows);
-                              }}
-                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                            />
-                          </td>
-                          {filteredHeaders.map((header) => (
-                            <td
-                              key={`${rowIndex}-${header.key}`}
-                              className="py-3 px-2 text-xs whitespace-nowrap overflow-hidden text-ellipsis align-middle min-w-[120px]"
-                            >
-                              {header.editable ? (
-                                renderEditableCell(
-                                  ticket,
-                                  header,
-                                  true
-                                  // hoveredRowIndex === rowIndex
-                                )
-                              ) : (
-                                <span className="text-xs">
-                                  {ticket[header.key]}
-                                </span>
-                              )}
-                            </td>
-                          ))}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Sticky right columns - Fixed positioning and alignment */}
-              <div
-                className="absolute top-0 right-0 bg-white border-l border-gray-200 shadow-lg overflow-hidden"
-                style={{
-                  width: `${stickyColumnsWidth}px`,
-                  height: "auto",
-                }}
-              >
-                {/* Sticky Header */}
-                <div
-                  className="bg-gray-50 border-b border-gray-200 flex"
-                  style={{ height: "45px" }}
-                >
-                  {stickyHeaders.map((header, idx) => (
-                    <div
-                      key={`sticky-header-${idx}`}
-                      className="flex-1 py-3 px-2 text-left text-gray-600 text-xs border-r last:border-r-0 border-gray-200 font-medium whitespace-nowrap text-center flex items-center justify-center"
-                      style={{ minWidth: "50px" }}
-                    >
-                      {header}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Sticky Body Rows */}
-                {tickets.map((ticket, rowIndex) => {
-                  const stickyColumns = getStickyColumnsForRow(
-                    ticket,
-                    rowIndex
-                  );
-                  const globalRowIndex = ticketsData.findIndex(
-                    (t) => t.id === ticket.id
-                  );
-                  const isSelected = selectedRows.includes(globalRowIndex);
-
-                  return (
-                    <div
-                      key={`sticky-${ticket.id}`}
-                      className={`border-b border-gray-200 flex transition-colors ${
-                        isSelected ? "bg-blue-50" : "bg-white hover:bg-gray-50"
-                      }`}
-                      style={{ height: "48px" }} // Match the main table row height
-                      onMouseEnter={() => setHoveredRowIndex(rowIndex)}
-                      onMouseLeave={() => setHoveredRowIndex(null)}
-                    >
-                      {stickyColumns.map((column, colIndex) => (
-                        <div
-                          key={`sticky-${rowIndex}-${colIndex}`}
-                          className={`flex-1 py-3 px-2 text-sm border-r last:border-r-0 border-gray-200 cursor-pointer flex items-center justify-center ${
-                            column?.className || ""
-                          }`}
-                          style={{ minWidth: "50px" }}
-                          onClick={column.onClick}
-                        >
-                          {column.icon}
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   const handleConfirmClick = (data, index, rowData) => {
     updateCellValues(data, rowData?.s_no);
     setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
@@ -1811,33 +1253,83 @@ const TicketsPage = (props) => {
 
   const handleColumnsReorder = (newColumns) => {
     setColumnOrder(newColumns);
-
-    // Persist to localStorage for user preferences
-    // localStorage.setItem("ticketsPageColumnOrder", JSON.stringify(newColumns));
   };
 
   // Initialize column order when headers change
   useEffect(() => {
-    if (headers.length > 0 && columnOrder.length === 0) {
-      const initialOrder = headers.map((header) => header.key);
+    if (
+      constructHeadersFromListingHistory.length > 0 &&
+      columnOrder.length === 0
+    ) {
+      const initialOrder = constructHeadersFromListingHistory.map(
+        (header) => header.key
+      );
       setColumnOrder(initialOrder);
     }
-  }, [headers, columnOrder.length]);
+  }, [constructHeadersFromListingHistory, columnOrder.length]);
 
-  // Load saved column order from localStorage on component mount
-  // useEffect(() => {
-  //   const savedOrder = localStorage.getItem("ticketsPageColumnOrder");
-  //   if (savedOrder) {
-  //     try {
-  //       const parsedOrder = JSON.parse(savedOrder);
-  //       if (Array.isArray(parsedOrder) && parsedOrder.length > 0) {
-  //         setColumnOrder(parsedOrder);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error loading saved column order:", error);
-  //     }
-  //   }
-  // }, []);
+  // Update visible columns when headers change
+  useEffect(() => {
+    if (constructHeadersFromListingHistory.length > 0) {
+      setVisibleColumns(createInitialVisibleColumns());
+    }
+  }, [constructHeadersFromListingHistory, createInitialVisibleColumns]);
+
+  // Enhanced Custom Match Table Component using CommonInventoryTable
+  const CustomMatchTable = ({ matchData }) => {
+    const { matchInfo, tickets, matchIndex, filters } = matchData;
+    const [isCollapsed, setIsCollapsed] = useState(
+      collapsedMatches[matchIndex] || false
+    );
+
+    const handleToggleCollapse = () => {
+      const newState = !isCollapsed;
+      setIsCollapsed(newState);
+      setCollapsedMatches((prev) => ({
+        ...prev,
+        [matchIndex]: newState,
+      }));
+    };
+
+    // Convert match info to the format expected by CommonInventoryTable
+    const matchDetails = {
+      match_name: matchInfo?.match_name,
+      match_date_format: new Date(matchInfo?.match_date).toLocaleDateString(),
+      match_time: matchInfo?.match_time,
+      stadium_name: matchInfo?.stadium_name,
+      country_name: matchInfo?.country_name,
+      city_name: matchInfo?.city_name,
+    };
+
+    return (
+      <CommonInventoryTable
+        inventoryData={tickets}
+        headers={filteredHeaders}
+        selectedRows={selectedRows.filter((index) => {
+          const ticket = ticketsData[index];
+          return ticket && ticket.matchIndex === matchIndex;
+        })}
+        setSelectedRows={setSelectedRows}
+        handleCellEdit={handleCellEdit}
+        handleHandAction={handleHandAction}
+        handleUploadAction={handleUploadAction}
+        handleSelectAll={handleSelectAll}
+        handleDeselectAll={handleDeselectAll}
+        matchDetails={matchDetails}
+        isEditMode={false}
+        editingRowIndex={null}
+        mode="multiple"
+        showAccordion={true}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={handleToggleCollapse}
+        matchIndex={matchIndex}
+        totalTicketsCount={tickets.length}
+        getStickyColumnsForRow={getStickyColumnsForRow}
+        stickyHeaders={["", "", ""]} // Removed empty header for chevron
+        stickyColumnsWidth={150}
+      />
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -1887,7 +1379,7 @@ const TicketsPage = (props) => {
         )}
       </div>
 
-      {/* Main Content Area with Custom Tables */}
+      {/* Main Content Area with Common Tables */}
       {isLoading ? (
         <ShimmerLoader />
       ) : (
@@ -1895,10 +1387,9 @@ const TicketsPage = (props) => {
           <div className="m-6 max-h-[calc(100vh-400px)] overflow-y-auto">
             {groupedTicketsData.length > 0 ? (
               groupedTicketsData.map((matchData, index) => (
-                <CustomMatchTable
-                  key={`match-${matchData.matchIndex}`}
-                  matchData={matchData}
-                />
+                <div key={`match-${matchData.matchIndex}`} className="mb-4">
+                  <CustomMatchTable matchData={matchData} />
+                </div>
               ))
             ) : (
               <div className="bg-white rounded p-8 text-center">
@@ -1928,8 +1419,6 @@ const TicketsPage = (props) => {
               </div>
             )}
           </div>
-
-          {/* Remove the pagination from bottom since it's now in the header area */}
         </>
       )}
 
