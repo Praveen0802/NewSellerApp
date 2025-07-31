@@ -549,12 +549,13 @@ const TabbedLayout = ({
 
       <div className={containerClassName}>
         <div className="bg-white">
+          <p className="px-6 pt-5 text-[#323A70] text-[18px] font-semibold"> Overview</p>
           {/* List Items Section with Transitions - NOW WITH SHOW/HIDE ANIMATION */}
           <div
             className={`transition-all duration-300 ease-in-out overflow-hidden border-b-[1px] border-[#E0E1EA] ${
               showListItems
-                ? "max-h-[500px] opacity-100 px-[24px] py-[12px]"
-                : "max-h-0 opacity-0 px-[24px] py-0"
+                ? "max-h-[500px] opacity-100 px-6 pb-5 pt-4"
+                : "max-h-0 opacity-0 px-6 py-0"
             }`}
           >
             <div className="relative">
@@ -630,7 +631,7 @@ const TabbedLayout = ({
                 {currentListItems?.map((item, index) => (
                   <div
                     key={`current-${item.key || index}-${Date.now()}`}
-                    className="min-w-[200px]"
+                    className="flex-grow flex-shrink flex-basis-[25%] min-w-[12rem]"
                   >
                     <AvailableList
                       list={{
@@ -662,13 +663,13 @@ const TabbedLayout = ({
 
           {/* Filter Section - Only show filters that are active AND IN CUSTOM ORDER */}
           {showFilters && getVisibleFilters().length > 0 && (
-            <div>
+            <div className="px-6 py-5">
               {customComponent && customComponent()}
               <FilterSection
                 filterConfig={getVisibleFilters()} // This now returns filters in custom order
                 currentTab={selectedTab}
                 onFilterChange={handleFilterChange}
-                containerClassName="md:flex flex-wrap gap-3 items-center  p-3"
+                containerClassName="md:flex flex-wrap gap-3 items-center"
                 initialValues={currentFilterValues}
               />
             </div>
