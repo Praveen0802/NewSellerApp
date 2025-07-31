@@ -65,7 +65,7 @@ const AddInventoryPage = (props) => {
   const { matchId, response } = props;
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-
+  console.log("response", response);
   const {
     block_data = {},
     home_town = {},
@@ -102,7 +102,48 @@ const AddInventoryPage = (props) => {
 
   const [inventoryData, setInventoryData] = useState([]);
   const [showTicketInfoPopup, setShowTicketInfoPopup] = useState(false);
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return "";
 
+    try {
+      // Handle different date formats
+      let date;
+
+      // If it's in format "22 August 2025"
+      if (
+        typeof dateString === "string" &&
+        dateString.match(/^\d{1,2}\s\w+\s\d{4}$/)
+      ) {
+        date = new Date(dateString);
+      }
+      // If it's already a Date object
+      else if (dateString instanceof Date) {
+        date = dateString;
+      }
+      // If it's in YYYY-MM-DD format
+      else if (
+        typeof dateString === "string" &&
+        dateString.match(/^\d{4}-\d{2}-\d{2}$/)
+      ) {
+        date = new Date(dateString);
+      }
+      // Try to parse any other format
+      else {
+        date = new Date(dateString);
+      }
+
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return "";
+      }
+
+      // Return in YYYY-MM-DD format for input fields
+      return date.toISOString().split("T")[0];
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "";
+    }
+  };
   const getBlockDetails = async () => {
     try {
       const getBlockData = await fetchBlockDetails("", {
@@ -212,7 +253,7 @@ const AddInventoryPage = (props) => {
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, split_details: value })),
     },
-     {
+    {
       type: "select",
       name: "max_quantity",
       label: "Max Display Quantity",
@@ -250,7 +291,8 @@ const AddInventoryPage = (props) => {
       type: "select",
       name: "ticket_category",
       label: "Seating Category",
-      increasedWidth: "!w-[220px] !min-w-[220px]",
+      mandatory: true,
+      increasedWidth: "!w-[180px] !min-w-[180px]",
       value: filtersApplied?.ticket_category,
       options: Object.entries(block_data || {}).map(([key, value]) => ({
         value: key,
@@ -399,12 +441,11 @@ const AddInventoryPage = (props) => {
       name: "ship_date",
       label: "Date to Ship",
       value: filtersApplied?.ship_date || {
-        startDate: matchDetails?.ship_date,
-        endDate: matchDetails?.ship_date,
+        startDate: formatDateForInput(matchDetails?.ship_date),
+        endDate: formatDateForInput(matchDetails?.ship_date),
       },
-      // Convert Date object to YYYY-MM-DD string format
       minDate: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
-      maxDate: matchDetails?.ship_date, // Assuming this is already in YYYY-MM-DD format
+      maxDate: formatDateForInput(matchDetails?.ship_date), // Convert to proper format
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       singleDateMode: true,
       className: "!py-[10px] !px-[12px] w-full mobile:text-xs",
@@ -420,6 +461,7 @@ const AddInventoryPage = (props) => {
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[4px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
+      hideFromTable: true,
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -438,6 +480,7 @@ const AddInventoryPage = (props) => {
       type: filter.type || "text",
       options: filter.options || [],
       showIcon: filter?.showIcon,
+      hideFromTable: filter?.hideFromTable,
     };
 
     if (filter.multiselect) {
@@ -522,8 +565,8 @@ const AddInventoryPage = (props) => {
   });
 
   // Filter headers based on visible columns
-  const headers = allHeaders.filter((header) =>
-    visibleColumns.includes(header.key)
+  const headers = allHeaders.filter(
+    (header) => visibleColumns.includes(header.key) && !header?.hideFromTable
   );
 
   // Filter the filters array based on active filters
@@ -801,8 +844,8 @@ const AddInventoryPage = (props) => {
           <td
             key={`${rowIndex}-${header.key}`}
             className={`py-2 px-3 text-xs ${
-              header?.increasedWidth ? header?.increasedWidth : "min-w-[140px]"
-            } whitespace-nowrap overflow-hidden text-ellipsis align-middle min-w-[140px] border-r border-gray-200 ${
+              header?.increasedWidth ? header?.increasedWidth : "min-w-[110px]"
+            } whitespace-nowrap overflow-hidden text-ellipsis align-middle min-w-[110px] border-r border-gray-200 ${
               isRowDisabled ? "bg-gray-50" : ""
             }`}
           >
@@ -899,6 +942,34 @@ const AddInventoryPage = (props) => {
     );
   };
 
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return "";
+
+    try {
+      let date;
+
+      // Handle the startDate from date range picker
+      if (typeof dateString === "object" && dateString.startDate) {
+        date = new Date(dateString.startDate);
+      } else {
+        date = new Date(dateString);
+      }
+
+      if (isNaN(date.getTime())) {
+        return dateString; // Return original if can't parse
+      }
+
+      // Return in readable format
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    } catch (error) {
+      console.error("Error formatting date for display:", error);
+      return dateString;
+    }
+  };
   // Custom cell renderer that handles both regular and multiselect types
 
   // Handle select all functionality
@@ -910,7 +981,6 @@ const AddInventoryPage = (props) => {
   const handleDeselectAll = () => {
     setSelectedRows([]);
   };
-  console.log(filtersApplied?.ship_date, "lllllllllll");
   // Enhanced function to construct FormData dynamically for multiple rows
   const constructFormDataAsFields = (publishingDataArray) => {
     const formData = new FormData();
@@ -985,14 +1055,22 @@ const AddInventoryPage = (props) => {
         `data[${index}][split_type]`,
         publishingData.split_type || ""
       );
-      console.log(
-        publishingData.ship_date?.startDate,
-        "publishingData.ship_date?.startDatepublishingData.ship_date?.startDate"
-      );
-      formData.append(
-        `data[${index}][ship_date]`,
-        publishingData.ship_date?.startDate || matchDetails?.ship_date || ""
-      );
+      let shipDateValue = "";
+      if (publishingData.ship_date) {
+        if (
+          typeof publishingData.ship_date === "object" &&
+          publishingData.ship_date.startDate
+        ) {
+          shipDateValue = publishingData.ship_date.startDate;
+        } else if (typeof publishingData.ship_date === "string") {
+          shipDateValue = formatDateForInput(publishingData.ship_date);
+        }
+      }
+      if (!shipDateValue) {
+        shipDateValue = formatDateForInput(matchDetails?.ship_date);
+      }
+
+      formData.append(`data[${index}][ship_date]`, shipDateValue);
       formData.append(
         `data[${index}][tickets_in_hand]`,
         publishingData.tickets_in_hand ? "1" : "0"
@@ -1176,11 +1254,33 @@ const AddInventoryPage = (props) => {
       ) {
         if (Array.isArray(filterValue) && filterValue.length === 0) {
           newItem[filter.name] = [];
+        } else if (filter.name === "ship_date") {
+          // Special handling for ship_date
+          if (typeof filterValue === "object" && filterValue.startDate) {
+            newItem[filter.name] = {
+              startDate: filterValue.startDate,
+              endDate: filterValue.endDate || filterValue.startDate,
+            };
+          } else {
+            // Fallback to matchDetails ship_date if no filter value
+            newItem[filter.name] = {
+              startDate: formatDateForInput(matchDetails?.ship_date),
+              endDate: formatDateForInput(matchDetails?.ship_date),
+            };
+          }
         } else {
           newItem[filter.name] = filterValue;
         }
       } else {
-        newItem[filter.name] = filter.multiselect ? [] : "";
+        if (filter.name === "ship_date") {
+          // Default ship_date from matchDetails
+          newItem[filter.name] = {
+            startDate: formatDateForInput(matchDetails?.ship_date),
+            endDate: formatDateForInput(matchDetails?.ship_date),
+          };
+        } else {
+          newItem[filter.name] = filter.multiselect ? [] : "";
+        }
       }
     });
 
@@ -1265,7 +1365,6 @@ const AddInventoryPage = (props) => {
     setShowTable(true);
 
     // Show success message
-    toast.success("Listing added successfully!");
   };
 
   const handleSearchBlur = () => {
@@ -1320,6 +1419,7 @@ const AddInventoryPage = (props) => {
               name="searchMatch"
               keyValue={"searchMatch"}
               value={searchValue}
+              checkLength={true}
               onChange={(e) => handleOnChangeEvents(e)}
               onFocus={handleSearchFocus}
               onBlur={handleSearchBlur}
@@ -1351,7 +1451,7 @@ const AddInventoryPage = (props) => {
                 setShowSearchDropdown(false);
                 setHasSearched(false);
               }}
-              parentClassName="!w-[500px]"
+              parentClassName="!w-[550px]"
             />
 
             {matchDetails && (
@@ -1371,8 +1471,13 @@ const AddInventoryPage = (props) => {
                 <div className="flex gap-2 items-center">
                   <MapPin size={16} className="text-[#00A3ED]" />
                   <p className="text-[#3a3c42] truncate text-[14px]">
-                    {matchDetails?.stadium_name} , {matchDetails?.country_name}{" "}
-                    , {matchDetails?.city_name}
+                    {matchDetails?.stadium_name}{" "}
+                    {matchDetails?.country_name
+                      ? `${matchDetails?.country_name},`
+                      : ""}{" "}
+                    {matchDetails?.city_name
+                      ? `${matchDetails?.city_name},}`
+                      : ""}
                   </p>
                 </div>
               </div>

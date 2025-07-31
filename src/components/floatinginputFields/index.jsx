@@ -25,6 +25,7 @@ const FloatingLabelInput = ({
   placeholder = "",
   error = "",
   rightIcon = null,
+  checkLength = false,
   iconBefore = null, // New prop for left icon
   iconBeforeTooltip = "", // New prop for tooltip text
   autoFocus = false,
@@ -115,7 +116,11 @@ const FloatingLabelInput = ({
 
   // Determine left padding based on iconBefore
   const getLeftPadding = () => {
-    return (value.length<=3 && iconBefore) ? "pl-12" : "px-3"; // Increased from pl-10 to pl-12
+    return value.length <= 3 && iconBefore && checkLength
+      ? "pl-12"
+      : iconBefore && !checkLength
+      ? "pl-12"
+      : "px-3"; // Increased from pl-10 to pl-12
   };
 
   // Determine right padding based on what icons are shown
@@ -139,7 +144,9 @@ const FloatingLabelInput = ({
     <div className={`relative w-full ${parentClassName}`}>
       {!hideLabel && (
         <FloatingPlaceholder
-          className={`${labelClassName} ${value.length<=3 && iconBefore && "!left-12"} `} // Changed from !left-14 to !left-12
+          className={`${labelClassName} ${
+            value.length <= 3 && iconBefore && "!left-12"
+          } `} // Changed from !left-14 to !left-12
           isFocused={isFocused}
           hasError={!!error}
         >
@@ -157,14 +164,15 @@ const FloatingLabelInput = ({
 
       <div className="relative">
         {/* Left icon - iconBefore with tooltip */}
-        {value.length<=3 &&iconBefore && (
-          <div 
+        {((value.length <= 3 && iconBefore && checkLength) ||
+          (iconBefore && !checkLength)) && (
+          <div
             className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer hover:text-blue-600 transition-colors"
             onMouseEnter={() => iconBeforeTooltip && setShowTooltip(true)}
             onMouseLeave={() => setShowTooltip(false)}
           >
             {typeof iconBefore === "function" ? iconBefore() : iconBefore}
-            
+
             {/* Tooltip */}
             {iconBeforeTooltip && showTooltip && (
               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg whitespace-nowrap z-50">

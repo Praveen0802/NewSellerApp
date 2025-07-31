@@ -426,7 +426,7 @@ const CustomInventoryTable = ({
             className="w-full overflow-x-auto hideScrollbar"
             style={{
               paddingLeft: `50px`,
-              paddingRight: `50px`,
+              paddingRight: `100px`,
             }}
           >
             <table
@@ -442,7 +442,7 @@ const CustomInventoryTable = ({
                       className={`px-3 py-3 ${
                         header?.increasedWidth
                           ? header?.increasedWidth
-                          : "min-w-[140px]"
+                          : "min-w-[110px]"
                       } text-left text-[#7D82A4] font-medium whitespace-nowrap text-xs border-r border-[#DADBE5]`}
                     >
                       <div className="flex justify-between items-center">
@@ -482,7 +482,7 @@ const CustomInventoryTable = ({
                           className={`py-2 px-3 text-xs ${
                             header?.increasedWidth
                               ? header?.increasedWidth
-                              : "min-w-[140px]"
+                              : "min-w-[110px]"
                           } whitespace-nowrap overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
                             isRowDisabled ? "bg-gray-50" : ""
                           } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
