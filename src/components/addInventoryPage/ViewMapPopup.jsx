@@ -6,12 +6,19 @@ import Image from "next/image";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import RightViewModal from "../commonComponents/rightViewModal";
 
-const ViewMapPopup = ({ show, onClose }) => {
+const ViewMapPopup = ({
+  show,
+  onClose,
+  image,
+  stadiumName,
+  blockData,
+  blockDataColor,
+}) => {
   return (
     <RightViewModal show={show} onClose={onClose} className="w-[650px]">
-      <div className="bg-white p-2 rounded-md ">
-        <div className="flex justify-between items-center p-2 border-b-[1px]  border-[#DADBE5]">
-          <p className="text-[18px] font-semibold">Old Trafford</p>
+      <div className="bg-white p-2 rounded-md">
+        <div className="flex justify-between items-center p-2 border-b-[1px] border-[#DADBE5]">
+          <p className="text-[18px] font-semibold">{stadiumName}</p>
           <IconStore.close
             className="w-5 h-5 cursor-pointer"
             onClick={onClose}
@@ -19,13 +26,22 @@ const ViewMapPopup = ({ show, onClose }) => {
         </div>
         <div className="flex flex-col justify-center items-center">
           <Image
-            src={viewMap}
+            src={image}
             width={350}
             height={200}
             alt="View Map"
             className=""
           />
-          <TicketCategories />
+          <TicketCategories
+            blockData={blockData}
+            blockDataColor={blockDataColor}
+            title="Stadium Seating Areas"
+            layout="grid"
+            onCategorySelect={(categoryId) => {
+              console.log("Selected category:", categoryId);
+              // Handle category selection here
+            }}
+          />
         </div>
       </div>
     </RightViewModal>

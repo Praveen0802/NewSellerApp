@@ -33,6 +33,8 @@ import {
   Check,
   X,
   SearchIcon,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import UploadTickets from "../ModalComponents/uploadTickets";
@@ -57,7 +59,6 @@ import TicketListingQuality from "../TicketInfoPopup";
 import CompactInfoCard from "../CompactInfoCard";
 import SubjectDescriptionPopup from "../settingPage/subjectDescriptionPopup";
 
-// Custom MultiSelect Component for table cells
 const MultiSelectEditableCell = ({
   value,
   options = [],
@@ -65,10 +66,12 @@ const MultiSelectEditableCell = ({
   className = "",
   isRowHovered = false,
   disabled = false,
+  placeholder = "Select options...",
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const dropdownRef = useRef(null);
 
   // Convert string value to array if needed
@@ -193,7 +196,7 @@ const MultiSelectEditableCell = ({
 
   const getDisplayValue = () => {
     const normalizedValue = normalizeValue(value);
-    if (normalizedValue.length === 0) return "Select options...";
+    if (normalizedValue.length === 0) return placeholder;
 
     return `${normalizedValue.length} item${
       normalizedValue.length !== 1 ? "s" : ""
@@ -209,20 +212,28 @@ const MultiSelectEditableCell = ({
     return (
       <div className="relative w-full" ref={dropdownRef}>
         <div
-          className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 bg-white w-full cursor-pointer"
+          className={`border rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] transition-colors ${
+            isFocused || isDropdownOpen
+              ? "border-green-500 ring-2 ring-green-600"
+              : "border-[#DADBE5] hover:border-green-600"
+          }`}
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           onKeyDown={handleKeyPress}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          onMouseEnter={() => !isDropdownOpen && setIsFocused(true)}
+          onMouseLeave={() => !isDropdownOpen && setIsFocused(false)}
           tabIndex={0}
         >
           <div className="flex justify-between items-center">
-            <span className="truncate">
+            <span className="truncate text-[#323A70]">
               {getSelectedCount() > 0
                 ? `${getSelectedCount()} selected`
-                : "Select options..."}
+                : placeholder}
             </span>
             <ChevronDown
               size={12}
-              className={`transform transition-transform ${
+              className={`transform transition-transform text-[#323A70] ${
                 isDropdownOpen ? "rotate-180" : ""
               }`}
             />
@@ -232,7 +243,7 @@ const MultiSelectEditableCell = ({
         {isDropdownOpen && (
           <div
             data-multiselect-dropdown
-            className="fixed bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto"
+            className="fixed bg-white border border-[#DADBE5] rounded shadow-lg max-h-48 overflow-y-auto"
             style={{
               zIndex: 9999,
               top:
@@ -249,7 +260,7 @@ const MultiSelectEditableCell = ({
               e.stopPropagation();
             }}
           >
-            <div className="border-b border-gray-200 p-2">
+            <div className="border-b border-[#DADBE5] p-2">
               <div className="flex justify-between">
                 <button
                   onClick={(e) => {
@@ -291,14 +302,14 @@ const MultiSelectEditableCell = ({
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => {}}
-                    className="w-3 h-3 text-blue-600"
+                    className="w-3 h-3 text-blue-600 border-[#DADBE5]"
                   />
-                  <span className="text-xs">{option.label}</span>
+                  <span className="text-xs text-[#323A70]">{option.label}</span>
                 </div>
               );
             })}
 
-            <div className="border-t border-gray-200 p-2 flex justify-end space-x-2">
+            <div className="border-t border-[#DADBE5] p-2 flex justify-end space-x-2">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -327,10 +338,18 @@ const MultiSelectEditableCell = ({
   if (isRowHovered && !disabled) {
     return (
       <div className={`cursor-pointer ${className}`} onClick={handleClick}>
-        <div className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer">
+        <div className="border border-[#DADBE5] rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer hover:border-green-600 hover:ring-2 hover:ring-green-600 transition-colors">
           <div className="flex justify-between items-center">
-            <span className="truncate">{getDisplayValue()}</span>
-            <ChevronDown size={12} />
+            <span
+              className={`truncate ${
+                normalizeValue(value).length > 0
+                  ? "text-[#323A70]"
+                  : "text-gray-400"
+              }`}
+            >
+              {getDisplayValue()}
+            </span>
+            <ChevronDown size={12} className="text-[#323A70]" />
           </div>
         </div>
       </div>
@@ -344,14 +363,22 @@ const MultiSelectEditableCell = ({
       } ${className}`}
       onClick={handleClick}
     >
-      <span className={`text-xs truncate ${disabled ? "text-gray-400" : ""}`}>
+      <span
+        className={`text-xs truncate ${
+          disabled
+            ? "text-gray-400"
+            : normalizeValue(value).length > 0
+            ? "text-[#323A70]"
+            : "text-gray-400"
+        }`}
+      >
         {getDisplayValue()}
       </span>
     </div>
   );
 };
 
-// Simple Editable Cell Component (fallback for non-multiselect)
+// Updated SimpleEditableCell component with placeholder support
 const SimpleEditableCell = ({
   value,
   type = "text",
@@ -360,9 +387,11 @@ const SimpleEditableCell = ({
   className = "",
   isRowHovered = false,
   disabled = false,
+  placeholder = "Enter...",
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
+  const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -410,12 +439,21 @@ const SimpleEditableCell = ({
   const getDisplayValue = () => {
     if (type === "select" && options.length > 0) {
       const option = options.find((opt) => opt.value === value);
-      return option ? option.label : value;
+      return option ? option.label : !value ? placeholder : value;
     }
     if (type === "checkbox") {
       return value ? "Yes" : "No";
     }
-    return value || "";
+    return value || placeholder;
+  };
+
+  const hasValue = () => {
+    if (type === "checkbox") return true; // Always show Yes/No for checkbox
+    if (type === "select") {
+      const option = options.find((opt) => opt.value === value);
+      return !!option;
+    }
+    return !!(value && value.toString().trim());
   };
 
   if (isEditing && !disabled) {
@@ -424,13 +462,20 @@ const SimpleEditableCell = ({
         {type === "select" ? (
           <select
             ref={inputRef}
-            value={editValue}
+            value={editValue || ""}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyPress}
             onBlur={handleBlur}
-            className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 bg-white w-full"
+            onFocus={() => setIsFocused(true)}
+            onMouseEnter={() => setIsFocused(true)}
+            onMouseLeave={() => setIsFocused(false)}
+            className={`border rounded px-2 py-1 text-xs focus:outline-none bg-white w-full text-[#323A70] transition-colors ${
+              isFocused
+                ? "border-green-600 ring-2 ring-green-500"
+                : "border-[#DADBE5] hover:border-green-500"
+            }`}
           >
-            <option value="">Select option...</option>
+            <option value="">{placeholder}</option>
             {options.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -445,17 +490,32 @@ const SimpleEditableCell = ({
             onChange={(e) => setEditValue(e.target.checked)}
             onKeyDown={handleKeyPress}
             onBlur={handleBlur}
-            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+            onFocus={() => setIsFocused(true)}
+            onMouseEnter={() => setIsFocused(true)}
+            onMouseLeave={() => setIsFocused(false)}
+            className={`w-4 h-4 text-blue-600 bg-gray-100 rounded transition-colors ${
+              isFocused
+                ? "border-green-500 ring-2 ring-green-500"
+                : "border-[#DADBE5] hover:border-green-400"
+            }`}
           />
         ) : (
           <input
             ref={inputRef}
             type={type}
-            value={editValue}
+            value={editValue || ""}
+            placeholder={placeholder}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyPress}
             onBlur={handleBlur}
-            className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 w-full bg-white"
+            onFocus={() => setIsFocused(true)}
+            onMouseEnter={() => setIsFocused(true)}
+            onMouseLeave={() => setIsFocused(false)}
+            className={`border rounded px-2 py-1 text-xs focus:outline-none w-full bg-white text-[#323A70] transition-colors placeholder:text-gray-400 ${
+              isFocused
+                ? "border-green-500 ring-2 ring-green-500"
+                : "border-[#DADBE5] hover:border-green-400"
+            }`}
           />
         )}
       </div>
@@ -467,8 +527,8 @@ const SimpleEditableCell = ({
       <div className={`cursor-pointer ${className}`} onClick={handleClick}>
         {type === "select" ? (
           <select
-            value={editValue}
-            className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer"
+            value={editValue || ""}
+            className="border border-[#DADBE5] rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors"
             onClick={handleClick}
             readOnly
           >
@@ -479,7 +539,7 @@ const SimpleEditableCell = ({
             <input
               type="checkbox"
               checked={editValue}
-              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded cursor-pointer"
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-[#DADBE5] rounded cursor-pointer hover:border-green-600 transition-colors"
               onClick={handleClick}
               readOnly
             />
@@ -487,8 +547,9 @@ const SimpleEditableCell = ({
         ) : (
           <input
             type={type}
-            value={editValue}
-            className="border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer"
+            value={editValue || ""}
+            placeholder={placeholder}
+            className="border border-[#DADBE5] rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors placeholder:text-gray-400"
             onClick={handleClick}
             readOnly
           />
@@ -504,204 +565,18 @@ const SimpleEditableCell = ({
       } ${className}`}
       onClick={handleClick}
     >
-      <span className={`text-xs ${disabled ? "text-gray-400" : ""}`}>
+      <span
+        className={`text-xs ${
+          disabled
+            ? "text-gray-400"
+            : hasValue()
+            ? "text-[#323A70]"
+            : "text-gray-400"
+        }`}
+      >
         {getDisplayValue()}
       </span>
     </div>
-  );
-};
-
-// Modified table row rendering with disabled state
-const tableRowRendering = (row, rowIndex) => {
-  const isSelected = selectedRows.includes(rowIndex);
-  const isRowDisabled = isEditMode && editingRowIndex !== rowIndex;
-
-  return (
-    <tr
-      key={row.id || rowIndex}
-      className={`border-b border-gray-200 transition-colors ${
-        isSelected ? "bg-blue-50" : "bg-white hover:bg-gray-50"
-      } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
-      onMouseEnter={() => !isRowDisabled && setHoveredRowIndex(rowIndex)}
-      onMouseLeave={() => setHoveredRowIndex(null)}
-    >
-      <td className="py-2 px-3 text-xs whitespace-nowrap w-12 border border-r-1 border-gray-200">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          disabled={isRowDisabled}
-          onChange={(e) => {
-            if (isRowDisabled) return;
-            e.stopPropagation();
-            const newSelectedRows = isSelected
-              ? selectedRows.filter((index) => index !== rowIndex)
-              : [...selectedRows, rowIndex];
-            setSelectedRows(newSelectedRows);
-          }}
-          className={`w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 ${
-            isRowDisabled ? "cursor-not-allowed opacity-50" : ""
-          }`}
-        />
-      </td>
-      {headers.map((header) => (
-        <td
-          key={`${rowIndex}-${header.key}`}
-          className={`py-2 px-3 text-xs ${
-            header?.increasedWidth ? header?.increasedWidth : "min-w-[140px]"
-          } whitespace-nowrap overflow-hidden text-ellipsis align-middle min-w-[140px] border-r border-gray-200 ${
-            isRowDisabled ? "bg-gray-50" : ""
-          }`}
-        >
-          {header.editable ? (
-            renderEditableCell(
-              row,
-              header,
-              rowIndex,
-              hoveredRowIndex === rowIndex && !isRowDisabled
-            )
-          ) : (
-            <span
-              className={`${header.className || ""} ${
-                isRowDisabled ? "text-gray-400" : ""
-              }`}
-            >
-              {row[header.key]}
-            </span>
-          )}
-        </td>
-      ))}
-    </tr>
-  );
-};
-
-// Filter Dropdown Component
-const FilterDropdown = ({
-  isOpen,
-  onClose,
-  activeFilters,
-  onFilterToggle,
-  filterConfig,
-}) => {
-  if (!isOpen) return null;
-
-  return (
-    <>
-      <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 w-80 max-h-96 overflow-y-auto z-50">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">Search filters</h3>
-        </div>
-
-        <div className="p-4">
-          {filterConfig?.map((filter, index) => (
-            <div key={index} className="flex items-center justify-between py-2">
-              <span className="text-sm text-gray-700">{filter.label}</span>
-              <input
-                type="checkbox"
-                checked={activeFilters.includes(filter.name)}
-                onChange={() => onFilterToggle(filter.name)}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-              />
-            </div>
-          ))}
-        </div>
-
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={() => {
-              const allFilterNames =
-                filterConfig?.map((filter) => filter.name) || [];
-              allFilterNames.forEach((filterName) => {
-                if (!activeFilters.includes(filterName)) {
-                  onFilterToggle(filterName);
-                }
-              });
-            }}
-            className="flex items-center text-sm text-blue-600 hover:text-blue-800"
-          >
-            🔄 Restore defaults
-          </button>
-        </div>
-      </div>
-    </>
-  );
-};
-
-// Column Dropdown Component
-const ColumnDropdown = ({
-  isOpen,
-  onClose,
-  headers,
-  visibleColumns,
-  onColumnToggle,
-}) => {
-  const [searchTerm, setSearchTerm] = useState("");
-
-  if (!isOpen) return null;
-
-  // More robust filtering with proper null checks
-  const filteredHeaders = (headers || []).filter((header) => {
-    if (!header || !header.label) return false;
-    return header.label.toLowerCase().includes(searchTerm.toLowerCase().trim());
-  });
-
-  return (
-    <>
-      <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 w-80 max-h-96 overflow-y-auto z-50">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">Search columns</h3>
-        </div>
-
-        <div className="p-4">
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Search columns"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-            />
-          </div>
-
-          {filteredHeaders.length === 0 && searchTerm ? (
-            <div className="text-sm text-gray-500 py-4 text-center">
-              No columns found matching "{searchTerm}"
-            </div>
-          ) : (
-            filteredHeaders.map((header, index) => (
-              <div
-                key={header.key || index}
-                className="flex items-center justify-between py-2"
-              >
-                <span className="text-sm text-gray-700">{header.label}</span>
-                <input
-                  type="checkbox"
-                  checked={visibleColumns?.includes(header.key) || false}
-                  onChange={() => onColumnToggle(header.key)}
-                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                />
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={() => {
-              (headers || []).forEach((header) => {
-                if (header?.key && !visibleColumns?.includes(header.key)) {
-                  onColumnToggle(header.key);
-                }
-              });
-            }}
-            className="flex items-center text-sm text-blue-600 hover:text-blue-800"
-          >
-            🔄 Restore defaults
-          </button>
-        </div>
-      </div>
-    </>
   );
 };
 
@@ -975,7 +850,7 @@ const AddInventoryPage = (props) => {
     {
       type: "select",
       name: "notes",
-      label: "Listing Notes",
+      label: "Benifits",
       value: filtersApplied?.notes,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       multiselect: true,
@@ -1028,7 +903,7 @@ const AddInventoryPage = (props) => {
       maxDate: matchDetails?.ship_date, // Assuming this is already in YYYY-MM-DD format
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       singleDateMode: true,
-      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      className: "!py-[10px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, ship_date: value })),
@@ -1284,8 +1159,12 @@ const AddInventoryPage = (props) => {
     if (!searchValue || searchValue.trim() === "") {
       // First time focus without any search value - call with empty query
       fetchApiCall("", true);
-    } else if(searchedEvents?.length==0 && searchValue && searchValue.trim()){
-      setShowSearchDropdown(false) ;
+    } else if (
+      searchedEvents?.length == 0 &&
+      searchValue &&
+      searchValue.trim()
+    ) {
+      setShowSearchDropdown(false);
     } else if (searchValue && searchValue.trim()) {
       // If there's already a search value, show existing results
       setShowSearchDropdown(true);
@@ -1306,28 +1185,6 @@ const AddInventoryPage = (props) => {
 
   const handleSearchedEventClick = (event) => {
     router.push(`/add-listings/${event?.m_id}`);
-  };
-
-  // Handle filter toggle from dropdown
-  const handleFilterToggle = (filterName) => {
-    setActiveFilters((prev) => {
-      if (prev.includes(filterName)) {
-        return prev.filter((f) => f !== filterName);
-      } else {
-        return [...prev, filterName];
-      }
-    });
-  };
-
-  // Handle column toggle from dropdown
-  const handleColumnToggle = (columnKey) => {
-    setVisibleColumns((prev) => {
-      if (prev.includes(columnKey)) {
-        return prev.filter((c) => c !== columnKey);
-      } else {
-        return [...prev, columnKey];
-      }
-    });
   };
 
   // Updated handleCellEdit to use rowIndex directly
@@ -1462,6 +1319,35 @@ const AddInventoryPage = (props) => {
       isRowEditable &&
       (isRowHovered || (isEditMode && editingRowIndex === rowIndex));
 
+    // Get placeholder text based on header type and label
+    const getPlaceholder = () => {
+      if (header.type === "select" || header.type === "multiselect") {
+        return "Select...";
+      }
+      if (header.type === "text") {
+        if (
+          header.label.toLowerCase().includes("price") ||
+          header.label.toLowerCase().includes("value")
+        ) {
+          return "Enter amount";
+        }
+        if (header.label.toLowerCase().includes("seat")) {
+          return "Enter seat";
+        }
+        if (header.label.toLowerCase().includes("row")) {
+          return "Enter row";
+        }
+        return "Enter...";
+      }
+      if (header.type === "date") {
+        return "Select date";
+      }
+      if (header.type === "checkbox") {
+        return "No";
+      }
+      return "Enter...";
+    };
+
     if (header.type === "multiselect") {
       return (
         <MultiSelectEditableCell
@@ -1469,8 +1355,9 @@ const AddInventoryPage = (props) => {
           options={header.options || []}
           onSave={(value) => handleCellEdit(rowIndex, header.key, value)}
           className={header.className || ""}
-          isRowHovered={shouldShowAsEditable}
+          isRowHovered={true} //isRowHovered={shouldShowAsEditable}
           disabled={!isRowEditable || isDisabled}
+          placeholder="Select options..."
         />
       );
     }
@@ -1482,8 +1369,9 @@ const AddInventoryPage = (props) => {
         options={header.options || []}
         onSave={(value) => handleCellEdit(rowIndex, header.key, value)}
         className={header.className || ""}
-        isRowHovered={shouldShowAsEditable}
+        isRowHovered={true} //{shouldShowAsEditable}
         disabled={!isRowEditable || isDisabled}
+        placeholder={getPlaceholder()}
       />
     );
   };
@@ -1564,7 +1452,7 @@ const AddInventoryPage = (props) => {
         `data[${index}][face_value]`,
         publishingData.face_value || ""
       );
-      
+
       formData.append(
         `data[${index}][first_seat]`,
         publishingData.first_seat || ""
@@ -1574,7 +1462,10 @@ const AddInventoryPage = (props) => {
         `data[${index}][split_type]`,
         publishingData.split_type || ""
       );
-      console.log(publishingData.ship_date?.startDate,'publishingData.ship_date?.startDatepublishingData.ship_date?.startDate')
+      console.log(
+        publishingData.ship_date?.startDate,
+        "publishingData.ship_date?.startDatepublishingData.ship_date?.startDate"
+      );
       formData.append(
         `data[${index}][ship_date]`,
         publishingData.ship_date?.startDate || matchDetails?.ship_date || ""
@@ -1733,7 +1624,7 @@ const AddInventoryPage = (props) => {
       // if (selectedRows?.length > 1) {
       // await saveBulkListing("", formData);
       // } else {
-        await saveAddListing("", formData);
+      await saveAddListing("", formData);
       // }
 
       router.push("/my-listings?success=true");
@@ -1802,228 +1693,331 @@ const AddInventoryPage = (props) => {
     setShowTable(true);
   };
 
-  // Enhanced Custom Table Component with sticky columns
+  // Enhanced Custom Table Component with working scroll functionality
   const CustomInventoryTable = () => {
     const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
+    const [hasScrolledLeft, setHasScrolledLeft] = useState(false);
+    const [isTableCollapsed, setIsTableCollapsed] = useState(false);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(false);
+
+    // Function to check scroll capabilities and update state
+    const checkScrollCapabilities = () => {
+      if (!scrollContainerRef.current) return;
+
+      const { scrollLeft, scrollWidth, clientWidth } =
+        scrollContainerRef.current;
+
+      // Can scroll left if we've scrolled right
+      setCanScrollLeft(scrollLeft > 0);
+
+      // Can scroll right if there's more content to the right
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1); // -1 for rounding issues
+
+      // Update hasScrolledLeft state
+      setHasScrolledLeft(scrollLeft > 0);
+    };
+
+    // Scroll functions
+    const scrollLeft = () => {
+      if (!scrollContainerRef.current || !canScrollLeft) return;
+
+      const container = scrollContainerRef.current;
+      const scrollAmount = Math.min(300, container.clientWidth / 3); // Scroll by 300px or 1/3 of visible width
+
+      container.scrollBy({
+        left: -scrollAmount,
+        behavior: "smooth",
+      });
+    };
+
+    const scrollRight = () => {
+      if (!scrollContainerRef.current || !canScrollRight) return;
+
+      const container = scrollContainerRef.current;
+      const scrollAmount = Math.min(300, container.clientWidth / 3); // Scroll by 300px or 1/3 of visible width
+
+      container.scrollBy({
+        left: scrollAmount,
+        behavior: "smooth",
+      });
+    };
+
+    // Set up scroll event listener
+    useEffect(() => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      // Initial check
+      checkScrollCapabilities();
+
+      // Add scroll event listener
+      const handleScroll = () => {
+        checkScrollCapabilities();
+      };
+
+      container.addEventListener("scroll", handleScroll);
+
+      // Check on resize as well
+      const handleResize = () => {
+        setTimeout(checkScrollCapabilities, 100); // Small delay to ensure layout is updated
+      };
+
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        container.removeEventListener("scroll", handleScroll);
+        window.removeEventListener("resize", handleResize);
+      };
+    }, [inventoryData]); // Re-run when data changes
+
+    // Check scroll capabilities when table data changes
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        checkScrollCapabilities();
+      }, 100); // Small delay to ensure DOM is updated
+
+      return () => clearTimeout(timer);
+    }, [inventoryData, isTableCollapsed]);
+
+    const stickyLeftWidth = 60; // Width for checkbox column
 
     return (
       <div
         ref={containerRef}
-        className="border border-gray-200 rounded-lg mb-2 overflow-hidden relative shadow-sm"
+        className="border border-gray-200 rounded-lg overflow-hidden relative shadow-sm"
       >
-        {/* Table Header */}
-        <div className="bg-[#343432] text-white px-4 py-3">
+        {/* Updated Accordion Header with working scroll buttons */}
+        <div
+          className="bg-[#343432]  cursor-pointer"
+          onClick={() => setIsTableCollapsed(!isTableCollapsed)}
+        >
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <h3 className="font-medium text-sm truncate max-w-xs">
+            <div className="flex items-center space-x-6">
+              {/* Radio button */}
+              <div className="flex w-[50px] justify-center py-4 border-r-[1px] border-[#51428E] items-center">
+                <div className="w-4 h-4 border-2 border-white rounded-full flex items-center justify-center">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+              </div>
+
+              {/* Match name with pipe separator */}
+              <div className="flex items-center  space-x-4 py-4 pr-4 border-r-[1px] border-[#51428E]">
+                <h3 className="font-medium text-sm text-white">
                   {matchDetails?.match_name || "Match Details"}
                 </h3>
-                {isEditMode && (
-                  <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs">
-                    EDIT MODE
-                  </span>
-                )}
               </div>
-              <div className="flex items-center space-x-4 text-xs">
-                <div className="flex items-center space-x-1">
-                  <Calendar1Icon size={12} />
-                  <span className="truncate">
+
+              {/* Match details with pipe separators and more spacing */}
+              <div className="flex items-center space-x-6 text-xs ">
+                <div className="flex items-center space-x-2 py-4 pr-4 border-r-[1px] border-[#51428E]">
+                  <Calendar1Icon size={14} className="text-white" />
+                  <span className="text-white">
                     {matchDetails?.match_date_format}
                   </span>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <Clock size={12} />
-                  <span className="truncate">{matchDetails?.match_time}</span>
+
+                <div className="flex items-center space-x-2 py-4 pr-4 border-r-[1px] border-[#51428E]">
+                  <Clock size={14} className="text-white" />
+                  <span className="text-white">{matchDetails?.match_time}</span>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <MapPin size={12} />
-                  <span className="truncate max-w-xs">
-                    {matchDetails?.stadium_name} , {matchDetails?.country_name}{" "}
-                    , {matchDetails?.city_name}
+
+                <div className="flex items-center space-x-2 py-4 pr-4 border-r-[1px] border-[#51428E]">
+                  <MapPin size={14} className="text-white" />
+                  <span className="text-white max-w-xs truncate">
+                    {matchDetails?.stadium_name}, {matchDetails?.country_name},{" "}
+                    {matchDetails?.city_name}
                   </span>
                 </div>
               </div>
             </div>
-            <ChevronDown size={16} />
+
+            <div className="flex items-center space-x-4 pr-4">
+              {/* Accordion Toggle - Remove scroll buttons from here */}
+              <div className="bg-[#FFFFFF26] p-2 rounded-full cursor-pointer">
+                <ChevronDown
+                  size={18}
+                  className={`text-white transition-transform duration-200 ${
+                    isTableCollapsed ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Table Content with Sticky Columns */}
-        <div
-          className="w-full bg-white relative"
-          style={{ overflow: "visible" }}
-        >
-          {/* Main scrollable table container */}
+        {/* Table Content */}
+        {!isTableCollapsed && (
           <div
-            ref={scrollContainerRef}
-            className="w-full overflow-x-auto"
-            style={{ paddingRight: `${stickyColumnsWidth}px` }}
+            className="w-full bg-white relative"
+            style={{ overflow: "visible" }}
           >
-            <table
-              ref={mainTableRef}
-              className="w-full border-none"
-              style={{ minWidth: "1200px" }}
+            {/* Sticky Left Column for Checkbox */}
+            <div
+              className={`absolute top-0 left-0 h-full bg-white border-r border-[#DADBE5] z-30 transition-shadow duration-200 ${
+                hasScrolledLeft ? "shadow-md" : ""
+              }`}
+              style={{ width: `50px` }}
             >
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-3 py-2 text-left text-gray-600 font-medium whitespace-nowrap text-xs w-12 border border-r-1 border-gray-200">
-                    <input
-                      type="checkbox"
-                      checked={
-                        selectedRows.length === inventoryData.length &&
-                        inventoryData.length > 0
-                      }
-                      disabled={isEditMode}
-                      onChange={
-                        selectedRows.length > 0
-                          ? handleDeselectAll
-                          : handleSelectAll
-                      }
-                      className={`w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 ${
-                        isEditMode ? "cursor-not-allowed opacity-50" : ""
-                      }`}
-                    />
-                  </th>
-                  {headers.map((header) => (
-                    <th
-                      key={header.key}
-                      className={`px-3 py-3 ${
-                        header?.increasedWidth
-                          ? header?.increasedWidth
-                          : "min-w-[140px]"
-                      } text-left text-gray-600 font-medium whitespace-nowrap text-xs border border-r-1 border-gray-200`}
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="truncate">{header.label}</span>
-                      </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {inventoryData.map((row, rowIndex) => {
-                  const isSelected = selectedRows.includes(rowIndex);
-                  const isRowDisabled =
-                    isEditMode && editingRowIndex !== rowIndex;
-
-                  return (
-                    <tr
-                      key={row.id || rowIndex}
-                      className={`border-b border-gray-200 transition-colors ${
-                        isSelected ? "bg-blue-50" : "bg-white hover:bg-gray-50"
-                      } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
-                      onMouseEnter={() =>
-                        !isRowDisabled && setHoveredRowIndex(rowIndex)
-                      }
-                      onMouseLeave={() => setHoveredRowIndex(null)}
-                    >
-                      <td className="py-2 px-3 text-xs whitespace-nowrap w-12 border border-r-1 border-gray-200">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          disabled={isRowDisabled}
-                          onChange={(e) => {
-                            if (isRowDisabled) return;
-                            e.stopPropagation();
-                            const newSelectedRows = isSelected
-                              ? selectedRows.filter(
-                                  (index) => index !== rowIndex
-                                )
-                              : [...selectedRows, rowIndex];
-                            setSelectedRows(newSelectedRows);
-                          }}
-                          className={`w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 ${
-                            isRowDisabled ? "cursor-not-allowed opacity-50" : ""
-                          }`}
-                        />
-                      </td>
-                      {headers.map((header) => (
-                        <td
-                          key={`${rowIndex}-${header.key}`}
-                          className={`py-2 px-3 text-xs ${
-                            header?.increasedWidth
-                              ? header?.increasedWidth
-                              : "min-w-[140px]"
-                          } whitespace-nowrap overflow-hidden text-ellipsis align-middle min-w-[140px] border-r border-gray-200 ${
-                            isRowDisabled ? "bg-gray-50" : ""
-                          }`}
-                        >
-                          {header.editable ? (
-                            renderEditableCell(
-                              row,
-                              header,
-                              rowIndex,
-                              true, //hoveredRowIndex === rowIndex && !isRowDisabled,
-                              isRowDisabled
-                            )
-                          ) : (
-                            <span
-                              className={`${header.className || ""} ${
-                                isRowDisabled ? "text-gray-400" : ""
-                              }`}
-                            >
-                              {row[header.key]}
-                            </span>
-                          )}
-                        </td>
-                      ))}
+              <div className="h-full">
+                <table className="w-full h-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-[#DADBE5]">
+                      <th className="px-3 py-3 text-center text-[#7D82A4] font-medium whitespace-nowrap text-xs border-r border-[#DADBE5]">
+                        <div className="flex justify-center items-center">
+                          <input
+                            type="checkbox"
+                            checked={
+                              selectedRows.length === inventoryData.length &&
+                              inventoryData.length > 0
+                            }
+                            disabled={isEditMode}
+                            onChange={
+                              selectedRows.length > 0
+                                ? handleDeselectAll
+                                : handleSelectAll
+                            }
+                            className={`w-4 h-4 text-blue-600 border-[#DADBE5] rounded focus:ring-blue-500 ${
+                              isEditMode ? "cursor-not-allowed opacity-50" : ""
+                            }`}
+                          />
+                        </div>
+                      </th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {inventoryData.map((row, rowIndex) => {
+                      const isSelected = selectedRows.includes(rowIndex);
+                      const isRowDisabled =
+                        isEditMode && editingRowIndex !== rowIndex;
 
-          {/* Sticky right columns - also need to handle disabled state */}
-          <div
-            className={`absolute top-0 right-0 h-full bg-white border-l border-gray-200 ${
-              hasScrolled ? "shadow-md" : ""
-            }`}
-            style={{ width: `${stickyColumnsWidth}px` }}
-          >
-            <div className="h-full">
+                      return (
+                        <tr
+                          key={`sticky-left-${row.id || rowIndex}`}
+                          className={`border-b border-[#DADBE5] transition-colors ${
+                            isSelected
+                              ? "bg-[#EEF1FD]"
+                              : "bg-white hover:bg-gray-50"
+                          } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
+                          onMouseEnter={() =>
+                            !isRowDisabled && setHoveredRowIndex(rowIndex)
+                          }
+                          onMouseLeave={() => setHoveredRowIndex(null)}
+                        >
+                          <td className="py-2 px-3 text-center whitespace-nowrap border-r border-[#DADBE5]">
+                            <div className="flex justify-center items-center">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                disabled={isRowDisabled}
+                                onChange={(e) => {
+                                  if (isRowDisabled) return;
+                                  e.stopPropagation();
+                                  const newSelectedRows = isSelected
+                                    ? selectedRows.filter(
+                                        (index) => index !== rowIndex
+                                      )
+                                    : [...selectedRows, rowIndex];
+                                  setSelectedRows(newSelectedRows);
+                                }}
+                                className={`w-4 h-4 text-blue-600 border-[#DADBE5] rounded focus:ring-blue-500 ${
+                                  isRowDisabled
+                                    ? "cursor-not-allowed opacity-50"
+                                    : ""
+                                }`}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            {/* Main scrollable table container */}
+            <div
+              ref={scrollContainerRef}
+              className="w-full overflow-x-auto hideScrollbar"
+              style={{
+                paddingLeft: `50px`,
+                paddingRight: `50px`,
+              }}
+            >
               <table
-                ref={stickyTableRef}
-                className="w-full h-full border-collapse"
+                ref={mainTableRef}
+                className="w-full border-none"
+                style={{ minWidth: "1200px" }}
               >
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    {stickyHeaders.map((header, idx) => (
+                  <tr className="bg-gray-50 border-b border-[#DADBE5]">
+                    {headers.map((header) => (
                       <th
-                        key={`sticky-header-${idx}`}
-                        className="py-2 px-2 text-left text-gray-600 text-xs border-r border-gray-200 font-medium whitespace-nowrap text-center"
-                        style={{ width: "50px" }}
+                        key={header.key}
+                        className={`px-3 py-3 ${
+                          header?.increasedWidth
+                            ? header?.increasedWidth
+                            : "min-w-[140px]"
+                        } text-left text-[#7D82A4] font-medium whitespace-nowrap text-xs border-r border-[#DADBE5]`}
                       >
-                        {header}
+                        <div className="flex justify-between items-center">
+                          <span className="truncate text-[#7D82A4]">
+                            {header.label}
+                          </span>
+                        </div>
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {inventoryData.map((row, rowIndex) => {
-                    const stickyColumns = getStickyColumnsForRow(row, rowIndex);
+                    const isSelected = selectedRows.includes(rowIndex);
                     const isRowDisabled =
                       isEditMode && editingRowIndex !== rowIndex;
 
                     return (
                       <tr
-                        key={`sticky-${row.id || rowIndex}`}
-                        className={`border-b border-gray-200 bg-white hover:bg-gray-50 ${
-                          isRowDisabled ? "opacity-60 bg-gray-50" : ""
-                        }`}
+                        key={row.id || rowIndex}
+                        className={`border-b border-[#DADBE5] transition-colors ${
+                          isSelected
+                            ? "bg-[#EEF1FD]"
+                            : "bg-white hover:bg-gray-50"
+                        } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
+                        onMouseEnter={() =>
+                          !isRowDisabled && setHoveredRowIndex(rowIndex)
+                        }
+                        onMouseLeave={() => setHoveredRowIndex(null)}
                       >
-                        {stickyColumns.map((column, colIndex) => (
+                        {headers.map((header) => (
                           <td
-                            key={`sticky-${rowIndex}-${colIndex}`}
-                            className={`py-2 text-sm align-middle text-center border-r border-gray-200 ${
-                              column?.className || ""
-                            } ${isRowDisabled ? "pointer-events-none" : ""}`}
-                            style={{ width: "50px" }}
+                            key={`${rowIndex}-${header.key}`}
+                            className={`py-2 px-3 text-xs ${
+                              header?.increasedWidth
+                                ? header?.increasedWidth
+                                : "min-w-[140px]"
+                            } whitespace-nowrap overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
+                              isRowDisabled ? "bg-gray-50" : ""
+                            } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
                           >
-                            <div className="flex justify-center">
-                              {column.icon}
-                            </div>
+                            {header.editable ? (
+                              renderEditableCell(
+                                row,
+                                header,
+                                rowIndex,
+                                true,
+                                isRowDisabled
+                              )
+                            ) : (
+                              <span
+                                className={`${header.className || ""} ${
+                                  isRowDisabled
+                                    ? "text-gray-400"
+                                    : "text-[#323A70]"
+                                }`}
+                              >
+                                {row[header.key]}
+                              </span>
+                            )}
                           </td>
                         ))}
                       </tr>
@@ -2032,8 +2026,154 @@ const AddInventoryPage = (props) => {
                 </tbody>
               </table>
             </div>
+
+            <div
+              className={`absolute top-0 right-0 h-full bg-white border-l border-[#DADBE5] z-20 transition-shadow duration-200 ${
+                hasScrolled ? "shadow-md" : ""
+              }`}
+              style={{ width: `${stickyColumnsWidth}px` }}
+            >
+              <div className="h-full">
+                <table
+                  ref={stickyTableRef}
+                  className="w-full h-full border-collapse"
+                >
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-[#DADBE5]">
+                      {/* Hand icon column header - Empty header with just text */}
+                      <th
+                        className="py-2 px-2 text-left text-[#7D82A4] text-xs border-r border-[#DADBE5] font-medium whitespace-nowrap text-center"
+                        style={{
+                          width: "50px",
+                          minWidth: "50px",
+                          maxWidth: "50px",
+                        }}
+                      >
+                        <div className="flex items-center justify-center">
+                          <span className="text-[#7D82A4] text-xs"></span>
+                        </div>
+                      </th>
+
+                      {/* Upload icon column header with scroll navigation */}
+                      <th
+                        className="py-2 px-2 text-left text-[#7D82A4] text-xs font-medium whitespace-nowrap text-center relative"
+                        style={{
+                          width: "50px",
+                          minWidth: "50px",
+                          maxWidth: "50px",
+                        }}
+                      >
+                        {/* Scroll Navigation Arrows in table header */}
+                        <div className="flex items-center justify-center space-x-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              scrollLeft();
+                            }}
+                            disabled={!canScrollLeft}
+                            className={`p-1 rounded transition-colors ${
+                              canScrollLeft
+                                ? "text-[#7D82A4] hover:bg-gray-200 cursor-pointer"
+                                : "text-gray-300 cursor-not-allowed"
+                            }`}
+                            title="Scroll Left"
+                          >
+                            <ChevronLeft size={12} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              scrollRight();
+                            }}
+                            disabled={!canScrollRight}
+                            className={`p-1 rounded transition-colors ${
+                              canScrollRight
+                                ? "text-[#7D82A4] hover:bg-gray-200 cursor-pointer"
+                                : "text-gray-300 cursor-not-allowed"
+                            }`}
+                            title="Scroll Right"
+                          >
+                            <ChevronRight size={12} />
+                          </button>
+                        </div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {inventoryData.map((row, rowIndex) => {
+                      const isRowDisabled =
+                        isEditMode && editingRowIndex !== rowIndex;
+                      const isSelected = selectedRows.includes(rowIndex);
+
+                      return (
+                        <tr
+                          key={`sticky-${row.id || rowIndex}`}
+                          className={`border-b border-[#DADBE5] transition-colors ${
+                            isSelected
+                              ? "bg-[#EEF1FD]"
+                              : "bg-white hover:bg-gray-50"
+                          } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
+                        >
+                          {/* Hand icon column */}
+                          <td
+                            className={`py-2 text-sm align-middle text-center border-r border-[#DADBE5] ${
+                              isRowDisabled ? "pointer-events-none" : ""
+                            } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
+                            style={{
+                              width: "50px",
+                              minWidth: "50px",
+                              maxWidth: "50px",
+                            }}
+                          >
+                            <div className="flex justify-center items-center">
+                              <Image
+                                src={row?.tickets_in_hand ? greenHand : oneHand}
+                                alt="hand status"
+                                width={16}
+                                height={16}
+                                className={`${
+                                  row?.tickets_in_hand
+                                    ? "text-green-500"
+                                    : "text-gray-400"
+                                } cursor-pointer hover:opacity-75 transition-opacity`}
+                                onClick={() => handleHandAction(row, rowIndex)}
+                              />
+                            </div>
+                          </td>
+
+                          {/* Upload icon column */}
+                          <td
+                            className={`py-2 text-sm align-middle text-center ${
+                              isRowDisabled ? "pointer-events-none" : ""
+                            } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
+                            style={{
+                              width: "50px",
+                              minWidth: "50px",
+                              maxWidth: "50px",
+                            }}
+                          >
+                            <div className="flex justify-center items-center h-full">
+                              <Image
+                                src={uploadListing}
+                                alt="upload"
+                                width={16}
+                                height={16}
+                                className="cursor-pointer hover:opacity-75 transition-opacity"
+                                onClick={() =>
+                                  handleUploadAction(row, rowIndex)
+                                }
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     );
   };
@@ -2065,19 +2205,21 @@ const AddInventoryPage = (props) => {
     setShowTicketInfoPopup(true);
   };
 
-
-  const handleBulkNavigateClick =(route)=>{
-    router.push(`/bulk-listings${route}` )
-  }
+  const handleBulkNavigateClick = (route) => {
+    router.push(`/bulk-listings${route}`);
+  };
 
   const [showRequestPopup, setShowRequestPopup] = useState(false);
-
   return (
     <div className="bg-[#F5F7FA] w-full h-full relative min-h-screen">
       {/* Header with selected match info */}
       <ViewMapPopup
+        image={matchDetails?.venue_image}
+        stadiumName={matchDetails?.stadium_name}
         onClose={() => setShowViewPopup(false)}
         show={showViewPopup}
+        blockData={block_data}
+        blockDataColor={response?.block_data_color}
       />
       <div className="bg-white">
         <div className="border-b-[1px] p-5 border-[#E0E1EA] flex justify-between items-center">
@@ -2108,7 +2250,9 @@ const AddInventoryPage = (props) => {
                 />
               }
               label="Choose Match Event"
-              className={`!py-[8px] !text-[#323A70] !text-[14px] ${searchValue.length<=3 && '!pl-[44px]'}`}
+              className={`!py-[8px] !text-[#323A70] !text-[14px] ${
+                searchValue.length <= 3 && "!pl-[44px]"
+              }`}
               paddingClassName=""
               autoComplete="off"
               showDelete={true}

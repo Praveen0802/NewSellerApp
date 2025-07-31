@@ -150,7 +150,7 @@ const FloatingLabelInput = ({
             }`}
           >
             {label}
-            {mandatory ? "*" : ""}
+            {mandatory ? <span className="text-red-400">*</span> : ""}
           </span>
         </FloatingPlaceholder>
       )}
