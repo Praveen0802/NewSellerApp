@@ -28,6 +28,7 @@ const OrderViewPopup = ({
           data={data}
           onClose={onClose}
           showShimmer={showShimmer}
+          isPayout={true}
         />
       )}
     </RightViewModal>

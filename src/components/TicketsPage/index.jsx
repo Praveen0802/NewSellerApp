@@ -340,6 +340,7 @@ const TicketsPage = (props) => {
       tickets.forEach((ticket, ticketIndex) => {
         transformedData.push({
           id: `${matchIndex}-${ticketIndex}`,
+          s_no: ticket.s_no || "N/A",
           matchIndex: matchIndex,
           ticketIndex: ticketIndex,
           match_name: matchInfo.match_name || "N/A",
@@ -354,7 +355,7 @@ const TicketsPage = (props) => {
           ticket_category_id: ticket.ticket_category_id || "",
           quantity: ticket.quantity || 0,
           price: ticket.price || 0,
-          price_currency: ticket.price_type || "GBP",
+          price_type: ticket.price_type || "GBP",
           status:
             ticket.status === 1
               ? "Active"
@@ -371,8 +372,8 @@ const TicketsPage = (props) => {
           split_type_id: ticket.split?.id || "",
           ship_date: ticket.ship_date || "N/A",
           tickets_in_hand: ticket.ticket_in_hand || false,
-          listing_notes:
-            ticket.listing_note?.map((note) => note.name).join(", ") || "N/A",
+          listing_note:
+            ticket.listing_note?.map((note) => `${note.id}`),
           rawTicketData: ticket,
           rawMatchData: matchInfo,
         });
@@ -393,41 +394,10 @@ const TicketsPage = (props) => {
 
     // Create headers based on the structure you want
     const headers = [
-      { key: "match_name", label: "Match Name", editable: false },
-      { key: "venue", label: "Venue", editable: false },
-      { key: "tournament", label: "Tournament", editable: false },
-      { key: "match_date", label: "Match Date", editable: false },
-      { key: "match_time", label: "Match Time", editable: false },
+      { key: "s_no", label: "Listing No", editable: false },
       {
         key: "ticket_type_id",
         label: "Ticket Type",
-        editable: true,
-        type: "select",
-        options: [],
-      },
-      {
-        key: "quantity",
-        label: "Quantity",
-        editable: true,
-        type: "select",
-        options: [
-          { value: "1", label: "1" },
-          { value: "2", label: "2" },
-          { value: "3", label: "3" },
-          { value: "4", label: "4" },
-          { value: "5", label: "5" },
-        ],
-      },
-      {
-        key: "split_type_id",
-        label: "Split Type",
-        editable: true,
-        type: "select",
-        options: [],
-      },
-      {
-        key: "home_town",
-        label: "Fan Area",
         editable: true,
         type: "select",
         options: [],
@@ -443,7 +413,17 @@ const TicketsPage = (props) => {
         key: "block",
         label: "Section/Block",
         editable: true,
-        type: "text",
+        type: "select",
+        options: [],
+        dynamicOptions: true,
+        dependentOn: ["ticket_category_id", "match_id"],
+      },
+      {
+        key: "home_town",
+        label: "Fan Area",
+        editable: true,
+        type: "select",
+        options: [],
       },
       {
         key: "row",
@@ -452,8 +432,21 @@ const TicketsPage = (props) => {
         type: "text",
       },
       {
-        key: "first_seat",
-        label: "First Seat",
+        key: "quantity",
+        label: "Quantity",
+        editable: true,
+        type: "select",
+        options: [
+          { value: "1", label: "1" },
+          { value: "2", label: "2" },
+          { value: "3", label: "3" },
+          { value: "4", label: "4" },
+          { value: "5", label: "5" },
+        ],
+      },
+      {
+        key: "seat",
+        label: "Seat",
         editable: true,
         type: "text",
       },
@@ -470,10 +463,42 @@ const TicketsPage = (props) => {
         type: "text",
       },
       {
+        key: "price_type",
+        label: "Price Currency",
+        editable: false,
+        type: "text",
+      },
+      {
+        key: "web_price",
+        label: "Web Price",
+        editable: true,
+        type: "text",
+      },
+      {
+        key: "listing_note",
+        label: "Listing Note",
+        editable: true,
+        type: "multiselect",
+        options: [],
+      },
+      {
+        key: "first_seat",
+        label: "First Seat",
+        editable: true,
+        type: "text",
+      },
+      {
         key: "ship_date",
         label: "Date to Ship",
         editable: true,
         type: "date",
+      },
+      {
+        key: "split_type_id",
+        label: "Split Type",
+        editable: true,
+        type: "select",
+        options: [],
       },
       {
         key: "status",
@@ -494,6 +519,7 @@ const TicketsPage = (props) => {
       const allSplitTypes = new Map();
       const allHomeTowns = new Map();
       const allTicketCategories = new Map();
+      const allListingNotes = new Map();
 
       allFilters.forEach((filter) => {
         // Ticket Types
@@ -523,6 +549,15 @@ const TicketsPage = (props) => {
             allTicketCategories.set(key, value);
           });
         }
+
+        // Listing Notes
+        if (filter.restriction_left || filter.restriction_right) {
+          [...filter.restriction_left, ...filter.restriction_right].forEach(
+            (note) => {
+              allListingNotes.set(note.id.toString(), note.name);
+            }
+          );
+        }
       });
 
       // Update headers with options
@@ -550,6 +585,13 @@ const TicketsPage = (props) => {
           );
         } else if (header.key === "ticket_category_id") {
           header.options = Array.from(allTicketCategories.entries()).map(
+            ([value, label]) => ({
+              value,
+              label,
+            })
+          );
+        } else if (header.key === "listing_note") {
+          header.options = Array.from(allListingNotes.entries()).map(
             ([value, label]) => ({
               value,
               label,
@@ -1279,11 +1321,12 @@ const TicketsPage = (props) => {
   const CustomMatchTable = ({ matchData }) => {
     const { matchInfo, tickets, matchIndex, filters } = matchData;
     const [isCollapsed, setIsCollapsed] = useState(
-      collapsedMatches[matchIndex] || false
+      collapsedMatches[matchIndex] ?? true
     );
 
     const handleToggleCollapse = () => {
       const newState = !isCollapsed;
+      console.log("Toggle collapse", newState);
       setIsCollapsed(newState);
       setCollapsedMatches((prev) => ({
         ...prev,
@@ -1384,10 +1427,10 @@ const TicketsPage = (props) => {
         <ShimmerLoader />
       ) : (
         <>
-          <div className="m-6 max-h-[calc(100vh-400px)] overflow-y-auto">
+          <div className="m-6 max-h-[calc(100vh-460px)] overflow-y-auto">
             {groupedTicketsData.length > 0 ? (
               groupedTicketsData.map((matchData, index) => (
-                <div key={`match-${matchData.matchIndex}`} className="mb-4">
+                <div key={`match-${matchData.matchIndex}`} className="not-last:mb-4">
                   <CustomMatchTable matchData={matchData} />
                 </div>
               ))

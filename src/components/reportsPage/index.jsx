@@ -28,6 +28,7 @@ import { getAuthToken } from "@/utils/helperFunctions";
 import SelectListItem from "../tradePage/components/selectListItem";
 import { useRouter } from "next/router";
 import { toast } from "react-toastify";
+import { formatDate } from "../tradePage/components/stickyDataTable";
 
 const ReportsPage = (props) => {
   const { apiData } = props;
@@ -155,27 +156,18 @@ const ReportsPage = (props) => {
   };
 
   const getStatusText = (statusCode) => {
-    switch (statusCode) {
-      case 1:
-        return "Approved";
-      case 2:
-        return "Pending";
-      case 3:
-        return "Rejected";
-      default:
-        return "Unknown";
-    }
+    return statusCode;
   };
 
   const depositData = depositHistory?.map((list) => {
     return {
       title: list?.month,
       headers: [
-        "Reference No",
+        "Payment Reference",
         "Amount",
         "Payment Method",
-        "Status",
         "Date",
+        "Status",
         "",
       ],
       data: list?.transactions?.map((listItems) => {
@@ -183,8 +175,8 @@ const ReportsPage = (props) => {
           referenceNo: listItems?.reference_no,
           amount: listItems?.price_with_currency,
           paymentMethod: listItems?.payment_transfer_by,
-          status: getStatusText(listItems?.status),
-          date: listItems?.created_date_time,
+          date: formatDate(listItems?.created_date_time, "dateOnly"),
+          status: getStatusText(listItems?.status_label),
           eye: true,
           id: listItems?.id,
         };
@@ -195,13 +187,13 @@ const ReportsPage = (props) => {
   const transactionData = transactionHistory?.map((list) => {
     return {
       title: list?.month,
-      headers: ["Reference No", "Amount", "Type", "Date", ""],
+      headers: ["Payment Reference", "Amount", "Type", "Date", ""],
       data: list?.transactions?.map((listItems) => {
         return {
           referenceNo: listItems?.reference_no,
           amount: listItems?.price_with_currency,
           paymentMethod: listItems?.credit_debit,
-          date: listItems?.created_date_time,
+          date: formatDate(listItems?.created_date_time, "dateOnly"),
           eye: true,
           id: listItems?.id,
         };
@@ -368,42 +360,46 @@ const ReportsPage = (props) => {
               </div>
 
               {/* Select and Date Range - Full width containers on mobile */}
-              <div className="flex flex-col sm:flex-row gap-3 w-full">
-                <FloatingSelect
-                  label={
-                    !transactionTab ? "Transaction status" : "Transaction type"
-                  }
-                  options={
-                    !transactionTab
-                      ? [
-                          { value: "1", label: "Approved" },
-                          { value: "2", label: "Pending" },
-                          { value: "3", label: "Rejected" },
-                        ]
-                      : [
-                          { value: "CREDIT", label: "CREDIT" },
-                          { value: "DEBIT", label: "DEBIT" },
-                        ]
-                  }
-                  selectedValue={
-                    transactionTab ? transactionType : statusFilter
-                  }
-                  keyValue="transactionType"
-                  className="!w-full sm:!w-[50%]"
-                  onSelect={handleSelectChange}
-                  paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
-                />
-                <FloatingDateRange
-                  id="transactionDate"
-                  name="transactionDate"
-                  keyValue="transactionDate"
-                  parentClassName="!w-full sm:!w-[50%]"
-                  label="Transaction date"
-                  className="!py-[8px] !px-[16px] mobile:text-xs"
-                  value={dateRange}
-                  onChange={handleDateChange}
-                />
-              </div>
+              {!transactionTab && (
+                <div className="flex flex-col sm:flex-row gap-3 w-full">
+                  <FloatingSelect
+                    label={
+                      !transactionTab
+                        ? "Transaction status"
+                        : "Transaction type"
+                    }
+                    options={
+                      !transactionTab
+                        ? [
+                            { value: "1", label: "Approved" },
+                            { value: "2", label: "Pending" },
+                            { value: "3", label: "Rejected" },
+                          ]
+                        : [
+                            { value: "CREDIT", label: "CREDIT" },
+                            { value: "DEBIT", label: "DEBIT" },
+                          ]
+                    }
+                    selectedValue={
+                      transactionTab ? transactionType : statusFilter
+                    }
+                    keyValue="transactionType"
+                    className="!w-full sm:!w-[50%]"
+                    onSelect={handleSelectChange}
+                    paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
+                  />
+                  <FloatingDateRange
+                    id="transactionDate"
+                    name="transactionDate"
+                    keyValue="transactionDate"
+                    parentClassName="!w-full sm:!w-[50%]"
+                    label="Transaction date"
+                    className="!py-[8px] !px-[16px] mobile:text-xs"
+                    value={dateRange}
+                    onChange={handleDateChange}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Table Section */}

@@ -272,9 +272,9 @@ const RportHistory = (props) => {
     { key: "ticket_details", label: "Ticket Details" },
     { key: "quantity", label: "Qty" },
     { key: "ticket_type", label: "Ticket Type" },
-    { key: "order_status_label", label: "Order Status Label" },
-    { key: "order_status", label: "Order Status" },
-    { key: "payment_status", label: "Payment Status" },
+    { key: "order_status_label", label: "Order Status" },
+    // { key: "order_status", label: "Order Status" },
+    { key: "payment_status_label", label: "Payment Status" },
   ];
 
   const createInitialVisibleColumns = () => {
@@ -755,7 +755,7 @@ const RportHistory = (props) => {
           </div>
 
           {/* StickyDataTable */}
-          <div className="max-h-[calc(100vh-370px)] overflow-auto">
+          <div className="max-h-[calc(100vh-410px)] overflow-auto">
             <StickyDataTable
               headers={filteredHeaders}
               data={transformedData}
@@ -763,6 +763,10 @@ const RportHistory = (props) => {
               loading={isLoading}
               onScrollEnd={() => {
                 handleScrollEnd();
+              }}
+              dateFormatConfig={{
+                order_date: "dateOnly",
+                event_date: "dateOnly",
               }}
             />
           </div>

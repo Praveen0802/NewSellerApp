@@ -28,7 +28,7 @@ const Reports = (props) => {
       key: "payouts",
       route: "/payouts",
       icon: (
-        <IconStore.search className="text-[#3E2E7E] stroke-[#3E2E7E] size-4" />
+        <IconStore.wallet className="text-[#3E2E7E] stroke-[#3E2E7E] size-4" />
       ),
     },
   ];
@@ -52,7 +52,11 @@ const Reports = (props) => {
           );
         })}
       </div>
-      {activeTab == "wallet" ? <ReportsPage {...props} /> : <PayoutPage {...props} />}
+      {activeTab == "wallet" ? (
+        <ReportsPage {...props} />
+      ) : (
+        <PayoutPage {...props} />
+      )}
     </div>
   );
 };
