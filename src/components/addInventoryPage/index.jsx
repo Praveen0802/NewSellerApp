@@ -1227,7 +1227,7 @@ const AddInventoryPage = (props) => {
                       ? `${matchDetails?.country_name},`
                       : ""}{" "}
                     {matchDetails?.city_name
-                      ? `${matchDetails?.city_name},}`
+                      ? `${matchDetails?.city_name}`
                       : ""}
                   </p>
                 </div>

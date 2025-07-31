@@ -428,7 +428,7 @@ const SimpleEditableCell = ({
 
   const getDisplayValue = () => {
     if (type === "select" && options.length > 0) {
-      const option = options.find((opt) => opt.value === value);
+      const option = options.find((opt) => opt.value == value);
       return option ? option.label : !value ? placeholder : value;
     }
     if (type === "checkbox") {

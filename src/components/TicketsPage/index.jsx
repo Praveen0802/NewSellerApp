@@ -33,6 +33,7 @@ import {
   getMyListingHistory,
   getViewDetailsPopup,
   updateMyListing,
+  deleteMyListing, // Add this import if it exists
 } from "@/utils/apiHandler/request";
 import UploadTickets from "../ModalComponents/uploadTickets";
 import InventoryLogsInfo from "../inventoryLogsInfo";
@@ -47,6 +48,7 @@ import {
   constructHeadersFromFilters,
 } from "../addInventoryPage/customInventoryTable/utils";
 import CommonInventoryTable from "../addInventoryPage/customInventoryTable";
+import BulkActionBar from "../addInventoryPage/bulkActionBar"; // Import the BulkActionBar
 
 const ShimmerCard = () => (
   <div className="border border-gray-200 rounded-lg mb-4 overflow-hidden animate-pulse">
@@ -309,7 +311,13 @@ const TicketsPage = (props) => {
     page: 1,
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedRows, setSelectedRows] = useState([]);
+  
+  // ENHANCED: Global selection state similar to BulkInventory
+  const [globalSelectedTickets, setGlobalSelectedTickets] = useState([]);
+  const [globalEditingTickets, setGlobalEditingTickets] = useState([]);
+  const [isGlobalEditMode, setIsGlobalEditMode] = useState(false);
+  const [loader, setLoader] = useState(false);
+  
   const [viewDetailsPopup, setViewDetailsPopup] = useState({
     show: false,
     rowData: null,
@@ -340,6 +348,8 @@ const TicketsPage = (props) => {
       tickets.forEach((ticket, ticketIndex) => {
         transformedData.push({
           id: `${matchIndex}-${ticketIndex}`,
+          uniqueId: `${matchIndex}_${ticketIndex}`, // Add uniqueId for global selection
+          s_no: ticket.s_no || "N/A",
           matchIndex: matchIndex,
           ticketIndex: ticketIndex,
           match_name: matchInfo.match_name || "N/A",
@@ -354,7 +364,7 @@ const TicketsPage = (props) => {
           ticket_category_id: ticket.ticket_category_id || "",
           quantity: ticket.quantity || 0,
           price: ticket.price || 0,
-          price_currency: ticket.price_type || "GBP",
+          price_type: ticket.price_type || "GBP",
           status:
             ticket.status === 1
               ? "Active"
@@ -371,8 +381,7 @@ const TicketsPage = (props) => {
           split_type_id: ticket.split?.id || "",
           ship_date: ticket.ship_date || "N/A",
           tickets_in_hand: ticket.ticket_in_hand || false,
-          listing_notes:
-            ticket.listing_note?.map((note) => note.name).join(", ") || "N/A",
+          listing_note: ticket.listing_note?.map((note) => `${note.id}`),
           rawTicketData: ticket,
           rawMatchData: matchInfo,
         });
@@ -381,6 +390,188 @@ const TicketsPage = (props) => {
 
     setTicketsData(transformedData);
   }, [mockListingHistory]);
+
+  // ENHANCED: Global selection handlers similar to BulkInventory
+  const handleGlobalSelectAll = () => {
+    const allTicketIds = ticketsData.map(ticket => ticket.uniqueId);
+    setGlobalSelectedTickets(allTicketIds);
+  };
+
+  const handleGlobalDeselectAll = () => {
+    setGlobalSelectedTickets([]);
+  };
+
+  // Handle select all for specific match
+  const handleSelectAllForMatch = (matchIndex) => {
+    const matchTickets = ticketsData.filter(ticket => ticket.matchIndex === matchIndex);
+    const matchTicketIds = matchTickets.map(ticket => ticket.uniqueId);
+    
+    // Remove existing selections for this match and add new ones
+    const filteredGlobalSelection = globalSelectedTickets.filter(uniqueId => {
+      const [ticketMatchIndex] = uniqueId.split('_');
+      return parseInt(ticketMatchIndex) !== matchIndex;
+    });
+    
+    setGlobalSelectedTickets([...filteredGlobalSelection, ...matchTicketIds]);
+  };
+
+  // Handle deselect all for specific match
+  const handleDeselectAllForMatch = (matchIndex) => {
+    const filteredGlobalSelection = globalSelectedTickets.filter(uniqueId => {
+      const [ticketMatchIndex] = uniqueId.split('_');
+      return parseInt(ticketMatchIndex) !== matchIndex;
+    });
+    
+    setGlobalSelectedTickets(filteredGlobalSelection);
+  };
+
+  // Get selected rows for a specific match (convert uniqueId to local indices)
+  const getSelectedRowsForMatch = (matchIndex) => {
+    const selectedRows = [];
+    globalSelectedTickets.forEach(uniqueId => {
+      const [ticketMatchIndex, ticketIndex] = uniqueId.split('_');
+      if (parseInt(ticketMatchIndex) === matchIndex) {
+        selectedRows.push(parseInt(ticketIndex));
+      }
+    });
+    return selectedRows;
+  };
+
+  // Handle row selection for individual match tables
+  const handleSetSelectedRowsForMatch = (matchIndex, newSelectedRows) => {
+    // Remove existing selections for this match
+    const filteredGlobalSelection = globalSelectedTickets.filter(uniqueId => {
+      const [ticketMatchIndex] = uniqueId.split('_');
+      return parseInt(ticketMatchIndex) !== matchIndex;
+    });
+
+    // Add new selections for this match
+    const newGlobalSelections = newSelectedRows.map(rowIndex => `${matchIndex}_${rowIndex}`);
+    
+    setGlobalSelectedTickets([...filteredGlobalSelection, ...newGlobalSelections]);
+  };
+
+  // ENHANCED: Global bulk actions
+  const handleGlobalEdit = () => {
+    if (globalSelectedTickets.length === 0) {
+      toast.error("Please select tickets to edit");
+      return;
+    }
+
+    setGlobalEditingTickets(globalSelectedTickets);
+    setIsGlobalEditMode(true);
+
+    if (globalSelectedTickets.length === 1) {
+      toast.success("Edit mode activated for selected ticket");
+    } else {
+      toast.success(`Bulk edit mode activated for ${globalSelectedTickets.length} tickets`);
+    }
+  };
+
+  const handleGlobalSaveEdit = () => {
+    setGlobalEditingTickets([]);
+    setIsGlobalEditMode(false);
+    setGlobalSelectedTickets([]);
+
+    if (globalEditingTickets.length > 1) {
+      toast.success(`Changes saved successfully for ${globalEditingTickets.length} tickets`);
+    } else {
+      toast.success("Changes saved successfully");
+    }
+  };
+
+  const handleGlobalCancelEdit = () => {
+    setGlobalEditingTickets([]);
+    setIsGlobalEditMode(false);
+    setGlobalSelectedTickets([]);
+    toast.info("Edit cancelled");
+  };
+
+  const handleGlobalDelete = async () => {
+    if (globalSelectedTickets.length === 0) {
+      toast.error("Please select tickets to delete");
+      return;
+    }
+
+    console.log("Deleting selected tickets:", globalSelectedTickets);
+    
+    try {
+      setLoader(true);
+      
+      // Get the actual tickets to delete
+      const ticketsToDelete = ticketsData.filter(ticket => 
+        globalSelectedTickets.includes(ticket.uniqueId)
+      );
+console.log(ticketsToDelete,'ticketsToDeleteticketsToDelete')
+      // Delete each ticket via API
+      try{
+        const deletePromises = ticketsToDelete.map(ticket => 
+          deleteMyListing("", ticket.rawTicketData.s_no) // Assuming this API exists
+        );
+        await Promise.all(deletePromises);
+      }catch{
+        console.log('error')
+      }
+     
+
+     
+
+      // Remove tickets from local state
+      setTicketsData(prevData => 
+        prevData.filter(ticket => !globalSelectedTickets.includes(ticket.uniqueId))
+      );
+      
+      setGlobalSelectedTickets([]);
+      toast.success(`${globalSelectedTickets.length} ticket(s) deleted successfully`);
+      
+      // Optionally refresh data from server
+      await fetchData(filtersApplied);
+      
+    } catch (error) {
+      console.error("Error deleting tickets:", error);
+      toast.error("Error deleting tickets");
+    } finally {
+      setLoader(false);
+    }
+  };
+
+  const handleGlobalClone = () => {
+    if (globalSelectedTickets.length === 0) {
+      toast.error("Please select tickets to clone");
+      return;
+    }
+
+    console.log("Cloning selected tickets:", globalSelectedTickets);
+    
+    // Get the tickets to clone
+    const ticketsToClone = ticketsData.filter(ticket => 
+      globalSelectedTickets.includes(ticket.uniqueId)
+    );
+
+    // Create cloned tickets with new IDs
+    const clonedTickets = ticketsToClone.map((ticket) => ({
+      ...ticket,
+      id: `${ticket.matchIndex}-${Date.now()}-${Math.random()}`,
+      uniqueId: `${ticket.matchIndex}_${Date.now()}_${Math.random()}`,
+      s_no: `CLONE_${ticket.s_no}`, // Prefix to indicate it's a clone
+      rawTicketData: {
+        ...ticket.rawTicketData,
+        s_no: `CLONE_${ticket.rawTicketData.s_no}`,
+      },
+    }));
+
+    // Add cloned tickets to state
+    setTicketsData(prevData => [...prevData, ...clonedTickets]);
+    
+    setGlobalSelectedTickets([]);
+    toast.success(`${globalSelectedTickets.length} ticket(s) cloned successfully`);
+  };
+
+  // Check if a specific ticket is in edit mode
+  const isTicketInEditMode = (matchIndex, ticketIndex) => {
+    const uniqueId = `${matchIndex}_${ticketIndex}`;
+    return isGlobalEditMode && globalEditingTickets.includes(uniqueId);
+  };
 
   // NEW: Construct headers dynamically from filters
   const constructHeadersFromListingHistory = useMemo(() => {
@@ -393,41 +584,10 @@ const TicketsPage = (props) => {
 
     // Create headers based on the structure you want
     const headers = [
-      { key: "match_name", label: "Match Name", editable: false },
-      { key: "venue", label: "Venue", editable: false },
-      { key: "tournament", label: "Tournament", editable: false },
-      { key: "match_date", label: "Match Date", editable: false },
-      { key: "match_time", label: "Match Time", editable: false },
+      { key: "s_no", label: "Listing No", editable: false },
       {
         key: "ticket_type_id",
         label: "Ticket Type",
-        editable: true,
-        type: "select",
-        options: [],
-      },
-      {
-        key: "quantity",
-        label: "Quantity",
-        editable: true,
-        type: "select",
-        options: [
-          { value: "1", label: "1" },
-          { value: "2", label: "2" },
-          { value: "3", label: "3" },
-          { value: "4", label: "4" },
-          { value: "5", label: "5" },
-        ],
-      },
-      {
-        key: "split_type_id",
-        label: "Split Type",
-        editable: true,
-        type: "select",
-        options: [],
-      },
-      {
-        key: "home_town",
-        label: "Fan Area",
         editable: true,
         type: "select",
         options: [],
@@ -443,7 +603,17 @@ const TicketsPage = (props) => {
         key: "block",
         label: "Section/Block",
         editable: true,
-        type: "text",
+        type: "select",
+        options: [],
+        dynamicOptions: true,
+        dependentOn: ["ticket_category_id", "match_id"],
+      },
+      {
+        key: "home_town",
+        label: "Fan Area",
+        editable: true,
+        type: "select",
+        options: [],
       },
       {
         key: "row",
@@ -452,8 +622,21 @@ const TicketsPage = (props) => {
         type: "text",
       },
       {
-        key: "first_seat",
-        label: "First Seat",
+        key: "quantity",
+        label: "Quantity",
+        editable: true,
+        type: "select",
+        options: [
+          { value: "1", label: "1" },
+          { value: "2", label: "2" },
+          { value: "3", label: "3" },
+          { value: "4", label: "4" },
+          { value: "5", label: "5" },
+        ],
+      },
+      {
+        key: "seat",
+        label: "Seat",
         editable: true,
         type: "text",
       },
@@ -470,10 +653,42 @@ const TicketsPage = (props) => {
         type: "text",
       },
       {
+        key: "price_type",
+        label: "Price Currency",
+        editable: false,
+        type: "text",
+      },
+      {
+        key: "web_price",
+        label: "Web Price",
+        editable: true,
+        type: "text",
+      },
+      {
+        key: "listing_note",
+        label: "Listing Note",
+        editable: true,
+        type: "multiselect",
+        options: [],
+      },
+      {
+        key: "first_seat",
+        label: "First Seat",
+        editable: true,
+        type: "text",
+      },
+      {
         key: "ship_date",
         label: "Date to Ship",
         editable: true,
         type: "date",
+      },
+      {
+        key: "split_type_id",
+        label: "Split Type",
+        editable: true,
+        type: "select",
+        options: [],
       },
       {
         key: "status",
@@ -494,6 +709,7 @@ const TicketsPage = (props) => {
       const allSplitTypes = new Map();
       const allHomeTowns = new Map();
       const allTicketCategories = new Map();
+      const allListingNotes = new Map();
 
       allFilters.forEach((filter) => {
         // Ticket Types
@@ -523,6 +739,15 @@ const TicketsPage = (props) => {
             allTicketCategories.set(key, value);
           });
         }
+
+        // Listing Notes
+        if (filter.restriction_left || filter.restriction_right) {
+          [...filter.restriction_left, ...filter.restriction_right].forEach(
+            (note) => {
+              allListingNotes.set(note.id.toString(), note.name);
+            }
+          );
+        }
       });
 
       // Update headers with options
@@ -550,6 +775,13 @@ const TicketsPage = (props) => {
           );
         } else if (header.key === "ticket_category_id") {
           header.options = Array.from(allTicketCategories.entries()).map(
+            ([value, label]) => ({
+              value,
+              label,
+            })
+          );
+        } else if (header.key === "listing_note") {
+          header.options = Array.from(allListingNotes.entries()).map(
             ([value, label]) => ({
               value,
               label,
@@ -631,22 +863,41 @@ const TicketsPage = (props) => {
       }
     }
 
-    // Update local state
-    setTicketsData((prevData) =>
-      prevData.map((ticketItem) =>
-        ticketItem.id === ticket.id
-          ? { ...ticketItem, [columnKey]: processedValue }
-          : ticketItem
-      )
-    );
+    // ENHANCED: In global edit mode, update all selected tickets
+    if (isGlobalEditMode && globalEditingTickets.length > 0) {
+      setTicketsData((prevData) =>
+        prevData.map((ticketItem) => {
+          if (globalEditingTickets.includes(ticketItem.uniqueId)) {
+            return { ...ticketItem, [columnKey]: processedValue };
+          }
+          return ticketItem;
+        })
+      );
 
-    // Prepare update parameters
-    const updateParams = { [columnKey]: processedValue };
+      // Update all selected tickets via API
+      const selectedTickets = ticketsData.filter(t => globalEditingTickets.includes(t.uniqueId));
+      const updateParams = { [columnKey]: processedValue };
+      
+      selectedTickets.forEach(selectedTicket => {
+        updateCellValues(updateParams, selectedTicket?.rawTicketData?.s_no);
+      });
+    } else {
+      // Single ticket edit mode
+      setTicketsData((prevData) =>
+        prevData.map((ticketItem) =>
+          ticketItem.id === ticket.id
+            ? { ...ticketItem, [columnKey]: processedValue }
+            : ticketItem
+        )
+      );
 
-    console.log("Sending update params:", updateParams);
+      // Prepare update parameters
+      const updateParams = { [columnKey]: processedValue };
+      console.log("Sending update params:", updateParams);
 
-    // Call API update
-    updateCellValues(updateParams, ticket?.rawTicketData?.s_no);
+      // Call API update
+      updateCellValues(updateParams, ticket?.rawTicketData?.s_no);
+    }
   };
 
   // Enhanced updateCellValues function with better error handling
@@ -1030,20 +1281,6 @@ const TicketsPage = (props) => {
     };
   }, []);
 
-  const handleRowSelectionChange = (newSelectedRows) => {
-    console.log("Row selection changed:", newSelectedRows);
-    setSelectedRows(newSelectedRows);
-  };
-
-  const handleSelectAll = () => {
-    const allRowIndices = ticketsData.map((_, index) => index);
-    setSelectedRows(allRowIndices);
-  };
-
-  const handleDeselectAll = () => {
-    setSelectedRows([]);
-  };
-
   const handleConfirmClick = (data, index, rowData) => {
     updateCellValues(data, rowData?.s_no);
     setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
@@ -1175,11 +1412,18 @@ const TicketsPage = (props) => {
     }
   }, [constructHeadersFromListingHistory, createInitialVisibleColumns]);
 
+  // Calculate total ticket count across all matches
+  const getTotalTicketCount = () => {
+    return ticketsData.length;
+  };
+
+  const totalTicketCount = getTotalTicketCount();
+
   // Enhanced Custom Match Table Component using CommonInventoryTable
   const CustomMatchTable = ({ matchData }) => {
     const { matchInfo, tickets, matchIndex, filters } = matchData;
     const [isCollapsed, setIsCollapsed] = useState(
-      collapsedMatches[matchIndex] || false
+      collapsedMatches[matchIndex] ?? true
     );
 
     const handleToggleCollapse = () => {
@@ -1199,25 +1443,30 @@ const TicketsPage = (props) => {
       stadium_name: matchInfo?.stadium_name,
       country_name: matchInfo?.country_name,
       city_name: matchInfo?.city_name,
+      match_id: matchInfo?.m_id,
     };
 
     return (
       <CommonInventoryTable
         inventoryData={tickets}
         headers={filteredHeaders}
-        selectedRows={selectedRows.filter((index) => {
-          const ticket = ticketsData[index];
-          return ticket && ticket.matchIndex === matchIndex;
-        })}
-        setSelectedRows={setSelectedRows}
+        selectedRows={getSelectedRowsForMatch(matchIndex)}
+        setSelectedRows={(newSelectedRows) => 
+          handleSetSelectedRowsForMatch(matchIndex, newSelectedRows)
+        }
         handleCellEdit={handleCellEdit}
         handleHandAction={handleHandAction}
         handleUploadAction={handleUploadAction}
-        handleSelectAll={handleSelectAll}
-        handleDeselectAll={handleDeselectAll}
+        handleSelectAll={() => handleSelectAllForMatch(matchIndex)}
+        handleDeselectAll={() => handleDeselectAllForMatch(matchIndex)}
         matchDetails={matchDetails}
-        isEditMode={false}
-        editingRowIndex={null}
+        isEditMode={isGlobalEditMode}
+        editingRowIndex={isGlobalEditMode ? 
+          tickets.map((_, index) => 
+            isTicketInEditMode(matchIndex, index) ? index : null
+          ).filter(index => index !== null) : 
+          null
+        }
         mode="multiple"
         showAccordion={true}
         isCollapsed={isCollapsed}
@@ -1225,7 +1474,7 @@ const TicketsPage = (props) => {
         matchIndex={matchIndex}
         totalTicketsCount={tickets.length}
         getStickyColumnsForRow={getStickyColumnsForRow}
-        stickyHeaders={["", "", ""]} // Removed empty header for chevron
+        stickyHeaders={["", "", ""]}
         stickyColumnsWidth={150}
       />
     );
@@ -1284,10 +1533,13 @@ const TicketsPage = (props) => {
         <ShimmerLoader />
       ) : (
         <>
-          <div className="m-6 max-h-[calc(100vh-400px)] overflow-y-auto">
+          <div className="m-6 max-h-[calc(100vh-460px)] overflow-y-auto pb-[100px]">
             {groupedTicketsData.length > 0 ? (
               groupedTicketsData.map((matchData, index) => (
-                <div key={`match-${matchData.matchIndex}`} className="mb-4">
+                <div
+                  key={`match-${matchData.matchIndex}`}
+                  className="not-last:mb-4"
+                >
                   <CustomMatchTable matchData={matchData} />
                 </div>
               ))
@@ -1320,6 +1572,29 @@ const TicketsPage = (props) => {
             )}
           </div>
         </>
+      )}
+
+      {/* ENHANCED: Global Bulk Action Bar - Only show when tickets are selected */}
+      {globalSelectedTickets.length > 0 && (
+        <BulkActionBar
+          selectedCount={globalSelectedTickets.length}
+          totalCount={totalTicketCount}
+          onSelectAll={handleGlobalSelectAll}
+          onDeselectAll={handleGlobalDeselectAll}
+          onClone={handleGlobalClone}
+          onEdit={handleGlobalEdit}
+          onDelete={handleGlobalDelete}
+          onPublishLive={() => {
+            // You can implement publish functionality if needed
+            toast.info("Publish functionality not implemented for this page");
+          }}
+          onSaveEdit={handleGlobalSaveEdit}
+          onCancelEdit={handleGlobalCancelEdit}
+          loading={loader}
+          disabled={globalSelectedTickets.length === 0}
+          isEditMode={isGlobalEditMode}
+          hidepublishLive={true}
+        />
       )}
 
       <UploadTickets

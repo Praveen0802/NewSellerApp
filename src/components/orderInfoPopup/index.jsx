@@ -190,6 +190,13 @@ const OrderInfo = ({
       <RightViewModal className={"!w-[600px]"} show={show} onClose={onClose}>
         <div className="p-4 text-center">
           <p>No order data available</p>
+          <p className="text-sm text-gray-500">Please try again later.</p>
+          <button
+            onClick={onClose}
+            className="mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded"
+          >
+            Close
+          </button>
         </div>
       </RightViewModal>
     );
@@ -203,6 +210,8 @@ const OrderInfo = ({
     attendee_details,
     order_id_label,
   } = data;
+
+  console.log("order_details", order_details);
 
   // Extract order notes from ticket details
   const order_notes = ticket_details?.[0]?.order_notes || "";

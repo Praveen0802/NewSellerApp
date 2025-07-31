@@ -80,7 +80,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
   const [listValueData, setListvalueData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-
+console.log(matchInfo,'matchInfomatchInfomatchInfo')
   const getInsightsData = async () => {
     try {
       setIsLoading(true);

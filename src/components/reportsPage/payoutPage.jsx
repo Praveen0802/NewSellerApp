@@ -22,14 +22,14 @@ import { IconStore } from "@/utils/helperFunctions/iconStore";
 import FloatingDateRange from "../commonComponents/dateRangeInput";
 import { getAuthToken } from "@/utils/helperFunctions";
 import { toast } from "react-toastify";
+import { formatDate } from "../tradePage/components/stickyDataTable";
+import OrderInfo from "../orderInfoPopup";
 
 const PayoutPage = (props) => {
   const { apiData } = props;
 
   const { payout_overview, payoutHistory, payoutOrders, countriesList } =
     apiData;
-
-  console.log("payout_overview", payout_overview);
 
   const flagMap = {
     GBP: ukFlag,
@@ -130,31 +130,44 @@ const PayoutPage = (props) => {
       });
   };
 
+  const isOrderTab = selectedTab === "order";
+
   const handleEyeClick = async (item) => {
-    console.log("item", item);
-
     try {
-      const payload = { id: item?.id };
-
       setEyeViewPopup({
         flag: true,
         isLoading: true,
       });
-      if (selectedTab === "order") {
+      const { bookingNo } = item ?? {};
+      const booking_id = Number(bookingNo?.replace("1BX", "")); //TODO :Hardcoded here
+      if (isOrderTab) {
         const params = {
-          booking_id: Number(item?.bookingNo?.replace("1BX", "")), //TODO :Hardcoded here
+          booking_id,
         };
-        const resp = await getPayoutDetails("", params);
+        const salesData = await getPayoutDetails("", params);
         setEyeViewPopup({
           flag: true,
-          data: { ...resp, transactionType: selectedTab },
+          data: salesData?.map((list) => ({
+            ...list,
+            order_id_label: item?.bookingNo ?? null,
+          })),
+          bookingNo,
         });
-        console.log("resp", resp);
         return;
       }
+      //PAYOUT HISTORY
+      const { referenceNo, id } = item ?? {};
+      const transData =
+        currentHistoryData
+          ?.map((list) => list?.transactions)
+          ?.flat()
+          ?.find(
+            (list) => list?.reference_no === referenceNo && list?.id === id
+          ) ?? {};
+
       setEyeViewPopup({
         flag: true,
-        data: { ...item, transactionType: selectedTab },
+        data: { ...transData, transactionType: selectedTab },
       });
     } catch (error) {
       console.log("ERROR in handleEyeClick", error);
@@ -164,6 +177,12 @@ const PayoutPage = (props) => {
       }).finally(() => {
         setEyeViewPopup((prev) => ({ ...prev, isLoading: false }));
       });
+    }
+  };
+
+  const refreshPopupData = async () => {
+    if (eyeViewPopup?.flag) {
+      await handleEyeClick({ bookingNo: eyeViewPopup?.bookingNo });
     }
   };
 
@@ -207,21 +226,21 @@ const PayoutPage = (props) => {
         return {
           title: list?.month,
           headers: [
-            "Reference No",
+            "Payment Reference",
             "Amount",
-            "Status",
             "Payout Date",
             "Expected Date",
+            "Status",
             "",
           ],
           data: list?.transactions?.map((listItems) => {
-            const status = getStatusText(listItems?.status);
+            // const status = getStatusText(listItems?.status);
             return {
               referenceNo: listItems?.reference_no,
               amount: listItems?.price_with_currency,
-              status: status,
-              payoutDate: listItems?.payout_date,
-              expectedDate: listItems?.expected_date,
+              payoutDate: formatDate(listItems?.payout_date, "dateOnly"),
+              expectedDate: formatDate(listItems?.expected_date, "dateOnly"),
+              status: listItems?.status_label,
               eye: true,
               id: listItems?.id,
             };
@@ -237,20 +256,20 @@ const PayoutPage = (props) => {
             "Booking No",
             "Match Name",
             "Amount",
-            "Status",
             "Payment Date",
             "Ticket",
+            "Status",
             "",
           ],
           data: list?.transactions?.map((listItems) => {
-            const status = getStatusText(listItems?.status);
             return {
               bookingNo: listItems?.booking_no,
               matchName: listItems?.match_name,
               amount: listItems?.amount_with_currency,
-              status: status,
-              paymentDate: listItems?.payment_date || "N/A",
+              paymentDate:
+                formatDate(listItems?.payment_date, "dateOnly") || "N/A",
               ticket: listItems?.ticket,
+              status: listItems?.payout_status,
               eye: true,
               id: listItems?.booking_no, // Using booking_no as ID for orders
             };
@@ -484,13 +503,25 @@ const PayoutPage = (props) => {
         countriesList={countriesList}
         showShimmer={payOutPopup?.isLoading}
       />
-      <OrderViewPopup
-        show={eyeViewPopup?.flag}
-        onClose={() => setEyeViewPopup({ flag: false, data: "" })}
-        data={eyeViewPopup?.data}
-        outSideClickClose={false}
-        showShimmer={eyeViewPopup?.isLoading}
-      />
+
+      {isOrderTab ? (
+        <OrderInfo
+          show={eyeViewPopup?.flag}
+          data={eyeViewPopup?.data}
+          onClose={() => setEyeViewPopup({ flag: false, data: "" })}
+          refreshPopupData={refreshPopupData}
+          type="sales"
+          showShimmer={eyeViewPopup?.isLoading}
+        />
+      ) : (
+        <OrderViewPopup
+          show={eyeViewPopup?.flag}
+          onClose={() => setEyeViewPopup({ flag: false, data: "" })}
+          data={eyeViewPopup?.data}
+          outSideClickClose={false}
+          showShimmer={eyeViewPopup?.isLoading}
+        />
+      )}
     </div>
   );
 };

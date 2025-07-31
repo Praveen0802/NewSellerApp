@@ -51,6 +51,11 @@ const CtaValues = ({ ctaText, order_notes, onSaveNote = () => {} } = {}) => {
     setNoteValue(e.target.value);
   };
 
+  const isAddNotes = (item) => {
+    if (item?.cta == "+ Add Note") {
+      return true;
+    }
+  };
   return (
     <div className="space-y-4">
       {/* CTA Cards */}
@@ -68,9 +73,11 @@ const CtaValues = ({ ctaText, order_notes, onSaveNote = () => {} } = {}) => {
                 onClick={() => handleNoteAction(item)}
                 classNames={{
                   root: `${
-                    item.cta === "No File"
+                    isAddNotes(item)
+                      ? "bg-[#343432] text-white"
+                      : item.cta === "No File"
                       ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-[#0137D5] hover:bg-[#0129B8]"
+                      : "bg-green-600 hover:bg-green-700"
                   } px-3 py-2 transition-colors duration-200`,
                   label_: "text-xs text-white font-medium",
                 }}

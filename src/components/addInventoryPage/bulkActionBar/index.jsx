@@ -26,12 +26,13 @@ const BulkActionBar = ({
   loading = false,
   disabled = false,
   isEditMode = false,
+  hidepublishLive = false,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Updated logic: Determine if all items are selected
   const allSelected = totalCount > 0 && selectedCount === totalCount;
-  
+
   // Select All button should be:
   // - Enabled when there are items (totalCount > 0) AND not all are selected
   // - Disabled when all items are already selected OR no items exist
@@ -248,41 +249,44 @@ const BulkActionBar = ({
                 <span className="font-medium">{selectedCount}</span> of{" "}
                 {totalCount} selected
               </div>
+              {!hidepublishLive && (
+                <>
+                  {/* Cancel Button */}
+                  <button
+                    onClick={onDeselectAll}
+                    disabled={disabled || selectedCount === 0}
+                    className={`px-4 py-2 text-sm border rounded-md transition-colors font-medium ${
+                      disabled || selectedCount === 0
+                        ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    Cancel
+                  </button>
 
-              {/* Cancel Button */}
-              <button
-                onClick={onDeselectAll}
-                disabled={disabled || selectedCount === 0}
-                className={`px-4 py-2 text-sm border rounded-md transition-colors font-medium ${
-                  disabled || selectedCount === 0
-                    ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                Cancel
-              </button>
-
-              {/* Publish Live Button */}
-              <button
-                onClick={onPublishLive}
-                disabled={disabled || loading || selectedCount === 0}
-                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                  disabled || loading || selectedCount === 0
-                    ? "bg-gray-400 text-white cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-700 text-white"
-                }`}
-              >
-                {loading ? (
-                  <div className="flex items-center space-x-2">
-                    <Loader2 size={16} className="animate-spin" />
-                    <span>PUBLISHING...</span>
-                  </div>
-                ) : (
-                  `PUBLISH LIVE ${
-                    selectedCount > 0 ? `(${selectedCount})` : ""
-                  }`
-                )}
-              </button>
+                  {/* Publish Live Button */}
+                  <button
+                    onClick={onPublishLive}
+                    disabled={disabled || loading || selectedCount === 0}
+                    className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                      disabled || loading || selectedCount === 0
+                        ? "bg-gray-400 text-white cursor-not-allowed"
+                        : "bg-green-600 hover:bg-green-700 text-white"
+                    }`}
+                  >
+                    {loading ? (
+                      <div className="flex items-center space-x-2">
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>PUBLISHING...</span>
+                      </div>
+                    ) : (
+                      `PUBLISH LIVE ${
+                        selectedCount > 0 ? `(${selectedCount})` : ""
+                      }`
+                    )}
+                  </button>
+                </>
+              )}
             </>
           ) : (
             <>
