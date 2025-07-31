@@ -212,6 +212,25 @@ const AddInventoryPage = (props) => {
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, split_details: value })),
     },
+     {
+      type: "select",
+      name: "max_quantity",
+      label: "Max Display Quantity",
+      mandatory: true,
+      value: filtersApplied?.max_quantity,
+      options: [
+        { value: "1", label: "1" },
+        { value: "2", label: "2" },
+        { value: "3", label: "3" },
+        { value: "4", label: "4" },
+        { value: "5", label: "5" },
+      ],
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
+      labelClassName: "!text-[11px]",
+      onChange: (value) =>
+        setFiltersApplied((prev) => ({ ...prev, max_quantity: value })),
+    },
     {
       type: "select",
       name: "home_town",
@@ -332,6 +351,7 @@ const AddInventoryPage = (props) => {
       type: "select",
       name: "notes",
       label: "Benifits",
+      mandatory: true,
       value: filtersApplied?.notes,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       multiselect: true,
@@ -354,6 +374,7 @@ const AddInventoryPage = (props) => {
       type: "select",
       name: "restrictions",
       label: "Restrictions",
+      mandatory: true,
       value: filtersApplied?.restrictions,
       multiselect: true,
       options: [
@@ -1336,19 +1357,19 @@ const AddInventoryPage = (props) => {
             {matchDetails && (
               <div className="flex gap-4 items-center">
                 <div className="flex gap-2 items-center pr-4 border-r-[1px] border-[#DADBE5]">
-                  <Calendar1Icon size={16} className="text-[#595c6d]" />
+                  <Calendar1Icon size={16} className="text-[#00A3ED]" />
                   <p className="text-[#3a3c42] truncate text-[14px]">
                     {matchDetails?.match_date_format}
                   </p>
                 </div>
                 <div className="flex gap-2 items-center pr-4 border-r-[1px] border-[#DADBE5]">
-                  <Clock size={16} className="text-[#595c6d]" />
+                  <Clock size={16} className="text-[#00A3ED]" />
                   <p className="text-[#3a3c42] truncate text-[14px]">
                     {matchDetails?.match_time}
                   </p>
                 </div>
                 <div className="flex gap-2 items-center">
-                  <MapPin size={16} className="text-[#595c6d]" />
+                  <MapPin size={16} className="text-[#00A3ED]" />
                   <p className="text-[#3a3c42] truncate text-[14px]">
                     {matchDetails?.stadium_name} , {matchDetails?.country_name}{" "}
                     , {matchDetails?.city_name}
