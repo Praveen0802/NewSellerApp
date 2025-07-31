@@ -6,7 +6,7 @@ import ChevronRight from "@/components/commonComponents/filledChevron/chevronRig
 import TooltipWrapper from "@/components/TooltipWrapper";
 
 // Utility function to format dates
-const formatDate = (dateString, format = "default") => {
+export const formatDate = (dateString, format = "default") => {
   if (!dateString) return "";
 
   // Check if it's a valid date string
@@ -47,6 +47,7 @@ const formatDate = (dateString, format = "default") => {
 };
 
 // Function to detect if a string is a date format
+
 const isDateString = (value) => {
   if (typeof value !== "string") return false;
 
@@ -54,13 +55,22 @@ const isDateString = (value) => {
   const datePatterns = [
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{6})?Z?$/, // ISO format
     /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/, // SQL datetime format
+    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/, // Simple datetime format (YYYY-MM-DD HH:MM)
     /^\d{4}-\d{2}-\d{2}$/, // Date only format
   ];
 
-  return (
-    datePatterns.some((pattern) => pattern.test(value)) &&
-    !isNaN(Date.parse(value))
-  );
+  // First check if it matches any pattern
+  const matchesPattern = datePatterns.some((pattern) => pattern.test(value));
+
+  if (!matchesPattern) return false;
+
+  // For the HH:MM format, append :00 seconds for validation
+  let testValue = value;
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(value)) {
+    testValue = value + ":00";
+  }
+
+  return !isNaN(Date.parse(testValue));
 };
 
 // Shimmer loading component for table cells

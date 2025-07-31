@@ -1162,7 +1162,7 @@ const LeftMenuBar = () => {
                           <div className="text-white capitalize text-[14px] flex-1">
                             {item?.name}
                           </div>
-                          {item?.badge && item?.badge > 0 && (
+                          {item?.badge != null && item?.badge > 0 && (
                             <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
                               {item?.badge}
                             </span>
@@ -1266,7 +1266,13 @@ const LeftMenuBar = () => {
         }`}
       >
         {/* Header section - fixed */}
-        <div className="h-[80px] px-[10px] py-[20px] border-b-[1px] border-[#51428E] flex items-center justify-center flex-shrink-0">
+        <div
+          className="h-[80px] px-[10px] py-[20px] border-b-[1px] border-[#51428E] flex items-center justify-center flex-shrink-0 cursor-pointer"
+          onClick={() => {
+            router.push("/dashboard");
+          }}
+          title={"Go to Dashboard"}
+        >
           <Image src={logo} alt="logo" width={40} height={40} />
         </div>
 
@@ -1301,9 +1307,9 @@ const LeftMenuBar = () => {
                           {item?.text}
                         </p>
                       )}
-                      {item?.badge && item?.badge > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                          {item?.badge}
+                      {item?.badge != null && item?.badge > 0 && (
+                        <span className="bg-red-500 text-white text-xs w-5 h-5 p-1  flex items-center justify-center rounded-full absolute top-[-5px] right-[2px]">
+                          {item?.badge > 10 ? "10+" : item?.badge}
                         </span>
                       )}
                     </div>
@@ -1344,11 +1350,13 @@ const LeftMenuBar = () => {
                         {item?.name}
                       </div>
                     )}
-                    {item?.badge && item?.badge > 0 && showFullDisplay && (
-                      <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                        {item?.badge}
-                      </span>
-                    )}
+                    {item?.badge != null &&
+                      item?.badge > 0 &&
+                      showFullDisplay && (
+                        <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                          {item?.badge}
+                        </span>
+                      )}
                     {item?.hasSubItems && showFullDisplay && (
                       <div className="w-4 h-4 flex items-center justify-center">
                         <div
