@@ -9,6 +9,7 @@ import {
   Loader2,
   SquareX,
   Save,
+  Users,
 } from "lucide-react";
 
 const BulkActionBar = ({
@@ -91,7 +92,9 @@ const BulkActionBar = ({
                 }`}
               >
                 <Edit className={disabled ? "text-gray-400" : "text-[#0137D5]"} size={16} />
-                <span className={`text-[14px] ${disabled ? "text-gray-400" : "text-[#323A70]"}`}>Edit</span>
+                <span className={`text-[14px] ${disabled ? "text-gray-400" : "text-[#323A70]"}`}>
+                  {selectedCount > 1 ? "Bulk Edit" : "Edit"}
+                </span>
               </button>
 
               {/* Delete Button */}
@@ -111,10 +114,27 @@ const BulkActionBar = ({
           ) : (
             <>
               {/* Edit mode buttons */}
-              <div className="flex items-center space-x-2 text-sm text-blue-600 font-medium">
-                <Edit size={16} />
-                <span>Edit Mode Active</span>
+              <div className="flex items-center space-x-2 text-sm font-medium bg-blue-50 px-3 py-1 rounded-md">
+                {selectedCount > 1 ? (
+                  <>
+                    <Users size={16} className="text-blue-600" />
+                    <span className="text-blue-600">Bulk Edit Mode Active</span>
+                    <span className="text-blue-500 text-xs">({selectedCount} rows)</span>
+                  </>
+                ) : (
+                  <>
+                    <Edit size={16} className="text-blue-600" />
+                    <span className="text-blue-600">Edit Mode Active</span>
+                  </>
+                )}
               </div>
+              
+              {/* Bulk edit info */}
+              {selectedCount > 1 && (
+                <div className="text-sm text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-200">
+                  <span className="font-medium">💡 Tip:</span> Changes to any field will apply to all selected rows
+                </div>
+              )}
               
               {/* Save Button */}
               <button
@@ -142,6 +162,11 @@ const BulkActionBar = ({
           {!isEditMode ? (
             <>
               {/* Normal mode right side */}
+              {/* Selection count info */}
+              <div className="text-sm text-gray-600">
+                <span className="font-medium">{selectedCount}</span> of {totalCount} selected
+              </div>
+
               {/* Cancel Button */}
               <button
                 onClick={onDeselectAll}
@@ -171,7 +196,7 @@ const BulkActionBar = ({
                     <span>PUBLISHING...</span>
                   </div>
                 ) : (
-                  "PUBLISH LIVE"
+                  `PUBLISH LIVE ${selectedCount > 0 ? `(${selectedCount})` : ''}`
                 )}
               </button>
             </>
@@ -179,7 +204,7 @@ const BulkActionBar = ({
             <>
               {/* Edit mode right side */}
               <div className="text-sm text-gray-600">
-                Editing row {selectedCount > 0 ? selectedCount : 1} of {totalCount}
+                Editing {selectedCount} row{selectedCount !== 1 ? 's' : ''} of {totalCount}
               </div>
             </>
           )}

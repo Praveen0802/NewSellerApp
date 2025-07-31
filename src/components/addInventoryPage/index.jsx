@@ -58,527 +58,8 @@ import RightViewModal from "../commonComponents/rightViewModal";
 import TicketListingQuality from "../TicketInfoPopup";
 import CompactInfoCard from "../CompactInfoCard";
 import SubjectDescriptionPopup from "../settingPage/subjectDescriptionPopup";
-
-const MultiSelectEditableCell = ({
-  value,
-  options = [],
-  onSave,
-  className = "",
-  isRowHovered = false,
-  disabled = false,
-  placeholder = "Select options...",
-}) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
-  const dropdownRef = useRef(null);
-
-  // Convert string value to array if needed
-  const normalizeValue = (val) => {
-    if (!val) return [];
-    if (Array.isArray(val)) return val;
-    if (typeof val === "string") {
-      return val.includes(",") ? val.split(",").map((v) => v.trim()) : [val];
-    }
-    return [val];
-  };
-
-  // Update editValue when value prop changes
-  useEffect(() => {
-    setEditValue(normalizeValue(value));
-  }, [value]);
-
-  // Prevent editing if disabled
-  const handleClick = () => {
-    if (disabled) return;
-    setIsEditing(true);
-  };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        const dropdown = document.querySelector("[data-multiselect-dropdown]");
-        if (dropdown && dropdown.contains(event.target)) {
-          return;
-        }
-        setIsDropdownOpen(false);
-      }
-    };
-
-    const handleScroll = (event) => {
-      if (isDropdownOpen) {
-        const dropdown = document.querySelector("[data-multiselect-dropdown]");
-        if (dropdown && dropdown.contains(event.target)) {
-          return;
-        }
-
-        let currentElement = event.target;
-        while (currentElement && currentElement !== document) {
-          if (
-            currentElement.hasAttribute &&
-            currentElement.hasAttribute("data-multiselect-dropdown")
-          ) {
-            return;
-          }
-          currentElement = currentElement.parentElement;
-        }
-
-        setIsDropdownOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape" && isDropdownOpen) {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    if (isDropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("scroll", handleScroll, true);
-      document.addEventListener("keydown", handleKeyDown);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("scroll", handleScroll, true);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isDropdownOpen]);
-
-  const handleSave = () => {
-    const normalizedCurrent = normalizeValue(value);
-    const normalizedEdit = normalizeValue(editValue);
-
-    if (JSON.stringify(normalizedCurrent) !== JSON.stringify(normalizedEdit)) {
-      onSave(normalizedEdit);
-    }
-    setIsEditing(false);
-    setIsDropdownOpen(false);
-  };
-
-  const handleCancel = () => {
-    setEditValue(normalizeValue(value));
-    setIsEditing(false);
-    setIsDropdownOpen(false);
-  };
-
-  const handleOptionToggle = (optionValue) => {
-    const currentValues = normalizeValue(editValue);
-    let newValues;
-
-    if (currentValues.includes(optionValue)) {
-      newValues = currentValues.filter((val) => val !== optionValue);
-    } else {
-      newValues = [...currentValues, optionValue];
-    }
-
-    setEditValue(newValues);
-  };
-
-  const handleSelectAll = () => {
-    setEditValue(options.map((opt) => opt.value));
-  };
-
-  const handleDeselectAll = () => {
-    setEditValue([]);
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSave();
-    } else if (e.key === "Escape") {
-      handleCancel();
-    }
-  };
-
-  const getDisplayValue = () => {
-    const normalizedValue = normalizeValue(value);
-    if (normalizedValue.length === 0) return placeholder;
-
-    return `${normalizedValue.length} item${
-      normalizedValue.length !== 1 ? "s" : ""
-    } selected`;
-  };
-
-  const getSelectedCount = () => {
-    const normalizedValue = normalizeValue(editValue);
-    return normalizedValue.length;
-  };
-
-  if (isEditing && !disabled) {
-    return (
-      <div className="relative w-full" ref={dropdownRef}>
-        <div
-          className={`border rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] transition-colors ${
-            isFocused || isDropdownOpen
-              ? "border-green-500 ring-2 ring-green-600"
-              : "border-[#DADBE5] hover:border-green-600"
-          }`}
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          onKeyDown={handleKeyPress}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          onMouseEnter={() => !isDropdownOpen && setIsFocused(true)}
-          onMouseLeave={() => !isDropdownOpen && setIsFocused(false)}
-          tabIndex={0}
-        >
-          <div className="flex justify-between items-center">
-            <span className="truncate text-[#323A70]">
-              {getSelectedCount() > 0
-                ? `${getSelectedCount()} selected`
-                : placeholder}
-            </span>
-            <ChevronDown
-              size={12}
-              className={`transform transition-transform text-[#323A70] ${
-                isDropdownOpen ? "rotate-180" : ""
-              }`}
-            />
-          </div>
-        </div>
-
-        {isDropdownOpen && (
-          <div
-            data-multiselect-dropdown
-            className="fixed bg-white border border-[#DADBE5] rounded shadow-lg max-h-48 overflow-y-auto"
-            style={{
-              zIndex: 9999,
-              top:
-                dropdownRef.current?.getBoundingClientRect()?.bottom +
-                window.scrollY +
-                4,
-              left:
-                dropdownRef.current?.getBoundingClientRect()?.left +
-                window.scrollX,
-              width: dropdownRef.current?.getBoundingClientRect()?.width,
-              minWidth: "200px",
-            }}
-            onScroll={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            <div className="border-b border-[#DADBE5] p-2">
-              <div className="flex justify-between">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSelectAll();
-                  }}
-                  className="text-xs px-2 py-1 text-blue-600 hover:text-blue-800"
-                >
-                  Select All
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeselectAll();
-                  }}
-                  className="text-xs px-2 py-1 text-red-600 hover:text-red-800"
-                >
-                  Deselect All
-                </button>
-              </div>
-            </div>
-
-            {options.map((option) => {
-              const isSelected = normalizeValue(editValue).includes(
-                option.value
-              );
-              return (
-                <div
-                  key={option.value}
-                  className={`px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center space-x-2 ${
-                    isSelected ? "bg-blue-50" : ""
-                  }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleOptionToggle(option.value);
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => {}}
-                    className="w-3 h-3 text-blue-600 border-[#DADBE5]"
-                  />
-                  <span className="text-xs text-[#323A70]">{option.label}</span>
-                </div>
-              );
-            })}
-
-            <div className="border-t border-[#DADBE5] p-2 flex justify-end space-x-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCancel();
-                }}
-                className="text-xs px-2 py-1 text-gray-600 hover:text-gray-800"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSave();
-                }}
-                className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  if (isRowHovered && !disabled) {
-    return (
-      <div className={`cursor-pointer ${className}`} onClick={handleClick}>
-        <div className="border border-[#DADBE5] rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer hover:border-green-600 hover:ring-2 hover:ring-green-600 transition-colors">
-          <div className="flex justify-between items-center">
-            <span
-              className={`truncate ${
-                normalizeValue(value).length > 0
-                  ? "text-[#323A70]"
-                  : "text-gray-400"
-              }`}
-            >
-              {getDisplayValue()}
-            </span>
-            <ChevronDown size={12} className="text-[#323A70]" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={`${
-        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
-      } ${className}`}
-      onClick={handleClick}
-    >
-      <span
-        className={`text-xs truncate ${
-          disabled
-            ? "text-gray-400"
-            : normalizeValue(value).length > 0
-            ? "text-[#323A70]"
-            : "text-gray-400"
-        }`}
-      >
-        {getDisplayValue()}
-      </span>
-    </div>
-  );
-};
-
-// Updated SimpleEditableCell component with placeholder support
-const SimpleEditableCell = ({
-  value,
-  type = "text",
-  options = [],
-  onSave,
-  className = "",
-  isRowHovered = false,
-  disabled = false,
-  placeholder = "Enter...",
-}) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
-  const [isFocused, setIsFocused] = useState(false);
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    setEditValue(value);
-  }, [value]);
-
-  const handleClick = () => {
-    if (disabled) return;
-    setIsEditing(true);
-  };
-
-  const handleSave = () => {
-    if (editValue !== value) {
-      onSave(editValue);
-    }
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setEditValue(value);
-    setIsEditing(false);
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSave();
-    } else if (e.key === "Escape") {
-      handleCancel();
-    }
-  };
-
-  const handleBlur = () => {
-    handleSave();
-  };
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      if (inputRef.current.select && type !== "select") {
-        inputRef.current.select();
-      }
-    }
-  }, [isEditing, type]);
-
-  const getDisplayValue = () => {
-    if (type === "select" && options.length > 0) {
-      const option = options.find((opt) => opt.value === value);
-      return option ? option.label : !value ? placeholder : value;
-    }
-    if (type === "checkbox") {
-      return value ? "Yes" : "No";
-    }
-    return value || placeholder;
-  };
-
-  const hasValue = () => {
-    if (type === "checkbox") return true; // Always show Yes/No for checkbox
-    if (type === "select") {
-      const option = options.find((opt) => opt.value === value);
-      return !!option;
-    }
-    return !!(value && value.toString().trim());
-  };
-
-  if (isEditing && !disabled) {
-    return (
-      <div className="w-full">
-        {type === "select" ? (
-          <select
-            ref={inputRef}
-            value={editValue || ""}
-            onChange={(e) => setEditValue(e.target.value)}
-            onKeyDown={handleKeyPress}
-            onBlur={handleBlur}
-            onFocus={() => setIsFocused(true)}
-            onMouseEnter={() => setIsFocused(true)}
-            onMouseLeave={() => setIsFocused(false)}
-            className={`border rounded px-2 py-1 text-xs focus:outline-none bg-white w-full text-[#323A70] transition-colors ${
-              isFocused
-                ? "border-green-600 ring-2 ring-green-500"
-                : "border-[#DADBE5] hover:border-green-500"
-            }`}
-          >
-            <option value="">{placeholder}</option>
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        ) : type === "checkbox" ? (
-          <input
-            ref={inputRef}
-            type="checkbox"
-            checked={editValue}
-            onChange={(e) => setEditValue(e.target.checked)}
-            onKeyDown={handleKeyPress}
-            onBlur={handleBlur}
-            onFocus={() => setIsFocused(true)}
-            onMouseEnter={() => setIsFocused(true)}
-            onMouseLeave={() => setIsFocused(false)}
-            className={`w-4 h-4 text-blue-600 bg-gray-100 rounded transition-colors ${
-              isFocused
-                ? "border-green-500 ring-2 ring-green-500"
-                : "border-[#DADBE5] hover:border-green-400"
-            }`}
-          />
-        ) : (
-          <input
-            ref={inputRef}
-            type={type}
-            value={editValue || ""}
-            placeholder={placeholder}
-            onChange={(e) => setEditValue(e.target.value)}
-            onKeyDown={handleKeyPress}
-            onBlur={handleBlur}
-            onFocus={() => setIsFocused(true)}
-            onMouseEnter={() => setIsFocused(true)}
-            onMouseLeave={() => setIsFocused(false)}
-            className={`border rounded px-2 py-1 text-xs focus:outline-none w-full bg-white text-[#323A70] transition-colors placeholder:text-gray-400 ${
-              isFocused
-                ? "border-green-500 ring-2 ring-green-500"
-                : "border-[#DADBE5] hover:border-green-400"
-            }`}
-          />
-        )}
-      </div>
-    );
-  }
-
-  if (isRowHovered && !disabled) {
-    return (
-      <div className={`cursor-pointer ${className}`} onClick={handleClick}>
-        {type === "select" ? (
-          <select
-            value={editValue || ""}
-            className="border border-[#DADBE5] rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors"
-            onClick={handleClick}
-            readOnly
-          >
-            <option>{getDisplayValue()}</option>
-          </select>
-        ) : type === "checkbox" ? (
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              checked={editValue}
-              className="w-4 h-4 text-blue-600 bg-gray-100 border-[#DADBE5] rounded cursor-pointer hover:border-green-600 transition-colors"
-              onClick={handleClick}
-              readOnly
-            />
-          </div>
-        ) : (
-          <input
-            type={type}
-            value={editValue || ""}
-            placeholder={placeholder}
-            className="border border-[#DADBE5] rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors placeholder:text-gray-400"
-            onClick={handleClick}
-            readOnly
-          />
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={`${
-        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
-      } ${className}`}
-      onClick={handleClick}
-    >
-      <span
-        className={`text-xs ${
-          disabled
-            ? "text-gray-400"
-            : hasValue()
-            ? "text-[#323A70]"
-            : "text-gray-400"
-        }`}
-      >
-        {getDisplayValue()}
-      </span>
-    </div>
-  );
-};
+import { MultiSelectEditableCell, SimpleEditableCell } from "./selectCell";
+import CustomInventoryTable from "./customInventoryTable";
 
 const AddInventoryPage = (props) => {
   const { matchId, response } = props;
@@ -669,7 +150,7 @@ const AddInventoryPage = (props) => {
         })) || []),
       ],
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, ticket_types: value })),
@@ -688,7 +169,7 @@ const AddInventoryPage = (props) => {
         { value: "5", label: "5" },
       ],
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, add_qty_addlist: value })),
@@ -697,7 +178,6 @@ const AddInventoryPage = (props) => {
       type: "select",
       name: "split_type",
       label: "Split Type",
-      mandatory: true,
       value: filtersApplied?.split_type,
       options: [
         ...(split_types?.map((note) => ({
@@ -706,15 +186,51 @@ const AddInventoryPage = (props) => {
         })) || []),
       ],
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, split_type: value })),
     },
     {
       type: "select",
+      name: "split_details",
+      label: "Seating Arrangement",
+      value: filtersApplied?.split_details,
+      options: [
+        ...(split_details_left?.map((note) => ({
+          value: note.id.toString(),
+          label: note.name,
+        })) || []),
+        ...(split_details_right?.map((note) => ({
+          value: note.id.toString(),
+          label: note.name,
+        })) || []),
+      ],
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
+      labelClassName: "!text-[11px]",
+      onChange: (value) =>
+        setFiltersApplied((prev) => ({ ...prev, split_details: value })),
+    },
+    {
+      type: "select",
+      name: "home_town",
+      label: "Fan Area",
+      value: filtersApplied?.home_town,
+      options: Object.entries(home_town || {}).map(([key, value]) => ({
+        value: key,
+        label: value,
+      })),
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
+      labelClassName: "!text-[11px]",
+      onChange: (value) =>
+        setFiltersApplied((prev) => ({ ...prev, home_town: value })),
+    },
+    {
+      type: "select",
       name: "ticket_category",
-      label: "Seat Category",
+      label: "Seating Category",
       increasedWidth: "!w-[220px] !min-w-[220px]",
       value: filtersApplied?.ticket_category,
       options: Object.entries(block_data || {}).map(([key, value]) => ({
@@ -722,7 +238,7 @@ const AddInventoryPage = (props) => {
         label: value,
       })),
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({
@@ -739,26 +255,12 @@ const AddInventoryPage = (props) => {
       options: blockDetails,
       disabled: !filtersApplied?.ticket_category,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, ticket_block: value })),
     },
-    {
-      type: "select",
-      name: "home_town",
-      label: "Fan Area",
-      value: filtersApplied?.home_town,
-      options: Object.entries(home_town || {}).map(([key, value]) => ({
-        value: key,
-        label: value,
-      })),
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, home_town: value })),
-    },
+
     {
       type: "text",
       name: "row",
@@ -810,6 +312,7 @@ const AddInventoryPage = (props) => {
       type: "text",
       name: "add_price_addlist",
       label: "Processed Price",
+      mandatory: true,
       value: filtersApplied?.add_price_addlist,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       iconBefore: (
@@ -824,28 +327,6 @@ const AddInventoryPage = (props) => {
           ...prev,
           add_price_addlist: e?.target?.value,
         })),
-    },
-    {
-      type: "select",
-      name: "restrictions",
-      label: "Restrictions",
-      value: filtersApplied?.restrictions,
-      multiselect: true,
-      options: [
-        ...(restriction_left?.map((note) => ({
-          value: note.id.toString(),
-          label: note.name,
-        })) || []),
-        ...(restriction_right?.map((note) => ({
-          value: note.id.toString(),
-          label: note.name,
-        })) || []),
-      ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, restrictions: value })),
     },
     {
       type: "select",
@@ -864,32 +345,34 @@ const AddInventoryPage = (props) => {
           label: note.name,
         })) || []),
       ],
-      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, notes: value })),
     },
     {
       type: "select",
-      name: "split_details",
-      label: "Seating Arrangement",
-      value: filtersApplied?.split_details,
+      name: "restrictions",
+      label: "Restrictions",
+      value: filtersApplied?.restrictions,
+      multiselect: true,
       options: [
-        ...(split_details_left?.map((note) => ({
+        ...(restriction_left?.map((note) => ({
           value: note.id.toString(),
           label: note.name,
         })) || []),
-        ...(split_details_right?.map((note) => ({
+        ...(restriction_right?.map((note) => ({
           value: note.id.toString(),
           label: note.name,
         })) || []),
       ],
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, split_details: value })),
+        setFiltersApplied((prev) => ({ ...prev, restrictions: value })),
     },
+
     {
       type: "date",
       name: "ship_date",
@@ -914,7 +397,7 @@ const AddInventoryPage = (props) => {
       label: "Tickets In Hand",
       value: filtersApplied?.tickets_in_hand || false,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      className: "!py-[4px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
@@ -1190,9 +673,10 @@ const AddInventoryPage = (props) => {
   // Updated handleCellEdit to use rowIndex directly
   const handleCellEdit = (rowIndex, columnKey, value) => {
     console.log("Cell edited:", { rowIndex, columnKey, value });
-    let updatevalues = {};
-    if (columnKey == "ticket_types") {
-      updatevalues = {
+
+    let updateValues = {};
+    if (columnKey === "ticket_types") {
+      updateValues = {
         additional_file_type: "",
         additional_dynamic_content: "",
         qr_links: [],
@@ -1200,30 +684,41 @@ const AddInventoryPage = (props) => {
         paper_ticket_details: {},
       };
     }
+
     setInventoryData((prevData) =>
-      prevData.map((item, index) =>
-        index === rowIndex
-          ? { ...item, [columnKey]: value, ...updatevalues }
-          : item
-      )
+      prevData.map((item, index) => {
+        // In edit mode, if multiple rows are selected, update all selected rows
+        if (isEditMode && Array.isArray(editingRowIndex)) {
+          // Bulk edit mode: update all selected rows
+          if (editingRowIndex.includes(index)) {
+            return { ...item, [columnKey]: value, ...updateValues };
+          }
+          return item;
+        }
+        // Single row edit mode: update only the specific row
+        else if (index === rowIndex) {
+          return { ...item, [columnKey]: value, ...updateValues };
+        }
+        return item;
+      })
     );
   };
 
   const handleEdit = () => {
     if (selectedRows.length === 0) {
-      toast.error("Please select a row to edit");
+      toast.error("Please select rows to edit");
       return;
     }
 
-    if (selectedRows.length > 1) {
-      toast.error("Please select only one row to edit");
-      return;
-    }
-
-    const rowIndex = selectedRows[0];
-    setEditingRowIndex(rowIndex);
+    // For multiple rows, set all selected rows as editable
+    setEditingRowIndex(selectedRows); // Now this will be an array for bulk edit
     setIsEditMode(true);
-    toast.success("Edit mode activated for selected row");
+
+    if (selectedRows.length === 1) {
+      toast.success("Edit mode activated for selected row");
+    } else {
+      toast.success(`Bulk edit mode activated for ${selectedRows.length} rows`);
+    }
   };
 
   // Function to save edit changes
@@ -1231,10 +726,17 @@ const AddInventoryPage = (props) => {
     setEditingRowIndex(null);
     setIsEditMode(false);
     setSelectedRows([]);
-    toast.success("Changes saved successfully");
+
+    if (Array.isArray(editingRowIndex) && editingRowIndex.length > 1) {
+      toast.success(
+        `Changes saved successfully for ${editingRowIndex.length} rows`
+      );
+    } else {
+      toast.success("Changes saved successfully");
+    }
   };
 
-  // Function to cancel edit
+  // 4. Update the handleCancelEdit function
   const handleCancelEdit = () => {
     // Optionally restore original values here if you want to implement undo functionality
     setEditingRowIndex(null);
@@ -1672,13 +1174,61 @@ const AddInventoryPage = (props) => {
   };
 
   // Modified Add listing function to use filter values
+  const validateMandatoryFields = () => {
+    const errors = [];
+
+    // Get all mandatory fields from filters
+    const mandatoryFields = filters.filter(
+      (filter) => filter.mandatory === true
+    );
+
+    // Check each mandatory field
+    mandatoryFields.forEach((field) => {
+      const fieldValue = filtersApplied[field.name];
+
+      // Check if field is empty or invalid
+      if (
+        fieldValue === undefined ||
+        fieldValue === null ||
+        fieldValue === "" ||
+        (Array.isArray(fieldValue) && fieldValue.length === 0)
+      ) {
+        errors.push({
+          field: field.name,
+          label: field.label,
+          message: `${field.label} is required`,
+        });
+      }
+    });
+
+    return {
+      isValid: errors.length === 0,
+      errors: errors,
+    };
+  };
+
+  // Updated handleAddListing function with mandatory validation
   const handleAddListing = () => {
+    // First validate mandatory fields
+    const validation = validateMandatoryFields();
+
+    if (!validation.isValid) {
+      // Show error toast with all missing mandatory fields
+      const fieldNames = validation.errors
+        .map((error) => error.label)
+        .join(", ");
+      toast.error(`Please fill in all mandatory fields: ${fieldNames}`);
+      return;
+    }
+
+    // Check if any filter values are present (your existing logic)
     const hasFilterValues = Object.values(filtersApplied).some((value) => {
       if (Array.isArray(value)) {
         return value.length > 0;
       }
       return value && value.toString().trim() !== "";
     });
+
     setSelectedRows([0]);
 
     if (!hasFilterValues) {
@@ -1688,494 +1238,13 @@ const AddInventoryPage = (props) => {
       return;
     }
 
+    // If all validations pass, create the listing
     const newListing = createInventoryItemFromFilters();
     setInventoryData((prevData) => [...prevData, newListing]);
     setShowTable(true);
-  };
 
-  // Enhanced Custom Table Component with working scroll functionality
-  const CustomInventoryTable = () => {
-    const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
-    const [hasScrolledLeft, setHasScrolledLeft] = useState(false);
-    const [isTableCollapsed, setIsTableCollapsed] = useState(false);
-    const [canScrollLeft, setCanScrollLeft] = useState(false);
-    const [canScrollRight, setCanScrollRight] = useState(false);
-
-    // Function to check scroll capabilities and update state
-    const checkScrollCapabilities = () => {
-      if (!scrollContainerRef.current) return;
-
-      const { scrollLeft, scrollWidth, clientWidth } =
-        scrollContainerRef.current;
-
-      // Can scroll left if we've scrolled right
-      setCanScrollLeft(scrollLeft > 0);
-
-      // Can scroll right if there's more content to the right
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1); // -1 for rounding issues
-
-      // Update hasScrolledLeft state
-      setHasScrolledLeft(scrollLeft > 0);
-    };
-
-    // Scroll functions
-    const scrollLeft = () => {
-      if (!scrollContainerRef.current || !canScrollLeft) return;
-
-      const container = scrollContainerRef.current;
-      const scrollAmount = Math.min(300, container.clientWidth / 3); // Scroll by 300px or 1/3 of visible width
-
-      container.scrollBy({
-        left: -scrollAmount,
-        behavior: "smooth",
-      });
-    };
-
-    const scrollRight = () => {
-      if (!scrollContainerRef.current || !canScrollRight) return;
-
-      const container = scrollContainerRef.current;
-      const scrollAmount = Math.min(300, container.clientWidth / 3); // Scroll by 300px or 1/3 of visible width
-
-      container.scrollBy({
-        left: scrollAmount,
-        behavior: "smooth",
-      });
-    };
-
-    // Set up scroll event listener
-    useEffect(() => {
-      const container = scrollContainerRef.current;
-      if (!container) return;
-
-      // Initial check
-      checkScrollCapabilities();
-
-      // Add scroll event listener
-      const handleScroll = () => {
-        checkScrollCapabilities();
-      };
-
-      container.addEventListener("scroll", handleScroll);
-
-      // Check on resize as well
-      const handleResize = () => {
-        setTimeout(checkScrollCapabilities, 100); // Small delay to ensure layout is updated
-      };
-
-      window.addEventListener("resize", handleResize);
-
-      return () => {
-        container.removeEventListener("scroll", handleScroll);
-        window.removeEventListener("resize", handleResize);
-      };
-    }, [inventoryData]); // Re-run when data changes
-
-    // Check scroll capabilities when table data changes
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        checkScrollCapabilities();
-      }, 100); // Small delay to ensure DOM is updated
-
-      return () => clearTimeout(timer);
-    }, [inventoryData, isTableCollapsed]);
-
-    const stickyLeftWidth = 60; // Width for checkbox column
-
-    return (
-      <div
-        ref={containerRef}
-        className="border border-gray-200 rounded-lg overflow-hidden relative shadow-sm"
-      >
-        {/* Updated Accordion Header with working scroll buttons */}
-        <div
-          className="bg-[#343432]  cursor-pointer"
-          onClick={() => setIsTableCollapsed(!isTableCollapsed)}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              {/* Radio button */}
-              <div className="flex w-[50px] justify-center py-4 border-r-[1px] border-[#51428E] items-center">
-                <div className="w-4 h-4 border-2 border-white rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-              </div>
-
-              {/* Match name with pipe separator */}
-              <div className="flex items-center  space-x-4 py-4 pr-4 border-r-[1px] border-[#51428E]">
-                <h3 className="font-medium text-sm text-white">
-                  {matchDetails?.match_name || "Match Details"}
-                </h3>
-              </div>
-
-              {/* Match details with pipe separators and more spacing */}
-              <div className="flex items-center space-x-6 text-xs ">
-                <div className="flex items-center space-x-2 py-4 pr-4 border-r-[1px] border-[#51428E]">
-                  <Calendar1Icon size={14} className="text-white" />
-                  <span className="text-white">
-                    {matchDetails?.match_date_format}
-                  </span>
-                </div>
-
-                <div className="flex items-center space-x-2 py-4 pr-4 border-r-[1px] border-[#51428E]">
-                  <Clock size={14} className="text-white" />
-                  <span className="text-white">{matchDetails?.match_time}</span>
-                </div>
-
-                <div className="flex items-center space-x-2 py-4 pr-4 border-r-[1px] border-[#51428E]">
-                  <MapPin size={14} className="text-white" />
-                  <span className="text-white max-w-xs truncate">
-                    {matchDetails?.stadium_name}, {matchDetails?.country_name},{" "}
-                    {matchDetails?.city_name}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4 pr-4">
-              {/* Accordion Toggle - Remove scroll buttons from here */}
-              <div className="bg-[#FFFFFF26] p-2 rounded-full cursor-pointer">
-                <ChevronDown
-                  size={18}
-                  className={`text-white transition-transform duration-200 ${
-                    isTableCollapsed ? "rotate-180" : ""
-                  }`}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Table Content */}
-        {!isTableCollapsed && (
-          <div
-            className="w-full bg-white relative"
-            style={{ overflow: "visible" }}
-          >
-            {/* Sticky Left Column for Checkbox */}
-            <div
-              className={`absolute top-0 left-0 h-full bg-white border-r border-[#DADBE5] z-30 transition-shadow duration-200 ${
-                hasScrolledLeft ? "shadow-md" : ""
-              }`}
-              style={{ width: `50px` }}
-            >
-              <div className="h-full">
-                <table className="w-full h-full border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-[#DADBE5]">
-                      <th className="px-3 py-3 text-center text-[#7D82A4] font-medium whitespace-nowrap text-xs border-r border-[#DADBE5]">
-                        <div className="flex justify-center items-center">
-                          <input
-                            type="checkbox"
-                            checked={
-                              selectedRows.length === inventoryData.length &&
-                              inventoryData.length > 0
-                            }
-                            disabled={isEditMode}
-                            onChange={
-                              selectedRows.length > 0
-                                ? handleDeselectAll
-                                : handleSelectAll
-                            }
-                            className={`w-4 h-4 text-blue-600 border-[#DADBE5] rounded focus:ring-blue-500 ${
-                              isEditMode ? "cursor-not-allowed opacity-50" : ""
-                            }`}
-                          />
-                        </div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {inventoryData.map((row, rowIndex) => {
-                      const isSelected = selectedRows.includes(rowIndex);
-                      const isRowDisabled =
-                        isEditMode && editingRowIndex !== rowIndex;
-
-                      return (
-                        <tr
-                          key={`sticky-left-${row.id || rowIndex}`}
-                          className={`border-b border-[#DADBE5] transition-colors ${
-                            isSelected
-                              ? "bg-[#EEF1FD]"
-                              : "bg-white hover:bg-gray-50"
-                          } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
-                          onMouseEnter={() =>
-                            !isRowDisabled && setHoveredRowIndex(rowIndex)
-                          }
-                          onMouseLeave={() => setHoveredRowIndex(null)}
-                        >
-                          <td className="py-2 px-3 text-center whitespace-nowrap border-r border-[#DADBE5]">
-                            <div className="flex justify-center items-center">
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                disabled={isRowDisabled}
-                                onChange={(e) => {
-                                  if (isRowDisabled) return;
-                                  e.stopPropagation();
-                                  const newSelectedRows = isSelected
-                                    ? selectedRows.filter(
-                                        (index) => index !== rowIndex
-                                      )
-                                    : [...selectedRows, rowIndex];
-                                  setSelectedRows(newSelectedRows);
-                                }}
-                                className={`w-4 h-4 text-blue-600 border-[#DADBE5] rounded focus:ring-blue-500 ${
-                                  isRowDisabled
-                                    ? "cursor-not-allowed opacity-50"
-                                    : ""
-                                }`}
-                              />
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            {/* Main scrollable table container */}
-            <div
-              ref={scrollContainerRef}
-              className="w-full overflow-x-auto hideScrollbar"
-              style={{
-                paddingLeft: `50px`,
-                paddingRight: `50px`,
-              }}
-            >
-              <table
-                ref={mainTableRef}
-                className="w-full border-none"
-                style={{ minWidth: "1200px" }}
-              >
-                <thead>
-                  <tr className="bg-gray-50 border-b border-[#DADBE5]">
-                    {headers.map((header) => (
-                      <th
-                        key={header.key}
-                        className={`px-3 py-3 ${
-                          header?.increasedWidth
-                            ? header?.increasedWidth
-                            : "min-w-[140px]"
-                        } text-left text-[#7D82A4] font-medium whitespace-nowrap text-xs border-r border-[#DADBE5]`}
-                      >
-                        <div className="flex justify-between items-center">
-                          <span className="truncate text-[#7D82A4]">
-                            {header.label}
-                          </span>
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {inventoryData.map((row, rowIndex) => {
-                    const isSelected = selectedRows.includes(rowIndex);
-                    const isRowDisabled =
-                      isEditMode && editingRowIndex !== rowIndex;
-
-                    return (
-                      <tr
-                        key={row.id || rowIndex}
-                        className={`border-b border-[#DADBE5] transition-colors ${
-                          isSelected
-                            ? "bg-[#EEF1FD]"
-                            : "bg-white hover:bg-gray-50"
-                        } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
-                        onMouseEnter={() =>
-                          !isRowDisabled && setHoveredRowIndex(rowIndex)
-                        }
-                        onMouseLeave={() => setHoveredRowIndex(null)}
-                      >
-                        {headers.map((header) => (
-                          <td
-                            key={`${rowIndex}-${header.key}`}
-                            className={`py-2 px-3 text-xs ${
-                              header?.increasedWidth
-                                ? header?.increasedWidth
-                                : "min-w-[140px]"
-                            } whitespace-nowrap overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
-                              isRowDisabled ? "bg-gray-50" : ""
-                            } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
-                          >
-                            {header.editable ? (
-                              renderEditableCell(
-                                row,
-                                header,
-                                rowIndex,
-                                true,
-                                isRowDisabled
-                              )
-                            ) : (
-                              <span
-                                className={`${header.className || ""} ${
-                                  isRowDisabled
-                                    ? "text-gray-400"
-                                    : "text-[#323A70]"
-                                }`}
-                              >
-                                {row[header.key]}
-                              </span>
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <div
-              className={`absolute top-0 right-0 h-full bg-white border-l border-[#DADBE5] z-20 transition-shadow duration-200 ${
-                hasScrolled ? "shadow-md" : ""
-              }`}
-              style={{ width: `${stickyColumnsWidth}px` }}
-            >
-              <div className="h-full">
-                <table
-                  ref={stickyTableRef}
-                  className="w-full h-full border-collapse"
-                >
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-[#DADBE5]">
-                      {/* Hand icon column header - Empty header with just text */}
-                      <th
-                        className="py-2 px-2 text-left text-[#7D82A4] text-xs border-r border-[#DADBE5] font-medium whitespace-nowrap text-center"
-                        style={{
-                          width: "50px",
-                          minWidth: "50px",
-                          maxWidth: "50px",
-                        }}
-                      >
-                        <div className="flex items-center justify-center">
-                          <span className="text-[#7D82A4] text-xs"></span>
-                        </div>
-                      </th>
-
-                      {/* Upload icon column header with scroll navigation */}
-                      <th
-                        className="py-2 px-2 text-left text-[#7D82A4] text-xs font-medium whitespace-nowrap text-center relative"
-                        style={{
-                          width: "50px",
-                          minWidth: "50px",
-                          maxWidth: "50px",
-                        }}
-                      >
-                        {/* Scroll Navigation Arrows in table header */}
-                        <div className="flex items-center justify-center space-x-1">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              scrollLeft();
-                            }}
-                            disabled={!canScrollLeft}
-                            className={`p-1 rounded transition-colors ${
-                              canScrollLeft
-                                ? "text-[#7D82A4] hover:bg-gray-200 cursor-pointer"
-                                : "text-gray-300 cursor-not-allowed"
-                            }`}
-                            title="Scroll Left"
-                          >
-                            <ChevronLeft size={12} />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              scrollRight();
-                            }}
-                            disabled={!canScrollRight}
-                            className={`p-1 rounded transition-colors ${
-                              canScrollRight
-                                ? "text-[#7D82A4] hover:bg-gray-200 cursor-pointer"
-                                : "text-gray-300 cursor-not-allowed"
-                            }`}
-                            title="Scroll Right"
-                          >
-                            <ChevronRight size={12} />
-                          </button>
-                        </div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {inventoryData.map((row, rowIndex) => {
-                      const isRowDisabled =
-                        isEditMode && editingRowIndex !== rowIndex;
-                      const isSelected = selectedRows.includes(rowIndex);
-
-                      return (
-                        <tr
-                          key={`sticky-${row.id || rowIndex}`}
-                          className={`border-b border-[#DADBE5] transition-colors ${
-                            isSelected
-                              ? "bg-[#EEF1FD]"
-                              : "bg-white hover:bg-gray-50"
-                          } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
-                        >
-                          {/* Hand icon column */}
-                          <td
-                            className={`py-2 text-sm align-middle text-center border-r border-[#DADBE5] ${
-                              isRowDisabled ? "pointer-events-none" : ""
-                            } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
-                            style={{
-                              width: "50px",
-                              minWidth: "50px",
-                              maxWidth: "50px",
-                            }}
-                          >
-                            <div className="flex justify-center items-center">
-                              <Image
-                                src={row?.tickets_in_hand ? greenHand : oneHand}
-                                alt="hand status"
-                                width={16}
-                                height={16}
-                                className={`${
-                                  row?.tickets_in_hand
-                                    ? "text-green-500"
-                                    : "text-gray-400"
-                                } cursor-pointer hover:opacity-75 transition-opacity`}
-                                onClick={() => handleHandAction(row, rowIndex)}
-                              />
-                            </div>
-                          </td>
-
-                          {/* Upload icon column */}
-                          <td
-                            className={`py-2 text-sm align-middle text-center ${
-                              isRowDisabled ? "pointer-events-none" : ""
-                            } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
-                            style={{
-                              width: "50px",
-                              minWidth: "50px",
-                              maxWidth: "50px",
-                            }}
-                          >
-                            <div className="flex justify-center items-center h-full">
-                              <Image
-                                src={uploadListing}
-                                alt="upload"
-                                width={16}
-                                height={16}
-                                className="cursor-pointer hover:opacity-75 transition-opacity"
-                                onClick={() =>
-                                  handleUploadAction(row, rowIndex)
-                                }
-                              />
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
+    // Show success message
+    toast.success("Listing added successfully!");
   };
 
   const handleSearchBlur = () => {
@@ -2344,7 +1413,20 @@ const AddInventoryPage = (props) => {
       {matchDetails && showTable && inventoryData.length > 0 && (
         <div className="m-6 bg-white rounded-lg shadow-sm">
           <div style={{ maxHeight: "calc(100vh - 450px)", overflowY: "auto" }}>
-            <CustomInventoryTable />
+            <CustomInventoryTable
+              inventoryData={inventoryData}
+              headers={headers}
+              selectedRows={selectedRows}
+              setSelectedRows={setSelectedRows}
+              handleCellEdit={handleCellEdit}
+              handleHandAction={handleHandAction}
+              handleUploadAction={handleUploadAction}
+              handleSelectAll={handleSelectAll}
+              handleDeselectAll={handleDeselectAll}
+              matchDetails={matchDetails}
+              isEditMode={isEditMode}
+              editingRowIndex={editingRowIndex}
+            />
           </div>
         </div>
       )}
