@@ -1,84 +1,139 @@
-import React, { useState } from "react";
-import { Check, ChevronDown, X } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import {
+  Calendar,
+  Check,
+  ChevronDown,
+  Edit,
+  MapPin,
+  X,
+  XCircle,
+} from "lucide-react";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import CustomModal from "@/components/commonComponents/customModal";
 import CustomSelect from "@/components/commonComponents/customSelect";
+import {
+  getmarketingInsights,
+  updateTicketsPrice,
+} from "@/utils/apiHandler/request";
 
-const ListingsMarketplace = () => {
-  const [showModal, setShowModal] = useState(true);
+// Shimmer Loader Component
+const ShimmerLoader = () => {
+  return (
+    <div className="animate-pulse w-4xl">
+      {/* Header shimmer */}
+      <div className="grid grid-cols-6 border-b border-gray-200 bg-white">
+        <div className="p-3">
+          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+        </div>
+        <div className="p-3">
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+        <div className="p-3">
+          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+        <div className="p-3">
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+        <div className="p-3">
+          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+        </div>
+        <div className="p-3">
+          <div className="h-4 bg-gray-200 rounded w-full"></div>
+        </div>
+      </div>
+
+      {/* Row shimmers */}
+      {[...Array(6)].map((_, index) => (
+        <div key={index} className="grid grid-cols-6 border-b border-gray-200">
+          <div className="p-3">
+            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          </div>
+          <div className="p-3">
+            <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+          </div>
+          <div className="p-3">
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+          <div className="p-3">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          </div>
+          <div className="p-3">
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+          <div className="p-3">
+            <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Empty State Component
+const EmptyState = () => {
+  return (
+    <div className="flex flex-col items-center justify-center py-12">
+      <div className="text-gray-400 mb-4">
+        <Calendar className="w-12 h-12" />
+      </div>
+      <h3 className="text-lg font-medium text-gray-900 mb-2">
+        No listings found
+      </h3>
+      <p className="text-gray-500 text-center max-w-sm">
+        There are currently no ticket listings available for this match.
+      </p>
+    </div>
+  );
+};
+
+const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
+  const [listValueData, setListvalueData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  console.log(matchInfo, "matchInfomatchInfomatchInfo");
+  const getInsightsData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const res = await getmarketingInsights("", {
+        match_id: matchInfo?.match_id,
+      });
+
+      console.log(res, "res");
+      setListvalueData(res);
+    } catch (err) {
+      console.error("Error fetching insights:", err);
+      setError("Failed to load ticket listings. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (show && matchInfo?.match_id) {
+      getInsightsData();
+    }
+  }, [show, matchInfo?.match_id]);
+
+  // Safe data extraction with null checks
+  const listingsArray = listValueData?.listings?.data || [];
   const [selectedTab, setSelectedTab] = useState("Listings");
-  const [editingRow, setEditingRow] = useState(0); // Fourth row is editable as per image
-  const [editPrice, setEditPrice] = useState("50.00");
+  const [editingRow, setEditingRow] = useState(null);
+  const [editPrices, setEditPrices] = useState({});
 
   // Filter states
   const [sections, setSections] = useState("All Sections");
   const [venues, setVenues] = useState("All Venue Areas");
   const [quantities, setQuantities] = useState("All Quantities");
-
+  console.log(matchInfo, "matchInfomatchInfomatchInfo");
   const matchDetails = {
-    title: "Chelsea vs Arsenal - Premier League",
-    date: "Sun, 10 Nov 2024",
-    venue: "Stamford Bridge, London, United Kingdom",
+    title: matchInfo?.match_name || "Match Details",
+    date: matchInfo?.match_date || matchInfo?.match_date_format || "Date TBD",
+    venue: `${matchInfo?.stadium_name || "Stadium"}, ${
+      matchInfo?.city_name || "City"
+    }, ${matchInfo?.country_name || "Country"}`,
   };
-
-  const listingsData = [
-    {
-      section: "104",
-      row: "-",
-      quantity: 4,
-      category: "Longside Central Lower",
-      price: "£ 50.00",
-      benefits: "Standing Only",
-    },
-    {
-      section: "104",
-      row: "-",
-      quantity: 4,
-      category: "Lower Tier",
-      price: "£ 50.00",
-      benefits: "Standing Only",
-    },
-    {
-      section: "104",
-      row: "-",
-      quantity: 4,
-      category: "Longside Central Lower",
-      price: "£ 50.00",
-      benefits: "Standing Only",
-    },
-    {
-      section: "104",
-      row: "-",
-      quantity: 4,
-      category: "Longside Central Lower",
-      price: "£ 50.00",
-      benefits: "Standing Only",
-    },
-    {
-      section: "104",
-      row: "-",
-      quantity: 4,
-      category: "Lower Tier",
-      price: "£ 50.00",
-      benefits: "Standing Only",
-    },
-    {
-      section: "104",
-      row: "-",
-      quantity: 4,
-      category: "Longside Central Lower",
-      price: "£ 50.00",
-      benefits: "Standing Only",
-    },
-    {
-      section: "104",
-      row: "-",
-      quantity: 4,
-      category: "Lower Tier",
-      price: "£ 50.00",
-      benefits: "Standing Only",
-    },
-  ];
 
   const filterOptions = [
     { value: "all", label: "All Sections" },
@@ -99,29 +154,110 @@ const ListingsMarketplace = () => {
     { value: "4", label: "4" },
   ];
 
-  const savePrice = () => {
-    setEditingRow(null);
+  // Function to handle price edit initialization
+  const startEditPrice = (ticketId, currentPrice) => {
+    setEditingRow(ticketId);
+    setEditPrices({
+      ...editPrices,
+      [ticketId]: String(currentPrice || "").replace(/[^0-9.]/g, "") || "",
+    });
   };
 
+  // Function to handle price input change
+  const handlePriceChange = (ticketId, value) => {
+    setEditPrices({
+      ...editPrices,
+      [ticketId]: value,
+    });
+  };
+
+  // Function to save price and trigger callback
+  // Function to save price and refresh data
+  const savePrice = async (item) => {
+    if (!item?.ticket_id) return;
+
+    try {
+      const updatedPrice = editPrices[item.ticket_id];
+
+      console.log("Updated price:", updatedPrice);
+
+      const response = await updateTicketsPrice("", "", {
+        ticket_id: item.ticket_id,
+        new_price: updatedPrice,
+      });
+
+      console.log(response, "response");
+
+      // Clear editing state first
+      setEditingRow(null);
+      setEditPrices((prevPrices) => {
+        const newPrices = { ...prevPrices };
+        delete newPrices[item.ticket_id];
+        return newPrices;
+      });
+
+      // Refresh the entire dataset
+      await getInsightsData();
+
+      // Trigger callback function with updated data
+      if (onPriceUpdate) {
+        const updatedItem = {
+          ...item,
+          price: `$ ${updatedPrice}`,
+        };
+        onPriceUpdate(updatedItem, updatedPrice);
+      }
+    } catch (err) {
+      console.error("Error updating price:", err);
+      // You might want to show an error message to the user here
+    }
+  };
+
+  // Function to cancel price edit
   const cancelEdit = () => {
-    setEditPrice("50.00");
     setEditingRow(null);
+    setEditPrices({});
+  };
+
+  // Function to get benefits text from ticket_details
+  const getBenefitsText = (ticketDetails) => {
+    if (
+      !ticketDetails ||
+      !Array.isArray(ticketDetails) ||
+      ticketDetails.length === 0
+    ) {
+      return "No benefits";
+    }
+    return (
+      ticketDetails
+        .slice(0, 2)
+        .filter((detail) => detail?.name) // Filter out null/undefined names
+        .map((detail) => detail.name)
+        .join(", ") || "No benefits"
+    );
+  };
+
+  // Callback function that can be passed as prop
+  const onPriceUpdate = (updatedItem, newPrice) => {
+    // This function will be called when price is updated
+    console.log("Price updated for item:", updatedItem);
+    console.log("New price:", newPrice);
   };
 
   return (
     <div className="p-4">
-      <CustomModal show={showModal} onClose={() => setShowModal(false)}>
-        <div className="bg-white w-full max-w-6xl">
+      <CustomModal show={show} onClose={() => onClose()}>
+        <div className="bg-white w-full max-w-4xl rounded-md">
           {/* Header with match details */}
-          <div className="p-4 flex justify-between items-center">
+          <div className="px-4 pt-4 flex justify-between items-center">
             <h2 className="text-lg font-medium text-[#323A70]">
               {matchDetails.title}
             </h2>
             <button
-              onClick={() => setShowModal(false)}
-              className="text-gray-500"
+              onClick={() => onClose()}
+              className="text-gray-500 cursor-pointer"
             >
-              <IconStore.close />
+              <XCircle />
             </button>
           </div>
 
@@ -129,7 +265,7 @@ const ListingsMarketplace = () => {
           <div className="px-4 py-2 border-b border-gray-200 flex items-center gap-4">
             <div className="flex items-center gap-2 pr-4 border-r border-gray-200">
               <span className="text-[#323A70]">
-                <IconStore.calendar />
+                <Calendar className="w-4 h-4 text-[#00A3ED]" />
               </span>
               <span className="text-sm text-[#323A70]">
                 {matchDetails.date}
@@ -137,130 +273,153 @@ const ListingsMarketplace = () => {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[#323A70]">
-                <IconStore.location />
+                <MapPin className="w-4 h-4 text-[#00A3ED]" />
               </span>
-              <span className="text-sm text-[#323A70]">
-                {matchDetails.venue}
-              </span>
+              <span className="text-sm ">{matchDetails.venue}</span>
             </div>
           </div>
 
-          {/* Tabs and filters */}
-          <div className="px-4 py-2 border-b border-gray-200 flex justify-between items-center">
-            <div className="flex">
-              {["Listings", "Sales"].map((tab) => (
+          <div className="p-4 max-h-[500px] overflow-auto">
+            {/* Error State */}
+            {error && !isLoading && (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="text-red-400 mb-4">
+                  <X className="w-12 h-12" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Error
+                </h3>
+                <p className="text-gray-500 text-center max-w-sm mb-4">
+                  {error}
+                </p>
                 <button
-                  key={tab}
-                  className={`px-6 py-2 text-sm cursor-pointer ${
-                    selectedTab === tab
-                      ? "border-b-2 border-[#130061] text-[#130061] font-medium"
-                      : "text-[#323A70]"
-                  }`}
-                  onClick={() => setSelectedTab(tab)}
+                  onClick={getInsightsData}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
-                  {tab}
+                  Try Again
                 </button>
-              ))}
-            </div>
+              </div>
+            )}
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-[#323A70]">Filter by:</span>
-              <div className="flex gap-2">
-                <CustomSelect
-                  selectedValue={sections}
-                  options={filterOptions}
-                  onSelect={setSections}
-                  placeholder="All Sections"
-                  textSize="text-xs"
-                  buttonPadding="px-2 py-1"
-                />
-                <CustomSelect
-                  selectedValue={venues}
-                  options={venueOptions}
-                  onSelect={setVenues}
-                  placeholder="All Venue Areas"
-                  textSize="text-xs"
-                  buttonPadding="px-2 py-1"
-                />
-                <CustomSelect
-                  selectedValue={quantities}
-                  options={quantityOptions}
-                  onSelect={setQuantities}
-                  placeholder="All Quantities"
-                  textSize="text-xs"
-                  buttonPadding="px-2 py-1"
-                />
-              </div>
-            </div>
-          </div>
-          <div className="p-4">
-            {/* Table header */}
-            <div className="grid grid-cols-6 border-b border-gray-200 bg-white">
-              <div className="p-3 text-sm font-medium text-[#323A70]">
-                Section/Block
-              </div>
-              <div className="p-3 text-sm font-medium text-[#323A70]">Row</div>
-              <div className="p-3 text-sm font-medium text-[#323A70]">
-                Quantity
-              </div>
-              <div className="p-3 text-sm font-medium text-[#323A70]">
-                Category
-              </div>
-              <div className="p-3 text-sm font-medium text-[#323A70] flex items-center">
-                Payout Price <ChevronDown className="ml-1 w-4 h-4" />
-              </div>
-              <div className="p-3 text-sm font-medium text-[#323A70]">
-                Benefits & Restrictions
-              </div>
-            </div>
+            {/* Loading State */}
+            {isLoading && <ShimmerLoader />}
 
-            {/* Table rows */}
-            {listingsData.map((item, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-6 border-b border-gray-200 hover:bg-gray-50"
-              >
-                <div className="p-3 text-sm">{item.section}</div>
-                <div className="p-3 text-sm">{item.row}</div>
-                <div className="p-3 text-sm">{item.quantity}</div>
-                <div className="p-3 text-sm">{item.category}</div>
-                <div className="p-3 text-sm">
-                  {editingRow === index ? (
-                    <div className="flex items-center">
-                      <span className="mr-1">£</span>
-                      <input
-                        type="text"
-                        value={editPrice}
-                        onChange={(e) => setEditPrice(e.target.value)}
-                        className="border border-blue-500 rounded w-16 px-2 py-1 text-sm"
-                      />
-                      <div className="flex ml-2">
-                        <button
-                          onClick={savePrice}
-                          className="bg-blue-600 text-white rounded p-1 mr-1"
-                        >
-                          <Check className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={cancelEdit}
-                          className="bg-gray-200 text-gray-700 rounded p-1"
-                        >
-                          <X className="w-4 h-4" />
+            {/* Empty State */}
+            {!isLoading && !error && listingsArray.length === 0 && (
+              <EmptyState />
+            )}
+
+            {/* Data State */}
+            {!isLoading && !error && listingsArray.length > 0 && (
+              <>
+                {/* Table header */}
+                <div className="grid grid-cols-6 border-b border-gray-200 bg-white">
+                  <div className="p-3 text-sm font-medium text-[#323A70]">
+                    Section/Block
+                  </div>
+                  <div className="p-3 text-sm font-medium text-[#323A70]">
+                    Row
+                  </div>
+                  <div className="p-3 text-sm font-medium text-[#323A70]">
+                    Quantity
+                  </div>
+                  <div className="p-3 text-sm font-medium text-[#323A70]">
+                    Category
+                  </div>
+                  <div className="p-3 text-sm font-medium text-[#323A70] flex items-center">
+                    Payout Price <ChevronDown className="ml-1 w-4 h-4" />
+                  </div>
+                  <div className="p-3 text-sm font-medium text-[#323A70]">
+                    Benefits & Restrictions
+                  </div>
+                </div>
+
+                {/* Table rows - Loop through data */}
+                {listingsArray.map((item, index) => {
+                  // Null check for item
+                  if (!item) return null;
+
+                  return (
+                    <div
+                      key={item.ticket_id || index}
+                      className={`grid grid-cols-6 border-b border-gray-200 hover:bg-gray-50 ${
+                        item.flag === 1 ? "bg-blue-50" : ""
+                      }`}
+                    >
+                      <div className="p-3 text-sm">{item.block_id || "-"}</div>
+                      <div className="p-3 text-sm">-</div>
+                      <div className="p-3 text-sm">{item.quantity || "-"}</div>
+                      <div className="p-3 text-sm">
+                        {item.ticket_category || "-"}
+                      </div>
+                      <div className="p-3 text-sm">
+                        {editingRow === item.ticket_id ? (
+                          <div className="flex items-center">
+                            <span className="mr-1">$</span>
+                            <input
+                              type="text"
+                              value={editPrices[item.ticket_id] || ""}
+                              onChange={(e) =>
+                                handlePriceChange(
+                                  item.ticket_id,
+                                  e.target.value
+                                )
+                              }
+                              className="border border-blue-500 rounded w-16 px-2 py-1 text-sm"
+                            />
+                            <div className="flex ml-2">
+                              <button
+                                onClick={() => savePrice(item)}
+                                className="bg-blue-600 cursor-pointer text-white rounded p-1 mr-1"
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={cancelEdit}
+                                className="bg-gray-200 cursor-pointer text-gray-700 rounded p-1"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center">
+                            <span
+                              className={
+                                item.flag === 1 ? "cursor-pointer" : ""
+                              }
+                              onClick={() =>
+                                item.flag === 1 &&
+                                startEditPrice(item.ticket_id, item.price)
+                              }
+                            >
+                              {item.price || "-"}
+                            </span>
+                            {item.flag === 1 && (
+                              <button
+                                onClick={() =>
+                                  item.flag === 1 &&
+                                  startEditPrice(item.ticket_id, item.price)
+                                }
+                                className="ml-2 cursor-pointer bg-gray-400 text-white rounded p-1"
+                              >
+                                <Edit className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3 text-sm flex items-center justify-between">
+                        <span>{getBenefitsText(item.ticket_details)}</span>
+                        <button className="text-gray-400">
+                          <IconStore.document />
                         </button>
                       </div>
                     </div>
-                  ) : (
-                    <p onClick={() => setEditingRow(index)}>{item.price}</p>
-                  )}
-                </div>
-                <div className="p-3 text-sm flex items-center justify-between">
-                  <span>{item.benefits}</span>
-                  <button className="text-gray-400">
-                    <IconStore.document />
-                  </button>
-                </div>
-              </div>
-            ))}
+                  );
+                })}
+              </>
+            )}
           </div>
         </div>
       </CustomModal>

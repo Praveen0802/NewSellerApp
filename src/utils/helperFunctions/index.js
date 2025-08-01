@@ -242,3 +242,16 @@ export function formatDateToBoldDisplay(dateString) {
   // Return formatted string
   return `${dayName}, ${day} ${monthName} ${year}`;
 }
+
+export function addDayOfWeek(dateString) {
+  if(!dateString) return "";
+  // Parse the input date string
+  const date = new Date(dateString);
+  
+  // Get day of week
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayName = days[date.getDay()];
+  
+  // Return with day name and comma
+  return `${dayName}, ${dateString}`;
+}

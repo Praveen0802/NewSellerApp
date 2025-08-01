@@ -5,6 +5,17 @@
   height: 6px; /* height for horizontal scrollbar */
 }
 
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 ::-webkit-scrollbar-track {
   background: #f1f1f1; /* color of the tracking area */
   border-radius: 10px;

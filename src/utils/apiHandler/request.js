@@ -31,7 +31,7 @@ const makeRequest = async ({
       ? (await method.toLowerCase()) === "get"
         ? AJAX.get(modifiedUrl, { ...(token && { token: token }) })
         : AJAX.post(
-            url,
+            modifiedUrl,
             data,
             formData,
             { ...(token && { token: token }) },
@@ -80,6 +80,34 @@ export const fetchBulkListing = async (token, params = {}) => {
   } catch (error) {
     console.log("ERROR in fetchBulkListing", error);
     return {};
+  }
+};
+
+export const LogoutCall = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.AUTH_LOGOUT}`,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(data && { formData: data }),
+    });
+    return response?.data ? response?.data : {};
+  } catch (error) {
+    console.log("ERROR in myListingUploadTickets", error);
+  }
+};
+
+export const myListingUploadTickets = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.MY_LISTING_UPLOAD_TICKETS}`,
+      method: "POST",
+      ...(token && { token: token }),
+      ...(data && { formData: data }),
+    });
+    return response?.data ? response?.data : {};
+  } catch (error) {
+    console.log("ERROR in myListingUploadTickets", error);
   }
 };
 
@@ -162,6 +190,21 @@ export const downloadReports = async (token, params = {}) => {
   try {
     const response = await makeRequest({
       url: API_ROUTES.EXPORT_REPORTS,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in reportEventSearch", error);
+    return {};
+  }
+};
+
+export const deleteMyListing = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.DELETE_TICKET,
       method: "GET",
       ...(token && { token: token }),
       ...(params && { params: params }),
@@ -901,6 +944,52 @@ export const saveBulkListing = async (token, data) => {
   } catch (error) {
     console.log("ERROR in fetchUserDetails", error);
     throw error;
+  }
+};
+
+export const uploadPopInstruction = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.UPLOAD_POP}`,
+      method: "POST",
+      ...(token && { token: token }),
+      ...(data && { formData: data }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchUserDetails", error);
+    throw error;
+  }
+};
+
+export const updateTicketsPrice = async (token, data, params) => {
+  console.log(params, "paramsparams");
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.UPDATE_TICKETS_PRICE}`,
+      method: "POST",
+      ...(token && { token: token }),
+      ...(data && { data: data }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in updateTicketsPrice", error);
+    throw error;
+  }
+};
+
+export const getmarketingInsights = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.MARKETING_INSIGHTS}`,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in updateTicketsPrice", error);
   }
 };
 

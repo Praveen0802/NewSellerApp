@@ -10,19 +10,40 @@ export const readCookie = function (name) {
   return null;
 };
 
-export const setCookie = (name, value, daysToExpire = 30) => {
-  const expirationDate = new Date();
-  expirationDate.setDate(expirationDate.getDate() + daysToExpire);
+export const setCookie = (name, value, options = {}) => {
+  const {
+    expires,
+    daysToExpire,
+    path = '/',
+    domain,
+    secure,
+    sameSite
+  } = options;
 
-  // For deletion, make sure to use a past date
-  const expires =
-    daysToExpire < 0
-      ? "Thu, 01 Jan 1970 00:00:00 GMT"
-      : expirationDate.toUTCString();
-
-  console.log(name, value, "eeeeeee");
-  const cookieValue = `${name}=${value}; expires=${expires}; path=/`;
-  document.cookie = cookieValue;
+  let cookieString = `${name}=${value}`;
+  
+  // Handle expiration
+  if (expires) {
+    cookieString += `; expires=${expires}`;
+  } else if (daysToExpire !== undefined) {
+    if (daysToExpire <= 0) {
+      // For deletion, use a past date
+      cookieString += '; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    } else {
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + daysToExpire);
+      cookieString += `; expires=${expirationDate.toUTCString()}`;
+    }
+  }
+  
+  cookieString += `; path=${path}`;
+  
+  if (domain) cookieString += `; domain=${domain}`;
+  if (secure) cookieString += '; secure';
+  if (sameSite) cookieString += `; samesite=${sameSite}`;
+  
+  document.cookie = cookieString;
+  console.log(`Setting cookie: ${cookieString}`);
 };
 
 export function getCookie(name) {

@@ -22,9 +22,13 @@ import {
   fetchNotificationHistory,
   fetchActivityHistory,
   fetchNotificationCount,
+  LogoutCall,
 } from "@/utils/apiHandler/request";
-import { updateNotificationCount } from "@/utils/redux/common/action";
 import { useUserDisplayName } from "@/Hooks/_shared";
+import {
+  updateLeftMenuDisplay,
+  updateNotificationCount,
+} from "@/utils/redux/common/action";
 
 // Custom Tooltip Component with Portal Support
 const Tooltip = ({ children, content, position = "right" }) => {
@@ -885,16 +889,20 @@ const NotificationsPopup = ({
 };
 
 const LeftMenuBar = () => {
-  const [showFullDisplay, setShowFullDisplay] = useState(false);
+  // const [showFullDisplay, setShowFullDisplay] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [salesExpanded, setSalesExpanded] = useState(false);
 
   const { currentUser } = useSelector((state) => state.currentUser);
-  const { notificationCountData } = useSelector((state) => state.common);
 
   // Use the custom hook for hydration-safe user display name
   const { userDisplayName } = useUserDisplayName(currentUser);
+  const { notificationCountData, showFullDisplay } = useSelector(
+    (state) => state.common
+  );
+  const name = currentUser?.first_name?.slice(0, 2).toUpperCase();
+  const userName = currentUser?.first_name;
 
   const dispatch = useDispatch();
 
@@ -1044,10 +1052,11 @@ const LeftMenuBar = () => {
       setActive(currentPath);
     }
   }, [router?.pathname]);
-
+  console.log(showFullDisplay, "showFullDisplayshowFullDisplay");
   const handleSelectedClick = (index, item) => {
     if (index === 0 && !isMobile) {
-      setShowFullDisplay(!showFullDisplay);
+      // setShowFullDisplay(!showFullDisplay);
+      dispatch(updateLeftMenuDisplay(!showFullDisplay));
       return;
     }
 
@@ -1086,10 +1095,16 @@ const LeftMenuBar = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  const handleLogout = () => {
-    setCookie("auth_token", "", -1);
-    setCookie("auth_token_validity", "", -1);
-    setCookie("user_token", "", -1);
+  const handleLogout = async () => {
+    setCookie("auth_token", "", { expires: new Date(0) });
+    setCookie("auth_token_validity", "", { expires: new Date(0) });
+    setCookie("user_token", "", { expires: new Date(0) });
+    try {
+      await LogoutCall();
+    } catch (error) {
+      console.log("ERROR in myListingUploadTickets", error);
+    }
+
     router.push("/login");
   };
 
@@ -1271,7 +1286,7 @@ const LeftMenuBar = () => {
         </div>
 
         {/* Main menu items - scrollable area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto hideScrollbar">
           <div className="flex flex-col p-[10px] gap-3">
             {leftPaneValues.map((item, index) => (
               <div key={index}>

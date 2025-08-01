@@ -25,6 +25,7 @@ const FloatingLabelInput = ({
   placeholder = "",
   error = "",
   rightIcon = null,
+  checkLength = false,
   iconBefore = null, // New prop for left icon
   iconBeforeTooltip = "", // New prop for tooltip text
   autoFocus = false,
@@ -81,10 +82,84 @@ const FloatingLabelInput = ({
   };
 
   const handleKeyDown = (e) => {
+    // Prevent non-numeric characters for number type
+    if (type === "number") {
+      const allowedKeys = [
+        "Backspace",
+        "Delete",
+        "Tab",
+        "Escape",
+        "Enter",
+        "Home",
+        "End",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown",
+        "Clear",
+        "Copy",
+        "Paste",
+      ];
+
+      const isNumberKey = /^[0-9]$/.test(e.key);
+      const isDecimalPoint = e.key === "." && !e.target.value.includes(".");
+      const isNegativeSign =
+        e.key === "-" &&
+        e.target.selectionStart === 0 &&
+        !e.target.value.includes("-");
+      const isModifierKey = e.ctrlKey || e.metaKey || e.altKey;
+
+      if (
+        !allowedKeys.includes(e.key) &&
+        !isNumberKey &&
+        !isDecimalPoint &&
+        !isNegativeSign &&
+        !isModifierKey
+      ) {
+        e.preventDefault();
+        return;
+      }
+    }
+
     // Call the onKeyDown callback if provided
     if (onKeyDown && e.key === "Enter") {
       onKeyDown(e, false);
     }
+  };
+
+  // Handle input change with number validation
+  const handleInputChange = (e) => {
+    let inputValue = e.target.value;
+
+    // For number type, filter out non-numeric characters
+    if (type === "number") {
+      // Allow digits, decimal point, and negative sign
+      inputValue = inputValue.replace(/[^0-9.-]/g, "");
+
+      // Ensure only one decimal point
+      const decimalCount = (inputValue.match(/\./g) || []).length;
+      if (decimalCount > 1) {
+        const firstDecimalIndex = inputValue.indexOf(".");
+        inputValue =
+          inputValue.substring(0, firstDecimalIndex + 1) +
+          inputValue.substring(firstDecimalIndex + 1).replace(/\./g, "");
+      }
+
+      // Ensure negative sign only at the beginning
+      if (inputValue.includes("-")) {
+        const negativeIndex = inputValue.indexOf("-");
+        if (negativeIndex !== 0) {
+          inputValue = inputValue.replace(/-/g, "");
+        } else {
+          inputValue = "-" + inputValue.substring(1).replace(/-/g, "");
+        }
+      }
+
+      // Update the input value
+      e.target.value = inputValue;
+    }
+
+    onChange(e, keyValue);
   };
 
   // Add click handler for date inputs
@@ -115,7 +190,11 @@ const FloatingLabelInput = ({
 
   // Determine left padding based on iconBefore
   const getLeftPadding = () => {
-    return (value.length<=3 && iconBefore) ? "pl-12" : "px-3"; // Increased from pl-10 to pl-12
+    return value.length <= 3 && iconBefore && checkLength
+      ? "pl-12"
+      : iconBefore && !checkLength
+      ? "pl-12"
+      : "px-3"; // Increased from pl-10 to pl-12
   };
 
   // Determine right padding based on what icons are shown
@@ -133,13 +212,19 @@ const FloatingLabelInput = ({
       : isFocused
       ? "border-[#DADBE5] focus:border-indigo-300 focus:ring-1 focus:ring-indigo-300"
       : "border-[#DADBE5]"
-  } ${getRightPadding()}`;
+  } ${getRightPadding()} ${
+    type === "number"
+      ? "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+      : ""
+  }`;
 
   return (
     <div className={`relative w-full ${parentClassName}`}>
       {!hideLabel && (
         <FloatingPlaceholder
-          className={`${labelClassName} ${value.length<=3 && iconBefore && "!left-12"} `} // Changed from !left-14 to !left-12
+          className={`${labelClassName} ${
+            value.length <= 3 && iconBefore && "!left-12"
+          } `} // Changed from !left-14 to !left-12
           isFocused={isFocused}
           hasError={!!error}
         >
@@ -157,14 +242,15 @@ const FloatingLabelInput = ({
 
       <div className="relative">
         {/* Left icon - iconBefore with tooltip */}
-        {value.length<=3 &&iconBefore && (
-          <div 
+        {((value.length <= 3 && iconBefore && checkLength) ||
+          (iconBefore && !checkLength)) && (
+          <div
             className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer hover:text-blue-600 transition-colors"
             onMouseEnter={() => iconBeforeTooltip && setShowTooltip(true)}
             onMouseLeave={() => setShowTooltip(false)}
           >
             {typeof iconBefore === "function" ? iconBefore() : iconBefore}
-            
+
             {/* Tooltip */}
             {iconBeforeTooltip && showTooltip && (
               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg whitespace-nowrap z-50">
@@ -181,7 +267,7 @@ const FloatingLabelInput = ({
           type={actualType}
           name={name}
           value={value || ""}
-          onChange={(e) => onChange(e, keyValue)}
+          onChange={handleInputChange}
           onFocus={handleFocus}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}

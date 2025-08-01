@@ -1,7 +1,6 @@
 import SubjectDescriptionPopup from "@/components/settingPage/subjectDescriptionPopup";
 import { useState } from "react";
-
-const { default: InventorySearchedList } = require("../inventorySearchList");
+import InventorySearchedList from "../inventorySearchList";
 
 const SearchedViewComponent = ({
   searchEventLoader,
@@ -12,8 +11,26 @@ const SearchedViewComponent = ({
   show,
   handleBulkNavigateClick,
   setShow,
+  onItemSelect, // New prop to handle item selection
 }) => {
-    console.log(show,'showshow')
+  // Handle event click with proper dropdown closing
+  const handleEventClick = (item) => {
+    handleSearchedEventClick(item);
+    if (onItemSelect) onItemSelect(); // Close dropdown after selection
+  };
+
+  // Handle bulk navigate click with proper dropdown closing
+  const handleBulkClick = (route) => {
+    handleBulkNavigateClick(route);
+    if (onItemSelect) onItemSelect(); // Close dropdown after selection
+  };
+
+  // Handle request click with proper dropdown closing
+  const handleRequestClick = () => {
+    setShow(true);
+    if (onItemSelect) onItemSelect(); // Close dropdown after selection
+  };
+
   if (searchEventLoader) {
     return (
       <div className="max-h-[300px] overflow-y-auto p-3 flex justify-center items-center shadow-sm border border-[#E0E1EA]">
@@ -53,10 +70,9 @@ const SearchedViewComponent = ({
           <p className="text-xs text-gray-500">
             If your event not found ?{" "}
             <span
-              onClick={() => setShow(true)}
-              className="text-blue-600 cursor-pointer"
+              onClick={handleRequestClick}
+              className="text-blue-600 cursor-pointer hover:underline"
             >
-              {" "}
               click here
             </span>{" "}
             to request.
@@ -67,18 +83,16 @@ const SearchedViewComponent = ({
   }
 
   return (
-    <div className="max-h-[300px] overflow-y-auto p-3 flex flex-col gap-3 shadow-sm border border-[#E0E1EA]">
-      {/* Show a header for default/popular results when no search term */}
-
+    <div className="max-h-[300px] overflow-y-auto px-3 py-2 flex flex-col gap-3 shadow-sm border border-[#E0E1EA]">
       {hasEvents && (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col">
           <p className="text-[13px] font-medium">Events</p>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col">
             {searchedEvents.events.map((item, index) => (
               <div
                 key={index}
-                onClick={() => handleSearchedEventClick(item)}
-                className="cursor-pointer transition-transform duration-300 "
+                onClick={() => handleEventClick(item)}
+                className="cursor-pointer transition-transform duration-300 hover:bg-gray-50 rounded-md p-1"
               >
                 <InventorySearchedList item={item} />
               </div>
@@ -93,7 +107,7 @@ const SearchedViewComponent = ({
           {searchedEvents.performers.map((item, index) => (
             <p
               key={index}
-              onClick={() => handleBulkNavigateClick(`?team_id=${item?.team_id}`)}
+              onClick={() => handleBulkClick(`?query=${item?.team_name}`)}
               className="border border-[#E0E1EA] px-2 rounded-md py-1 text-[13px] text-[#343432] cursor-pointer transition-all duration-200 hover:border-blue-300 hover:bg-blue-50"
             >
               {item?.team_name}
@@ -108,7 +122,7 @@ const SearchedViewComponent = ({
           {searchedEvents.venues.map((item, index) => (
             <p
               key={index}
-              onClick={() => handleBulkNavigateClick(`?venue=${item?.stadium_id}`)}
+              onClick={() => handleBulkClick(`?venue=${item?.stadium_id}`)}
               className="border border-[#E0E1EA] px-2 rounded-md py-1 text-[13px] text-[#343432] cursor-pointer transition-all duration-200 hover:border-blue-300 hover:bg-blue-50"
             >
               {item?.stadium}
@@ -116,7 +130,6 @@ const SearchedViewComponent = ({
           ))}
         </div>
       )}
-      
     </div>
   );
 };
