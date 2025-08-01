@@ -589,7 +589,7 @@ const CommonInventoryTable = ({
                 <ChevronDown
                   size={isMobile ? 12 : 14}
                   className={`text-white transition-transform duration-200 ${
-                    isCollapsed ? "rotate-180" : ""
+                    !isCollapsed ? "rotate-180" : ""
                   }`}
                 />
               </div>

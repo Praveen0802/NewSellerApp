@@ -83,6 +83,20 @@ export const fetchBulkListing = async (token, params = {}) => {
   }
 };
 
+export const LogoutCall = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.AUTH_LOGOUT}`,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(data && { formData: data }),
+    });
+    return response?.data ? response?.data : {};
+  } catch (error) {
+    console.log("ERROR in myListingUploadTickets", error);
+  }
+};
+
 export const myListingUploadTickets = async (token, data) => {
   try {
     const response = await makeRequest({

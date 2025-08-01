@@ -22,6 +22,7 @@ import {
   fetchNotificationHistory,
   fetchActivityHistory,
   fetchNotificationCount,
+  LogoutCall,
 } from "@/utils/apiHandler/request";
 import {
   updateLeftMenuDisplay,
@@ -1097,11 +1098,18 @@ console.log(showFullDisplay,'showFullDisplayshowFullDisplay')
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  const handleLogout = () => {
-    setCookie("auth_token", "", -1);
-    setCookie("auth_token_validity", "", -1);
-    setCookie("user_token", "", -1);
+  const handleLogout = async() => {
+    setCookie("auth_token", "", { expires: new Date(0) });
+    setCookie("auth_token_validity", "", { expires: new Date(0) });
+    setCookie("user_token", "", { expires: new Date(0) });
+    try {
+      await LogoutCall();
+    }catch (error) {
+      console.log("ERROR in myListingUploadTickets", error);
+    }
+  
     router.push("/login");
+
   };
 
   // Mobile view with updated notification handling

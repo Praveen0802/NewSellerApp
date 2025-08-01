@@ -29,6 +29,7 @@ export const API_ROUTES = {
   FETCH_BULK_LISTING: `/my-listings/events-search`,
   MY_LISTING_UPLOAD_TICKETS:`/my-listings/upload-ticket`,
   GET_BULK_LISTING_FILTERS: `/bulk-listing/get-bulk-listing-event`,
+  AUTH_LOGOUT:`/auth/logout`,
   GET_BLOCKS_BY_CATEGORY: `/my-listings/get-block-details`,
   TOURNAMENTS_LIST: `/events/tournament-list`,
   REPORTS_EVENT_SEARCH: `/reports/events-search`,

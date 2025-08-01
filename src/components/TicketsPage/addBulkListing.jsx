@@ -1386,8 +1386,8 @@ const BulkInventory = (props) => {
       {/* Main Content Area - Split Mode Only */}
       {allMatchDetails.length > 0 && totalTicketCount > 0 && (
         <div
-          style={{ maxHeight: "calc(100vh - 450px)", overflowY: "auto" }}
-          className="m-6 pb-[100px] rounded-lg shadow-sm"
+          // style={{ maxHeight: "calc(100vh - 450px)", overflowY: "auto" }}
+          className="m-6 pb-[150px] rounded-lg shadow-sm"
         >
           <div>
             {/* Individual Match Accordions (Separate Tables) */}

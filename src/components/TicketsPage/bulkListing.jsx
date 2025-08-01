@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import Button from "../commonComponents/button";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { updateWalletPopupFlag } from "@/utils/redux/common/action";
 import FloatingLabelInput from "../floatinginputFields";
 import FloatingSelect from "../floatinginputFields/floatingSelect";
@@ -289,6 +289,8 @@ const [activeFilters, setActiveFilters] = useState({});
     </div>
   );
 };
+
+const {showFullDisplay} = useSelector((state) => state.common);
   return (
     <div className="bg-[#F5F7FA] w-full h-full relative">
       <div className="flex bg-white items-center py-2 md:py-2 justify-between px-4 md:px-6 border-b border-[#eaeaf1]">
@@ -509,7 +511,7 @@ const [activeFilters, setActiveFilters] = useState({});
 
       {/* Sticky Bottom Bar */}
       {selectedRows?.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E5E7EB] shadow-lg z-50">
+        <div className={`fixed bottom-0 w-full ${showFullDisplay ? 'left-42' : 'left-15' } right-0 bg-white border-t border-[#E5E7EB] shadow-lg z-50`}>
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-4">
               <span className="text-sm text-[#323A70] font-medium">
