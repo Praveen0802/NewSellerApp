@@ -24,6 +24,7 @@ import {
   fetchNotificationCount,
   LogoutCall,
 } from "@/utils/apiHandler/request";
+import { useUserDisplayName } from "@/Hooks/_shared";
 import {
   updateLeftMenuDisplay,
   updateNotificationCount,
@@ -894,6 +895,9 @@ const LeftMenuBar = () => {
   const [salesExpanded, setSalesExpanded] = useState(false);
 
   const { currentUser } = useSelector((state) => state.currentUser);
+
+  // Use the custom hook for hydration-safe user display name
+  const { userDisplayName } = useUserDisplayName(currentUser);
   const { notificationCountData, showFullDisplay } = useSelector(
     (state) => state.common
   );
@@ -905,7 +909,6 @@ const LeftMenuBar = () => {
   // Fetch notification count for badge
   const fetchNotificationCountForBadge = async () => {
     try {
-      const token = getCookie("auth_token") || currentUser?.token;
       const { data } = (await fetchNotificationCount()) ?? {};
       const { unread_count = 0 } = data ?? {};
 
@@ -918,25 +921,19 @@ const LeftMenuBar = () => {
 
   // Fetch notification count on component mount
   useEffect(() => {
-    // if (notificationCountData.isLoaded) {
     fetchNotificationCountForBadge();
-    // }
   }, [notificationCountData.isLoaded]);
 
   function getUnReadNotificationCount(notificationCountData) {
-    // if (notificationCountData?.isLoaded) {
     const notification = Number(notificationCountData?.notification) || 0;
     const activity = Number(notificationCountData?.activity) || 0;
 
     return notification;
-    // }
-    // return 0;
   }
 
   // Updated sales sub items to match your requirements with counts
   const salesSubItems = [
     { name: "Pending", route: "sales/pending", key: "sales-pending", count: 0 },
-
     {
       name: "Delivered",
       route: "sales/delivered",
@@ -964,8 +961,8 @@ const LeftMenuBar = () => {
       name: "Minimise",
     },
     {
-      text: "US",
-      name: "User",
+      text: userDisplayName.label,
+      name: userDisplayName.name,
       key: "name",
       route: "settings/myAccount",
     },
@@ -1055,7 +1052,7 @@ const LeftMenuBar = () => {
       setActive(currentPath);
     }
   }, [router?.pathname]);
-console.log(showFullDisplay,'showFullDisplayshowFullDisplay')
+  console.log(showFullDisplay, "showFullDisplayshowFullDisplay");
   const handleSelectedClick = (index, item) => {
     if (index === 0 && !isMobile) {
       // setShowFullDisplay(!showFullDisplay);
@@ -1098,18 +1095,17 @@ console.log(showFullDisplay,'showFullDisplayshowFullDisplay')
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  const handleLogout = async() => {
+  const handleLogout = async () => {
     setCookie("auth_token", "", { expires: new Date(0) });
     setCookie("auth_token_validity", "", { expires: new Date(0) });
     setCookie("user_token", "", { expires: new Date(0) });
     try {
       await LogoutCall();
-    }catch (error) {
+    } catch (error) {
       console.log("ERROR in myListingUploadTickets", error);
     }
-  
-    router.push("/login");
 
+    router.push("/login");
   };
 
   // Mobile view with updated notification handling

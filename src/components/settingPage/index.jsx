@@ -35,7 +35,7 @@ const SettingsPage = (props) => {
     //   key: "overview",
     // },
     {
-      icon: <IconStore.myContacts className={IconclassName} />,
+      icon: <IconStore.myaccount className={IconclassName} />,
       title: "My Account",
       key: "myAccount",
     },
@@ -51,17 +51,17 @@ const SettingsPage = (props) => {
     },
 
     {
-      icon: <IconStore.password className={IconclassName} />,
+      icon: <IconStore.wallet className={IconclassName} />,
       title: "SB Pay",
       key: "sbPay",
     },
     {
-      icon: <IconStore.myContacts className={IconclassName} />,
+      icon: <IconStore.referral className={IconclassName} />,
       title: "My Referral",
       key: "myRefferal",
     },
     {
-      icon: <IconStore.profile className={IconclassName} />,
+      icon: <IconStore.myTeams className={IconclassName} />,
       title: "My Team",
       key: "myTeam",
     },
@@ -76,7 +76,7 @@ const SettingsPage = (props) => {
       key: "linkedCards",
     },
     {
-      icon: <IconStore.glitter className={IconclassName} />,
+      icon: <IconStore.kyc className={IconclassName} />,
       title: "KYC",
       key: "kyc",
     },
