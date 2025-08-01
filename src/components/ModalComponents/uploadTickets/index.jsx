@@ -16,6 +16,7 @@ import Button from "@/components/commonComponents/button";
 import RightViewContainer from "@/components/dashboardPage/reportViewContainer/rightViewContainer";
 import RightViewModal from "@/components/commonComponents/rightViewModal";
 import { myListingUploadTickets } from "@/utils/apiHandler/request";
+import { toast } from "react-toastify";
 
 const UploadTickets = ({
   show,
@@ -888,7 +889,7 @@ const UploadTickets = ({
       const index = 0; // Since we're dealing with a single row
       formData.append(`data[0][ticket_id]`, rowData?.rawTicketData?.s_no);
       formData.append(
-        `data[0][ticket_types]`,
+        `data[0][ticket_type]`,
         rowData?.rawTicketData?.ticket_type_id
       );
       formData.append(`data[0][match_id]`, rowData?.rawMatchData?.m_id);
@@ -978,11 +979,12 @@ const UploadTickets = ({
 
       // Call the API with the constructed FormData
       const response = await myListingUploadTickets("", formData);
-
+console.log(response.success,'response.successresponse.success')
       // Handle response
       if (response.success) {
         // Handle success - maybe close modal, show success message, etc.
         onClose();
+        toast.success("Tickets uploaded successfully");
       } else {
         // Handle error
         console.error("Upload failed:", response.message);

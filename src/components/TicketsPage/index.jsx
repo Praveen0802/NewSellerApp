@@ -1575,6 +1575,7 @@ console.log(newValue,'oooooo')
         totalTicketsCount={tickets.length}
         getStickyColumnsForRow={getStickyColumnsForRow}
         stickyHeaders={["", "", ""]}
+        myListingPage={true}
         stickyColumnsWidth={150}
       />
     );

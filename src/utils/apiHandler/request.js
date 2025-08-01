@@ -86,12 +86,12 @@ export const fetchBulkListing = async (token, params = {}) => {
 export const myListingUploadTickets = async (token, data) => {
   try {
     const response = await makeRequest({
-      url: `${API_ROUTES.SAVE_BULK_LISTING}`,
+      url: `${API_ROUTES.MY_LISTING_UPLOAD_TICKETS}`,
       method: "POST",
       ...(token && { token: token }),
       ...(data && { formData: data }),
     });
-    return response?.data?.success ? response?.data?.data : {};
+    return response?.data ? response?.data : {};
   } catch (error) {
     console.log("ERROR in myListingUploadTickets", error);
   }
