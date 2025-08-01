@@ -1029,10 +1029,7 @@ const AddInventoryPage = (props) => {
       } else {
         if (filter.name === "ship_date") {
           // Default ship_date from matchDetails
-          newItem[filter.name] =
-            filtersApplied?.ship_date?.startDate ||
-            matchDetails?.ship_date ||
-            "";
+          newItem[filter.name] = matchDetails?.ship_date || "";
         } else {
           newItem[filter.name] = filter.multiselect ? [] : "";
         }
