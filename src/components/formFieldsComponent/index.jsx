@@ -96,7 +96,7 @@ const FormFields = ({ formFields }) => {
                 error={error}
                 mandatory={mandatory}
               />
-            ) : type === "text" || type === "password" || type === "email" ||type === "text" ? (
+            ) : type === "text" || type === "password" || type === "email" ||type === "number" ? (
               <FloatingLabelInput
                 id={id}
                 name={name}

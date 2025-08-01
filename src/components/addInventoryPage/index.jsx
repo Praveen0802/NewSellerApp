@@ -357,7 +357,7 @@ const AddInventoryPage = (props) => {
         })),
     },
     {
-      type: "text",
+      type: "number",
       name: "face_value",
       label: "Face Value",
       value: filtersApplied?.face_value,
@@ -376,7 +376,7 @@ const AddInventoryPage = (props) => {
         })),
     },
     {
-      type: "text",
+      type: "number",
       name: "add_price_addlist",
       label: "Processed Price",
       mandatory: true,
@@ -551,7 +551,11 @@ const AddInventoryPage = (props) => {
       },
     ];
   };
-
+  console.log(
+    matchDetails?.ship_date,
+    filtersApplied?.ship_date?.startDate,
+    "kkkkkkkkkkkkkk"
+  );
   // Updated handleCellEdit to work with the common component
   const handleCellEdit = (rowIndex, columnKey, value, row, matchIndex) => {
     console.log("Cell edited:", { rowIndex, columnKey, value });
@@ -874,7 +878,6 @@ const AddInventoryPage = (props) => {
         );
       }
 
-
       if (publishingData.additional_info) {
         formData.append(
           `data[${index}][additional_file_type]`,
@@ -904,7 +907,6 @@ const AddInventoryPage = (props) => {
           publishingData.courier_tracking_details
         );
       }
-
 
       // Handle file uploads
       if (
@@ -1004,7 +1006,7 @@ const AddInventoryPage = (props) => {
       setLoader(false);
     }
   };
-
+  console.log("matchDetails?.ship_date", filtersApplied?.ship_date?.startDate);
   // Function to create inventory item from filter values
   const createInventoryItemFromFilters = () => {
     const newItem = {
@@ -1027,7 +1029,10 @@ const AddInventoryPage = (props) => {
       } else {
         if (filter.name === "ship_date") {
           // Default ship_date from matchDetails
-          newItem[filter.name] = [];
+          newItem[filter.name] =
+            filtersApplied?.ship_date?.startDate ||
+            matchDetails?.ship_date ||
+            "";
         } else {
           newItem[filter.name] = filter.multiselect ? [] : "";
         }
@@ -1111,6 +1116,7 @@ const AddInventoryPage = (props) => {
 
     // If all validations pass, create the listing
     const newListing = createInventoryItemFromFilters();
+    console.log("New listing created:", newListing);
     setInventoryData((prevData) => [...prevData, newListing]);
     setShowTable(true);
 
@@ -1288,8 +1294,11 @@ const AddInventoryPage = (props) => {
 
       {/* Main Content Area with Common Table - Only show when table should be visible */}
       {matchDetails && showTable && inventoryData.length > 0 && (
-        <div style={{ maxHeight: "calc(100vh - 450px)", overflowY: "auto" }} className="m-6 pb-[100px] bg-white rounded-lg shadow-sm">
-          <div >
+        <div
+          style={{ maxHeight: "calc(100vh - 450px)", overflowY: "auto" }}
+          className="m-6 pb-[100px] bg-white rounded-lg shadow-sm"
+        >
+          <div>
             <CommonInventoryTable
               inventoryData={inventoryData}
               headers={headers}
@@ -1362,9 +1371,7 @@ const AddInventoryPage = (props) => {
       {showMarketPlaceModal && (
         <ListingsMarketplace
           show={showMarketPlaceModal}
-          onClose={() =>
-            setShowMarketPlaceModal(false)
-          }
+          onClose={() => setShowMarketPlaceModal(false)}
           matchInfo={matchDetails}
         />
       )}

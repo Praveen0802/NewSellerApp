@@ -1,4 +1,10 @@
-import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+} from "react";
 import oneHand from "../../../public/onehand.svg";
 import greenHand from "../../../public/greenhand.svg";
 import uploadListing from "../../../public/uploadlisting.svg";
@@ -53,7 +59,7 @@ import CommonInventoryTable from "../addInventoryPage/customInventoryTable";
 
 const BulkInventory = (props) => {
   const { matchId, response } = props;
-  console.log(response, 'responseresponseresponse');
+  console.log(response, "responseresponseresponse");
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
@@ -72,10 +78,10 @@ const BulkInventory = (props) => {
   } = response || {};
 
   const dispatch = useDispatch();
-  
+
   // Handle multiple matches
   const allMatchDetails = response?.match_data || [];
-  
+
   // Modify inventory data structure to handle multiple matches
   const [inventoryDataByMatch, setInventoryDataByMatch] = useState(() => {
     return allMatchDetails.reduce((acc, match) => {
@@ -95,16 +101,18 @@ const BulkInventory = (props) => {
   const createFlatTicketList = useMemo(() => {
     const flatList = [];
     Object.entries(inventoryDataByMatch).forEach(([matchId, tickets]) => {
-      const matchDetails = allMatchDetails.find(m => m.match_id.toString() === matchId);
+      const matchDetails = allMatchDetails.find(
+        (m) => m.match_id.toString() === matchId
+      );
       tickets.forEach((ticket, index) => {
         flatList.push({
           ...ticket,
           uniqueId: `${matchId}_${index}`, // Unique identifier for global selection
           matchId: matchId,
-          matchName: matchDetails?.match_name || '',
-          matchDate: matchDetails?.match_date_format || '',
-          matchTime: matchDetails?.match_time || '',
-          venue: matchDetails?.stadium_name || '',
+          matchName: matchDetails?.match_name || "",
+          matchDate: matchDetails?.match_date_format || "",
+          matchTime: matchDetails?.match_time || "",
+          venue: matchDetails?.stadium_name || "",
           originalIndex: index, // Keep track of original position in match
         });
       });
@@ -115,8 +123,8 @@ const BulkInventory = (props) => {
   // MODIFIED: Convert uniqueId-based selection to match-specific row indices for each table
   const getSelectedRowsForMatch = (matchId) => {
     const selectedRows = [];
-    globalSelectedTickets.forEach(uniqueId => {
-      const [ticketMatchId, originalIndex] = uniqueId.split('_');
+    globalSelectedTickets.forEach((uniqueId) => {
+      const [ticketMatchId, originalIndex] = uniqueId.split("_");
       if (ticketMatchId === matchId.toString()) {
         selectedRows.push(parseInt(originalIndex));
       }
@@ -127,20 +135,25 @@ const BulkInventory = (props) => {
   // MODIFIED: Handle row selection for individual match tables
   const handleSetSelectedRowsForMatch = (matchId, newSelectedRows) => {
     // Remove existing selections for this match
-    const filteredGlobalSelection = globalSelectedTickets.filter(uniqueId => {
-      const [ticketMatchId] = uniqueId.split('_');
+    const filteredGlobalSelection = globalSelectedTickets.filter((uniqueId) => {
+      const [ticketMatchId] = uniqueId.split("_");
       return ticketMatchId !== matchId.toString();
     });
 
     // Add new selections for this match
-    const newGlobalSelections = newSelectedRows.map(rowIndex => `${matchId}_${rowIndex}`);
-    
-    setGlobalSelectedTickets([...filteredGlobalSelection, ...newGlobalSelections]);
+    const newGlobalSelections = newSelectedRows.map(
+      (rowIndex) => `${matchId}_${rowIndex}`
+    );
+
+    setGlobalSelectedTickets([
+      ...filteredGlobalSelection,
+      ...newGlobalSelections,
+    ]);
   };
 
   // MODIFIED: Global selection handlers
   const handleGlobalSelectAll = () => {
-    const allTicketIds = createFlatTicketList.map(ticket => ticket.uniqueId);
+    const allTicketIds = createFlatTicketList.map((ticket) => ticket.uniqueId);
     setGlobalSelectedTickets(allTicketIds);
   };
 
@@ -173,7 +186,9 @@ const BulkInventory = (props) => {
     if (globalSelectedTickets.length === 1) {
       toast.success("Edit mode activated for selected ticket");
     } else {
-      toast.success(`Bulk edit mode activated for ${globalSelectedTickets.length} tickets`);
+      toast.success(
+        `Bulk edit mode activated for ${globalSelectedTickets.length} tickets`
+      );
     }
   };
 
@@ -183,7 +198,9 @@ const BulkInventory = (props) => {
     setGlobalSelectedTickets([]);
 
     if (globalEditingTickets.length > 1) {
-      toast.success(`Changes saved successfully for ${globalEditingTickets.length} tickets`);
+      toast.success(
+        `Changes saved successfully for ${globalEditingTickets.length} tickets`
+      );
     } else {
       toast.success("Changes saved successfully");
     }
@@ -205,7 +222,7 @@ const BulkInventory = (props) => {
   // MODIFIED: Global cell edit handler - Fixed to work across all matches
   const handleGlobalCellEdit = (matchId, rowIndex, columnKey, value, row) => {
     console.log("Global cell edited:", { matchId, rowIndex, columnKey, value });
-    
+
     let updateValues = {};
     if (columnKey === "ticket_types") {
       updateValues = {
@@ -221,11 +238,11 @@ const BulkInventory = (props) => {
       // In global edit mode, update ALL selected tickets across ALL matches
       setInventoryDataByMatch((prevData) => {
         const newData = { ...prevData };
-        
+
         // Group editing tickets by match for efficient updates
         const ticketsByMatch = {};
-        globalEditingTickets.forEach(uniqueId => {
-          const [ticketMatchId, originalIndex] = uniqueId.split('_');
+        globalEditingTickets.forEach((uniqueId) => {
+          const [ticketMatchId, originalIndex] = uniqueId.split("_");
           const index = parseInt(originalIndex);
           if (!ticketsByMatch[ticketMatchId]) {
             ticketsByMatch[ticketMatchId] = [];
@@ -256,7 +273,7 @@ const BulkInventory = (props) => {
             return { ...item, [columnKey]: value, ...updateValues };
           }
           return item;
-        })
+        }),
       }));
     }
   };
@@ -264,12 +281,20 @@ const BulkInventory = (props) => {
   // Action handlers for individual match mode
   const handleHandAction = (rowData, rowIndex, matchId) => {
     console.log("Hand action clicked for row:", rowData, rowIndex, matchId);
-    handleGlobalCellEdit(matchId, rowIndex, "tickets_in_hand", !rowData?.tickets_in_hand, rowData);
+    handleGlobalCellEdit(
+      matchId,
+      rowIndex,
+      "tickets_in_hand",
+      !rowData?.tickets_in_hand,
+      rowData
+    );
   };
 
   const handleUploadAction = (rowData, rowIndex, matchId) => {
     console.log("Upload action clicked for row:", rowData, rowIndex, matchId);
-    const matchDetails = allMatchDetails.find(m => m.match_id.toString() === matchId.toString());
+    const matchDetails = allMatchDetails.find(
+      (m) => m.match_id.toString() === matchId.toString()
+    );
     setShowUploadPopup({
       show: true,
       rowData,
@@ -287,11 +312,11 @@ const BulkInventory = (props) => {
     }
 
     console.log("Deleting selected tickets:", globalSelectedTickets);
-    
+
     // Group tickets by match for deletion
     const ticketsByMatch = {};
-    globalSelectedTickets.forEach(uniqueId => {
-      const [matchId, originalIndex] = uniqueId.split('_');
+    globalSelectedTickets.forEach((uniqueId) => {
+      const [matchId, originalIndex] = uniqueId.split("_");
       const index = parseInt(originalIndex);
       if (!ticketsByMatch[matchId]) {
         ticketsByMatch[matchId] = [];
@@ -306,15 +331,17 @@ const BulkInventory = (props) => {
         // Sort indices in descending order to avoid index shifting issues
         const sortedIndices = indices.sort((a, b) => b - a);
         newData[matchId] = [...prevData[matchId]];
-        sortedIndices.forEach(index => {
+        sortedIndices.forEach((index) => {
           newData[matchId].splice(index, 1);
         });
       });
       return newData;
     });
-    
+
     setGlobalSelectedTickets([]);
-    toast.success(`${globalSelectedTickets.length} ticket(s) deleted successfully`);
+    toast.success(
+      `${globalSelectedTickets.length} ticket(s) deleted successfully`
+    );
   };
 
   const handleGlobalClone = () => {
@@ -324,11 +351,11 @@ const BulkInventory = (props) => {
     }
 
     console.log("Cloning selected tickets:", globalSelectedTickets);
-    
+
     // Group tickets by match for cloning
     const ticketsByMatch = {};
-    globalSelectedTickets.forEach(uniqueId => {
-      const [matchId, originalIndex] = uniqueId.split('_');
+    globalSelectedTickets.forEach((uniqueId) => {
+      const [matchId, originalIndex] = uniqueId.split("_");
       const index = parseInt(originalIndex);
       if (!ticketsByMatch[matchId]) {
         ticketsByMatch[matchId] = [];
@@ -340,7 +367,7 @@ const BulkInventory = (props) => {
     setInventoryDataByMatch((prevData) => {
       const newData = { ...prevData };
       Object.entries(ticketsByMatch).forEach(([matchId, indices]) => {
-        const ticketsToClone = indices.map(index => prevData[matchId][index]);
+        const ticketsToClone = indices.map((index) => prevData[matchId][index]);
         const clonedTickets = ticketsToClone.map((ticket) => ({
           ...ticket,
           id: Date.now() + Math.random(),
@@ -354,9 +381,11 @@ const BulkInventory = (props) => {
       });
       return newData;
     });
-    
+
     setGlobalSelectedTickets([]);
-    toast.success(`${globalSelectedTickets.length} ticket(s) cloned successfully`);
+    toast.success(
+      `${globalSelectedTickets.length} ticket(s) cloned successfully`
+    );
   };
 
   const [loader, setLoader] = useState(false);
@@ -369,17 +398,19 @@ const BulkInventory = (props) => {
     }
 
     setLoader(true);
-    
+
     try {
       // Collect all selected tickets with their match details
       const selectedTicketsData = [];
-      
-      globalSelectedTickets.forEach(uniqueId => {
-        const [matchId, originalIndex] = uniqueId.split('_');
+
+      globalSelectedTickets.forEach((uniqueId) => {
+        const [matchId, originalIndex] = uniqueId.split("_");
         const index = parseInt(originalIndex);
-        const matchDetails = allMatchDetails.find(m => m.match_id.toString() === matchId);
+        const matchDetails = allMatchDetails.find(
+          (m) => m.match_id.toString() === matchId
+        );
         const ticketData = inventoryDataByMatch[matchId][index];
-        
+
         if (ticketData && matchDetails) {
           selectedTicketsData.push({
             match_id: matchDetails.match_id,
@@ -390,7 +421,7 @@ const BulkInventory = (props) => {
       });
 
       const formData = constructFormDataAsFields(selectedTicketsData);
-      
+
       if (selectedTicketsData.length > 1) {
         await saveBulkListing("", formData);
       } else {
@@ -398,7 +429,9 @@ const BulkInventory = (props) => {
       }
 
       router.push("/my-listings?success=true");
-      toast.success(`${selectedTicketsData.length} listing(s) published successfully`);
+      toast.success(
+        `${selectedTicketsData.length} listing(s) published successfully`
+      );
       setLoader(false);
     } catch (error) {
       console.error("Error publishing listings:", error);
@@ -419,7 +452,7 @@ const BulkInventory = (props) => {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
   const [blockDetailsByCategory, setBlockDetailsByCategory] = useState({});
-  const [blockData,setBlockData] = useState([]);
+  const [blockData, setBlockData] = useState([]);
   const filterButtonRef = useRef(null);
   const columnButtonRef = useRef(null);
 
@@ -436,24 +469,24 @@ const BulkInventory = (props) => {
         label: item?.block_id,
         value: item?.id,
       }));
-      
-      setBlockDetailsByCategory(prev => ({
+
+      setBlockDetailsByCategory((prev) => ({
         ...prev,
-        [`${matchId}_${filtersApplied?.ticket_category}`]: blockData
+        [`${matchId}_${filtersApplied?.ticket_category}`]: blockData,
       }));
       setBlockData(blockData);
     } catch (error) {
       console.error("Error fetching block details:", error);
-      setBlockDetailsByCategory(prev => ({
+      setBlockDetailsByCategory((prev) => ({
         ...prev,
-        [`${matchId}_${filtersApplied?.ticket_category}`]: []
+        [`${matchId}_${filtersApplied?.ticket_category}`]: [],
       }));
     }
   };
 
   useEffect(() => {
     if (filtersApplied?.ticket_category) {
-      allMatchDetails.forEach(match => {
+      allMatchDetails.forEach((match) => {
         getBlockDetails(match.match_id);
       });
     }
@@ -461,7 +494,10 @@ const BulkInventory = (props) => {
 
   // Get block details for specific match
   const getBlockDetailsForMatch = (matchId) => {
-    return blockDetailsByCategory[`${matchId}_${filtersApplied?.ticket_category}`] || [];
+    return (
+      blockDetailsByCategory[`${matchId}_${filtersApplied?.ticket_category}`] ||
+      []
+    );
   };
 
   // KEEP THE ORIGINAL formatDateForInput function (EXACT SAME)
@@ -670,14 +706,16 @@ const BulkInventory = (props) => {
         })),
     },
     {
-      type: "text",
+      type: "number",
       name: "face_value",
       label: "Face Value",
       value: filtersApplied?.face_value,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       iconBefore: (
         <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
-          <p className="text-xs">{allMatchDetails[0]?.currency_icon?.[0] || "$"}</p>
+          <p className="text-xs">
+            {allMatchDetails[0]?.currency_icon?.[0] || "$"}
+          </p>
         </div>
       ),
       className: "!py-[6px] w-full mobile:text-xs",
@@ -689,7 +727,7 @@ const BulkInventory = (props) => {
         })),
     },
     {
-      type: "text",
+      type: "number",
       name: "add_price_addlist",
       label: "Processed Price",
       mandatory: true,
@@ -697,7 +735,9 @@ const BulkInventory = (props) => {
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       iconBefore: (
         <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
-          <p className="text-xs">{allMatchDetails[0]?.currency_icon?.[0] || "$"}</p>
+          <p className="text-xs">
+            {allMatchDetails[0]?.currency_icon?.[0] || "$"}
+          </p>
         </div>
       ),
       className: "!py-[6px] w-full mobile:text-xs",
@@ -899,36 +939,83 @@ const BulkInventory = (props) => {
     };
 
     publishingDataArray.forEach((publishingData, index) => {
-      formData.append(`data[${index}][ticket_types]`, publishingData.ticket_types || "");
-      formData.append(`data[${index}][add_qty_addlist]`, publishingData.add_qty_addlist || "");
-      formData.append(`data[${index}][home_town]`, publishingData.home_town || "");
-      formData.append(`data[${index}][ticket_category]`, publishingData.ticket_category || "");
-      formData.append(`data[${index}][ticket_block]`, publishingData.ticket_block || "");
-      formData.append(`data[${index}][add_price_addlist]`, publishingData.add_price_addlist || "");
-      formData.append(`data[${index}][face_value]`, publishingData.face_value || "");
-      formData.append(`data[${index}][first_seat]`, publishingData.first_seat || "");
+      formData.append(
+        `data[${index}][ticket_types]`,
+        publishingData.ticket_types || ""
+      );
+      formData.append(
+        `data[${index}][add_qty_addlist]`,
+        publishingData.add_qty_addlist || ""
+      );
+      formData.append(
+        `data[${index}][home_town]`,
+        publishingData.home_town || ""
+      );
+      formData.append(
+        `data[${index}][ticket_category]`,
+        publishingData.ticket_category || ""
+      );
+      formData.append(
+        `data[${index}][ticket_block]`,
+        publishingData.ticket_block || ""
+      );
+      formData.append(
+        `data[${index}][add_price_addlist]`,
+        publishingData.add_price_addlist || ""
+      );
+      formData.append(
+        `data[${index}][face_value]`,
+        publishingData.face_value || ""
+      );
+      formData.append(
+        `data[${index}][first_seat]`,
+        publishingData.first_seat || ""
+      );
       formData.append(`data[${index}][row]`, publishingData.row || "");
-      formData.append(`data[${index}][split_type]`, publishingData.split_type || "");
-      
+      formData.append(
+        `data[${index}][split_type]`,
+        publishingData.split_type || ""
+      );
+
       let shipDateValue = "";
       if (publishingData.ship_date) {
-        if (typeof publishingData.ship_date === "object" && publishingData.ship_date.startDate) {
+        if (
+          typeof publishingData.ship_date === "object" &&
+          publishingData.ship_date.startDate
+        ) {
           shipDateValue = publishingData.ship_date.startDate;
         } else if (typeof publishingData.ship_date === "string") {
           shipDateValue = formatDateForInput(publishingData.ship_date);
         }
       }
       if (!shipDateValue) {
-        const matchDetails = allMatchDetails.find(m => m.match_id.toString() === publishingData.match_id?.toString());
+        const matchDetails = allMatchDetails.find(
+          (m) => m.match_id.toString() === publishingData.match_id?.toString()
+        );
         shipDateValue = formatDateForInput(matchDetails?.ship_date);
       }
 
       formData.append(`data[${index}][ship_date]`, shipDateValue);
-      formData.append(`data[${index}][tickets_in_hand]`, publishingData.tickets_in_hand ? "1" : "0");
-      formData.append(`data[${index}][additional_file_type]`, publishingData.additional_file_type || "");
-      formData.append(`data[${index}][additional_dynamic_content]`, publishingData.additional_dynamic_content || "");
-      formData.append(`data[${index}][match_id]`, publishingData.match_id || "");
-      formData.append(`data[${index}][add_pricetype_addlist]`, publishingData.add_pricetype_addlist || "EUR");
+      formData.append(
+        `data[${index}][tickets_in_hand]`,
+        publishingData.tickets_in_hand ? "1" : "0"
+      );
+      formData.append(
+        `data[${index}][additional_file_type]`,
+        publishingData.additional_file_type || ""
+      );
+      formData.append(
+        `data[${index}][additional_dynamic_content]`,
+        publishingData.additional_dynamic_content || ""
+      );
+      formData.append(
+        `data[${index}][match_id]`,
+        publishingData.match_id || ""
+      );
+      formData.append(
+        `data[${index}][add_pricetype_addlist]`,
+        publishingData.add_pricetype_addlist || "EUR"
+      );
       formData.append(`data[${index}][event]`, publishingData.event || "E");
 
       // Add ticket_details (combination of notes and restrictions)
@@ -937,39 +1024,73 @@ const BulkInventory = (props) => {
         ...(publishingData.restrictions || []),
       ];
       ticketDetails.forEach((detail, detailIndex) => {
-        formData.append(`data[${index}][ticket_details][${detailIndex}]`, detail);
+        formData.append(
+          `data[${index}][ticket_details][${detailIndex}]`,
+          detail
+        );
       });
-      formData.append(`data[${index}][ticket_details1]`, publishingData.split_details);
+      formData.append(
+        `data[${index}][ticket_details1]`,
+        publishingData.split_details
+      );
 
       // Add transformed QR links
       const qrLinksTransformed = transformQRLinks(publishingData.qr_links);
       if (qrLinksTransformed.qr_link_android) {
-        formData.append(`data[${index}][qr_link_android]`, qrLinksTransformed.qr_link_android);
+        formData.append(
+          `data[${index}][qr_link_android]`,
+          qrLinksTransformed.qr_link_android
+        );
       }
       if (qrLinksTransformed.qr_link_ios) {
-        formData.append(`data[${index}][qr_link_ios]`, qrLinksTransformed.qr_link_ios);
+        formData.append(
+          `data[${index}][qr_link_ios]`,
+          qrLinksTransformed.qr_link_ios
+        );
       }
 
       if (publishingData.additional_info) {
-        formData.append(`data[${index}][additional_file_type]`, publishingData.additional_info.template || "");
-        formData.append(`data[${index}][additional_dynamic_content]`, publishingData.additional_info.dynamicContent || "");
+        formData.append(
+          `data[${index}][additional_file_type]`,
+          publishingData.additional_info.template || ""
+        );
+        formData.append(
+          `data[${index}][additional_dynamic_content]`,
+          publishingData.additional_info.dynamicContent || ""
+        );
       }
 
       if (publishingData.courier_type) {
-        formData.append(`data[${index}][courier_type]`, publishingData.courier_type);
+        formData.append(
+          `data[${index}][courier_type]`,
+          publishingData.courier_type
+        );
       }
       if (publishingData.courier_name) {
-        formData.append(`data[${index}][courier_name]`, publishingData.courier_name);
+        formData.append(
+          `data[${index}][courier_name]`,
+          publishingData.courier_name
+        );
       }
       if (publishingData.courier_tracking_details) {
-        formData.append(`data[${index}][courier_tracking_details]`, publishingData.courier_tracking_details);
+        formData.append(
+          `data[${index}][courier_tracking_details]`,
+          publishingData.courier_tracking_details
+        );
       }
 
       // Handle file uploads
-      if (publishingData.upload_tickets && publishingData.upload_tickets.length > 0) {
+      if (
+        publishingData.upload_tickets &&
+        publishingData.upload_tickets.length > 0
+      ) {
         publishingData.upload_tickets.forEach((ticket, ticketIndex) => {
           if (ticket.file && ticket.file instanceof File) {
-            formData.append(`data[${index}][upload_tickets][${ticketIndex}]`, ticket.file, ticket.name);
+            formData.append(
+              `data[${index}][upload_tickets][${ticketIndex}]`,
+              ticket.file,
+              ticket.name
+            );
           }
         });
       }
@@ -987,7 +1108,11 @@ const BulkInventory = (props) => {
     filters.forEach((filter) => {
       const filterValue = filtersApplied[filter.name];
 
-      if (filterValue !== undefined && filterValue !== null && filterValue !== "") {
+      if (
+        filterValue !== undefined &&
+        filterValue !== null &&
+        filterValue !== ""
+      ) {
         if (Array.isArray(filterValue) && filterValue.length === 0) {
           newItem[filter.name] = [];
         } else {
@@ -995,7 +1120,8 @@ const BulkInventory = (props) => {
         }
       } else {
         if (filter.name === "ship_date") {
-          newItem[filter.name] = [];
+          newItem[filter.name] = filtersApplied?.ship_date?.startDate || "";
+          ("");
         } else {
           newItem[filter.name] = filter.multiselect ? [] : "";
         }
@@ -1014,7 +1140,9 @@ const BulkInventory = (props) => {
   // Validation function
   const validateMandatoryFields = () => {
     const errors = [];
-    const mandatoryFields = filters.filter((filter) => filter.mandatory === true);
+    const mandatoryFields = filters.filter(
+      (filter) => filter.mandatory === true
+    );
 
     mandatoryFields.forEach((field) => {
       const fieldValue = filtersApplied[field.name];
@@ -1044,7 +1172,9 @@ const BulkInventory = (props) => {
     const validation = validateMandatoryFields();
 
     if (!validation.isValid) {
-      const fieldNames = validation.errors.map((error) => error.label).join(", ");
+      const fieldNames = validation.errors
+        .map((error) => error.label)
+        .join(", ");
       toast.error(`Please fill in all mandatory fields: ${fieldNames}`);
       return;
     }
@@ -1057,38 +1187,52 @@ const BulkInventory = (props) => {
     });
 
     if (!hasFilterValues) {
-      toast.error("Please select at least one filter value before adding listings.");
+      toast.error(
+        "Please select at least one filter value before adding listings."
+      );
       return;
     }
 
     // Add listings to all matches
     const updatedInventoryData = {};
-    allMatchDetails.forEach(match => {
+    allMatchDetails.forEach((match) => {
       const newListing = createInventoryItemFromFilters();
-      updatedInventoryData[match.match_id] = [...(inventoryDataByMatch[match.match_id] || []), newListing];
+      updatedInventoryData[match.match_id] = [
+        ...(inventoryDataByMatch[match.match_id] || []),
+        newListing,
+      ];
     });
 
-    setInventoryDataByMatch(prev => ({
+    setInventoryDataByMatch((prev) => ({
       ...prev,
-      ...updatedInventoryData
+      ...updatedInventoryData,
     }));
   };
 
   // Handle confirm click for upload popup
   const handleConfirmClick = (data, index) => {
     const { matchId } = showUploadPopup;
-    setInventoryDataByMatch(prev => ({
+    setInventoryDataByMatch((prev) => ({
       ...prev,
       [matchId]: prev[matchId].map((item, i) =>
         i === index ? { ...item, ...data } : item
-      )
+      ),
     }));
-    setShowUploadPopup({ show: false, rowData: null, rowIndex: null, matchId: null, matchDetails: null });
+    setShowUploadPopup({
+      show: false,
+      rowData: null,
+      rowIndex: null,
+      matchId: null,
+      matchDetails: null,
+    });
   };
 
   // Calculate total tickets across all matches
   const getTotalTicketCount = () => {
-    return Object.values(inventoryDataByMatch).reduce((total, tickets) => total + tickets.length, 0);
+    return Object.values(inventoryDataByMatch).reduce(
+      (total, tickets) => total + tickets.length,
+      0
+    );
   };
 
   const totalTicketCount = getTotalTicketCount();
@@ -1114,25 +1258,26 @@ const BulkInventory = (props) => {
         blockData={response?.block_data}
         blockDataColor={response?.block_data_color}
       />
-      
+
       <div className="bg-white">
         <div className="border-b-[1px] p-5 border-[#E0E1EA] flex justify-between items-center">
           <div className="w-full flex items-center gap-5">
             <div className="text-lg font-semibold text-[#323A70]">
               Bulk Inventory Management
             </div>
-            
+
             {allMatchDetails.length > 0 && (
               <div className="flex gap-4 items-center">
                 <div className="flex gap-2 items-center pr-4 border-r-[1px] border-[#DADBE5]">
                   <span className="text-[#3a3c42] truncate text-[14px]">
-                    {allMatchDetails.length} Match(es) • {totalTicketCount} Ticket(s)
+                    {allMatchDetails.length} Match(es) • {totalTicketCount}{" "}
+                    Ticket(s)
                   </span>
                 </div>
               </div>
             )}
           </div>
-          
+
           <div className="flex items-center">
             {allMatchDetails.length > 0 && (
               <p
@@ -1151,7 +1296,7 @@ const BulkInventory = (props) => {
             />
           </div>
         </div>
-        
+
         {allMatchDetails.length > 0 && (
           <>
             {/* Filter Section with Control Icons */}
@@ -1187,8 +1332,11 @@ const BulkInventory = (props) => {
 
       {/* Main Content Area - Split Mode Only */}
       {allMatchDetails.length > 0 && totalTicketCount > 0 && (
-        <div style={{ maxHeight: "calc(100vh - 450px)", overflowY: "auto" }} className="m-6 pb-[100px] rounded-lg shadow-sm">
-          <div >
+        <div
+          style={{ maxHeight: "calc(100vh - 450px)", overflowY: "auto" }}
+          className="m-6 pb-[100px] rounded-lg shadow-sm"
+        >
+          <div>
             {/* Individual Match Accordions (Separate Tables) */}
             {allMatchDetails.map((matchDetails) => {
               const matchId = matchDetails.match_id;
@@ -1203,16 +1351,22 @@ const BulkInventory = (props) => {
                     headers={headers}
                     // Use global selection converted to match-specific indices
                     selectedRows={getSelectedRowsForMatch(matchId)}
-                    setSelectedRows={(newSelectedRows) => 
+                    setSelectedRows={(newSelectedRows) =>
                       handleSetSelectedRowsForMatch(matchId, newSelectedRows)
                     }
-                    handleCellEdit={(rowIndex, columnKey, value, row) => 
-                      handleGlobalCellEdit(matchId, rowIndex, columnKey, value, row)
+                    handleCellEdit={(rowIndex, columnKey, value, row) =>
+                      handleGlobalCellEdit(
+                        matchId,
+                        rowIndex,
+                        columnKey,
+                        value,
+                        row
+                      )
                     }
-                    handleHandAction={(rowData, rowIndex) => 
+                    handleHandAction={(rowData, rowIndex) =>
                       handleHandAction(rowData, rowIndex, matchId)
                     }
-                    handleUploadAction={(rowData, rowIndex) => 
+                    handleUploadAction={(rowData, rowIndex) =>
                       handleUploadAction(rowData, rowIndex, matchId)
                     }
                     handleSelectAll={() => handleSelectAllForMatch(matchId)}
@@ -1220,11 +1374,14 @@ const BulkInventory = (props) => {
                     matchDetails={matchDetails}
                     // Use global edit mode but check per ticket
                     isEditMode={isGlobalEditMode}
-                    editingRowIndex={isGlobalEditMode ? 
-                      inventoryData.map((_, index) => 
-                        isTicketInEditMode(matchId, index) ? index : null
-                      ).filter(index => index !== null) : 
-                      null
+                    editingRowIndex={
+                      isGlobalEditMode
+                        ? inventoryData
+                            .map((_, index) =>
+                              isTicketInEditMode(matchId, index) ? index : null
+                            )
+                            .filter((index) => index !== null)
+                        : null
                     }
                     mode="multiple"
                     showAccordion={true}
@@ -1232,7 +1389,7 @@ const BulkInventory = (props) => {
                     onToggleCollapse={() => {}}
                     matchIndex={matchId}
                     totalTicketsCount={inventoryData.length}
-                    getStickyColumnsForRow={(rowData, rowIndex) => 
+                    getStickyColumnsForRow={(rowData, rowIndex) =>
                       getStickyColumnsForRow(rowData, rowIndex, matchId)
                     }
                     stickyHeaders={["", ""]}
@@ -1316,12 +1473,12 @@ const BulkInventory = (props) => {
         handleConfirmClick={handleConfirmClick}
         rowIndex={showUploadPopup?.rowIndex}
         onClose={() => {
-          setShowUploadPopup({ 
-            show: false, 
-            rowData: null, 
-            rowIndex: null, 
-            matchId: null, 
-            matchDetails: null 
+          setShowUploadPopup({
+            show: false,
+            rowData: null,
+            rowIndex: null,
+            matchId: null,
+            matchDetails: null,
           });
         }}
       />

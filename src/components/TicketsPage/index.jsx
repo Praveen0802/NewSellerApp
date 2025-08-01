@@ -643,13 +643,13 @@ console.log(ticketsToDelete,'ticketsToDeleteticketsToDelete')
         key: "face_value",
         label: "Face Value",
         editable: true,
-        type: "text",
+        type: "number",
       },
       {
         key: "price",
         label: "Price",
         editable: true,
-        type: "text",
+        type: "number",
       },
       {
         key: "price_type",
