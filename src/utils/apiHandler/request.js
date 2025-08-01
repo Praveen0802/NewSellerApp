@@ -2136,3 +2136,33 @@ export const getPayoutDetails = async (token, params) => {
     throw error;
   }
 };
+
+export const getPayoutHistoryReport = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_PAYOUT_HISTORY_REPORT,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getPayoutHistory", error);
+    throw error;
+  }
+};
+
+export const getPayoutOrderReport = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_PAYOUT_ORDER_REPORT,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getPayoutOrderReport", error);
+    throw error;
+  }
+};

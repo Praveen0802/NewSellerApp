@@ -22,6 +22,7 @@ const FloatingDateRange = ({
   subParentClassName = "",
   minDate = null, // New prop: minimum selectable date (YYYY-MM-DD format)
   maxDate = null, // New prop: maximum selectable date (YYYY-MM-DD format)
+  openUpward = true, // New prop: open calendar upward
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -125,19 +126,19 @@ const FloatingDateRange = ({
   const isDateInRange = (date) => {
     const dateToCheck = new Date(date);
     dateToCheck.setHours(0, 0, 0, 0);
-    
+
     if (minDateObj) {
       const minDateCheck = new Date(minDateObj);
       minDateCheck.setHours(0, 0, 0, 0);
       if (dateToCheck < minDateCheck) return false;
     }
-    
+
     if (maxDateObj) {
       const maxDateCheck = new Date(maxDateObj);
       maxDateCheck.setHours(0, 0, 0, 0);
       if (dateToCheck > maxDateCheck) return false;
     }
-    
+
     return true;
   };
 
@@ -166,8 +167,12 @@ const FloatingDateRange = ({
         }
       }
     } else {
-      if (tempStartDate && tempEndDate && 
-          isDateInRange(tempStartDate) && isDateInRange(tempEndDate)) {
+      if (
+        tempStartDate &&
+        tempEndDate &&
+        isDateInRange(tempStartDate) &&
+        isDateInRange(tempEndDate)
+      ) {
         const formattedStart = toLocalDateString(tempStartDate);
         const formattedEnd = toLocalDateString(tempEndDate);
         setStartDate(formattedStart);
@@ -280,7 +285,7 @@ const FloatingDateRange = ({
     for (let i = 1; i <= daysInMonth; i++) {
       const date = new Date(year, month, i);
       const isDisabled = !isDateInRange(date);
-      
+
       let isSelected;
 
       if (singleDateMode) {
@@ -385,9 +390,10 @@ const FloatingDateRange = ({
                   ${isSelected && !isDisabled ? "bg-green-500 text-white" : ""}
                   ${isInRange && !isDisabled ? "bg-blue-100" : ""}
                   ${isToday && !isDisabled ? "border border-green-400" : ""}
-                  ${isDisabled 
-                    ? "text-gray-300 cursor-not-allowed bg-gray-50" 
-                    : "cursor-pointer hover:bg-green-200"
+                  ${
+                    isDisabled
+                      ? "text-gray-300 cursor-not-allowed bg-gray-50"
+                      : "cursor-pointer hover:bg-green-200"
                   }
                 `}
                 disabled={isDisabled}
@@ -461,7 +467,11 @@ const FloatingDateRange = ({
       {error && <p className="mt-0.5 text-xs text-red-500">{error}</p>}
 
       {isOpen && (
-        <div className="absolute z-[99] mt-1 bg-white border border-gray-200 rounded shadow w-full p-2">
+        <div
+          className={`absolute z-[99] ${
+            openUpward ? "bottom-full mb-1" : "mt-1"
+          } bg-white border border-gray-200 rounded shadow w-full p-2`}
+        >
           <div className="space-y-2">
             <div className="text-xs font-medium text-gray-700">
               {singleDateMode
@@ -494,9 +504,9 @@ const FloatingDateRange = ({
                     onClick={handleApply}
                     className="px-2 py-1 text-xs cursor-pointer bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     disabled={
-                      !tempStartDate || 
-                      !tempEndDate || 
-                      !isDateInRange(tempStartDate) || 
+                      !tempStartDate ||
+                      !tempEndDate ||
+                      !isDateInRange(tempStartDate) ||
                       !isDateInRange(tempEndDate)
                     }
                   >

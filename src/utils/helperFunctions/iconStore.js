@@ -752,12 +752,103 @@ export const IconStore = {
       xmlns="http://www.w3.org/2000/svg"
       class="w-[1.125rem] h-[1.125rem]"
       id=""
+      {...props}
     >
       <path
         fill-rule="evenodd"
         clip-rule="evenodd"
         d="M4.875 2.25C3.42525 2.25 2.25 3.42525 2.25 4.875V12.9375C2.25 14.4908 3.5092 15.75 5.0625 15.75H14.4375C15.1624 15.75 15.75 15.1624 15.75 14.4375V7.3125C15.75 6.58763 15.1624 6 14.4375 6H12.75V3.39844C12.75 2.76417 12.2358 2.25 11.6016 2.25H4.875ZM11.625 6V3.39844C11.625 3.38549 11.6145 3.375 11.6016 3.375H4.875C4.04657 3.375 3.375 4.04657 3.375 4.875C3.375 5.49632 3.87868 6 4.5 6H11.625ZM11.625 11.625C12.0392 11.625 12.375 11.2892 12.375 10.875C12.375 10.4608 12.0392 10.125 11.625 10.125C11.2108 10.125 10.875 10.4608 10.875 10.875C10.875 11.2892 11.2108 11.625 11.625 11.625Z"
       ></path>
+    </svg>
+  )),
+  referral: withMerger((props) => (
+    <svg
+      id=""
+      data-name="Group 22598"
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      class="w-6 h-6 group-hover:[&amp;&gt;path]:stroke-indigo-500 false"
+      {...props}
+    >
+      <path
+        id="Path_49195"
+        data-name="Path 49195"
+        d="M19.5,8.75V11.5m0,0v2.75m0-2.75h-2.75m2.75,0h2.75m-7.5-5A3.75,3.75,0,1,1,11,2.75,3.75,3.75,0,0,1,14.748,6.5ZM3.67,19.166A7.356,7.356,0,0,1,11,13.25a7.356,7.356,0,0,1,7.328,5.916A.91.91,0,0,1,17.4,20.25H4.6A.91.91,0,0,1,3.67,19.166Z"
+        transform="translate(-0.948 -0.25)"
+        fill="none"
+        stroke="#41007f"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+      ></path>
+    </svg>
+  )),
+  myaccount: withMerger((props) => (
+    <svg
+      id=""
+      data-name="Group 22600"
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      class="w-6 h-6 group-hover:[&amp;&gt;path]:stroke-indigo-500 false"
+      {...props}
+    >
+      <path
+        id="Path_49172"
+        data-name="Path 49172"
+        d="M5.857,18.916A7.272,7.272,0,0,1,12,15.75a7.272,7.272,0,0,1,6.143,3.166m-12.286,0a9.25,9.25,0,0,0,12.286,0m-12.286,0a9.25,9.25,0,1,1,12.286,0M15.25,10A3.25,3.25,0,1,1,12,6.75,3.25,3.25,0,0,1,15.25,10Z"
+        fill="none"
+        stroke="#41007f"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+      ></path>
+    </svg>
+  )),
+  myTeams: withMerger((props) => (
+    <svg
+      id=""
+      data-name="Group 21081"
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      class="w-6 h-6 group-hover:[&amp;&gt;path]:stroke-indigo-500 false"
+      {...props}
+    >
+      <path
+        id="Path_49196"
+        data-name="Path 49196"
+        d="M14.425,13.18c3.362-1.4,7.6.6,8.454,6a.938.938,0,0,1-.952,1.067H16.75M10.75,7A3.25,3.25,0,1,1,7.5,3.75,3.25,3.25,0,0,1,10.75,7Zm9,0A3.25,3.25,0,1,1,16.5,3.75,3.25,3.25,0,0,1,19.75,7ZM12.784,20.25H2.072a.94.94,0,0,1-.952-1.07c1.362-8.574,11.252-8.574,12.614,0A.94.94,0,0,1,12.784,20.25Z"
+        transform="translate(0)"
+        fill="none"
+        stroke="#41007f"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+      ></path>
+    </svg>
+  )),
+  kyc: withMerger((props) => (
+    <svg
+      id="kyc-simple"
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      class="w-6 h-6 group-hover:[&>path]:stroke-indigo-500"
+      {...props}
+    >
+      <path
+        d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6zm3 2a2 2 0 1 0 4 0 2 2 0 0 0-4 0zm0 6c0-1.5 1.5-3 4-3s4 1.5 4 3m4-4h4m-4 2h3m1 3l-1 1 2 2"
+        fill="none"
+        stroke="#41007f"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+      />
     </svg>
   )),
 };

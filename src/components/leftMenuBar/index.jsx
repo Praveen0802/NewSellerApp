@@ -24,6 +24,7 @@ import {
   fetchNotificationCount,
 } from "@/utils/apiHandler/request";
 import { updateNotificationCount } from "@/utils/redux/common/action";
+import { useUserDisplayName } from "@/Hooks/_shared";
 
 // Custom Tooltip Component with Portal Support
 const Tooltip = ({ children, content, position = "right" }) => {
@@ -892,15 +893,14 @@ const LeftMenuBar = () => {
   const { currentUser } = useSelector((state) => state.currentUser);
   const { notificationCountData } = useSelector((state) => state.common);
 
-  const name = currentUser?.first_name?.slice(0, 2).toUpperCase();
-  const userName = currentUser?.first_name;
+  // Use the custom hook for hydration-safe user display name
+  const { userDisplayName } = useUserDisplayName(currentUser);
 
   const dispatch = useDispatch();
 
   // Fetch notification count for badge
   const fetchNotificationCountForBadge = async () => {
     try {
-      const token = getCookie("auth_token") || currentUser?.token;
       const { data } = (await fetchNotificationCount()) ?? {};
       const { unread_count = 0 } = data ?? {};
 
@@ -913,25 +913,19 @@ const LeftMenuBar = () => {
 
   // Fetch notification count on component mount
   useEffect(() => {
-    // if (notificationCountData.isLoaded) {
     fetchNotificationCountForBadge();
-    // }
   }, [notificationCountData.isLoaded]);
 
   function getUnReadNotificationCount(notificationCountData) {
-    // if (notificationCountData?.isLoaded) {
     const notification = Number(notificationCountData?.notification) || 0;
     const activity = Number(notificationCountData?.activity) || 0;
 
     return notification;
-    // }
-    // return 0;
   }
 
   // Updated sales sub items to match your requirements with counts
   const salesSubItems = [
     { name: "Pending", route: "sales/pending", key: "sales-pending", count: 0 },
-
     {
       name: "Delivered",
       route: "sales/delivered",
@@ -959,8 +953,8 @@ const LeftMenuBar = () => {
       name: "Minimise",
     },
     {
-      text: "US",
-      name: "User",
+      text: userDisplayName.label,
+      name: userDisplayName.name,
       key: "name",
       route: "settings/myAccount",
     },

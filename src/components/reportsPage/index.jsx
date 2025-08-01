@@ -29,6 +29,7 @@ import SelectListItem from "../tradePage/components/selectListItem";
 import { useRouter } from "next/router";
 import { toast } from "react-toastify";
 import { formatDate } from "../tradePage/components/stickyDataTable";
+import ActiveFiltersBox from "../tabbedLayout/ActiveFilterBoxs";
 
 const ReportsPage = (props) => {
   const { apiData } = props;
@@ -83,6 +84,7 @@ const ReportsPage = (props) => {
   const [paymentReference, setPaymentReference] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [dateRange, setDateRange] = useState({ startDate: "", endDate: "" });
+  const [isPayoutEntered, setIsPayoutEntered] = useState(false);
 
   const tabValues = [
     { key: "Transactions", value: "transaction" },
@@ -241,7 +243,7 @@ const ReportsPage = (props) => {
 
   const handleInputBlurOrEnter = (e, isBlur = false) => {
     if (!isBlur && e.key !== "Enter") return;
-
+    setIsPayoutEntered(true);
     const params = {
       ...(paymentReference && { reference_no: paymentReference }),
       ...(transactionTab &&
@@ -273,6 +275,112 @@ const ReportsPage = (props) => {
     );
 
     filterChange(filteredParams);
+  };
+
+  // Helper function to get status/type label from value
+  const getFilterLabel = (value, isTransaction = false) => {
+    if (isTransaction) {
+      // Transaction type labels
+      return value; // CREDIT/DEBIT are already readable
+    } else {
+      // Status labels
+      const statusMap = {
+        1: "Approved",
+        2: "Pending",
+        3: "Rejected",
+      };
+      return statusMap[value] || value;
+    }
+  };
+
+  // Create active filters object for ActiveFiltersBox
+  const getActiveFilters = () => {
+    const filters = {};
+
+    if (paymentReference && isPayoutEntered) {
+      // store the payment reference in ref
+      filters.paymentReference = paymentReference;
+    }
+
+    if (transactionTab && transactionType) {
+      filters.transactionType = getFilterLabel(transactionType, true);
+    }
+
+    if (!transactionTab && statusFilter) {
+      filters.status = getFilterLabel(statusFilter, false);
+    }
+
+    if (dateRange?.startDate && dateRange?.endDate) {
+      filters.dateRange = `${dateRange.startDate} to ${dateRange.endDate}`;
+    }
+
+    return filters;
+  };
+
+  // Handle filter changes from ActiveFiltersBox
+  const handleFilterChange = (filterKey, filterValue, allFilters) => {
+    switch (filterKey) {
+      case "paymentReference":
+        setPaymentReference("");
+        setIsPayoutEntered(false);
+        break;
+      case "transactionType":
+        setTransactionType("");
+        break;
+      case "status":
+        setStatusFilter("");
+        break;
+      case "dateRange":
+        setDateRange({ startDate: "", endDate: "" });
+        break;
+      case "clearAll":
+        setPaymentReference("");
+        setTransactionType("");
+        setStatusFilter("");
+        setDateRange({ startDate: "", endDate: "" });
+        break;
+      default:
+        break;
+    }
+
+    // Trigger filter change with cleared values
+    const params = {
+      ...(filterKey !== "paymentReference" &&
+        filterKey !== "clearAll" &&
+        paymentReference && { reference_no: paymentReference }),
+      ...(filterKey !== "transactionType" &&
+        filterKey !== "clearAll" &&
+        transactionTab &&
+        transactionType && { payment_type: transactionType }),
+      ...(filterKey !== "status" &&
+        filterKey !== "clearAll" &&
+        !transactionTab &&
+        statusFilter && { status: statusFilter }),
+      ...(filterKey !== "dateRange" &&
+        filterKey !== "clearAll" &&
+        dateRange?.startDate && { start_date: dateRange?.startDate }),
+      ...(filterKey !== "dateRange" &&
+        filterKey !== "clearAll" &&
+        dateRange?.endDate && { end_date: dateRange?.endDate }),
+    };
+
+    const filteredParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v != null)
+    );
+
+    filterChange(filteredParams);
+  };
+
+  // Handle clear all filters
+  const handleClearAllFilters = () => {
+    setPaymentReference("");
+    setTransactionType("");
+    setStatusFilter("");
+    setDateRange({ startDate: "", endDate: "" });
+    setIsPayoutEntered(false);
+
+    // Trigger filter change with no filters
+    filterChange({});
   };
 
   return (
@@ -351,7 +459,9 @@ const ReportsPage = (props) => {
                 <input
                   type="text"
                   placeholder="Search transactions"
-                  onChange={(e) => setPaymentReference(e.target.value)}
+                  onChange={(e) => {
+                    setPaymentReference(e.target.value);
+                  }}
                   value={paymentReference}
                   onBlur={(e) => handleInputBlurOrEnter(e, true)}
                   onKeyPress={(e) => handleInputBlurOrEnter(e)}
@@ -401,6 +511,14 @@ const ReportsPage = (props) => {
                 </div>
               )}
             </div>
+
+            {/* Active Filters Box */}
+            <ActiveFiltersBox
+              activeFilters={getActiveFilters()}
+              onFilterChange={handleFilterChange}
+              onClearAllFilters={handleClearAllFilters}
+              currentTab={selectedTab}
+            />
 
             {/* Table Section */}
             <div className="flex-grow  mb-[10%]">
