@@ -56,6 +56,7 @@ import {
 } from "../addInventoryPage/customInventoryTable/utils";
 import CommonInventoryTable from "../addInventoryPage/customInventoryTable";
 import BulkActionBar from "../addInventoryPage/bulkActionBar"; // Import the BulkActionBar
+import Tooltip from "../addInventoryPage/simmpleTooltip";
 
 const ShimmerCard = () => (
   <div className="border border-gray-200 rounded-lg mb-4 overflow-hidden animate-pulse">
@@ -977,19 +978,25 @@ const TicketsPage = (props) => {
       {
         key: "hand",
         icon: (
-          <Hand
-            size={14}
-            className={`${
-              rowData?.tickets_in_hand ? "text-green-500" : "text-black"
-            } hover:text-green-500 cursor-pointer`}
-            onClick={() => handleHandAction(rowData, rowIndex)}
-          />
+          <Tooltip content="Tickets in Hand">
+            <Hand
+              size={14}
+              className={`${
+                rowData?.tickets_in_hand ? "text-green-500" : "text-black"
+              } hover:text-green-500 cursor-pointer`}
+              onClick={() => handleHandAction(rowData, rowIndex)}
+            />
+          </Tooltip>
         ),
         className: "py-2 text-center border-r border-[#E0E1EA]",
       },
       {
         key: "upload",
-        icon: <IconStore.upload className="size-4" />,
+        icon: (
+          <Tooltip content="Upload">
+            <IconStore.upload className="size-4" />
+          </Tooltip>
+        ),
         className: "cursor-pointer pl-2",
         tooltipComponent: <p className="text-center">{rowData.ticket_type}</p>,
         onClick: () => handleUploadAction(rowData, rowIndex),
@@ -997,21 +1004,27 @@ const TicketsPage = (props) => {
       {
         key: "",
         icon: (
-          <HardDriveUpload
-            onClick={() =>
-              handleUploadAction(
-                { ...rowData, handleProofUpload: true },
-                rowIndex
-              )
-            }
-            className="cursor-pointer w-[16px] h-[16px]"
-          />
+          <Tooltip content="Upload Pop">
+            <HardDriveUpload
+              onClick={() =>
+                handleUploadAction(
+                  { ...rowData, handleProofUpload: true },
+                  rowIndex
+                )
+              }
+              className="cursor-pointer w-[16px] h-[16px]"
+            />
+          </Tooltip>
         ),
         className: "py-2 text-center border-r border-[#E0E1EA]",
       },
       {
         key: "view",
-        icon: <Clock className="size-4" />,
+        icon: (
+          <Tooltip content="logs">
+            <Clock className="size-4" />
+          </Tooltip>
+        ),
         className: "cursor-pointer px-2",
         tooltipComponent: (
           <p className="text-center">
@@ -1622,7 +1635,7 @@ const TicketsPage = (props) => {
         matchIndex={matchIndex}
         totalTicketsCount={tickets.length}
         getStickyColumnsForRow={getStickyColumnsForRow}
-        stickyHeaders={["", "", "",""]}
+        stickyHeaders={["", "", "", ""]}
         myListingPage={true}
         stickyColumnsWidth={170}
       />

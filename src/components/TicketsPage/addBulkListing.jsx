@@ -57,6 +57,7 @@ import ListingsMarketplace from "../ModalComponents/listSalesModal";
 import ViewMapPopup from "../addInventoryPage/ViewMapPopup";
 import BulkActionBar from "../addInventoryPage/bulkActionBar";
 import CommonInventoryTable from "../addInventoryPage/customInventoryTable";
+import Tooltip from "../addInventoryPage/simmpleTooltip";
 
 const BulkInventory = (props) => {
   const { matchId, response } = props;
@@ -877,49 +878,37 @@ const BulkInventory = (props) => {
       {
         key: "",
         icon: (
-          <Image
-            src={rowData?.tickets_in_hand ? greenHand : oneHand}
-            alt="tick"
-            width={16}
-            height={16}
-            className={`${
-              rowData?.tickets_in_hand ? "text-green-500" : "text-gray-400"
-            } cursor-pointer hover:text-blue-500 transition-colors`}
-            onClick={() => handleHandAction(rowData, rowIndex, matchId)}
-          />
+          <Tooltip content="Tickets In Hand">
+            <Image
+              src={rowData?.tickets_in_hand ? greenHand : oneHand}
+              alt="tick"
+              width={16}
+              height={16}
+              className={`${
+                rowData?.tickets_in_hand ? "text-green-500" : "text-gray-400"
+              } cursor-pointer hover:text-blue-500 transition-colors`}
+              onClick={() => handleHandAction(rowData, rowIndex, matchId)}
+            />
+          </Tooltip>
         ),
         className: "py-2 text-center border-r border-[#E0E1EA]",
       },
       {
         key: "",
         icon: (
-          <Image
-            src={uploadListing}
-            alt="tick"
-            width={16}
-            height={16}
-            className="cursor-pointer hover:text-blue-500 transition-colors"
-            onClick={() => handleUploadAction(rowData, rowIndex, matchId)}
-          />
+          <Tooltip content="Upload">
+            <Image
+              src={uploadListing}
+              alt="tick"
+              width={16}
+              height={16}
+              className="cursor-pointer hover:text-blue-500 transition-colors"
+              onClick={() => handleUploadAction(rowData, rowIndex, matchId)}
+            />
+          </Tooltip>
         ),
         className: "py-2 text-center",
-      },
-      {
-        key: "",
-        icon: (
-          <HardDriveUpload
-            onClick={() =>
-              handleUploadAction(
-                { ...rowData, handleProofUpload: true },
-                rowIndex,
-                matchId
-              )
-            }
-            className="cursor-pointer w-[16px] h-[16px]"
-          />
-        ),
-        className: "py-2 text-center border-r border-[#E0E1EA]",
-      },
+      }
     ];
   };
 
@@ -1409,8 +1398,8 @@ const BulkInventory = (props) => {
                     getStickyColumnsForRow={(rowData, rowIndex) =>
                       getStickyColumnsForRow(rowData, rowIndex, matchId)
                     }
-                    stickyHeaders={["", "", ""]}
-                    stickyColumnsWidth={120}
+                    stickyHeaders={["", ""]}
+                    stickyColumnsWidth={100}
                   />
                 </div>
               );

@@ -15,8 +15,12 @@ import Image from "next/image";
 import Button from "@/components/commonComponents/button";
 import RightViewContainer from "@/components/dashboardPage/reportViewContainer/rightViewContainer";
 import RightViewModal from "@/components/commonComponents/rightViewModal";
-import { myListingUploadTickets } from "@/utils/apiHandler/request";
+import {
+  myListingUploadTickets,
+  uploadPopInstruction,
+} from "@/utils/apiHandler/request";
 import { toast } from "react-toastify";
+import { set } from "lodash";
 
 const UploadTickets = ({
   show,
@@ -1068,18 +1072,37 @@ const UploadTickets = ({
       setIsLoading(false);
     }
   };
-
-  const handleConfirmCtaClick = useCallback(() => {
-    if (proofUploadView) {
-      // Handle proof upload flow
-      const updatedObject = {
-        upload_tickets: transferredFiles,
-        // No additional info for proof upload
-      };
-      if (myListingPage) {
-        handleTicketsPageApiCall(updatedObject);
-      } else {
-        handleConfirmClick(updatedObject, rowIndex, rowData);
+  console.log(rowData, "rowDatarowDatarowData");
+  const handleConfirmCtaClick = useCallback(async () => {
+    if (proofUploadView && myListingPage) {
+      setIsLoading(true);
+      const formData = new FormData();
+      formData.append(`ticket_id`, rowData?.rawTicketData?.s_no);
+      formData.append(`match_id`, rowData?.rawTicketData?.match_id);
+      if (
+        transferredFiles[0]?.file &&
+        transferredFiles[0]?.file instanceof File
+      ) {
+        formData.append(
+          `upload_tickets`,
+          transferredFiles[0]?.file,
+          transferredFiles[0]?.name
+        );
+      }
+      try {
+        const response = await uploadPopInstruction("", formData);
+        console.log(response, "response.response.response");
+        setIsLoading(false);
+        onClose();
+        toast.success(
+          proofUploadView
+            ? "Proof document uploaded successfully"
+            : "Tickets uploaded successfully"
+        );
+      } catch (error) {
+        console.error("API call failed:", error);
+        toast.error("Upload failed. Please try again.");
+        setIsLoading(false);
       }
     } else if (normalFlow) {
       const updatedObject = {

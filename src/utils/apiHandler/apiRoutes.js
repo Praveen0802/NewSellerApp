@@ -6,6 +6,7 @@ export const API_ROUTES = {
   LMT_TRADE_ORDERS: `/purchase/lmt-trade/history`,
   GET_MY_LISTING_OVERVIEW: `/my-listings/overview`,
   GET_MY_LISTING_TICKET_HISTORY: `/my-listings/ticket-history`,
+  UPLOAD_POP: `/my-listings/upload-pop`,
   VIEW_DETAILS_POPUP: `/my-listings/ticket-logs`,
   GET_MY_LISTING_TICKET_FILTERS: `/my-listing/event-option`,
   UPDATE_MY_LISTING_TICKETS: `/my-listings/update-ticket/`,

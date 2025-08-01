@@ -15,7 +15,7 @@ import blueClock from "../../../public/blue-clock.svg";
 import FloatingLabelInput from "../floatinginputFields";
 import FloatingSelect from "../floatinginputFields/floatingSelect";
 import FloatingDateRange from "../commonComponents/dateRangeInput";
-import { dateFormat } from "@/utils/helperFunctions";
+import { addDayOfWeek, dateFormat } from "@/utils/helperFunctions";
 import { debounce, entries, filter, head, max, set } from "lodash";
 import {
   ChevronUp,
@@ -63,6 +63,7 @@ import SubjectDescriptionPopup from "../settingPage/subjectDescriptionPopup";
 import { MultiSelectEditableCell, SimpleEditableCell } from "./selectCell";
 import CommonInventoryTable from "./customInventoryTable";
 import ListingsMarketplace from "../ModalComponents/listSalesModal";
+import Tooltip from "./simmpleTooltip";
 
 const AddInventoryPage = (props) => {
   const { matchId, response } = props;
@@ -459,7 +460,7 @@ const AddInventoryPage = (props) => {
       maxDate: matchDetails?.ship_date, // Convert to proper format
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       singleDateMode: true,
-      className: "!py-[10px] !px-[12px] w-full mobile:text-xs",
+      className: "!pb-[10px] !pt-[12px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, ship_date: value })),
@@ -526,50 +527,40 @@ const AddInventoryPage = (props) => {
     return [
       {
         key: "",
+        toolTipContent: "Tickets In Hand",
         icon: (
-          <Image
-            src={rowData?.tickets_in_hand ? greenHand : oneHand}
-            alt="tick"
-            width={16}
-            height={16}
-            className={`${
-              rowData?.tickets_in_hand ? "text-green-500" : "text-gray-400"
-            } cursor-pointer hover:text-blue-500 transition-colors`}
-            onClick={() => handleHandAction(rowData, rowIndex)}
-          />
+          <Tooltip content="Tickets In Hand">
+            <Image
+              src={rowData?.tickets_in_hand ? greenHand : oneHand}
+              alt="tick"
+              width={16}
+              height={16}
+              className={`${
+                rowData?.tickets_in_hand ? "text-green-500" : "text-gray-400"
+              } cursor-pointer hover:text-blue-500 transition-colors`}
+              onClick={() => handleHandAction(rowData, rowIndex)}
+            />
+          </Tooltip>
         ),
         className: "py-2 text-center border-r border-[#E0E1EA]",
       },
-     
+
       {
         key: "",
+        toolTipContent: "Upload",
         icon: (
-          <Image
-            src={uploadListing}
-            alt="tick"
-            width={16}
-            height={16}
-            className="cursor-pointer hover:text-blue-500 transition-colors"
-            onClick={() => handleUploadAction(rowData, rowIndex)}
-          />
+          <Tooltip content="Upload">
+            <Image
+              src={uploadListing}
+              alt="tick"
+              width={16}
+              height={16}
+              className="cursor-pointer hover:text-blue-500 transition-colors"
+              onClick={() => handleUploadAction(rowData, rowIndex)}
+            />
+          </Tooltip>
         ),
         className: "py-2 text-center",
-      },
-       {
-        key: "",
-        icon: (
-         
-          <HardDriveUpload
-            onClick={() =>
-              handleUploadAction(
-                { ...rowData, handleProofUpload: true },
-                rowIndex
-              )
-            }
-            className="cursor-pointer w-[16px] h-[16px]"
-          />
-        ),
-        className: "py-2 text-center border-r border-[#E0E1EA]",
       },
     ];
   };
@@ -1174,7 +1165,7 @@ const AddInventoryPage = (props) => {
   };
 
   const [showRequestPopup, setShowRequestPopup] = useState(false);
-
+console.log(matchDetails?.match_date_format,'matchDetails?.match_date_format')
   return (
     <div className="bg-[#F5F7FA] w-full h-full relative min-h-screen">
       {/* Header with selected match info */}
@@ -1235,7 +1226,7 @@ const AddInventoryPage = (props) => {
                 <div className="flex gap-2 items-center pr-4 border-r-[1px] border-[#DADBE5]">
                   <Calendar1Icon size={16} className="text-[#00A3ED]" />
                   <p className="text-[#3a3c42] truncate text-[14px]">
-                    {matchDetails?.match_date_format}
+                    {addDayOfWeek(matchDetails?.match_date_format)}
                   </p>
                 </div>
                 <div className="flex gap-2 items-center pr-4 border-r-[1px] border-[#DADBE5]">
@@ -1336,8 +1327,8 @@ const AddInventoryPage = (props) => {
               isCollapsed={isTableCollapsed}
               onToggleCollapse={handleToggleCollapse}
               getStickyColumnsForRow={getStickyColumnsForRow}
-              stickyHeaders={["", "", ""]}
-              stickyColumnsWidth={120}
+              stickyHeaders={["", ""]}
+              stickyColumnsWidth={100}
             />
           </div>
         </div>

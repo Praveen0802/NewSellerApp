@@ -933,8 +933,23 @@ export const saveBulkListing = async (token, data) => {
   }
 };
 
+export const uploadPopInstruction = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.UPLOAD_POP}`,
+      method: "POST",
+      ...(token && { token: token }),
+      ...(data && { formData: data }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchUserDetails", error);
+    throw error;
+  }
+};
+
 export const updateTicketsPrice = async (token, data, params) => {
-  console.log(params,'paramsparams')
+  console.log(params, "paramsparams");
   try {
     const response = await makeRequest({
       url: `${API_ROUTES.UPDATE_TICKETS_PRICE}`,
