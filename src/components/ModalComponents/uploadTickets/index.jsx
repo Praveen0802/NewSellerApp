@@ -28,15 +28,19 @@ const UploadTickets = ({
   handleConfirmClick,
   myListingPage = false,
 }) => {
+  const proofUploadView = rowData?.handleProofUpload || false;
   const ticketTypes = !isNaN(parseInt(rowData?.ticket_type))
     ? rowData?.ticket_type
     : rowData?.ticket_types || rowData?.ticket_type_id;
   const ETicketsFlow = [2, 4]?.includes(parseInt(ticketTypes));
   const paperTicketFlow = parseInt(ticketTypes) === 3;
   const normalFlow = !ETicketsFlow && !paperTicketFlow;
+
   // Get the quantity limit from rowData
-  const maxQuantity =
-    parseInt(rowData?.add_qty_addlist || rowData?.quantity) || 0;
+  // For proof upload view, limit to 1, otherwise use the original quantity
+  const maxQuantity = proofUploadView
+    ? 1
+    : parseInt(rowData?.add_qty_addlist || rowData?.quantity) || 0;
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -73,17 +77,30 @@ const UploadTickets = ({
     fileInputRef.current?.click();
   }, []);
 
-  const handleFileUpload = useCallback((e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 0) {
-      const newFiles = files.map((file, index) => ({
-        id: Date.now() + index,
-        name: file.name,
-        file: file,
-      }));
-      setUploadedFiles((prev) => [...prev, ...newFiles]);
-    }
-  }, []);
+  const handleFileUpload = useCallback(
+    (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length > 0) {
+        // For proof upload view, only allow one file
+        if (proofUploadView) {
+          const newFile = {
+            id: Date.now(),
+            name: files[0].name,
+            file: files[0],
+          };
+          setUploadedFiles([newFile]); // Replace existing files with just one
+        } else {
+          const newFiles = files.map((file, index) => ({
+            id: Date.now() + index,
+            name: file.name,
+            file: file,
+          }));
+          setUploadedFiles((prev) => [...prev, ...newFiles]);
+        }
+      }
+    },
+    [proofUploadView]
+  );
 
   const handleDeleteUploaded = useCallback((id) => {
     setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
@@ -158,7 +175,16 @@ const UploadTickets = ({
 
   // Common instructions based on flow type - Memoized
   const instructions = useMemo(() => {
-    if (ETicketsFlow) {
+    if (proofUploadView) {
+      return [
+        "Upload proof of purchase or ticket confirmation document",
+        "Accepted formats: PDF, JPG, JPEG, PNG",
+        "Only one file can be uploaded for proof verification",
+        "Ensure the document clearly shows ticket details and purchase information",
+        "Click 'Transfer' button to move the file to the assignment area",
+        "Confirm the proof document is uploaded by clicking the green 'confirm' button",
+      ];
+    } else if (ETicketsFlow) {
       return [
         "Have the ticket ready and open on your phone (With the brightness turned up high and auto-rotate turned off) when approaching the turnstile.",
         "Make sure to enter the venue using the gate entrance that is stated on your tickets. Any other turnstile used result in the ticket not working.",
@@ -182,7 +208,7 @@ const UploadTickets = ({
       "Click 'Transfer' button next to each file to move it to the assignment area",
       "Confirm all tickets are uploaded and transferred by clicking the green 'confirm' button",
     ];
-  }, [ETicketsFlow, paperTicketFlow]);
+  }, [ETicketsFlow, paperTicketFlow, proofUploadView]);
 
   // Common Match Header Component - Move outside useMemo
   const MatchHeader = () => (
@@ -211,16 +237,26 @@ const UploadTickets = ({
     <div className="border-[1px] border-[#E0E1EA] rounded-b-md flex-shrink-0">
       <div className="grid grid-cols-4 bg-gray-100 px-3 py-2 border-b border-gray-200">
         <div className="text-xs font-medium text-[#323A70]">Listing ID</div>
-        <div className="text-xs font-medium text-[#323A70]">Quantity</div>
+        <div className="text-xs font-medium text-[#323A70]">
+          {proofUploadView ? "Proof Required" : "Quantity"}
+        </div>
         <div className="text-xs font-medium text-[#323A70]">Ticket Details</div>
         <div className="text-xs font-medium text-[#323A70]">
-          {ETicketsFlow ? "Type" : paperTicketFlow ? "Type" : "Row (Seat)"}
+          {ETicketsFlow
+            ? "Type"
+            : paperTicketFlow
+            ? "Type"
+            : proofUploadView
+            ? "Status"
+            : "Row (Seat)"}
         </div>
       </div>
 
       <div className="grid grid-cols-4 bg-[#F9F9FB] py-2 px-3 border-b border-gray-200">
         <div className="text-xs truncate">{rowData?.id || "N/A"}</div>
-        <div className="text-xs truncate">{maxQuantity}</div>
+        <div className="text-xs truncate">
+          {proofUploadView ? "1 Document" : maxQuantity}
+        </div>
         <div className="text-xs truncate">
           {rowData?.ticket_category || "N/A"}, {rowData?.ticket_block || ""}
         </div>
@@ -229,6 +265,8 @@ const UploadTickets = ({
             "E-Ticket"
           ) : paperTicketFlow ? (
             "Paper Ticket"
+          ) : proofUploadView ? (
+            <span className="text-orange-600">Pending Upload</span>
           ) : (
             <div className="flex gap-5 items-center justify-end">
               <span>{rowData?.row || "0"} (0)</span>
@@ -265,7 +303,9 @@ const UploadTickets = ({
       <div className="border-1 bg-[#F9F9FB] border-dashed border-[#130061] rounded-lg p-4 flex flex-col gap-1 items-center justify-center h-32">
         <Image src={uploadImage} width={42} height={42} alt="Upload" />
         <p className="text-xs text-[#323A70] mb-1">
-          Drag your file(s) to start uploading
+          {proofUploadView
+            ? "Add your proof document to start uploading"
+            : "Add your file(s) to start uploading"}
         </p>
         <p className="text-xs text-gray-500">OR</p>
         <Button
@@ -281,24 +321,33 @@ const UploadTickets = ({
           type="file"
           ref={fileInputRef}
           onChange={handleFileUpload}
-          multiple
+          multiple={!proofUploadView} // Only allow multiple files if not proof upload
           accept=".pdf,.jpg,.jpeg,.png"
           className="hidden"
         />
+        {proofUploadView && (
+          <p className="text-xs text-gray-500 mt-1">
+            Maximum 1 file allowed for proof upload
+          </p>
+        )}
       </div>
 
       {/* Uploaded files list */}
       <div className="flex-1">
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-sm font-medium text-[#323A70]">
-            Uploaded Files ({uploadedFiles.length})
+            {proofUploadView
+              ? `Proof Document (${uploadedFiles.length}/1)`
+              : `Uploaded Files (${uploadedFiles.length})`}
           </h3>
         </div>
 
         <div className="max-h-64 overflow-y-auto border border-[#E0E1EA] rounded">
           {uploadedFiles.length === 0 ? (
             <div className="p-4 text-center text-gray-500 text-sm">
-              No files uploaded yet
+              {proofUploadView
+                ? "No proof document uploaded yet"
+                : "No files uploaded yet"}
             </div>
           ) : (
             uploadedFiles.map((file) => (
@@ -324,7 +373,8 @@ const UploadTickets = ({
                       label_: "text-[10px] font-medium flex items-center gap-1",
                     }}
                   >
-                    Add <ArrowRight className="w-3 h-3" />
+                    {proofUploadView ? "Attach" : "Add"}{" "}
+                    <ArrowRight className="w-3 h-3" />
                   </Button>
                   <button
                     className="p-1 text-red-500 cursor-pointer hover:text-red-700"
@@ -440,9 +490,13 @@ const UploadTickets = ({
         ) : (
           <>
             <FileUploadSection />
-            {showInstruction && (
+            {(proofUploadView || showInstruction) && (
               <InstructionsPanel
-                title="Upload Instructions"
+                title={
+                  proofUploadView
+                    ? "Proof Upload Instructions"
+                    : "Upload Instructions"
+                }
                 instructions={instructions}
               />
             )}
@@ -457,7 +511,9 @@ const UploadTickets = ({
     <div className="p-3">
       <div className="flex justify-between items-center mb-2">
         <h4 className="text-sm font-medium text-[#323A70]">
-          Ticket Assignment ({transferredFiles.length}/{maxQuantity})
+          {proofUploadView
+            ? `Proof Assignment (${transferredFiles.length}/${maxQuantity})`
+            : `Ticket Assignment (${transferredFiles.length}/${maxQuantity})`}
         </h4>
       </div>
 
@@ -468,16 +524,16 @@ const UploadTickets = ({
           </div>
         ) : (
           Array.from({ length: maxQuantity }, (_, index) => {
-            const ticketNumber = index + 1;
+            const itemNumber = index + 1;
             const assignedFile = transferredFiles[index];
 
             return (
               <div
-                key={ticketNumber}
+                key={itemNumber}
                 className="grid grid-cols-2 items-center border-b border-gray-200 last:border-b-0"
               >
                 <div className="px-3 py-2 text-xs font-medium text-[#323A70]">
-                  Ticket {ticketNumber}
+                  {proofUploadView ? `Proof Document` : `Ticket ${itemNumber}`}
                 </div>
                 <div className="px-3 py-2 flex items-center">
                   {assignedFile ? (
@@ -496,7 +552,9 @@ const UploadTickets = ({
                     </div>
                   ) : (
                     <div className="text-xs text-gray-400 w-full border-[1px] border-dashed border-[#E0E1EA] bg-white rounded-md px-2 py-1">
-                      Waiting for file...
+                      {proofUploadView
+                        ? "Waiting for proof document..."
+                        : "Waiting for file..."}
                     </div>
                   )}
                 </div>
@@ -820,19 +878,19 @@ const UploadTickets = ({
         {ETicketsFlow ? (
           <>
             <QRLinksConfigSection />
-            <AdditionalInfoSection />
+            {!proofUploadView && <AdditionalInfoSection />}
           </>
         ) : paperTicketFlow ? (
           <>
             <PaperTicketCourierDetailsSection />
-            <AdditionalInfoSection />
+            {!proofUploadView && <AdditionalInfoSection />}
           </>
         ) : (
           <>
             <div className="border-[1px] border-[#E0E1EA] rounded-b-md flex-shrink-0">
               <TicketAssignmentSection />
             </div>
-            <AdditionalInfoSection />
+            {!proofUploadView && <AdditionalInfoSection />}
           </>
         )}
       </div>
@@ -854,7 +912,7 @@ const UploadTickets = ({
 
       const isComplete = hasCourierDetails;
       return { completed: isComplete ? maxQuantity : 0, total: maxQuantity };
-    } else if (normalFlow) {
+    } else if (normalFlow || proofUploadView) {
       return { completed: transferredFiles.length, total: maxQuantity };
     }
     return { completed: 0, total: 0 };
@@ -862,6 +920,7 @@ const UploadTickets = ({
     ETicketsFlow,
     paperTicketFlow,
     normalFlow,
+    proofUploadView,
     ticketLinks,
     paperTicketDetails,
     transferredFiles,
@@ -872,16 +931,19 @@ const UploadTickets = ({
 
   // Get modal title based on flow type
   const getModalTitle = () => {
+    if (proofUploadView) return "Upload Proof Document";
     if (ETicketsFlow) return "Configure E-Tickets";
     if (paperTicketFlow) return "Configure Paper Tickets";
     return "Upload Tickets";
   };
 
   const getModalSubtitle = () => {
+    if (proofUploadView) return " (1 document required)";
     if (ETicketsFlow) return ` (${maxQuantity} tickets)`;
     if (paperTicketFlow) return ` (${maxQuantity} tickets)`;
     return ` (Max: ${maxQuantity})`;
   };
+
   const handleTicketsPageApiCall = async (updatedObject) => {
     setIsLoading(true);
     const constructTicketFormData = (updatedObject) => {
@@ -893,8 +955,9 @@ const UploadTickets = ({
         rowData?.rawTicketData?.ticket_type_id
       );
       formData.append(`data[0][match_id]`, rowData?.rawMatchData?.m_id);
-      // Common additional info fields for all flows
-      if (updatedObject.additional_info) {
+
+      // Common additional info fields for all flows (except proof upload)
+      if (updatedObject.additional_info && !proofUploadView) {
         formData.append(
           `data[${index}][additional_file_type]`,
           updatedObject.additional_info.template || ""
@@ -905,18 +968,17 @@ const UploadTickets = ({
         );
       }
 
-      // Handle Normal Flow - upload_tickets
+      // Handle Normal Flow and Proof Upload - upload_tickets
       if (
         updatedObject.upload_tickets &&
         updatedObject.upload_tickets.length > 0
       ) {
         updatedObject.upload_tickets.forEach((ticket, ticketIndex) => {
           if (ticket.file && ticket.file instanceof File) {
-            formData.append(
-              `data[${index}][upload_tickets][${ticketIndex}]`,
-              ticket.file,
-              ticket.name
-            );
+            const fieldName = proofUploadView
+              ? `data[${index}][proof_document][${ticketIndex}]`
+              : `data[${index}][upload_tickets][${ticketIndex}]`;
+            formData.append(fieldName, ticket.file, ticket.name);
           }
         });
       }
@@ -971,6 +1033,11 @@ const UploadTickets = ({
         formData.append(`data[${index}][id]`, rowData.id);
       }
 
+      // Add proof upload flag if applicable
+      if (proofUploadView) {
+        formData.append(`data[${index}][is_proof_upload]`, "1");
+      }
+
       return formData;
     };
 
@@ -979,25 +1046,42 @@ const UploadTickets = ({
 
       // Call the API with the constructed FormData
       const response = await myListingUploadTickets("", formData);
-console.log(response.success,'response.successresponse.success')
+      console.log(response.success, "response.successresponse.success");
       // Handle response
       if (response.success) {
         // Handle success - maybe close modal, show success message, etc.
         onClose();
-        toast.success("Tickets uploaded successfully");
+        toast.success(
+          proofUploadView
+            ? "Proof document uploaded successfully"
+            : "Tickets uploaded successfully"
+        );
       } else {
         // Handle error
         console.error("Upload failed:", response.message);
+        toast.error(response.message || "Upload failed");
       }
     } catch (error) {
       console.error("API call failed:", error);
+      toast.error("Upload failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleConfirmCtaClick = useCallback(() => {
-    if (normalFlow) {
+    if (proofUploadView) {
+      // Handle proof upload flow
+      const updatedObject = {
+        upload_tickets: transferredFiles,
+        // No additional info for proof upload
+      };
+      if (myListingPage) {
+        handleTicketsPageApiCall(updatedObject);
+      } else {
+        handleConfirmClick(updatedObject, rowIndex, rowData);
+      }
+    } else if (normalFlow) {
       const updatedObject = {
         upload_tickets: transferredFiles,
         additional_info: additionalInfo,
@@ -1033,6 +1117,7 @@ console.log(response.success,'response.successresponse.success')
       }
     }
   }, [
+    proofUploadView,
     normalFlow,
     ETicketsFlow,
     paperTicketFlow,
@@ -1044,6 +1129,7 @@ console.log(response.success,'response.successresponse.success')
     handleConfirmClick,
     rowIndex,
     rowData,
+    myListingPage,
   ]);
 
   return (
@@ -1086,7 +1172,7 @@ console.log(response.success,'response.successresponse.success')
                 loading={isLoading}
                 onClick={handleConfirmCtaClick}
               >
-                Confirm
+                {proofUploadView ? "Submit Proof" : "Confirm"}
               </Button>
             </div>
           </div>

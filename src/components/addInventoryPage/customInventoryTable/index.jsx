@@ -3,12 +3,12 @@ import Image from "next/image";
 import {
   ChevronDown,
   ChevronLeft,
-  ChevronRight,
   Calendar1Icon,
   Clock,
   MapPin,
   ChartLine,
 } from "lucide-react";
+import ChevronRight from "@/components/commonComponents/filledChevron/chevronRight";
 import oneHand from "../../../../public/onehand.svg";
 import greenHand from "../../../../public/greenhand.svg";
 import uploadListing from "../../../../public/uploadlisting.svg";
@@ -50,6 +50,12 @@ const CommonInventoryTable = ({
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
   const [showMarketPlaceModal, setShowMarketPlaceModal] = useState(false);
+
+  // MOVED: Dynamic options state to component level to fix hooks issue
+  const [dynamicOptions, setDynamicOptions] = useState({});
+
+  // NEW: Track which dynamic options have been fetched to prevent duplicate calls
+  const [fetchedOptionsCache, setFetchedOptionsCache] = useState(new Set());
 
   // Refs for sticky table functionality
   const containerRef = useRef(null);
@@ -96,6 +102,102 @@ const CommonInventoryTable = ({
   // Use provided getStickyColumnsForRow or default one
   const getStickyColumns =
     getStickyColumnsForRow || getDefaultStickyColumnsForRow;
+
+  // OPTIMIZED: fetchDynamicOptions function with caching
+  const fetchDynamicOptions = useCallback(
+    async (row, header) => {
+      if (!header.dynamicOptions) return;
+
+      switch (header.key) {
+        case "block":
+          const matchId = row.rawTicketData?.match_id;
+          const categoryId = row.ticket_category_id;
+
+          if (!matchId || !categoryId) {
+            return;
+          }
+
+          // Create a unique cache key for this combination
+          const cacheKey = `${header.key}-${matchId}-${categoryId}`;
+
+          // Check if we already have this data or are currently fetching it
+          if (
+            fetchedOptionsCache.has(cacheKey) ||
+            (dynamicOptions?.block?.categoryId === categoryId &&
+              dynamicOptions?.block?.matchId === matchId)
+          ) {
+            return;
+          }
+
+          // Mark as being fetched to prevent duplicate calls
+          setFetchedOptionsCache((prev) => new Set([...prev, cacheKey]));
+
+          try {
+            const options = await fetchBlockDetails("", {
+              match_id: matchId,
+              category_id: categoryId,
+            }).then((res) =>
+              res && Array.isArray(res)
+                ? res.map((item) => ({ label: item.block_id, value: item.id }))
+                : []
+            );
+
+            setDynamicOptions((prev) => ({
+              ...prev,
+              [header.key]: { matchId, categoryId, options },
+            }));
+          } catch (error) {
+            console.error("Error fetching dynamic options:", error);
+            // Remove from cache on error so it can be retried
+            setFetchedOptionsCache((prev) => {
+              const newSet = new Set(prev);
+              newSet.delete(cacheKey);
+              return newSet;
+            });
+          }
+          break;
+        default:
+          break;
+      }
+    },
+    [dynamicOptions, fetchedOptionsCache]
+  );
+
+  // OPTIMIZED: Effect to fetch dynamic options only when accordion is open and data is available
+  useEffect(() => {
+    // Only fetch when accordion is open (not collapsed)
+    if (isCollapsed || inventoryData.length === 0 || headers.length === 0) {
+      return;
+    }
+
+    const fetchAllDynamicOptions = async () => {
+      // Get unique combinations to avoid duplicate API calls
+      const uniqueCombinations = new Map();
+
+      for (const row of inventoryData) {
+        for (const header of headers) {
+          if (header.dynamicOptions && header.key === "block") {
+            const matchId = row.rawTicketData?.match_id;
+            const categoryId = row.ticket_category_id;
+
+            if (matchId && categoryId) {
+              const key = `${matchId}-${categoryId}`;
+              if (!uniqueCombinations.has(key)) {
+                uniqueCombinations.set(key, { row, header });
+              }
+            }
+          }
+        }
+      }
+
+      // Fetch options for unique combinations only
+      for (const [key, { row, header }] of uniqueCombinations) {
+        await fetchDynamicOptions(row, header);
+      }
+    };
+
+    fetchAllDynamicOptions();
+  }, [inventoryData, headers, isCollapsed, fetchDynamicOptions]);
 
   // Function to check scroll capabilities and update state
   const checkScrollCapabilities = () => {
@@ -229,7 +331,7 @@ const CommonInventoryTable = ({
     };
   }, [inventoryData]);
 
-  // Render editable cell function
+  // FIXED: Render editable cell function - removed useState and useEffect hooks
   const renderEditableCell = (
     row,
     header,
@@ -237,8 +339,6 @@ const CommonInventoryTable = ({
     isRowHovered,
     isDisabled = false
   ) => {
-    const [dynamicOptions, setDynamicOptions] = useState({});
-
     // Check if this row is editable
     const isRowEditable =
       !isEditMode ||
@@ -282,42 +382,6 @@ const CommonInventoryTable = ({
       }
       return "Enter...";
     };
-
-    const fetchDynamicOptions = useCallback(async () => {
-      if (!header.dynamicOptions) return;
-      switch (header.key) {
-        case "block":
-          const matchId = row.rawTicketData.match_id;
-          const categoryId = row.ticket_category_id;
-          if (
-            !matchId ||
-            !categoryId ||
-            (categoryId === dynamicOptions?.block?.categoryId &&
-              matchId === dynamicOptions?.block?.matchId)
-          ) {
-            return;
-          }
-          const options = await fetchBlockDetails("", {
-            match_id: matchId,
-            category_id: categoryId,
-          }).then((res) =>
-            res && Array.isArray(res)
-              ? res.map((item) => ({ label: item.block_id, value: item.id }))
-              : []
-          );
-          setDynamicOptions((prev) => ({
-            ...prev,
-            [header.key]: { matchId, categoryId, options },
-          }));
-          break;
-        default:
-          break;
-      }
-    }, [row]);
-
-    useEffect(() => {
-      fetchDynamicOptions();
-    }, [row]);
 
     const fetchOptions = () =>
       (header.dynamicOptions
@@ -384,7 +448,7 @@ const CommonInventoryTable = ({
 
               {/* Match details with pipe separators and more spacing */}
               <div className="flex items-center space-x-6 text-xs">
-                <div className="flex items-center space-x-2 py-4 pr-4 w-[110px] border-r-[1px] border-[#51428E]">
+                <div className="flex items-center space-x-2 py-4 pr-4 w-[170px] border-r-[1px] border-[#51428E]">
                   <Calendar1Icon size={14} className="text-white" />
                   <span className="text-white">
                     {matchDetails?.match_date_format}
@@ -558,7 +622,7 @@ const CommonInventoryTable = ({
                       className={`px-3 py-3 ${
                         header?.increasedWidth
                           ? header?.increasedWidth
-                          : "min-w-[110px]"
+                          : "min-w-[140px]"
                       } text-left text-[#7D82A4] font-medium whitespace-nowrap text-xs border-r border-[#DADBE5]`}
                     >
                       <div className="flex justify-between items-center">
@@ -598,7 +662,7 @@ const CommonInventoryTable = ({
                           className={`py-2 px-3 text-xs ${
                             header?.increasedWidth
                               ? header?.increasedWidth
-                              : "min-w-[110px]"
+                              : "min-w-[140px]"
                           } whitespace-nowrap overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
                             isRowDisabled ? "bg-gray-50" : ""
                           } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
@@ -679,7 +743,10 @@ const CommonInventoryTable = ({
                                   }`}
                                   title="Scroll Left"
                                 >
-                                  <ChevronLeft size={12} />
+                                  <ChevronRight
+                                    className="rotate-180"
+                                    color={canScrollLeft ? "" : "#B4B7CB"}
+                                  />
                                 </button>
                                 <button
                                   onClick={(e) => {
@@ -694,7 +761,9 @@ const CommonInventoryTable = ({
                                   }`}
                                   title="Scroll Right"
                                 >
-                                  <ChevronRight size={12} />
+                                  <ChevronRight
+                                    color={canScrollRight ? "" : "#B4B7CB"}
+                                  />
                                 </button>
                               </div>
                             )}

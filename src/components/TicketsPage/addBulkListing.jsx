@@ -34,6 +34,7 @@ import {
   SearchIcon,
   ChevronLeft,
   ChevronRight,
+  HardDriveUpload,
 } from "lucide-react";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import UploadTickets from "../ModalComponents/uploadTickets";
@@ -903,6 +904,22 @@ const BulkInventory = (props) => {
         ),
         className: "py-2 text-center",
       },
+      {
+        key: "",
+        icon: (
+          <HardDriveUpload
+            onClick={() =>
+              handleUploadAction(
+                { ...rowData, handleProofUpload: true },
+                rowIndex,
+                matchId
+              )
+            }
+            className="cursor-pointer w-[16px] h-[16px]"
+          />
+        ),
+        className: "py-2 text-center border-r border-[#E0E1EA]",
+      },
     ];
   };
 
@@ -1392,8 +1409,8 @@ const BulkInventory = (props) => {
                     getStickyColumnsForRow={(rowData, rowIndex) =>
                       getStickyColumnsForRow(rowData, rowIndex, matchId)
                     }
-                    stickyHeaders={["", ""]}
-                    stickyColumnsWidth={100}
+                    stickyHeaders={["", "", ""]}
+                    stickyColumnsWidth={120}
                   />
                 </div>
               );

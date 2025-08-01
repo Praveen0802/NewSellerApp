@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Calendar, Check, ChevronDown, MapPin, X, XCircle } from "lucide-react";
+import {
+  Calendar,
+  Check,
+  ChevronDown,
+  Edit,
+  MapPin,
+  X,
+  XCircle,
+} from "lucide-react";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import CustomModal from "@/components/commonComponents/customModal";
 import CustomSelect from "@/components/commonComponents/customSelect";
@@ -33,7 +41,7 @@ const ShimmerLoader = () => {
           <div className="h-4 bg-gray-200 rounded w-full"></div>
         </div>
       </div>
-      
+
       {/* Row shimmers */}
       {[...Array(6)].map((_, index) => (
         <div key={index} className="grid grid-cols-6 border-b border-gray-200">
@@ -68,7 +76,9 @@ const EmptyState = () => {
       <div className="text-gray-400 mb-4">
         <Calendar className="w-12 h-12" />
       </div>
-      <h3 className="text-lg font-medium text-gray-900 mb-2">No listings found</h3>
+      <h3 className="text-lg font-medium text-gray-900 mb-2">
+        No listings found
+      </h3>
       <p className="text-gray-500 text-center max-w-sm">
         There are currently no ticket listings available for this match.
       </p>
@@ -80,16 +90,16 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
   const [listValueData, setListvalueData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-console.log(matchInfo,'matchInfomatchInfomatchInfo')
+  console.log(matchInfo, "matchInfomatchInfomatchInfo");
   const getInsightsData = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const res = await getmarketingInsights("", {
         match_id: matchInfo?.match_id,
       });
-      
+
       console.log(res, "res");
       setListvalueData(res);
     } catch (err) {
@@ -116,10 +126,10 @@ console.log(matchInfo,'matchInfomatchInfomatchInfo')
   const [sections, setSections] = useState("All Sections");
   const [venues, setVenues] = useState("All Venue Areas");
   const [quantities, setQuantities] = useState("All Quantities");
-
+  console.log(matchInfo, "matchInfomatchInfomatchInfo");
   const matchDetails = {
     title: matchInfo?.match_name || "Match Details",
-    date: matchInfo?.match_date || "Date TBD",
+    date: matchInfo?.match_date || matchInfo?.match_date_format || "Date TBD",
     venue: `${matchInfo?.stadium_name || "Stadium"}, ${
       matchInfo?.city_name || "City"
     }, ${matchInfo?.country_name || "Country"}`,
@@ -149,7 +159,7 @@ console.log(matchInfo,'matchInfomatchInfomatchInfo')
     setEditingRow(ticketId);
     setEditPrices({
       ...editPrices,
-      [ticketId]: currentPrice?.replace(/[^0-9.]/g, "") || "", // Safe replace with null check
+      [ticketId]: String(currentPrice || "").replace(/[^0-9.]/g, "") || "",
     });
   };
 
@@ -162,31 +172,41 @@ console.log(matchInfo,'matchInfomatchInfomatchInfo')
   };
 
   // Function to save price and trigger callback
+  // Function to save price and refresh data
   const savePrice = async (item) => {
     if (!item?.ticket_id) return;
-    
+
     try {
       const updatedPrice = editPrices[item.ticket_id];
-      const updatedItem = {
-        ...item,
-        price: `$ ${updatedPrice}`,
-      };
 
-      // Trigger callback function with updated data
-      if (onPriceUpdate) {
-        onPriceUpdate(updatedItem, updatedPrice);
-      }
-
-      console.log("Updated item:", updatedItem);
       console.log("Updated price:", updatedPrice);
-      
+
       const response = await updateTicketsPrice("", "", {
         ticket_id: item.ticket_id,
         new_price: updatedPrice,
       });
-      
+
       console.log(response, "response");
+
+      // Clear editing state first
       setEditingRow(null);
+      setEditPrices((prevPrices) => {
+        const newPrices = { ...prevPrices };
+        delete newPrices[item.ticket_id];
+        return newPrices;
+      });
+
+      // Refresh the entire dataset
+      await getInsightsData();
+
+      // Trigger callback function with updated data
+      if (onPriceUpdate) {
+        const updatedItem = {
+          ...item,
+          price: `$ ${updatedPrice}`,
+        };
+        onPriceUpdate(updatedItem, updatedPrice);
+      }
     } catch (err) {
       console.error("Error updating price:", err);
       // You might want to show an error message to the user here
@@ -201,14 +221,20 @@ console.log(matchInfo,'matchInfomatchInfomatchInfo')
 
   // Function to get benefits text from ticket_details
   const getBenefitsText = (ticketDetails) => {
-    if (!ticketDetails || !Array.isArray(ticketDetails) || ticketDetails.length === 0) {
+    if (
+      !ticketDetails ||
+      !Array.isArray(ticketDetails) ||
+      ticketDetails.length === 0
+    ) {
       return "No benefits";
     }
-    return ticketDetails
-      .slice(0, 2)
-      .filter(detail => detail?.name) // Filter out null/undefined names
-      .map((detail) => detail.name)
-      .join(", ") || "No benefits";
+    return (
+      ticketDetails
+        .slice(0, 2)
+        .filter((detail) => detail?.name) // Filter out null/undefined names
+        .map((detail) => detail.name)
+        .join(", ") || "No benefits"
+    );
   };
 
   // Callback function that can be passed as prop
@@ -260,8 +286,12 @@ console.log(matchInfo,'matchInfomatchInfomatchInfo')
                 <div className="text-red-400 mb-4">
                   <X className="w-12 h-12" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Error</h3>
-                <p className="text-gray-500 text-center max-w-sm mb-4">{error}</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Error
+                </h3>
+                <p className="text-gray-500 text-center max-w-sm mb-4">
+                  {error}
+                </p>
                 <button
                   onClick={getInsightsData}
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -275,7 +305,9 @@ console.log(matchInfo,'matchInfomatchInfomatchInfo')
             {isLoading && <ShimmerLoader />}
 
             {/* Empty State */}
-            {!isLoading && !error && listingsArray.length === 0 && <EmptyState />}
+            {!isLoading && !error && listingsArray.length === 0 && (
+              <EmptyState />
+            )}
 
             {/* Data State */}
             {!isLoading && !error && listingsArray.length > 0 && (
@@ -285,7 +317,9 @@ console.log(matchInfo,'matchInfomatchInfomatchInfo')
                   <div className="p-3 text-sm font-medium text-[#323A70]">
                     Section/Block
                   </div>
-                  <div className="p-3 text-sm font-medium text-[#323A70]">Row</div>
+                  <div className="p-3 text-sm font-medium text-[#323A70]">
+                    Row
+                  </div>
                   <div className="p-3 text-sm font-medium text-[#323A70]">
                     Quantity
                   </div>
@@ -304,7 +338,7 @@ console.log(matchInfo,'matchInfomatchInfomatchInfo')
                 {listingsArray.map((item, index) => {
                   // Null check for item
                   if (!item) return null;
-                  
+
                   return (
                     <div
                       key={item.ticket_id || index}
@@ -315,7 +349,9 @@ console.log(matchInfo,'matchInfomatchInfomatchInfo')
                       <div className="p-3 text-sm">{item.block_id || "-"}</div>
                       <div className="p-3 text-sm">-</div>
                       <div className="p-3 text-sm">{item.quantity || "-"}</div>
-                      <div className="p-3 text-sm">{item.ticket_category || "-"}</div>
+                      <div className="p-3 text-sm">
+                        {item.ticket_category || "-"}
+                      </div>
                       <div className="p-3 text-sm">
                         {editingRow === item.ticket_id ? (
                           <div className="flex items-center">
@@ -324,7 +360,10 @@ console.log(matchInfo,'matchInfomatchInfomatchInfo')
                               type="text"
                               value={editPrices[item.ticket_id] || ""}
                               onChange={(e) =>
-                                handlePriceChange(item.ticket_id, e.target.value)
+                                handlePriceChange(
+                                  item.ticket_id,
+                                  e.target.value
+                                )
                               }
                               className="border border-blue-500 rounded w-16 px-2 py-1 text-sm"
                             />
@@ -346,7 +385,9 @@ console.log(matchInfo,'matchInfomatchInfomatchInfo')
                         ) : (
                           <div className="flex items-center">
                             <span
-                              className={item.flag === 1 ? "cursor-pointer" : ""}
+                              className={
+                                item.flag === 1 ? "cursor-pointer" : ""
+                              }
                               onClick={() =>
                                 item.flag === 1 &&
                                 startEditPrice(item.ticket_id, item.price)
@@ -356,10 +397,13 @@ console.log(matchInfo,'matchInfomatchInfomatchInfo')
                             </span>
                             {item.flag === 1 && (
                               <button
-                                onClick={() => savePrice(item)}
-                                className="ml-2 bg-green-600 text-white rounded p-1"
+                                onClick={() =>
+                                  item.flag === 1 &&
+                                  startEditPrice(item.ticket_id, item.price)
+                                }
+                                className="ml-2 bg-gray-300 text-white rounded p-1"
                               >
-                                <Check className="w-3 h-3" />
+                                <Edit className="w-3 h-3" />
                               </button>
                             )}
                           </div>

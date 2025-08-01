@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import oneHand from "../../../public/onehand.svg";
 import greenHand from "../../../public/greenhand.svg";
+
 import uploadListing from "../../../public/uploadlisting.svg";
 import Button from "../commonComponents/button";
 import { useDispatch } from "react-redux";
@@ -35,6 +36,7 @@ import {
   SearchIcon,
   ChevronLeft,
   ChevronRight,
+  HardDriveUpload,
 } from "lucide-react";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import UploadTickets from "../ModalComponents/uploadTickets";
@@ -260,11 +262,11 @@ const AddInventoryPage = (props) => {
         setFiltersApplied((prev) => ({ ...prev, split_details: value })),
     },
     {
-      type: "select",
-      name: "max_quantity",
+      type: "text",
+      name: "max_display_qty",
       label: "Max Display Quantity",
       mandatory: true,
-      value: filtersApplied?.max_quantity,
+      value: filtersApplied?.max_display_qty,
       options: [
         { value: "1", label: "1" },
         { value: "2", label: "2" },
@@ -275,8 +277,11 @@ const AddInventoryPage = (props) => {
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, max_quantity: value })),
+      onChange: (e) =>
+        setFiltersApplied((prev) => ({
+          ...prev,
+          max_display_qty: e?.target?.value,
+        })),
     },
     {
       type: "select",
@@ -535,6 +540,7 @@ const AddInventoryPage = (props) => {
         ),
         className: "py-2 text-center border-r border-[#E0E1EA]",
       },
+     
       {
         key: "",
         icon: (
@@ -549,13 +555,25 @@ const AddInventoryPage = (props) => {
         ),
         className: "py-2 text-center",
       },
+       {
+        key: "",
+        icon: (
+         
+          <HardDriveUpload
+            onClick={() =>
+              handleUploadAction(
+                { ...rowData, handleProofUpload: true },
+                rowIndex
+              )
+            }
+            className="cursor-pointer w-[16px] h-[16px]"
+          />
+        ),
+        className: "py-2 text-center border-r border-[#E0E1EA]",
+      },
     ];
   };
-  console.log(
-    matchDetails?.ship_date,
-    filtersApplied?.ship_date?.startDate,
-    "kkkkkkkkkkkkkk"
-  );
+
   // Updated handleCellEdit to work with the common component
   const handleCellEdit = (rowIndex, columnKey, value, row, matchIndex) => {
     console.log("Cell edited:", { rowIndex, columnKey, value });
@@ -796,10 +814,14 @@ const AddInventoryPage = (props) => {
         publishingData.add_price_addlist || ""
       );
       formData.append(
-        `data[${index}][face_value]`,
+        `data[${index}][web_price]`,
         publishingData.face_value || ""
       );
 
+      formData.append(
+        `data[${index}][max_display_qty]`,
+        publishingData.max_display_qty || ""
+      );
       formData.append(
         `data[${index}][first_seat]`,
         publishingData.first_seat || ""
@@ -1314,8 +1336,8 @@ const AddInventoryPage = (props) => {
               isCollapsed={isTableCollapsed}
               onToggleCollapse={handleToggleCollapse}
               getStickyColumnsForRow={getStickyColumnsForRow}
-              stickyHeaders={["", ""]}
-              stickyColumnsWidth={100}
+              stickyHeaders={["", "", ""]}
+              stickyColumnsWidth={120}
             />
           </div>
         </div>

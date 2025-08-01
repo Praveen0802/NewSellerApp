@@ -31,7 +31,7 @@ const makeRequest = async ({
       ? (await method.toLowerCase()) === "get"
         ? AJAX.get(modifiedUrl, { ...(token && { token: token }) })
         : AJAX.post(
-            url,
+            modifiedUrl,
             data,
             formData,
             { ...(token && { token: token }) },
@@ -934,11 +934,13 @@ export const saveBulkListing = async (token, data) => {
 };
 
 export const updateTicketsPrice = async (token, data, params) => {
+  console.log(params,'paramsparams')
   try {
     const response = await makeRequest({
       url: `${API_ROUTES.UPDATE_TICKETS_PRICE}`,
       method: "POST",
       ...(token && { token: token }),
+      ...(data && { data: data }),
       ...(params && { params: params }),
     });
     return response?.data?.success ? response?.data?.data : {};
