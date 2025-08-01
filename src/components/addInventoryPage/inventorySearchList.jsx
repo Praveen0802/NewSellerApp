@@ -12,7 +12,7 @@ const InventorySearchedList = ({ item }) => {
         {icon}
         <p
           title={text}
-          className={`text-[#7D82A4] ${className}  w-[90%] text-[12px] font-normal`}
+          className={`text-[#7D82A4] ${className}  w-[90%] text-[10px] font-normal`}
         >
           {text}
         </p>
@@ -21,23 +21,23 @@ const InventorySearchedList = ({ item }) => {
   };
   return (
     <div className="flex flex-col gap-1 p-2  hover:bg-gray-100 border-[1px] border-[#E0E1EA] rounded-md">
-      <p className="text-[14px] text-[#343432] font-semibold">
+      <p className="text-[13px] text-[#343432] font-semibold">
         {item?.match_name}
       </p>
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-3">
         {renderIconText(
-          <Image src={grayCalendar} width={16} height={16} alt="logo" />,
+          <Image src={grayCalendar} width={14} height={14} alt="logo" />,
           desiredFormatDate(item?.match_date),
           "whitespace-nowrap"
         )}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3">
           {renderIconText(
-            <Image src={grayClock} width={16} height={16} alt="logo" />,
+            <Image src={grayClock} width={14} height={14} alt="logo" />,
             item?.match_time
           )}
 
           {renderIconText(
-            <Image src={grayLocation} width={16} height={16} alt="logo" />,
+            <Image src={grayLocation} width={14} height={14} alt="logo" />,
             `${item?.stadium} , ${item?.city} , ${item?.country}`,
             "truncate"
           )}

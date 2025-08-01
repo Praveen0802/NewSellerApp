@@ -1301,7 +1301,7 @@ const BulkInventory = (props) => {
   const [showRequestPopup, setShowRequestPopup] = useState(false);
 
   return (
-    <div className="bg-[#F5F7FA] w-full h-full relative min-h-screen">
+    <div className="bg-[#F5F7FA] w-full max-h-[calc(100vh-100px)] overflow-auto relative min-h-screen">
       {/* Header with selected match info */}
       <ViewMapPopup
         image={allMatchDetails[0]?.venue_image}

@@ -50,6 +50,8 @@ const CommonInventoryTable = ({
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
   const [showMarketPlaceModal, setShowMarketPlaceModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
 
   // MOVED: Dynamic options state to component level to fix hooks issue
   const [dynamicOptions, setDynamicOptions] = useState({});
@@ -63,6 +65,19 @@ const CommonInventoryTable = ({
   const mainTableRef = useRef(null);
   const stickyTableRef = useRef(null);
 
+  // Responsive breakpoint detection
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width < 1024);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
   // Default sticky columns configuration for single mode (AddInventory)
   const getDefaultStickyColumnsForRow = (rowData, rowIndex) => {
     return [
@@ -72,8 +87,8 @@ const CommonInventoryTable = ({
           <Image
             src={rowData?.tickets_in_hand ? greenHand : oneHand}
             alt="tick"
-            width={16}
-            height={16}
+            width={isMobile ? 14 : 16}
+            height={isMobile ? 14 : 16}
             className={`${
               rowData?.tickets_in_hand ? "text-green-500" : "text-gray-400"
             } cursor-pointer hover:text-blue-500 transition-colors`}
@@ -88,8 +103,8 @@ const CommonInventoryTable = ({
           <Image
             src={uploadListing}
             alt="tick"
-            width={16}
-            height={16}
+            width={isMobile ? 14 : 16}
+            height={isMobile ? 14 : 16}
             className="cursor-pointer hover:text-blue-500 transition-colors"
             onClick={() => handleUploadAction(rowData, rowIndex)}
           />
@@ -216,7 +231,10 @@ const CommonInventoryTable = ({
     if (!scrollContainerRef.current || !canScrollLeft) return;
 
     const container = scrollContainerRef.current;
-    const scrollAmount = Math.min(300, container.clientWidth / 3);
+    const scrollAmount = Math.min(
+      isMobile ? 200 : 300,
+      container.clientWidth / 3
+    );
 
     container.scrollBy({
       left: -scrollAmount,
@@ -228,7 +246,10 @@ const CommonInventoryTable = ({
     if (!scrollContainerRef.current || !canScrollRight) return;
 
     const container = scrollContainerRef.current;
-    const scrollAmount = Math.min(300, container.clientWidth / 3);
+    const scrollAmount = Math.min(
+      isMobile ? 200 : 300,
+      container.clientWidth / 3
+    );
 
     container.scrollBy({
       left: scrollAmount,
@@ -429,74 +450,143 @@ const CommonInventoryTable = ({
       {showAccordion && (
         <div className="bg-[#343432] cursor-pointer" onClick={onToggleCollapse}>
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6">
               {/* Radio button for single mode, chevron for multiple mode */}
               {mode === "single" ? (
-                <div className="flex w-[50px] justify-center py-4 border-r-[1px] border-[#51428E] items-center">
-                  <div className="w-4 h-4 border-2 border-white rounded-full flex items-center justify-center">
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                <div
+                  className={`flex ${
+                    isMobile ? "w-[40px]" : "w-[50px]"
+                  } justify-center ${
+                    isMobile ? "py-3" : "py-4"
+                  } border-r-[1px] border-[#51428E] items-center`}
+                >
+                  <div
+                    className={`${
+                      isMobile ? "w-3 h-3" : "w-4 h-4"
+                    } border-2 border-white rounded-full flex items-center justify-center`}
+                  >
+                    <div
+                      className={`${
+                        isMobile ? "w-1.5 h-1.5" : "w-2 h-2"
+                      } bg-white rounded-full`}
+                    ></div>
                   </div>
                 </div>
               ) : null}
 
               {/* Match name with pipe separator */}
-              <div className="flex items-center space-x-4 py-4 px-4 border-r-[1px] border-[#51428E] w-[280px]">
-                <h3 className="font-medium text-sm text-white truncate">
+              <div
+                className={`flex items-center space-x-2 sm:space-x-4 ${
+                  isMobile ? "py-3 px-2" : "py-4 px-4"
+                } border-r-[1px] border-[#51428E] ${
+                  isMobile ? "w-[200px]" : "w-[280px]"
+                }`}
+              >
+                <h3
+                  className={`font-medium ${
+                    isMobile ? "text-xs" : "text-sm"
+                  } text-white truncate`}
+                >
                   {matchDetails?.match_name || "Match Details"}
                 </h3>
               </div>
 
               {/* Match details with pipe separators and more spacing */}
-              <div className="flex items-center space-x-6 text-xs">
-                <div className="flex items-center space-x-2 py-4 pr-4 w-[170px] border-r-[1px] border-[#51428E]">
-                  <Calendar1Icon size={14} className="text-white" />
-                  <span className="text-white">
+              <div
+                className={`flex items-center ${
+                  isMobile ? "space-x-2" : "space-x-4 sm:space-x-6"
+                } text-xs`}
+              >
+                <div
+                  className={`flex items-center space-x-1 sm:space-x-2 ${
+                    isMobile ? "py-3 pr-2" : "py-4 pr-4"
+                  } ${
+                    isMobile ? "w-[120px]" : "w-[170px]"
+                  } border-r-[1px] border-[#51428E]`}
+                >
+                  <Calendar1Icon
+                    size={isMobile ? 12 : 14}
+                    className="text-white"
+                  />
+                  <span
+                    className={`text-white ${
+                      isMobile ? "text-[10px]" : "text-xs"
+                    } truncate`}
+                  >
                     {matchDetails?.match_date_format}
                   </span>
                 </div>
 
-                <div className="flex items-center space-x-2 py-4 pr-4 border-r-[1px] border-[#51428E] w-[90px]">
-                  <Clock size={14} className="text-white" />
-                  <span className="text-white">{matchDetails?.match_time}</span>
-                </div>
-
-                <div className="flex items-center space-x-2 py-4 pr-4">
-                  <MapPin size={14} className="text-white" />
-                  <span className="text-white max-w-xs truncate">
-                    {matchDetails?.stadium_name}
-                    {matchDetails?.country_name
-                      ? `${matchDetails?.country_name},`
-                      : ""}
-                    {matchDetails?.city_name
-                      ? `${matchDetails?.city_name}`
-                      : ""}
+                <div
+                  className={`flex items-center space-x-1 sm:space-x-2 ${
+                    isMobile ? "py-3 pr-2" : "py-4 pr-4"
+                  } border-r-[1px] border-[#51428E] ${
+                    isMobile ? "w-[70px]" : "w-[90px]"
+                  }`}
+                >
+                  <Clock size={isMobile ? 12 : 14} className="text-white" />
+                  <span
+                    className={`text-white ${
+                      isMobile ? "text-[10px]" : "text-xs"
+                    } truncate`}
+                  >
+                    {matchDetails?.match_time}
                   </span>
                 </div>
+
+                {!isMobile && (
+                  <div className="flex items-center space-x-2 py-4 pr-4">
+                    <MapPin size={14} className="text-white" />
+                    <span className="text-white max-w-xs truncate text-xs">
+                      {matchDetails?.stadium_name}
+                      {matchDetails?.country_name
+                        ? `${matchDetails?.country_name},`
+                        : ""}
+                      {matchDetails?.city_name
+                        ? `${matchDetails?.city_name}`
+                        : ""}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="flex items-center space-x-4 pr-4">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowMarketPlaceModal(true);
-                }}
-                className="flex items-center gap-1 bg-[#FFFFFF26] border border-[#FFFFFF3A] text-[#FFFFFF] text-sm p-2 rounded-md cursor-pointer"
-              >
-                <ChartLine size={16} className="text-[#64EAA5]" />
-                Market Data
-              </button>
+            <div
+              className={`flex items-center ${
+                isMobile ? "space-x-2 pr-2" : "space-x-4 pr-4"
+              }`}
+            >
+              {!isMobile && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMarketPlaceModal(true);
+                  }}
+                  className="flex items-center gap-1 bg-[#FFFFFF26] border border-[#FFFFFF3A] text-[#FFFFFF] text-sm p-2 rounded-md cursor-pointer"
+                >
+                  <ChartLine size={16} className="text-[#64EAA5]" />
+                  Market Data
+                </button>
+              )}
 
               {/* Show ticket count for multiple mode */}
               {mode === "multiple" && totalTicketsCount && (
-                <span className="text-gray-300 text-xs text-right w-[60px]">
+                <span
+                  className={`text-gray-300 text-right ${
+                    isMobile ? "text-[10px] w-[40px]" : "text-xs w-[60px]"
+                  }`}
+                >
                   {totalTicketsCount} ticket{totalTicketsCount !== 1 ? "s" : ""}
                 </span>
               )}
 
-              <div className="bg-[#FFFFFF26] p-2 rounded-full cursor-pointer">
+              <div
+                className={`bg-[#FFFFFF26] ${
+                  isMobile ? "p-1.5" : "p-2"
+                } rounded-full cursor-pointer`}
+              >
                 <ChevronDown
-                  size={14}
+                  size={isMobile ? 12 : 14}
                   className={`text-white transition-transform duration-200 ${
                     isCollapsed ? "rotate-180" : ""
                   }`}
@@ -518,13 +608,19 @@ const CommonInventoryTable = ({
             className={`absolute top-0 left-0 h-full bg-white border-r border-[#DADBE5] z-30 transition-shadow duration-200 ${
               hasScrolledLeft ? "shadow-md" : ""
             }`}
-            style={{ width: `50px` }}
+            style={{ width: isMobile ? `40px` : `50px` }}
           >
             <div className="h-full">
               <table className="w-full h-full border-collapse">
                 <thead>
                   <tr className="bg-gray-50 border-b border-[#DADBE5]">
-                    <th className="px-3 py-3 text-center text-[#7D82A4] font-medium whitespace-nowrap text-xs border-r border-[#DADBE5]">
+                    <th
+                      className={`${
+                        isMobile ? "px-2 py-2" : "px-3 py-3"
+                      } text-center text-[#7D82A4] font-medium whitespace-nowrap ${
+                        isMobile ? "text-[10px]" : "text-xs"
+                      } border-r border-[#DADBE5]`}
+                    >
                       <div className="flex justify-center items-center">
                         <input
                           type="checkbox"
@@ -538,7 +634,9 @@ const CommonInventoryTable = ({
                               ? handleDeselectAll
                               : handleSelectAll
                           }
-                          className={`w-4 h-4 text-blue-600 border-[#DADBE5] rounded focus:ring-blue-500 ${
+                          className={`${
+                            isMobile ? "w-3 h-3" : "w-4 h-4"
+                          } text-blue-600 border-[#DADBE5] rounded focus:ring-blue-500 ${
                             isEditMode ? "cursor-not-allowed opacity-50" : ""
                           }`}
                         />
@@ -568,7 +666,11 @@ const CommonInventoryTable = ({
                         }
                         onMouseLeave={() => setHoveredRowIndex(null)}
                       >
-                        <td className="py-2 px-3 text-center whitespace-nowrap border-r border-[#DADBE5]">
+                        <td
+                          className={`${
+                            isMobile ? "py-1.5 px-2" : "py-2 px-3"
+                          } text-center whitespace-nowrap border-r border-[#DADBE5]`}
+                        >
                           <div className="flex justify-center items-center">
                             <input
                               type="checkbox"
@@ -584,7 +686,9 @@ const CommonInventoryTable = ({
                                   : [...selectedRows, rowIndex];
                                 setSelectedRows(newSelectedRows);
                               }}
-                              className={`w-4 h-4 text-blue-600 border-[#DADBE5] rounded focus:ring-blue-500 ${
+                              className={`${
+                                isMobile ? "w-3 h-3" : "w-4 h-4"
+                              } text-blue-600 border-[#DADBE5] rounded focus:ring-blue-500 ${
                                 isRowDisabled
                                   ? "cursor-not-allowed opacity-50"
                                   : ""
@@ -605,25 +709,29 @@ const CommonInventoryTable = ({
             ref={scrollContainerRef}
             className="w-full overflow-x-auto hideScrollbar"
             style={{
-              paddingLeft: `50px`,
+              paddingLeft: isMobile ? `40px` : `50px`,
               paddingRight: `${stickyColumnsWidth}px`,
             }}
           >
             <table
               ref={mainTableRef}
               className="w-full border-none"
-              style={{ minWidth: "1200px" }}
+              style={{ minWidth: isMobile ? "800px" : "1200px" }}
             >
               <thead>
                 <tr className="bg-gray-50 border-b border-[#DADBE5]">
                   {headers.map((header) => (
                     <th
                       key={header.key}
-                      className={`px-3 py-3 ${
+                      className={`${isMobile ? "px-2 py-2" : "px-3 py-3"} ${
                         header?.increasedWidth
                           ? header?.increasedWidth
+                          : isMobile
+                          ? "min-w-[100px]"
                           : "min-w-[140px]"
-                      } text-left text-[#7D82A4] font-medium whitespace-nowrap text-xs border-r border-[#DADBE5]`}
+                      } text-left text-[#7D82A4] font-medium whitespace-nowrap ${
+                        isMobile ? "text-[10px]" : "text-xs"
+                      } border-r border-[#DADBE5]`}
                     >
                       <div className="flex justify-between items-center">
                         <span className="truncate text-[#7D82A4]">
@@ -659,9 +767,15 @@ const CommonInventoryTable = ({
                       {headers.map((header) => (
                         <td
                           key={`${rowIndex}-${header.key}`}
-                          className={`py-2 px-3 text-xs ${
+                          className={`${
+                            isMobile
+                              ? "py-1.5 px-2 text-[10px]"
+                              : "py-2 px-3 text-xs"
+                          } ${
                             header?.increasedWidth
                               ? header?.increasedWidth
+                              : isMobile
+                              ? "min-w-[100px]"
                               : "min-w-[140px]"
                           } whitespace-nowrap overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
                             isRowDisabled ? "bg-gray-50" : ""
@@ -712,7 +826,11 @@ const CommonInventoryTable = ({
                     {stickyHeaders.map((header, index) => (
                       <th
                         key={`sticky-header-${index}`}
-                        className="py-2 px-2 text-left text-[#7D82A4] text-xs border-r border-[#DADBE5] font-medium whitespace-nowrap text-center"
+                        className={`${
+                          isMobile ? "py-1.5 px-1" : "py-2 px-2"
+                        } text-left text-[#7D82A4] ${
+                          isMobile ? "text-[10px]" : "text-xs"
+                        } border-r border-[#DADBE5] font-medium whitespace-nowrap text-center`}
                         style={{
                           width: `${
                             stickyColumnsWidth / stickyHeaders.length
@@ -736,7 +854,9 @@ const CommonInventoryTable = ({
                                     scrollLeft();
                                   }}
                                   disabled={!canScrollLeft}
-                                  className={`p-1 rounded transition-colors ${
+                                  className={`${
+                                    isMobile ? "p-0.5" : "p-1"
+                                  } rounded transition-colors ${
                                     canScrollLeft
                                       ? "text-[#7D82A4] hover:bg-gray-200 cursor-pointer"
                                       : "text-gray-300 cursor-not-allowed"
@@ -744,6 +864,7 @@ const CommonInventoryTable = ({
                                   title="Scroll Left"
                                 >
                                   <ChevronRight
+                                    size={isMobile ? 12 : 16}
                                     className="rotate-180"
                                     color={canScrollLeft ? "" : "#B4B7CB"}
                                   />
@@ -754,7 +875,9 @@ const CommonInventoryTable = ({
                                     scrollRight();
                                   }}
                                   disabled={!canScrollRight}
-                                  className={`p-1 rounded transition-colors ${
+                                  className={`${
+                                    isMobile ? "p-0.5" : "p-1"
+                                  } rounded transition-colors ${
                                     canScrollRight
                                       ? "text-[#7D82A4] hover:bg-gray-200 cursor-pointer"
                                       : "text-gray-300 cursor-not-allowed"
@@ -762,6 +885,7 @@ const CommonInventoryTable = ({
                                   title="Scroll Right"
                                 >
                                   <ChevronRight
+                                    size={isMobile ? 12 : 16}
                                     color={canScrollRight ? "" : "#B4B7CB"}
                                   />
                                 </button>
@@ -794,7 +918,9 @@ const CommonInventoryTable = ({
                         {stickyColumns.map((column, colIndex) => (
                           <td
                             key={`sticky-${rowIndex}-${colIndex}`}
-                            className={`py-2 text-sm align-middle text-center ${
+                            className={`${
+                              isMobile ? "py-1.5 text-xs" : "py-2 text-sm"
+                            } align-middle text-center ${
                               colIndex < stickyColumns.length - 1
                                 ? "border-r border-[#DADBE5]"
                                 : ""

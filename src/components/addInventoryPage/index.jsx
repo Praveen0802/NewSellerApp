@@ -37,6 +37,7 @@ import {
   ChevronLeft,
   ChevronRight,
   HardDriveUpload,
+  Menu,
 } from "lucide-react";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import UploadTickets from "../ModalComponents/uploadTickets";
@@ -69,6 +70,9 @@ const AddInventoryPage = (props) => {
   const { matchId, response } = props;
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Extract the original response structure (KEEP EXACTLY THE SAME)
   const {
@@ -111,6 +115,19 @@ const AddInventoryPage = (props) => {
   const [editingRowIndex, setEditingRowIndex] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isTableCollapsed, setIsTableCollapsed] = useState(false);
+
+  // Responsive breakpoint detection
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width < 1024);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
 
   // Handle accordion toggle for single mode
   const handleToggleCollapse = () => {
@@ -185,7 +202,7 @@ const AddInventoryPage = (props) => {
     }
   }, [filtersApplied?.ticket_category, matchId]);
 
-  // KEEP THE ORIGINAL filters array construction (EXACT SAME)
+  // KEEP THE ORIGINAL filters array construction (EXACT SAME) with responsive className updates
   const filters = [
     {
       type: "select",
@@ -199,9 +216,11 @@ const AddInventoryPage = (props) => {
           label: note.name,
         })) || []),
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[180px] lg:max-w-[212px]",
+      className:
+        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, ticket_types: value })),
     },
@@ -218,9 +237,11 @@ const AddInventoryPage = (props) => {
         { value: "4", label: "4" },
         { value: "5", label: "5" },
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[120px] lg:max-w-[212px]",
+      className:
+        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, add_qty_addlist: value })),
     },
@@ -235,9 +256,11 @@ const AddInventoryPage = (props) => {
           label: note.name,
         })) || []),
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[150px] lg:max-w-[212px]",
+      className:
+        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, split_type: value })),
     },
@@ -256,9 +279,11 @@ const AddInventoryPage = (props) => {
           label: note.name,
         })) || []),
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[180px] lg:max-w-[212px]",
+      className:
+        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, split_details: value })),
     },
@@ -275,9 +300,11 @@ const AddInventoryPage = (props) => {
         { value: "4", label: "4" },
         { value: "5", label: "5" },
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
+      className:
+        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -293,9 +320,11 @@ const AddInventoryPage = (props) => {
         value: key,
         label: value,
       })),
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[140px] lg:max-w-[212px]",
+      className:
+        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, home_town: value })),
     },
@@ -304,15 +333,18 @@ const AddInventoryPage = (props) => {
       name: "ticket_category",
       label: "Seating Category",
       mandatory: true,
-      increasedWidth: "!w-[180px] !min-w-[180px]",
+      increasedWidth:
+        "!w-[180px] !min-w-[180px] sm:!w-[160px] sm:!min-w-[160px] lg:!w-[180px] lg:!min-w-[180px]",
       value: filtersApplied?.ticket_category,
       options: Object.entries(block_data || {}).map(([key, value]) => ({
         value: key,
         label: value,
       })),
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[180px] lg:max-w-[212px]",
+      className:
+        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -327,9 +359,11 @@ const AddInventoryPage = (props) => {
       value: filtersApplied?.ticket_block,
       options: blockDetails,
       disabled: !filtersApplied?.ticket_category,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[150px] lg:max-w-[212px]",
+      className:
+        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, ticket_block: value })),
     },
@@ -339,9 +373,10 @@ const AddInventoryPage = (props) => {
       name: "row",
       label: "Row",
       value: filtersApplied?.row,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[6px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[100px] lg:max-w-[212px]",
+      className: "!py-[6px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -353,9 +388,10 @@ const AddInventoryPage = (props) => {
       name: "first_seat",
       label: "First Seat",
       value: filtersApplied?.first_seat,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[6px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[120px] lg:max-w-[212px]",
+      className: "!py-[6px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -367,14 +403,17 @@ const AddInventoryPage = (props) => {
       name: "face_value",
       label: "Face Value",
       value: filtersApplied?.face_value,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[140px] lg:max-w-[212px]",
       iconBefore: (
         <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
-          <p className="text-xs ">{matchDetails?.currency_icon?.[0] || "$"}</p>
+          <p className="text-xs sm:text-[10px] lg:text-xs">
+            {matchDetails?.currency_icon?.[0] || "$"}
+          </p>
         </div>
       ),
-      className: "!py-[6px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      className: "!py-[6px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -387,14 +426,17 @@ const AddInventoryPage = (props) => {
       label: "Processed Price",
       mandatory: true,
       value: filtersApplied?.add_price_addlist,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
       iconBefore: (
         <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
-          <p className="text-xs ">{matchDetails?.currency_icon?.[0] || "$"}</p>
+          <p className="text-xs sm:text-[10px] lg:text-xs">
+            {matchDetails?.currency_icon?.[0] || "$"}
+          </p>
         </div>
       ),
-      className: "!py-[6px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      className: "!py-[6px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -407,7 +449,8 @@ const AddInventoryPage = (props) => {
       label: "Benifits",
       mandatory: true,
       value: filtersApplied?.notes,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[140px] lg:max-w-[212px]",
       multiselect: true,
       options: [
         ...(notes_left?.map((note) => ({
@@ -419,8 +462,9 @@ const AddInventoryPage = (props) => {
           label: note.name,
         })) || []),
       ],
-      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      className:
+        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, notes: value })),
     },
@@ -441,9 +485,11 @@ const AddInventoryPage = (props) => {
           label: note.name,
         })) || []),
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
+      className:
+        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, restrictions: value })),
     },
@@ -458,10 +504,12 @@ const AddInventoryPage = (props) => {
       },
       minDate: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
       maxDate: matchDetails?.ship_date, // Convert to proper format
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
       singleDateMode: true,
-      className: "!pb-[10px] !pt-[12px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      className:
+        "!pb-[10px] !pt-[12px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, ship_date: value })),
     },
@@ -470,9 +518,11 @@ const AddInventoryPage = (props) => {
       name: "tickets_in_hand",
       label: "Tickets In Hand",
       value: filtersApplied?.tickets_in_hand || false,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[4px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
+      className:
+        "!py-[4px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       hideFromTable: true,
       onChange: (e) =>
         setFiltersApplied((prev) => ({
@@ -539,8 +589,8 @@ const AddInventoryPage = (props) => {
             <Image
               src={rowData?.tickets_in_hand ? greenHand : oneHand}
               alt="tick"
-              width={16}
-              height={16}
+              width={isMobile ? 14 : 16}
+              height={isMobile ? 14 : 16}
               className={`${
                 rowData?.tickets_in_hand ? "text-green-500" : "text-gray-400"
               } cursor-pointer hover:text-blue-500 transition-colors`}
@@ -558,8 +608,8 @@ const AddInventoryPage = (props) => {
             <Image
               src={uploadListing}
               alt="tick"
-              width={16}
-              height={16}
+              width={isMobile ? 14 : 16}
+              height={isMobile ? 14 : 16}
               className={`${
                 isBulkEditMode
                   ? "cursor-not-allowed opacity-50 grayscale"
@@ -589,7 +639,9 @@ const AddInventoryPage = (props) => {
                   );
                 }
               }}
-              className={`w-[16px] h-[16px] ${
+              className={`${
+                isMobile ? "w-[14px] h-[14px]" : "w-[16px] h-[16px]"
+              } ${
                 isBulkEditMode
                   ? "cursor-not-allowed opacity-50 text-gray-400"
                   : "cursor-pointer"
@@ -1251,7 +1303,7 @@ const AddInventoryPage = (props) => {
     "matchDetails?.match_date_format"
   );
   return (
-    <div className="bg-[#F5F7FA] w-full h-full relative min-h-screen">
+    <div className="bg-[#F5F7FA] w-full max-h-[calc(100vh-100px)] overflow-auto relative min-h-screen">
       {/* Header with selected match info */}
       <ViewMapPopup
         image={matchDetails?.venue_image}
@@ -1262,8 +1314,8 @@ const AddInventoryPage = (props) => {
         blockDataColor={response?.block_data_color}
       />
       <div className="bg-white">
-        <div className="border-b-[1px] p-5 border-[#E0E1EA] flex justify-between items-center">
-          <div className="w-full flex items-center gap-5">
+        <div className="border-b-[1px] p-3 sm:p-4 lg:p-5 border-[#E0E1EA] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-5">
+          <div className="w-full flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
             <FloatingLabelInput
               key="searchMatch"
               id="searchMatch"
@@ -1276,7 +1328,7 @@ const AddInventoryPage = (props) => {
               onBlur={handleSearchBlur}
               type="text"
               showDropdown={showSearchDropdown}
-              iconBefore={<SearchIcon size={16} />}
+              iconBefore={<SearchIcon size={isMobile ? 14 : 16} />}
               iconBeforeTooltip="Search"
               dropDownComponent={
                 <div data-dropdown="search-dropdown">
@@ -1294,9 +1346,9 @@ const AddInventoryPage = (props) => {
                 </div>
               }
               label="Choose Match Event"
-              className={`!py-[8px] !text-[#323A70] !text-[14px] ${
-                searchValue.length <= 3 && "!pl-[44px]"
-              }`}
+              className={`!py-[8px] !text-[#323A70] ${
+                isMobile ? "!text-[12px]" : "!text-[14px]"
+              } ${searchValue.length <= 3 && "!pl-[44px]"}`}
               paddingClassName=""
               autoComplete="off"
               showDelete={true}
@@ -1305,44 +1357,93 @@ const AddInventoryPage = (props) => {
                 setShowSearchDropdown(false);
                 setHasSearched(false);
               }}
-              parentClassName="!w-[550px]"
+              parentClassName={`${
+                isMobile ? "!w-full" : isTablet ? "!w-[400px]" : "!w-[550px]"
+              }`}
               data-search-container="true" // Add this
             />
 
             {matchDetails && (
-              <div className="flex gap-4 items-center">
-                <div className="flex gap-2 items-center pr-4 border-r-[1px] border-[#DADBE5]">
-                  <Calendar1Icon size={16} className="text-[#00A3ED]" />
-                  <p className="text-[#3a3c42] truncate text-[14px]">
-                    {addDayOfWeek(matchDetails?.match_date_format)}
-                  </p>
-                </div>
-                <div className="flex gap-2 items-center pr-4 border-r-[1px] border-[#DADBE5]">
-                  <Clock size={16} className="text-[#00A3ED]" />
-                  <p className="text-[#3a3c42] truncate text-[14px]">
-                    {matchDetails?.match_time}
-                  </p>
-                </div>
-                <div className="flex gap-2 items-center">
-                  <MapPin size={16} className="text-[#00A3ED]" />
-                  <p className="text-[#3a3c42] truncate text-[14px]">
-                    {matchDetails?.stadium_name}{" "}
-                    {matchDetails?.country_name
-                      ? `${matchDetails?.country_name},`
-                      : ""}{" "}
-                    {matchDetails?.city_name
-                      ? `${matchDetails?.city_name}`
-                      : ""}
-                  </p>
+              <div
+                className={`flex ${
+                  isMobile ? "flex-col gap-2" : "gap-4"
+                } items-start ${isMobile ? "" : "sm:items-center"}`}
+              >
+                <div
+                  className={`flex ${
+                    isMobile ? "flex-wrap" : "gap-4"
+                  } items-center ${isMobile ? "gap-3" : ""}`}
+                >
+                  <div
+                    className={`flex gap-2 items-center ${
+                      isMobile ? "" : "pr-4 border-r-[1px] border-[#DADBE5]"
+                    }`}
+                  >
+                    <Calendar1Icon
+                      size={isMobile ? 14 : 16}
+                      className="text-[#00A3ED]"
+                    />
+                    <p
+                      className={`text-[#3a3c42] truncate ${
+                        isMobile ? "text-[12px]" : "text-[14px]"
+                      }`}
+                    >
+                      {addDayOfWeek(matchDetails?.match_date_format)}
+                    </p>
+                  </div>
+                  <div
+                    className={`flex gap-2 items-center ${
+                      isMobile ? "" : "pr-4 border-r-[1px] border-[#DADBE5]"
+                    }`}
+                  >
+                    <Clock
+                      size={isMobile ? 14 : 16}
+                      className="text-[#00A3ED]"
+                    />
+                    <p
+                      className={`text-[#3a3c42] truncate ${
+                        isMobile ? "text-[12px]" : "text-[14px]"
+                      }`}
+                    >
+                      {matchDetails?.match_time}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <MapPin
+                      size={isMobile ? 14 : 16}
+                      className="text-[#00A3ED]"
+                    />
+                    <p
+                      className={`text-[#3a3c42] truncate ${
+                        isMobile ? "text-[12px] max-w-[200px]" : "text-[14px]"
+                      }`}
+                    >
+                      {matchDetails?.stadium_name}{" "}
+                      {matchDetails?.country_name
+                        ? `${matchDetails?.country_name},`
+                        : ""}{" "}
+                      {matchDetails?.city_name
+                        ? `${matchDetails?.city_name}`
+                        : ""}
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
           </div>
-          <div className="flex items-center">
+          <div
+            className={`flex items-center ${
+              isMobile ? "w-full justify-between" : ""
+            }`}
+          >
             {matchDetails && (
               <p
                 onClick={() => setShowViewPopup(true)}
-                className="text-[13px] whitespace-nowrap font-semibold text-[#0137D5] cursor-pointer hover:underline mr-6"
+                className={`${
+                  isMobile ? "text-[12px]" : "text-[13px]"
+                } whitespace-nowrap font-semibold text-[#0137D5] cursor-pointer hover:underline ${
+                  isMobile ? "mr-3" : "mr-6"
+                }`}
               >
                 View Map
               </p>
@@ -1359,10 +1460,37 @@ const AddInventoryPage = (props) => {
         </div>
         {matchDetails && (
           <>
+            {/* Mobile Filter Toggle Button */}
+            {isMobile && (
+              <div className="border-b-[1px] border-[#DADBE5] p-3">
+                <button
+                  onClick={() => setShowMobileFilters(!showMobileFilters)}
+                  className="flex items-center gap-2 text-[#0137D5] font-medium text-sm"
+                >
+                  <Menu size={16} />
+                  {showMobileFilters ? "Hide Filters" : "Show Filters"}
+                  <ChevronDown
+                    size={14}
+                    className={`transform transition-transform ${
+                      showMobileFilters ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
+
             {/* Filter Section with Control Icons */}
-            <div className="border-b-[1px] border-[#DADBE5] p-5">
+            <div
+              className={`border-b-[1px] border-[#DADBE5] p-3 sm:p-4 lg:p-5 ${
+                isMobile && !showMobileFilters ? "hidden" : ""
+              }`}
+            >
               <div className="flex items-center justify-between">
-                <div className="flex flex-wrap gap-5 items-center ">
+                <div
+                  className={`flex ${
+                    isMobile ? "flex-col gap-3" : "flex-wrap gap-5"
+                  } items-start ${isMobile ? "" : "sm:items-center"}`}
+                >
                   <FormFields
                     formFields={getActiveFilters()}
                     filtersApplied={filtersApplied}
@@ -1374,12 +1502,16 @@ const AddInventoryPage = (props) => {
 
             {/* Add Listings Button */}
             {inventoryData.length === 0 && (
-              <div className="flex justify-end px-5 py-2 border-b-[1px] border-[#E0E1EA]">
+              <div
+                className={`flex ${
+                  isMobile ? "justify-center" : "justify-end"
+                } px-3 sm:px-4 lg:px-5 py-2 border-b-[1px] border-[#E0E1EA]`}
+              >
                 <Button
                   type="blueType"
                   classNames={{
-                    root: "px-4 py-2.5",
-                    label_: "text-sm font-medium",
+                    root: `${isMobile ? "px-6 py-3" : "px-4 py-2.5"}`,
+                    label_: `${isMobile ? "text-base" : "text-sm"} font-medium`,
                   }}
                   onClick={handleAddListing}
                   label="+ Add Listings"
@@ -1393,8 +1525,13 @@ const AddInventoryPage = (props) => {
       {/* Main Content Area with Common Table - Only show when table should be visible */}
       {matchDetails && showTable && inventoryData.length > 0 && (
         <div
-          style={{ maxHeight: "calc(100vh - 450px)", overflowY: "auto" }}
-          className="m-6 pb-[100px] bg-white rounded-lg shadow-sm"
+          style={{
+            // maxHeight: isMobile ? "calc(100vh - 400px)" : "calc(100vh - 450px)",
+            // overflowY: "auto",
+          }}
+          className={`${
+            isMobile ? "m-3" : "m-4 lg:m-6"
+          } pb-[100px] bg-white rounded-lg shadow-sm`}
         >
           <div>
             <CommonInventoryTable
@@ -1416,7 +1553,7 @@ const AddInventoryPage = (props) => {
               onToggleCollapse={handleToggleCollapse}
               getStickyColumnsForRow={getStickyColumnsForRow}
               stickyHeaders={["", "", ""]}
-              stickyColumnsWidth={120}
+              stickyColumnsWidth={isMobile ? 100 : 120}
             />
           </div>
         </div>
@@ -1424,11 +1561,19 @@ const AddInventoryPage = (props) => {
 
       {/* Show message when no listings have been added yet */}
       {matchDetails && !showTable && (
-        <div className="m-6 bg-white rounded-lg shadow-sm p-12 text-center">
+        <div
+          className={`${
+            isMobile ? "m-3" : "m-4 lg:m-6"
+          } bg-white rounded-lg shadow-sm ${
+            isMobile ? "p-6" : "p-12"
+          } text-center`}
+        >
           <div className="max-w-md mx-auto">
             <div className="mb-6">
               <svg
-                className="mx-auto h-16 w-16 text-gray-400"
+                className={`mx-auto ${
+                  isMobile ? "h-12 w-12" : "h-16 w-16"
+                } text-gray-400`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -1441,14 +1586,22 @@ const AddInventoryPage = (props) => {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+            <h3
+              className={`${
+                isMobile ? "text-lg" : "text-xl"
+              } font-semibold text-gray-900 mb-3`}
+            >
               No listings added yet
             </h3>
-            <p className="text-gray-600 mb-6 leading-relaxed">
+            <p
+              className={`text-gray-600 mb-6 leading-relaxed ${
+                isMobile ? "text-sm" : ""
+              }`}
+            >
               Select your filter preferences above and click "Add Listings" to
               create your first inventory item.
             </p>
-            <p className="text-sm text-gray-500">
+            <p className={`text-gray-500 ${isMobile ? "text-xs" : "text-sm"}`}>
               The table will appear once you add your first listing with the
               selected filter values.
             </p>

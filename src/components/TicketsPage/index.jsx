@@ -1681,7 +1681,7 @@ console.log(filtersApplied,'filtersAppliedfiltersAppliedfiltersApplied')
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-[#F5F7FA] w-full max-h-[calc(100vh-100px)] overflow-auto relative ">
       <div className="bg-white">
         <TabbedLayout
           tabs={[]} // No tabs needed as per your requirement
@@ -1733,7 +1733,7 @@ console.log(filtersApplied,'filtersAppliedfiltersAppliedfiltersApplied')
         <ShimmerLoader />
       ) : (
         <>
-          <div className="m-6 max-h-[calc(100vh-460px)] overflow-y-auto pb-[100px]">
+          <div className="m-6  pb-[100px]">
             {groupedTicketsData.length > 0 ? (
               groupedTicketsData.map((matchData, index) => (
                 <div

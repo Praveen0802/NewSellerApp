@@ -1277,7 +1277,7 @@ const LeftMenuBar = () => {
         </div>
 
         {/* Main menu items - scrollable area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto hideScrollbar">
           <div className="flex flex-col p-[10px] gap-3">
             {leftPaneValues.map((item, index) => (
               <div key={index}>
