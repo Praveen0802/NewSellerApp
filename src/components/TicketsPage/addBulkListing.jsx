@@ -873,10 +873,15 @@ const BulkInventory = (props) => {
   };
 
   // Custom sticky columns configuration
+  // Custom sticky columns configuration
   const getStickyColumnsForRow = (rowData, rowIndex, matchId) => {
+    // Check if we're in global bulk edit mode with multiple tickets selected
+    const isBulkEditMode = isGlobalEditMode && globalEditingTickets.length > 1;
+
     return [
       {
         key: "",
+        toolTipContent: "Tickets In Hand",
         icon: (
           <Tooltip content="Tickets In Hand">
             <Image
@@ -895,20 +900,54 @@ const BulkInventory = (props) => {
       },
       {
         key: "",
+        toolTipContent: isBulkEditMode ? "Not Available" : "Upload",
         icon: (
-          <Tooltip content="Upload">
+          <Tooltip content={isBulkEditMode ? "Not Available" : "Upload"}>
             <Image
               src={uploadListing}
               alt="tick"
               width={16}
               height={16}
-              className="cursor-pointer hover:text-blue-500 transition-colors"
-              onClick={() => handleUploadAction(rowData, rowIndex, matchId)}
+              className={`${
+                isBulkEditMode
+                  ? "cursor-not-allowed opacity-50 grayscale"
+                  : "cursor-pointer hover:text-blue-500 transition-colors"
+              }`}
+              onClick={() => {
+                if (!isBulkEditMode) {
+                  handleUploadAction(rowData, rowIndex, matchId);
+                }
+              }}
             />
           </Tooltip>
         ),
         className: "py-2 text-center",
-      }
+      },
+      {
+        key: "",
+        toolTipContent: isBulkEditMode ? "Not Available" : "Upload Pop",
+        icon: (
+          <Tooltip content={isBulkEditMode ? "Not Available" : "Upload Pop"}>
+            <HardDriveUpload
+              onClick={() => {
+                if (!isBulkEditMode) {
+                  handleUploadAction(
+                    { ...rowData, handleProofUpload: true },
+                    rowIndex,
+                    matchId
+                  );
+                }
+              }}
+              className={`w-[16px] h-[16px] ${
+                isBulkEditMode
+                  ? "cursor-not-allowed opacity-50 text-gray-400"
+                  : "cursor-pointer"
+              }`}
+            />
+          </Tooltip>
+        ),
+        className: "py-2 text-center border-r border-[#E0E1EA]",
+      },
     ];
   };
 
@@ -1099,6 +1138,14 @@ const BulkInventory = (props) => {
             );
           }
         });
+      }
+
+      if (publishingData?.pop_upload_tickets) {
+        formData.append(
+          `data[${index}][pop_upload_tickets]`,
+          publishingData.pop_upload_tickets?.file,
+          publishingData.pop_upload_tickets?.name
+        );
       }
     });
 
@@ -1398,8 +1445,8 @@ const BulkInventory = (props) => {
                     getStickyColumnsForRow={(rowData, rowIndex) =>
                       getStickyColumnsForRow(rowData, rowIndex, matchId)
                     }
-                    stickyHeaders={["", ""]}
-                    stickyColumnsWidth={100}
+                    stickyHeaders={["", "", ""]}
+                    stickyColumnsWidth={120}
                   />
                 </div>
               );

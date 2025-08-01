@@ -80,7 +80,7 @@ const TabbedLayout = ({
   const [checkboxValues, setCheckboxValues] = useState({});
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
-
+console.log(currentFilterValues,'currentFilterValuescurrentFilterValues')
   // NEW: State for controlling list items visibility
   const [showListItems, setShowListItems] = useState(true);
 

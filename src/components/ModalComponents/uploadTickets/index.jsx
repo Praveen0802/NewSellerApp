@@ -36,7 +36,7 @@ const UploadTickets = ({
   const ticketTypes = !isNaN(parseInt(rowData?.ticket_type))
     ? rowData?.ticket_type
     : rowData?.ticket_types || rowData?.ticket_type_id;
-  const ETicketsFlow = [2, 4]?.includes(parseInt(ticketTypes));
+  const ETicketsFlow = [4]?.includes(parseInt(ticketTypes));
   const paperTicketFlow = parseInt(ticketTypes) === 3;
   const normalFlow = !ETicketsFlow && !paperTicketFlow;
 
@@ -52,6 +52,11 @@ const UploadTickets = ({
   const [uploadedFiles, setUploadedFiles] = useState([]); // Files in left panel
   const [transferredFiles, setTransferredFiles] = useState(
     rowData?.upload_tickets || []
+  ); // Files in right panel
+
+  const [proofUploadedFiles, setProofUploadedFiles] = useState([]); // Files in left panel
+  const [proofTransferredFiles, setProofTransferredFiles] = useState(
+    rowData?.pop_upload_tickets || []
   ); // Files in right panel
 
   // State for ETicketsFlow - storing links for each quantity
@@ -92,7 +97,7 @@ const UploadTickets = ({
             name: files[0].name,
             file: files[0],
           };
-          setUploadedFiles([newFile]); // Replace existing files with just one
+          setProofUploadedFiles([newFile]); // Replace existing files with just one
         } else {
           const newFiles = files.map((file, index) => ({
             id: Date.now() + index,
@@ -106,45 +111,111 @@ const UploadTickets = ({
     [proofUploadView]
   );
 
-  const handleDeleteUploaded = useCallback((id) => {
-    setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
-  }, []);
+  const handleDeleteUploaded = useCallback(
+    (id) => {
+      if (proofUploadView) {
+        setProofUploadedFiles((prev) => prev.filter((file) => file.id !== id));
+      } else {
+        setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
+      }
+    },
+    [proofUploadView]
+  );
 
-  const handleDeleteTransferred = useCallback((id) => {
-    setTransferredFiles((prev) => prev.filter((file) => file.id !== id));
-  }, []);
+  const handleDeleteTransferred = useCallback(
+    (id) => {
+      if (proofUploadView) {
+        setProofTransferredFiles((prev) =>
+          prev.filter((file) => file.id !== id)
+        );
+      } else {
+        setTransferredFiles((prev) => prev.filter((file) => file.id !== id));
+      }
+    },
+    [proofUploadView]
+  );
 
-  const handleRemoveFromSlot = useCallback((slotIndex) => {
-    setTransferredFiles((prev) => {
-      const newTransferredFiles = [...prev];
-      newTransferredFiles.splice(slotIndex, 1);
-      return newTransferredFiles;
-    });
-  }, []);
+  const handleRemoveFromSlot = useCallback(
+    (slotIndex) => {
+      if (proofUploadView) {
+        setProofTransferredFiles((prev) => {
+          const newTransferredFiles = [...prev];
+          newTransferredFiles.splice(slotIndex, 1);
+          return newTransferredFiles;
+        });
+      } else {
+        setTransferredFiles((prev) => {
+          const newTransferredFiles = [...prev];
+          newTransferredFiles.splice(slotIndex, 1);
+          return newTransferredFiles;
+        });
+      }
+    },
+    [proofUploadView]
+  );
 
   const handleTransferSingleFile = useCallback(
     (fileId) => {
-      const fileToTransfer = uploadedFiles.find((file) => file.id === fileId);
-      const remainingSlots = maxQuantity - transferredFiles.length;
+      if (proofUploadView) {
+        const fileToTransfer = proofUploadedFiles.find(
+          (file) => file.id === fileId
+        );
+        const remainingSlots = maxQuantity - proofTransferredFiles.length;
 
-      if (remainingSlots <= 0) {
-        alert(`Maximum limit reached. You can only have ${maxQuantity} files.`);
-        return;
-      }
+        if (remainingSlots <= 0) {
+          alert(
+            `Maximum limit reached. You can only have ${maxQuantity} files.`
+          );
+          return;
+        }
 
-      if (fileToTransfer) {
-        setTransferredFiles((prev) => [...prev, fileToTransfer]);
-        setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
+        if (fileToTransfer) {
+          setProofTransferredFiles((prev) => [...prev, fileToTransfer]);
+          setProofUploadedFiles((prev) =>
+            prev.filter((file) => file.id !== fileId)
+          );
+        }
+      } else {
+        const fileToTransfer = uploadedFiles.find((file) => file.id === fileId);
+        const remainingSlots = maxQuantity - transferredFiles.length;
+
+        if (remainingSlots <= 0) {
+          alert(
+            `Maximum limit reached. You can only have ${maxQuantity} files.`
+          );
+          return;
+        }
+
+        if (fileToTransfer) {
+          setTransferredFiles((prev) => [...prev, fileToTransfer]);
+          setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
+        }
       }
     },
-    [uploadedFiles, maxQuantity, transferredFiles.length]
+    [
+      proofUploadView,
+      proofUploadedFiles,
+      maxQuantity,
+      proofTransferredFiles.length,
+      uploadedFiles,
+      transferredFiles.length,
+    ]
   );
 
   const canTransferFile = useCallback(
     (fileId) => {
-      return transferredFiles.length < maxQuantity;
+      if (proofUploadView) {
+        return proofTransferredFiles.length < maxQuantity;
+      } else {
+        return transferredFiles.length < maxQuantity;
+      }
     },
-    [transferredFiles.length, maxQuantity]
+    [
+      proofUploadView,
+      proofTransferredFiles.length,
+      transferredFiles.length,
+      maxQuantity,
+    ]
   );
 
   // Handle link input changes for ETicketsFlow - FIXED
@@ -301,99 +372,107 @@ const UploadTickets = ({
   );
 
   // File Upload Section for Normal Flow - Move outside useMemo
-  const FileUploadSection = () => (
-    <>
-      {/* Drag and drop area */}
-      <div className="border-1 bg-[#F9F9FB] border-dashed border-[#130061] rounded-lg p-4 flex flex-col gap-1 items-center justify-center h-32">
-        <Image src={uploadImage} width={42} height={42} alt="Upload" />
-        <p className="text-xs text-[#323A70] mb-1">
-          {proofUploadView
-            ? "Add your proof document to start uploading"
-            : "Add your file(s) to start uploading"}
-        </p>
-        <p className="text-xs text-gray-500">OR</p>
-        <Button
-          onClick={handleBrowseFiles}
-          classNames={{
-            root: "py-2 border-1 border-[#0137D5] rounded-sm ",
-            label_: "text-[12px] font-medium !text-[#0137D5]",
-          }}
-        >
-          Browse Files
-        </Button>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileUpload}
-          multiple={!proofUploadView} // Only allow multiple files if not proof upload
-          accept=".pdf,.jpg,.jpeg,.png"
-          className="hidden"
-        />
-        {proofUploadView && (
-          <p className="text-xs text-gray-500 mt-1">
-            Maximum 1 file allowed for proof upload
-          </p>
-        )}
-      </div>
+  const FileUploadSection = () => {
+    // Use the appropriate state variables based on proof upload view
+    const currentUploadedFiles = proofUploadView
+      ? proofUploadedFiles
+      : uploadedFiles;
 
-      {/* Uploaded files list */}
-      <div className="flex-1">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-sm font-medium text-[#323A70]">
+    return (
+      <>
+        {/* Drag and drop area */}
+        <div className="border-1 bg-[#F9F9FB] border-dashed border-[#130061] rounded-lg p-4 flex flex-col gap-1 items-center justify-center ">
+          <Image src={uploadImage} width={42} height={42} alt="Upload" />
+          <p className="text-xs text-[#323A70] mb-1">
             {proofUploadView
-              ? `Proof Document (${uploadedFiles.length}/1)`
-              : `Uploaded Files (${uploadedFiles.length})`}
-          </h3>
-        </div>
-
-        <div className="max-h-64 overflow-y-auto border border-[#E0E1EA] rounded">
-          {uploadedFiles.length === 0 ? (
-            <div className="p-4 text-center text-gray-500 text-sm">
-              {proofUploadView
-                ? "No proof document uploaded yet"
-                : "No files uploaded yet"}
-            </div>
-          ) : (
-            uploadedFiles.map((file) => (
-              <div
-                key={file.id}
-                className="flex items-center justify-between p-2 border-b border-gray-200 last:border-b-0 bg-white"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-700 truncate max-w-32">
-                    {file.name}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    onClick={() => handleTransferSingleFile(file.id)}
-                    disabled={!canTransferFile(file.id)}
-                    classNames={{
-                      root: `py-1 px-2 cursor-pointer rounded-sm text-xs ${
-                        canTransferFile(file.id)
-                          ? "bg-[#0137D5] text-white hover:bg-[#0137D5]/90"
-                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      }`,
-                      label_: "text-[10px] font-medium flex items-center gap-1",
-                    }}
-                  >
-                    {proofUploadView ? "Attach" : "Add"}{" "}
-                    <ArrowRight className="w-3 h-3" />
-                  </Button>
-                  <button
-                    className="p-1 text-red-500 cursor-pointer hover:text-red-700"
-                    onClick={() => handleDeleteUploaded(file.id)}
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            ))
+              ? "Add your proof document to start uploading"
+              : "Add your file(s) to start uploading"}
+          </p>
+          <p className="text-xs text-gray-500">OR</p>
+          <Button
+            onClick={handleBrowseFiles}
+            classNames={{
+              root: "py-2 border-1 border-[#0137D5] rounded-sm ",
+              label_: "text-[12px] font-medium !text-[#0137D5]",
+            }}
+          >
+            Browse Files
+          </Button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            multiple={!proofUploadView} // Only allow multiple files if not proof upload
+            accept=".pdf,.jpg,.jpeg,.png"
+            className="hidden"
+          />
+          {proofUploadView && (
+            <p className="text-xs text-gray-500 mt-1">
+              Maximum 1 file allowed for proof upload
+            </p>
           )}
         </div>
-      </div>
-    </>
-  );
+
+        {/* Uploaded files list */}
+        <div className="flex-1">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-sm font-medium text-[#323A70]">
+              {proofUploadView
+                ? `Proof Document (${currentUploadedFiles.length}/1)`
+                : `Uploaded Files (${currentUploadedFiles.length})`}
+            </h3>
+          </div>
+
+          <div className="max-h-64 overflow-y-auto border border-[#E0E1EA] rounded">
+            {currentUploadedFiles.length === 0 ? (
+              <div className="p-4 text-center text-gray-500 text-sm">
+                {proofUploadView
+                  ? "No proof document uploaded yet"
+                  : "No files uploaded yet"}
+              </div>
+            ) : (
+              currentUploadedFiles.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex items-center justify-between p-2 border-b border-gray-200 last:border-b-0 bg-white"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-700 truncate max-w-32">
+                      {file.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      onClick={() => handleTransferSingleFile(file.id)}
+                      disabled={!canTransferFile(file.id)}
+                      classNames={{
+                        root: `py-1 px-2 cursor-pointer rounded-sm text-xs ${
+                          canTransferFile(file.id)
+                            ? "bg-[#0137D5] text-white hover:bg-[#0137D5]/90"
+                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        }`,
+                        label_:
+                          "text-[10px] font-medium flex items-center gap-1",
+                      }}
+                    >
+                      {proofUploadView ? "Attach" : "Add"}{" "}
+                      <ArrowRight className="w-3 h-3" />
+                    </Button>
+                    <button
+                      className="p-1 text-red-500 cursor-pointer hover:text-red-700"
+                      onClick={() => handleDeleteUploaded(file.id)}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </>
+    );
+  };
 
   // E-Ticket Info Section - Move outside useMemo
   const ETicketInfoSection = () => (
@@ -511,64 +590,73 @@ const UploadTickets = ({
   );
 
   // Ticket Assignment Section for Normal Flow - Move outside useMemo
-  const TicketAssignmentSection = () => (
-    <div className="p-3">
-      <div className="flex justify-between items-center mb-2">
-        <h4 className="text-sm font-medium text-[#323A70]">
-          {proofUploadView
-            ? `Proof Assignment (${transferredFiles.length}/${maxQuantity})`
-            : `Ticket Assignment (${transferredFiles.length}/${maxQuantity})`}
-        </h4>
-      </div>
+  const TicketAssignmentSection = () => {
+    // Use the appropriate state variables based on proof upload view
+    const currentTransferredFiles = proofUploadView
+      ? proofTransferredFiles
+      : transferredFiles;
 
-      <div className="max-h-60 overflow-y-auto">
-        {maxQuantity === 0 ? (
-          <div className="p-4 text-center text-gray-500 text-sm border border-gray-200 rounded">
-            No quantity specified
-          </div>
-        ) : (
-          Array.from({ length: maxQuantity }, (_, index) => {
-            const itemNumber = index + 1;
-            const assignedFile = transferredFiles[index];
+    return (
+      <div className="p-3">
+        <div className="flex justify-between items-center mb-2">
+          <h4 className="text-sm font-medium text-[#323A70]">
+            {proofUploadView
+              ? `Proof Assignment (${currentTransferredFiles.length}/${maxQuantity})`
+              : `Ticket Assignment (${currentTransferredFiles.length}/${maxQuantity})`}
+          </h4>
+        </div>
 
-            return (
-              <div
-                key={itemNumber}
-                className="grid grid-cols-2 items-center border-b border-gray-200 last:border-b-0"
-              >
-                <div className="px-3 py-2 text-xs font-medium text-[#323A70]">
-                  {proofUploadView ? `Proof Document` : `Ticket ${itemNumber}`}
-                </div>
-                <div className="px-3 py-2 flex items-center">
-                  {assignedFile ? (
-                    <div className="flex bg-gray-100 rounded px-2 py-1 items-center justify-between w-full">
-                      <span className="text-xs text-gray-700 truncate max-w-24">
-                        {assignedFile.name}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <button
-                          className="p-1 text-red-500 cursor-pointer hover:text-red-700"
-                          onClick={() => handleRemoveFromSlot(index)}
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
+        <div className="max-h-60 overflow-y-auto">
+          {maxQuantity === 0 ? (
+            <div className="p-4 text-center text-gray-500 text-sm border border-gray-200 rounded">
+              No quantity specified
+            </div>
+          ) : (
+            Array.from({ length: maxQuantity }, (_, index) => {
+              const itemNumber = index + 1;
+              const assignedFile = currentTransferredFiles[index];
+
+              return (
+                <div
+                  key={itemNumber}
+                  className="grid grid-cols-2 items-center border-b border-gray-200 last:border-b-0"
+                >
+                  <div className="px-3 py-2 text-xs font-medium text-[#323A70]">
+                    {proofUploadView
+                      ? `Proof Document`
+                      : `Ticket ${itemNumber}`}
+                  </div>
+                  <div className="px-3 py-2 flex items-center">
+                    {assignedFile ? (
+                      <div className="flex bg-gray-100 rounded px-2 py-1 items-center justify-between w-full">
+                        <span className="text-xs text-gray-700 truncate max-w-24">
+                          {assignedFile.name}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            className="p-1 text-red-500 cursor-pointer hover:text-red-700"
+                            onClick={() => handleRemoveFromSlot(index)}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="text-xs text-gray-400 w-full border-[1px] border-dashed border-[#E0E1EA] bg-white rounded-md px-2 py-1">
-                      {proofUploadView
-                        ? "Waiting for proof document..."
-                        : "Waiting for file..."}
-                    </div>
-                  )}
+                    ) : (
+                      <div className="text-xs text-gray-400 w-full border-[1px] border-dashed border-[#E0E1EA] bg-white rounded-md px-2 py-1">
+                        {proofUploadView
+                          ? "Waiting for proof document..."
+                          : "Waiting for file..."}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })
-        )}
+              );
+            })
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // QR Links Configuration Section for E-Ticket Flow - Move outside useMemo
   const QRLinksConfigSection = () => (
@@ -628,22 +716,6 @@ const UploadTickets = ({
                             "qr_link_android",
                             e.target.value
                           )
-                        }
-                        className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
-                      />
-                    </div>
-
-                    {/* iOS Link Input */}
-                    <div>
-                      <label className="block text-xs font-medium text-[#323A70] mb-1">
-                        iOS QR Link
-                      </label>
-                      <input
-                        type="url"
-                        placeholder="Enter iOS app/web link"
-                        value={ticketLinks[index]?.qr_link_ios || ""}
-                        onChange={(e) =>
-                          handleLinkChange(index, "qr_link_ios", e.target.value)
                         }
                         className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
                       />
@@ -917,7 +989,11 @@ const UploadTickets = ({
       const isComplete = hasCourierDetails;
       return { completed: isComplete ? maxQuantity : 0, total: maxQuantity };
     } else if (normalFlow || proofUploadView) {
-      return { completed: transferredFiles.length, total: maxQuantity };
+      // Use the appropriate transferred files based on proof upload view
+      const currentTransferredFiles = proofUploadView
+        ? proofTransferredFiles
+        : transferredFiles;
+      return { completed: currentTransferredFiles.length, total: maxQuantity };
     }
     return { completed: 0, total: 0 };
   }, [
@@ -928,6 +1004,7 @@ const UploadTickets = ({
     ticketLinks,
     paperTicketDetails,
     transferredFiles,
+    proofTransferredFiles,
     maxQuantity,
   ]);
 
@@ -1079,14 +1156,15 @@ const UploadTickets = ({
       const formData = new FormData();
       formData.append(`ticket_id`, rowData?.rawTicketData?.s_no);
       formData.append(`match_id`, rowData?.rawTicketData?.match_id);
+      // Use proofTransferredFiles instead of transferredFiles for proof upload
       if (
-        transferredFiles[0]?.file &&
-        transferredFiles[0]?.file instanceof File
+        proofTransferredFiles[0]?.file &&
+        proofTransferredFiles[0]?.file instanceof File
       ) {
         formData.append(
-          `upload_tickets`,
-          transferredFiles[0]?.file,
-          transferredFiles[0]?.name
+          `pop_upload_tickets`,
+          proofTransferredFiles[0]?.file,
+          proofTransferredFiles[0]?.name
         );
       }
       try {
@@ -1105,8 +1183,12 @@ const UploadTickets = ({
         setIsLoading(false);
       }
     } else if (normalFlow) {
+      // Use the appropriate transferred files based on proof upload view
+      const filesToUpload = proofUploadView
+        ? proofTransferredFiles
+        : transferredFiles;
       const updatedObject = {
-        upload_tickets: transferredFiles,
+        upload_tickets: filesToUpload,
         additional_info: additionalInfo,
       };
       if (myListingPage) {
@@ -1139,12 +1221,19 @@ const UploadTickets = ({
         handleConfirmClick(updatedObject, rowIndex, rowData);
       }
     }
+    if(proofUploadView && !myListingPage && proofTransferredFiles?.length > 0) {
+      const updatedObject = {
+        pop_upload_tickets: proofTransferredFiles?.[0],
+      }
+       handleConfirmClick(updatedObject, rowIndex, rowData);
+    };
   }, [
     proofUploadView,
     normalFlow,
     ETicketsFlow,
     paperTicketFlow,
     transferredFiles,
+    proofTransferredFiles,
     additionalInfo,
     ticketLinks,
     paperTicketDetails,
@@ -1170,7 +1259,7 @@ const UploadTickets = ({
               {getModalSubtitle()}
             </h2>
             <button onClick={() => onClose()} className="text-gray-500">
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5 cursor-pointer" />
             </button>
           </div>
 

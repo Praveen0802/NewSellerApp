@@ -349,7 +349,7 @@ const AddInventoryPage = (props) => {
         })),
     },
     {
-      type: "text",
+      type: "number",
       name: "first_seat",
       label: "First Seat",
       value: filtersApplied?.first_seat,
@@ -524,6 +524,12 @@ const AddInventoryPage = (props) => {
 
   // Custom sticky columns configuration for AddInventory
   const getStickyColumnsForRow = (rowData, rowIndex) => {
+    // Check if we're in bulk edit mode (multiple rows selected for editing)
+    const isBulkEditMode =
+      isEditMode &&
+      Array.isArray(editingRowIndex) &&
+      editingRowIndex.length > 1;
+
     return [
       {
         key: "",
@@ -544,23 +550,54 @@ const AddInventoryPage = (props) => {
         ),
         className: "py-2 text-center border-r border-[#E0E1EA]",
       },
-
       {
         key: "",
-        toolTipContent: "Upload",
+        toolTipContent: isBulkEditMode ? "Not Available" : "Upload",
         icon: (
-          <Tooltip content="Upload">
+          <Tooltip content={isBulkEditMode ? "Not Available" : "Upload"}>
             <Image
               src={uploadListing}
               alt="tick"
               width={16}
               height={16}
-              className="cursor-pointer hover:text-blue-500 transition-colors"
-              onClick={() => handleUploadAction(rowData, rowIndex)}
+              className={`${
+                isBulkEditMode
+                  ? "cursor-not-allowed opacity-50 grayscale"
+                  : "cursor-pointer hover:text-blue-500 transition-colors"
+              }`}
+              onClick={() => {
+                if (!isBulkEditMode) {
+                  handleUploadAction(rowData, rowIndex);
+                }
+              }}
             />
           </Tooltip>
         ),
         className: "py-2 text-center",
+      },
+      {
+        key: "",
+        toolTipContent: isBulkEditMode ? "Not Available" : "Upload Pop",
+        icon: (
+          <Tooltip content={isBulkEditMode ? "Not Available" : "Upload Pop"}>
+            <HardDriveUpload
+              onClick={() => {
+                if (!isBulkEditMode) {
+                  handleUploadAction(
+                    { ...rowData, handleProofUpload: true },
+                    rowIndex
+                  );
+                }
+              }}
+              className={`w-[16px] h-[16px] ${
+                isBulkEditMode
+                  ? "cursor-not-allowed opacity-50 text-gray-400"
+                  : "cursor-pointer"
+              }`}
+            />
+          </Tooltip>
+        ),
+        className: "py-2 text-center border-r border-[#E0E1EA]",
       },
     ];
   };
@@ -822,6 +859,7 @@ const AddInventoryPage = (props) => {
         `data[${index}][split_type]`,
         publishingData.split_type || ""
       );
+
       let shipDateValue = "";
       if (publishingData.ship_date) {
         if (
@@ -935,6 +973,13 @@ const AddInventoryPage = (props) => {
             );
           }
         });
+      }
+      if (publishingData?.pop_upload_tickets) {
+        formData.append(
+          `data[${index}][pop_upload_tickets]`,
+          publishingData.pop_upload_tickets?.file,
+          publishingData.pop_upload_tickets?.name
+        );
       }
     });
 
@@ -1133,11 +1178,21 @@ const AddInventoryPage = (props) => {
     // Show success message
   };
 
-  const handleSearchBlur = () => {
-    // Delay hiding dropdown to allow for clicks
+  const handleSearchBlur = (e) => {
+    // Check if the blur is caused by clicking inside the dropdown
+    const dropdown = document.querySelector(
+      '[data-dropdown="search-dropdown"]'
+    );
+
+    // If the related target (what's being focused) is inside the dropdown, don't close
+    if (dropdown && dropdown.contains(e.relatedTarget)) {
+      return;
+    }
+
+    // Delay hiding dropdown to allow for clicks on dropdown items
     setTimeout(() => {
       setShowSearchDropdown(false);
-    }, 150);
+    }, 200); // Increased timeout for better UX
   };
 
   // This comes right after searchedViewComponent()
@@ -1149,6 +1204,32 @@ const AddInventoryPage = (props) => {
     );
     setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
   };
+  const handleClickOutside = useCallback((event) => {
+    const searchContainer = document.querySelector(
+      '[data-search-container="true"]'
+    );
+    const dropdown = document.querySelector(
+      '[data-dropdown="search-dropdown"]'
+    );
+
+    if (
+      searchContainer &&
+      !searchContainer.contains(event.target) &&
+      dropdown &&
+      !dropdown.contains(event.target)
+    ) {
+      setShowSearchDropdown(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (showSearchDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [showSearchDropdown, handleClickOutside]);
 
   const selectedCount = selectedRows.length;
 
@@ -1165,7 +1246,10 @@ const AddInventoryPage = (props) => {
   };
 
   const [showRequestPopup, setShowRequestPopup] = useState(false);
-console.log(matchDetails?.match_date_format,'matchDetails?.match_date_format')
+  console.log(
+    matchDetails?.match_date_format,
+    "matchDetails?.match_date_format"
+  );
   return (
     <div className="bg-[#F5F7FA] w-full h-full relative min-h-screen">
       {/* Header with selected match info */}
@@ -1193,18 +1277,21 @@ console.log(matchDetails?.match_date_format,'matchDetails?.match_date_format')
               type="text"
               showDropdown={showSearchDropdown}
               iconBefore={<SearchIcon size={16} />}
-              iconBeforeTooltip="Search" // Pass tooltip text here
+              iconBeforeTooltip="Search"
               dropDownComponent={
-                <SearchedViewComponent
-                  searchEventLoader={searchEventLoader}
-                  searchedEvents={searchedEvents}
-                  hasSearched={hasSearched}
-                  searchValue={searchValue}
-                  handleSearchedEventClick={handleSearchedEventClick}
-                  show={showRequestPopup}
-                  setShow={setShowRequestPopup}
-                  handleBulkNavigateClick={handleBulkNavigateClick}
-                />
+                <div data-dropdown="search-dropdown">
+                  <SearchedViewComponent
+                    searchEventLoader={searchEventLoader}
+                    searchedEvents={searchedEvents}
+                    hasSearched={hasSearched}
+                    searchValue={searchValue}
+                    handleSearchedEventClick={handleSearchedEventClick}
+                    show={showRequestPopup}
+                    setShow={setShowRequestPopup}
+                    handleBulkNavigateClick={handleBulkNavigateClick}
+                    onItemSelect={() => setShowSearchDropdown(false)} // Add this prop
+                  />
+                </div>
               }
               label="Choose Match Event"
               className={`!py-[8px] !text-[#323A70] !text-[14px] ${
@@ -1219,6 +1306,7 @@ console.log(matchDetails?.match_date_format,'matchDetails?.match_date_format')
                 setHasSearched(false);
               }}
               parentClassName="!w-[550px]"
+              data-search-container="true" // Add this
             />
 
             {matchDetails && (
@@ -1327,8 +1415,8 @@ console.log(matchDetails?.match_date_format,'matchDetails?.match_date_format')
               isCollapsed={isTableCollapsed}
               onToggleCollapse={handleToggleCollapse}
               getStickyColumnsForRow={getStickyColumnsForRow}
-              stickyHeaders={["", ""]}
-              stickyColumnsWidth={100}
+              stickyHeaders={["", "", ""]}
+              stickyColumnsWidth={120}
             />
           </div>
         </div>

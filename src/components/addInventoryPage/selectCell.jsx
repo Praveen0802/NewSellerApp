@@ -10,6 +10,8 @@ const MultiSelectEditableCell = ({
   isRowHovered = false,
   disabled = false,
   placeholder = "Select options...",
+  // NEW: Add saveOnChange prop for AddInventory flow
+  saveOnChange = true,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -164,11 +166,12 @@ const MultiSelectEditableCell = ({
     setIsDropdownOpen(false);
   };
 
+  // UPDATED: Create different debounced functions based on saveOnChange
   const debouncedOnSave = useCallback(
     debounce((newValue) => {
       onSave(newValue);
-    }, 500), // 500ms delay
-    [onSave]
+    }, saveOnChange ? 100 : 500), // Shorter delay for AddInventory
+    [onSave, saveOnChange]
   );
 
   const handleOptionToggle = (optionValue) => {
@@ -183,16 +186,33 @@ const MultiSelectEditableCell = ({
 
     setEditValue(newValues);
 
-    // Call debounced save function
-    debouncedOnSave(newValues);
+    // UPDATED: For AddInventory flow, save immediately on change
+    if (saveOnChange) {
+      // Save immediately without debounce for AddInventory
+      onSave(newValues);
+    } else {
+      // Use debounced save for other flows
+      debouncedOnSave(newValues);
+    }
   };
 
   const handleSelectAll = () => {
-    setEditValue(options.map((opt) => opt.value));
+    const allValues = options.map((opt) => opt.value);
+    setEditValue(allValues);
+    
+    // UPDATED: Save on change for AddInventory flow
+    if (saveOnChange) {
+      onSave(allValues);
+    }
   };
 
   const handleDeselectAll = () => {
     setEditValue([]);
+    
+    // UPDATED: Save on change for AddInventory flow
+    if (saveOnChange) {
+      onSave([]);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -315,26 +335,29 @@ const MultiSelectEditableCell = ({
               );
             })}
 
-            <div className="border-t border-[#DADBE5] p-2 flex justify-end space-x-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCancel();
-                }}
-                className="text-xs px-2 py-1 text-gray-600 hover:text-gray-800"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSave();
-                }}
-                className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Save
-              </button>
-            </div>
+            {/* UPDATED: Only show Save/Cancel buttons when NOT using saveOnChange */}
+            {!saveOnChange && (
+              <div className="border-t border-[#DADBE5] p-2 flex justify-end space-x-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCancel();
+                  }}
+                  className="text-xs px-2 py-1 text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSave();
+                  }}
+                  className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Save
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -384,7 +407,7 @@ const MultiSelectEditableCell = ({
   );
 };
 
-// Updated SimpleEditableCell component with placeholder support
+// Updated SimpleEditableCell component with saveOnChange support
 const SimpleEditableCell = ({
   value,
   type = "text",
@@ -394,6 +417,8 @@ const SimpleEditableCell = ({
   isRowHovered = false,
   disabled = false,
   placeholder = "Enter...",
+  // NEW: Add saveOnChange prop for AddInventory flow
+  saveOnChange = true,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -421,6 +446,16 @@ const SimpleEditableCell = ({
     setIsEditing(false);
   };
 
+  // UPDATED: Handle onChange for AddInventory flow
+  const handleChange = (newValue) => {
+    setEditValue(newValue);
+    
+    // Save immediately on change for AddInventory flow
+    if (saveOnChange && newValue !== value) {
+      onSave(newValue);
+    }
+  };
+
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       handleSave();
@@ -429,8 +464,11 @@ const SimpleEditableCell = ({
     }
   };
 
+  // UPDATED: Only handle blur when NOT using saveOnChange
   const handleBlur = () => {
-    handleSave();
+    if (!saveOnChange) {
+      handleSave();
+    }
   };
 
   useEffect(() => {
@@ -469,7 +507,7 @@ const SimpleEditableCell = ({
           <select
             ref={inputRef}
             value={editValue || ""}
-            onChange={(e) => setEditValue(e.target.value)}
+            onChange={(e) => handleChange(e.target.value)}
             onKeyDown={handleKeyPress}
             onBlur={handleBlur}
             onFocus={() => setIsFocused(true)}
@@ -493,7 +531,7 @@ const SimpleEditableCell = ({
             ref={inputRef}
             type="checkbox"
             checked={editValue}
-            onChange={(e) => setEditValue(e.target.checked)}
+            onChange={(e) => handleChange(e.target.checked)}
             onKeyDown={handleKeyPress}
             onBlur={handleBlur}
             onFocus={() => setIsFocused(true)}
@@ -511,7 +549,7 @@ const SimpleEditableCell = ({
             type={type}
             value={editValue || ""}
             placeholder={placeholder}
-            onChange={(e) => setEditValue(e.target.value)}
+            onChange={(e) => handleChange(e.target.value)}
             onKeyDown={handleKeyPress}
             onBlur={handleBlur}
             onFocus={() => setIsFocused(true)}

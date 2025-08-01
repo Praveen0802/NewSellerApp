@@ -322,6 +322,7 @@ const TicketsPage = (props) => {
   const [filtersApplied, setFiltersApplied] = useState({
     page: 1,
   });
+  console.log(filtersApplied,'filtersAppliedfiltersApplied')
   const [isLoading, setIsLoading] = useState(false);
 
   // ENHANCED: Global selection state similar to BulkInventory
@@ -850,7 +851,7 @@ const TicketsPage = (props) => {
   }, [ticketsData, mockListingHistory]);
 
   console.log("groupedTicketsData", groupedTicketsData);
-
+  const [eventDate, setEventDate] = useState(null);
   // Enhanced handleCellEdit to work with multiple matches and use match-specific filters
   const handleCellEdit = (rowIndex, columnKey, value, ticket, matchIndex) => {
     console.log("Cell edited:", {
@@ -973,7 +974,11 @@ const TicketsPage = (props) => {
   };
 
   // Custom sticky columns configuration for TicketsPage (HIDE CHEVRON DOWN)
+  // Custom sticky columns configuration for TicketsPage (HIDE CHEVRON DOWN)
   const getStickyColumnsForRow = (rowData, rowIndex) => {
+    // Check if we're in global bulk edit mode
+    const isBulkEditMode = isGlobalEditMode && globalEditingTickets.length > 1;
+
     return [
       {
         key: "hand",
@@ -992,27 +997,47 @@ const TicketsPage = (props) => {
       },
       {
         key: "upload",
+        toolTipContent: isBulkEditMode ? "Not Available" : "Upload",
         icon: (
-          <Tooltip content="Upload">
-            <IconStore.upload className="size-4" />
+          <Tooltip content={isBulkEditMode ? "Not Available" : "Upload"}>
+            <IconStore.upload
+              className={`size-4 ${
+                isBulkEditMode
+                  ? "cursor-not-allowed opacity-50 grayscale"
+                  : "cursor-pointer"
+              }`}
+            />
           </Tooltip>
         ),
-        className: "cursor-pointer pl-2",
+        className: `${
+          isBulkEditMode ? "cursor-not-allowed pl-2" : "cursor-pointer pl-2"
+        }`,
         tooltipComponent: <p className="text-center">{rowData.ticket_type}</p>,
-        onClick: () => handleUploadAction(rowData, rowIndex),
+        onClick: () => {
+          if (!isBulkEditMode) {
+            handleUploadAction(rowData, rowIndex);
+          }
+        },
       },
       {
         key: "",
+        toolTipContent: isBulkEditMode ? "Not Available" : "Upload Pop",
         icon: (
-          <Tooltip content="Upload Pop">
+          <Tooltip content={isBulkEditMode ? "Not Available" : "Upload Pop"}>
             <HardDriveUpload
-              onClick={() =>
-                handleUploadAction(
-                  { ...rowData, handleProofUpload: true },
-                  rowIndex
-                )
-              }
-              className="cursor-pointer w-[16px] h-[16px]"
+              onClick={() => {
+                if (!isBulkEditMode) {
+                  handleUploadAction(
+                    { ...rowData, handleProofUpload: true },
+                    rowIndex
+                  );
+                }
+              }}
+              className={`w-[16px] h-[16px] ${
+                isBulkEditMode
+                  ? "cursor-not-allowed opacity-50 text-gray-400"
+                  : "cursor-pointer"
+              }`}
             />
           </Tooltip>
         ),
@@ -1190,15 +1215,15 @@ const TicketsPage = (props) => {
         },
         // {
         //   type: "select",
-        //   name: "seat_category",
-        //   label: "Seat Category",
-        //   value: filtersApplied?.seat_category,
-        //   options:
-        //     response?.filters?.ticket_category?.map((category) => ({
-        //       value: category?.id,
-        //       label: category?.name,
-        //     })) || [],
-        //   parentClassName: "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
+        //   name: "listing_status",
+        //   label: "Listing Status",
+        //   value: filtersApplied?.listing_status,
+        //   options: [
+        //     { value: 0, label: "Published" },
+        //     { value: 1, label: "Unpublished" },
+        //   ],
+        //   parentClassName:
+        //     "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
         //   className: "!py-[6px] !px-[12px] max-md:text-xs",
         //   labelClassName: "!text-[11px]",
         // },
@@ -1247,6 +1272,19 @@ const TicketsPage = (props) => {
           className: "!py-[6px] !px-[12px] max-md:text-xs",
           labelClassName: "!text-[11px]",
         },
+        {
+          type: "date",
+          name: "eventDate",
+          label: "Event Date",
+          value: {
+            startDate: filtersApplied?.start_date,
+            endDate: filtersApplied?.end_date,
+          },
+          parentClassName:
+            "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
+          className: "!py-[9px] !px-[12px] max-md:text-xs",
+          labelClassName: "!text-[11px]",
+        },
       ],
     }),
     [filtersApplied, response]
@@ -1274,11 +1312,11 @@ const TicketsPage = (props) => {
         match_date_from: value?.startDate,
         match_date_to: value?.endDate,
       };
-    } else if (filterKey === "listingDate") {
+    } else if (filterKey === "eventDate") {
       params = {
         ...params,
-        listing_date_from: value?.startDate,
-        listing_date_to: value?.endDate,
+        start_date: value?.startDate,
+        end_date: value?.endDate,
       };
     } else {
       params = {
@@ -1535,7 +1573,7 @@ const TicketsPage = (props) => {
       </div>
     );
   };
-
+console.log(filtersApplied,'filtersAppliedfiltersAppliedfiltersApplied')
   const handleClearAllFilters = () => {
     const clearedFilters = { page: 1 }; // Keep only page
     fetchData(clearedFilters);
@@ -1671,23 +1709,23 @@ const TicketsPage = (props) => {
         />
 
         {/* Pagination Component - Positioned below filters */}
-        {groupedTicketsData.length > 0 && (
-          <div className="border-[1px] border-[#E0E1EA]">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              itemsPerPage={itemsPerPage}
-              totalItems={totalItems}
-              onPageChange={handlePageChange}
-              onItemsPerPageChange={handleItemsPerPageChange}
-              activeFilters={filtersApplied}
-              filterConfig={filterConfig}
-              onFilterChange={handleFilterChange}
-              onClearAllFilters={handleClearAllFilters}
-              currentTab="tickets"
-            />
-          </div>
-        )}
+        {/* {groupedTicketsData.length > 0 && ( */}
+        <div className="border-[1px] border-[#E0E1EA]">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            itemsPerPage={itemsPerPage}
+            totalItems={totalItems}
+            onPageChange={handlePageChange}
+            onItemsPerPageChange={handleItemsPerPageChange}
+            activeFilters={filtersApplied}
+            filterConfig={filterConfig}
+            onFilterChange={handleFilterChange}
+            onClearAllFilters={handleClearAllFilters}
+            currentTab="tickets"
+          />
+        </div>
+        {/* )} */}
       </div>
 
       {/* Main Content Area with Common Tables */}
