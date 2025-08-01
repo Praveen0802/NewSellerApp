@@ -502,13 +502,12 @@ const TicketsPage = (props) => {
       const ticketsToDelete = ticketsData.filter(ticket => 
         globalSelectedTickets.includes(ticket.uniqueId)
       );
+      const ticketIds = ticketsToDelete.map(ticket => ticket.s_no).join(',');
 console.log(ticketsToDelete,'ticketsToDeleteticketsToDelete')
       // Delete each ticket via API
       try{
-        const deletePromises = ticketsToDelete.map(ticket => 
-          deleteMyListing("", ticket.rawTicketData.s_no) // Assuming this API exists
-        );
-        await Promise.all(deletePromises);
+        const deletePromises = await deleteMyListing("", {ticket_id:ticketIds}) // Assuming this API exists
+        
       }catch{
         console.log('error')
       }

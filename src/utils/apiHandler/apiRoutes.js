@@ -47,6 +47,7 @@ export const API_ROUTES = {
   PROFILE_DETAILS: `/settings/my-account`,
   UPDATE_PROFILE_DETAILS: `/settings/update-my-account`,
   EXPORT_REPORTS: `/reports/export`,
+  DELETE_TICKET:`/my-listings/delete-ticket`,
   EXPORT_SALES: `/sales/export-reports`,
   GET_ORDER_HISTORY: `/wallet/get-order-history`,
   SEND_RESET_REQUEST: `/auth/password/reset-request`,

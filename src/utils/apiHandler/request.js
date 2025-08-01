@@ -187,6 +187,21 @@ export const downloadReports = async (token, params = {}) => {
   }
 };
 
+export const deleteMyListing = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.DELETE_TICKET,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in reportEventSearch", error);
+    return {};
+  }
+};
+
 export const downloadSalesCSVReport = async (token, params = {}) => {
   try {
     const response = await makeRequest({
