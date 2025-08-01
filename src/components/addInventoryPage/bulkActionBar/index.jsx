@@ -11,6 +11,7 @@ import {
   Save,
   Users,
 } from "lucide-react";
+import { useSelector } from "react-redux";
 
 const BulkActionBar = ({
   selectedCount = 0,
@@ -30,6 +31,8 @@ const BulkActionBar = ({
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
+  const {showFullDisplay} = useSelector((state) => state.common);
+
   // Updated logic: Determine if all items are selected
   const allSelected = totalCount > 0 && selectedCount === totalCount;
 
@@ -39,7 +42,7 @@ const BulkActionBar = ({
   const selectAllDisabled = totalCount === 0 || allSelected;
   return (
     <div
-      className={`fixed bottom-0 left-10 right-0 border-t border-gray-200 shadow-lg z-50 ${
+      className={`fixed bottom-0 ${showFullDisplay ? 'left-40' : 'left-10'} right-0 border-t border-gray-200 shadow-lg z-50 ${
         disabled ? "bg-gray-100 " : "bg-white"
       }`}
     >
@@ -49,7 +52,7 @@ const BulkActionBar = ({
           {!isEditMode ? (
             <>
               {/* Normal mode buttons */}
-              {/* Select All Button */}
+              {/* Select All Button with Checkbox */}
               <button
                 onClick={onSelectAll}
                 disabled={selectAllDisabled}
@@ -59,12 +62,18 @@ const BulkActionBar = ({
                     : "text-blue-600 hover:text-blue-800 hover:bg-blue-50"
                 }`}
               >
-                <Check
-                  className={
-                    selectAllDisabled ? "text-gray-400" : "text-[#0137D5]"
-                  }
-                  size={16}
-                />
+                {/* Checkbox instead of Check icon */}
+                <div className={`w-4 h-4 border-2 rounded flex items-center justify-center ${
+                  allSelected 
+                    ? 'bg-[#0137D5] border-[#0137D5]' 
+                    : selectAllDisabled 
+                      ? 'border-gray-300 bg-gray-100'
+                      : 'border-[#DADBE5] bg-white hover:bg-blue-50'
+                }`}>
+                  {allSelected && (
+                    <Check size={12} className="text-white" />
+                  )}
+                </div>
                 <span
                   className={`text-[14px] ${
                     selectAllDisabled ? "text-gray-400" : "text-[#323A70]"

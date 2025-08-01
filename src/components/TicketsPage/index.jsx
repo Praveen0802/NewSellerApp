@@ -393,7 +393,7 @@ const TicketsPage = (props) => {
           split_type: ticket.split?.name || "N/A",
           split_type_id: ticket.split?.id || "",
           ship_date: ticket.ship_date || "N/A",
-          tickets_in_hand: ticket.ticket_in_hand || false,
+          ticket_in_hand: ticket.ticket_in_hand || false,
           listing_note: ticket.listing_note?.map((note) => `${note.id}`),
           rawTicketData: ticket,
           rawMatchData: matchInfo,
@@ -966,8 +966,8 @@ const TicketsPage = (props) => {
     console.log("Hand action clicked for row:", rowData, rowIndex);
     handleCellEdit(
       rowIndex,
-      "tickets_in_hand",
-      !rowData?.tickets_in_hand,
+      "ticket_in_hand",
+      !rowData?.ticket_in_hand,
       rowData,
       rowData?.matchIndex
     );
@@ -987,7 +987,7 @@ const TicketsPage = (props) => {
             <Hand
               size={14}
               className={`${
-                rowData?.tickets_in_hand ? "text-green-500" : "text-black"
+                rowData?.ticket_in_hand ? "text-green-500" : "text-black"
               } hover:text-green-500 cursor-pointer`}
               onClick={() => handleHandAction(rowData, rowIndex)}
             />

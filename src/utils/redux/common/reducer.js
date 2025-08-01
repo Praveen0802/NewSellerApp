@@ -1,6 +1,7 @@
 import {
   ADD_WALLET_POPUP,
   CONFIRM_PURCHASE_POPUP,
+  SHOW_FULL_DISPLAY,
   UPDATE_NOTIFICATION_COUNT,
 } from "./type";
 
@@ -15,6 +16,7 @@ const initalState = {
     activity: 0,
     isLoaded: false,
   },
+  showFullDisplay: false,
 };
 
 const CommonReducers = (state = initalState, action) => {
@@ -23,6 +25,12 @@ const CommonReducers = (state = initalState, action) => {
       return {
         ...state,
         addWalletflag: action?.payload?.flag,
+      };
+
+    case SHOW_FULL_DISPLAY:
+      return {
+        ...state,
+        showFullDisplay: action?.payload,
       };
     case CONFIRM_PURCHASE_POPUP:
       return {

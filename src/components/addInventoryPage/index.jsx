@@ -515,9 +515,9 @@ const AddInventoryPage = (props) => {
     },
     {
       type: "checkbox",
-      name: "tickets_in_hand",
+      name: "ticket_in_hand",
       label: "Tickets In Hand",
-      value: filtersApplied?.tickets_in_hand || false,
+      value: filtersApplied?.ticket_in_hand || false,
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
       className:
@@ -527,7 +527,7 @@ const AddInventoryPage = (props) => {
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
-          tickets_in_hand: e?.target?.checked,
+          ticket_in_hand: e?.target?.checked,
         })),
     },
   ];
@@ -543,6 +543,7 @@ const AddInventoryPage = (props) => {
       options: filter.options || [],
       showIcon: filter?.showIcon,
       hideFromTable: filter?.hideFromTable,
+      iconBefore: filter.iconBefore || null,
     };
 
     if (filter.multiselect) {
@@ -587,12 +588,12 @@ const AddInventoryPage = (props) => {
         icon: (
           <Tooltip content="Tickets In Hand">
             <Image
-              src={rowData?.tickets_in_hand ? greenHand : oneHand}
+              src={rowData?.ticket_in_hand ? greenHand : oneHand}
               alt="tick"
               width={isMobile ? 14 : 16}
               height={isMobile ? 14 : 16}
               className={`${
-                rowData?.tickets_in_hand ? "text-green-500" : "text-gray-400"
+                rowData?.ticket_in_hand ? "text-green-500" : "text-gray-400"
               } cursor-pointer hover:text-blue-500 transition-colors`}
               onClick={() => handleHandAction(rowData, rowIndex)}
             />
@@ -734,8 +735,8 @@ const AddInventoryPage = (props) => {
     console.log("Hand action clicked for row:", rowData, rowIndex);
     handleCellEdit(
       rowIndex,
-      "tickets_in_hand",
-      !rowData?.tickets_in_hand,
+      "ticket_in_hand",
+      !rowData?.ticket_in_hand,
       rowData
     );
   };
@@ -929,8 +930,8 @@ const AddInventoryPage = (props) => {
 
       formData.append(`data[${index}][ship_date]`, shipDateValue);
       formData.append(
-        `data[${index}][tickets_in_hand]`,
-        publishingData.tickets_in_hand ? "1" : "0"
+        `data[${index}][ticket_in_hand]`,
+        publishingData.ticket_in_hand ? "1" : "0"
       );
       formData.append(
         `data[${index}][additional_file_type]`,
@@ -1357,9 +1358,7 @@ const AddInventoryPage = (props) => {
                 setShowSearchDropdown(false);
                 setHasSearched(false);
               }}
-              parentClassName={`${
-                isMobile ? "!w-full" : isTablet ? "!w-[400px]" : "!w-[550px]"
-              }`}
+              parentClassName={`${"!w-[40%]"}`}
               data-search-container="true" // Add this
             />
 
@@ -1525,10 +1524,12 @@ const AddInventoryPage = (props) => {
       {/* Main Content Area with Common Table - Only show when table should be visible */}
       {matchDetails && showTable && inventoryData.length > 0 && (
         <div
-          style={{
-            // maxHeight: isMobile ? "calc(100vh - 400px)" : "calc(100vh - 450px)",
-            // overflowY: "auto",
-          }}
+          style={
+            {
+              // maxHeight: isMobile ? "calc(100vh - 400px)" : "calc(100vh - 450px)",
+              // overflowY: "auto",
+            }
+          }
           className={`${
             isMobile ? "m-3" : "m-4 lg:m-6"
           } pb-[100px] bg-white rounded-lg shadow-sm`}

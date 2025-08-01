@@ -23,7 +23,10 @@ import {
   fetchActivityHistory,
   fetchNotificationCount,
 } from "@/utils/apiHandler/request";
-import { updateNotificationCount } from "@/utils/redux/common/action";
+import {
+  updateLeftMenuDisplay,
+  updateNotificationCount,
+} from "@/utils/redux/common/action";
 
 // Custom Tooltip Component with Portal Support
 const Tooltip = ({ children, content, position = "right" }) => {
@@ -884,14 +887,15 @@ const NotificationsPopup = ({
 };
 
 const LeftMenuBar = () => {
-  const [showFullDisplay, setShowFullDisplay] = useState(false);
+  // const [showFullDisplay, setShowFullDisplay] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [salesExpanded, setSalesExpanded] = useState(false);
 
   const { currentUser } = useSelector((state) => state.currentUser);
-  const { notificationCountData } = useSelector((state) => state.common);
-
+  const { notificationCountData, showFullDisplay } = useSelector(
+    (state) => state.common
+  );
   const name = currentUser?.first_name?.slice(0, 2).toUpperCase();
   const userName = currentUser?.first_name;
 
@@ -1050,10 +1054,11 @@ const LeftMenuBar = () => {
       setActive(currentPath);
     }
   }, [router?.pathname]);
-
+console.log(showFullDisplay,'showFullDisplayshowFullDisplay')
   const handleSelectedClick = (index, item) => {
     if (index === 0 && !isMobile) {
-      setShowFullDisplay(!showFullDisplay);
+      // setShowFullDisplay(!showFullDisplay);
+      dispatch(updateLeftMenuDisplay(!showFullDisplay));
       return;
     }
 

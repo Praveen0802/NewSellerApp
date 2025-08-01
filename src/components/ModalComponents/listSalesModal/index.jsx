@@ -370,13 +370,13 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
                             <div className="flex ml-2">
                               <button
                                 onClick={() => savePrice(item)}
-                                className="bg-blue-600 text-white rounded p-1 mr-1"
+                                className="bg-blue-600 cursor-pointer text-white rounded p-1 mr-1"
                               >
                                 <Check className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={cancelEdit}
-                                className="bg-gray-200 text-gray-700 rounded p-1"
+                                className="bg-gray-200 cursor-pointer text-gray-700 rounded p-1"
                               >
                                 <X className="w-4 h-4" />
                               </button>
@@ -401,7 +401,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
                                   item.flag === 1 &&
                                   startEditPrice(item.ticket_id, item.price)
                                 }
-                                className="ml-2 bg-gray-300 text-white rounded p-1"
+                                className="ml-2 cursor-pointer bg-gray-400 text-white rounded p-1"
                               >
                                 <Edit className="w-3 h-3" />
                               </button>

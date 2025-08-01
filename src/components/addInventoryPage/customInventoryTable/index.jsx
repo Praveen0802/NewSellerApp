@@ -437,6 +437,7 @@ const CommonInventoryTable = ({
         isRowHovered={shouldShowAsEditable}
         disabled={!isRowEditable || isDisabled}
         placeholder={getPlaceholder()}
+        iconBefore={header.iconBefore || null}
       />
     );
   };

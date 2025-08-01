@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
-import { debounce } from 'lodash';
+import { debounce } from "lodash";
 
 const MultiSelectEditableCell = ({
   value,
@@ -10,7 +10,6 @@ const MultiSelectEditableCell = ({
   isRowHovered = false,
   disabled = false,
   placeholder = "Select options...",
-  // NEW: Add saveOnChange prop for AddInventory flow
   saveOnChange = true,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -40,42 +39,56 @@ const MultiSelectEditableCell = ({
     setEditValue(normalizeValue(value));
   }, [value]);
 
-  // Calculate dropdown position
+  // Calculate dropdown position with dynamic width
   const calculateDropdownPosition = useCallback(() => {
     if (!dropdownRef.current) return;
 
     const rect = dropdownRef.current.getBoundingClientRect();
-    const dropdownHeight = 200; // Estimated max height of dropdown
+    const dropdownHeight = 300; // Increased height for better visibility
     const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
     const spaceBelow = viewportHeight - rect.bottom;
     const spaceAbove = rect.top;
+
+    // Calculate optimal width based on content
+    const maxOptionLength = Math.max(
+      ...options.map((opt) => opt.label?.length || 0),
+      placeholder.length
+    );
+
+    // Calculate minimum width needed (rough estimation: 8px per character + padding)
+    const minWidthFromContent = Math.max(maxOptionLength * 8 + 60, 250);
+    const maxAllowedWidth = Math.min(viewportWidth - rect.left - 20, 400);
+    const optimalWidth = Math.min(minWidthFromContent, maxAllowedWidth);
 
     // Decide whether to show above or below
     const showAbove = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
 
     const position = {
       left: rect.left + window.scrollX,
-      width: rect.width,
+      width: Math.max(optimalWidth, rect.width),
       showAbove,
     };
 
+    // Adjust left position if dropdown would go off-screen
+    if (position.left + position.width > viewportWidth) {
+      position.left = Math.max(10, viewportWidth - position.width - 10);
+    }
+
     if (showAbove) {
-      // Position above the input
       position.top = rect.top + window.scrollY - dropdownHeight;
     } else {
-      // Position below the input
       position.top = rect.bottom + window.scrollY + 4;
     }
 
     setDropdownPosition(position);
-  }, []);
+  }, [options, placeholder]);
 
   // Update position when dropdown opens
   useEffect(() => {
     if (isDropdownOpen) {
       calculateDropdownPosition();
 
-      // Recalculate on scroll or resize
       const handleReposition = () => {
         calculateDropdownPosition();
       };
@@ -166,11 +179,13 @@ const MultiSelectEditableCell = ({
     setIsDropdownOpen(false);
   };
 
-  // UPDATED: Create different debounced functions based on saveOnChange
   const debouncedOnSave = useCallback(
-    debounce((newValue) => {
-      onSave(newValue);
-    }, saveOnChange ? 100 : 500), // Shorter delay for AddInventory
+    debounce(
+      (newValue) => {
+        onSave(newValue);
+      },
+      saveOnChange ? 100 : 500
+    ),
     [onSave, saveOnChange]
   );
 
@@ -186,12 +201,9 @@ const MultiSelectEditableCell = ({
 
     setEditValue(newValues);
 
-    // UPDATED: For AddInventory flow, save immediately on change
     if (saveOnChange) {
-      // Save immediately without debounce for AddInventory
       onSave(newValues);
     } else {
-      // Use debounced save for other flows
       debouncedOnSave(newValues);
     }
   };
@@ -199,8 +211,7 @@ const MultiSelectEditableCell = ({
   const handleSelectAll = () => {
     const allValues = options.map((opt) => opt.value);
     setEditValue(allValues);
-    
-    // UPDATED: Save on change for AddInventory flow
+
     if (saveOnChange) {
       onSave(allValues);
     }
@@ -208,8 +219,7 @@ const MultiSelectEditableCell = ({
 
   const handleDeselectAll = () => {
     setEditValue([]);
-    
-    // UPDATED: Save on change for AddInventory flow
+
     if (saveOnChange) {
       onSave([]);
     }
@@ -262,7 +272,7 @@ const MultiSelectEditableCell = ({
             </span>
             <ChevronDown
               size={12}
-              className={`transform transition-transform text-[#323A70] ${
+              className={`transform transition-transform text-[#323A70] flex-shrink-0 ml-2 ${
                 isDropdownOpen ? "rotate-180" : ""
               }`}
             />
@@ -272,28 +282,27 @@ const MultiSelectEditableCell = ({
         {isDropdownOpen && (
           <div
             data-multiselect-dropdown
-            className={`fixed bg-white border border-[#DADBE5] rounded shadow-lg max-h-48 overflow-y-auto ${
+            className={`fixed bg-white border border-[#DADBE5] rounded shadow-lg max-h-64 overflow-y-auto ${
               dropdownPosition.showAbove ? "shadow-lg" : "shadow-lg"
             }`}
             style={{
               zIndex: 9999,
               top: dropdownPosition.top,
               left: dropdownPosition.left,
-              width: Math.max(dropdownPosition.width, 200),
-              minWidth: "200px",
+              width: dropdownPosition.width,
             }}
             onScroll={(e) => {
               e.stopPropagation();
             }}
           >
-            <div className="border-b border-[#DADBE5] p-2">
-              <div className="flex justify-between">
+            <div className="border-b border-[#DADBE5] p-2 sticky top-0 bg-white">
+              <div className="flex justify-between gap-2">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleSelectAll();
                   }}
-                  className="text-xs px-2 py-1 text-blue-600 hover:text-blue-800"
+                  className="text-xs px-2 py-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                 >
                   Select All
                 </button>
@@ -302,7 +311,7 @@ const MultiSelectEditableCell = ({
                     e.stopPropagation();
                     handleDeselectAll();
                   }}
-                  className="text-xs px-2 py-1 text-red-600 hover:text-red-800"
+                  className="text-xs px-2 py-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
                 >
                   Deselect All
                 </button>
@@ -316,7 +325,7 @@ const MultiSelectEditableCell = ({
               return (
                 <div
                   key={option.value}
-                  className={`px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center space-x-2 ${
+                  className={`px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-start space-x-2 transition-colors ${
                     isSelected ? "bg-blue-50" : ""
                   }`}
                   onClick={(e) => {
@@ -328,22 +337,23 @@ const MultiSelectEditableCell = ({
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => {}}
-                    className="w-3 h-3 text-blue-600 border-[#DADBE5]"
+                    className="w-3 h-3 text-blue-600 border-[#DADBE5] mt-0.5 flex-shrink-0"
                   />
-                  <span className="text-xs text-[#323A70]">{option.label}</span>
+                  <span className="text-xs text-[#323A70] leading-tight break-words">
+                    {option.label}
+                  </span>
                 </div>
               );
             })}
 
-            {/* UPDATED: Only show Save/Cancel buttons when NOT using saveOnChange */}
             {!saveOnChange && (
-              <div className="border-t border-[#DADBE5] p-2 flex justify-end space-x-2">
+              <div className="border-t border-[#DADBE5] p-2 flex justify-end space-x-2 sticky bottom-0 bg-white">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleCancel();
                   }}
-                  className="text-xs px-2 py-1 text-gray-600 hover:text-gray-800"
+                  className="text-xs px-3 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
                 >
                   Cancel
                 </button>
@@ -352,7 +362,7 @@ const MultiSelectEditableCell = ({
                     e.stopPropagation();
                     handleSave();
                   }}
-                  className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  className="text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                 >
                   Save
                 </button>
@@ -378,7 +388,10 @@ const MultiSelectEditableCell = ({
             >
               {getDisplayValue()}
             </span>
-            <ChevronDown size={12} className="text-[#323A70]" />
+            <ChevronDown
+              size={12}
+              className="text-[#323A70] flex-shrink-0 ml-2"
+            />
           </div>
         </div>
       </div>
@@ -407,7 +420,7 @@ const MultiSelectEditableCell = ({
   );
 };
 
-// Updated SimpleEditableCell component with saveOnChange support
+// Updated SimpleEditableCell component with iconBefore support
 const SimpleEditableCell = ({
   value,
   type = "text",
@@ -417,8 +430,9 @@ const SimpleEditableCell = ({
   isRowHovered = false,
   disabled = false,
   placeholder = "Enter...",
-  // NEW: Add saveOnChange prop for AddInventory flow
   saveOnChange = true,
+  // NEW: Add iconBefore prop
+  iconBefore = null,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -446,11 +460,9 @@ const SimpleEditableCell = ({
     setIsEditing(false);
   };
 
-  // UPDATED: Handle onChange for AddInventory flow
   const handleChange = (newValue) => {
     setEditValue(newValue);
-    
-    // Save immediately on change for AddInventory flow
+
     if (saveOnChange && newValue !== value) {
       onSave(newValue);
     }
@@ -464,7 +476,6 @@ const SimpleEditableCell = ({
     }
   };
 
-  // UPDATED: Only handle blur when NOT using saveOnChange
   const handleBlur = () => {
     if (!saveOnChange) {
       handleSave();
@@ -492,7 +503,7 @@ const SimpleEditableCell = ({
   };
 
   const hasValue = () => {
-    if (type === "checkbox") return true; // Always show Yes/No for checkbox
+    if (type === "checkbox") return true;
     if (type === "select") {
       const option = options.find((opt) => opt.value === value);
       return !!option;
@@ -500,9 +511,26 @@ const SimpleEditableCell = ({
     return !!(value && value.toString().trim());
   };
 
+  // NEW: Helper function to get padding based on iconBefore
+  const getInputPadding = () => {
+    return iconBefore ? "pl-10 pr-2" : "px-2";
+  };
+
+  // NEW: Render iconBefore if present
+  const renderIconBefore = () => {
+    if (!iconBefore) return null;
+
+    return (
+      <div className="absolute left-2 top-1/2 transform -translate-y-1/2 pointer-events-none z-10">
+        {typeof iconBefore === "function" ? iconBefore() : iconBefore}
+      </div>
+    );
+  };
+
   if (isEditing && !disabled) {
     return (
-      <div className="w-full">
+      <div className="w-full relative">
+        {renderIconBefore()}
         {type === "select" ? (
           <select
             ref={inputRef}
@@ -513,7 +541,7 @@ const SimpleEditableCell = ({
             onFocus={() => setIsFocused(true)}
             onMouseEnter={() => setIsFocused(true)}
             onMouseLeave={() => setIsFocused(false)}
-            className={`border rounded px-2 py-1 text-xs focus:outline-none bg-white w-full text-[#323A70] transition-colors ${
+            className={`border rounded ${getInputPadding()} py-1 text-xs focus:outline-none bg-white w-full text-[#323A70] transition-colors ${
               isFocused
                 ? "border-green-600 ring-2 ring-green-500"
                 : "border-[#DADBE5] hover:border-green-500"
@@ -527,22 +555,24 @@ const SimpleEditableCell = ({
             ))}
           </select>
         ) : type === "checkbox" ? (
-          <input
-            ref={inputRef}
-            type="checkbox"
-            checked={editValue}
-            onChange={(e) => handleChange(e.target.checked)}
-            onKeyDown={handleKeyPress}
-            onBlur={handleBlur}
-            onFocus={() => setIsFocused(true)}
-            onMouseEnter={() => setIsFocused(true)}
-            onMouseLeave={() => setIsFocused(false)}
-            className={`w-4 h-4 text-blue-600 bg-gray-100 rounded transition-colors ${
-              isFocused
-                ? "border-green-500 ring-2 ring-green-500"
-                : "border-[#DADBE5] hover:border-green-400"
-            }`}
-          />
+          <div className="flex items-center">
+            <input
+              ref={inputRef}
+              type="checkbox"
+              checked={editValue}
+              onChange={(e) => handleChange(e.target.checked)}
+              onKeyDown={handleKeyPress}
+              onBlur={handleBlur}
+              onFocus={() => setIsFocused(true)}
+              onMouseEnter={() => setIsFocused(true)}
+              onMouseLeave={() => setIsFocused(false)}
+              className={`w-4 h-4 text-blue-600 bg-gray-100 rounded transition-colors ${
+                isFocused
+                  ? "border-green-500 ring-2 ring-green-500"
+                  : "border-[#DADBE5] hover:border-green-400"
+              }`}
+            />
+          </div>
         ) : (
           <input
             ref={inputRef}
@@ -555,7 +585,7 @@ const SimpleEditableCell = ({
             onFocus={() => setIsFocused(true)}
             onMouseEnter={() => setIsFocused(true)}
             onMouseLeave={() => setIsFocused(false)}
-            className={`border rounded px-2 py-1 text-xs focus:outline-none w-full bg-white text-[#323A70] transition-colors placeholder:text-gray-400 ${
+            className={`border rounded ${getInputPadding()} py-1 text-xs focus:outline-none w-full bg-white text-[#323A70] transition-colors placeholder:text-gray-400 ${
               isFocused
                 ? "border-green-500 ring-2 ring-green-500"
                 : "border-[#DADBE5] hover:border-green-400"
@@ -569,35 +599,38 @@ const SimpleEditableCell = ({
   if (isRowHovered && !disabled) {
     return (
       <div className={`cursor-pointer ${className}`} onClick={handleClick}>
-        {type === "select" ? (
-          <select
-            value={editValue || ""}
-            className="border border-[#DADBE5] rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors"
-            onClick={handleClick}
-            readOnly
-          >
-            <option>{getDisplayValue()}</option>
-          </select>
-        ) : type === "checkbox" ? (
-          <div className="flex items-center">
+        <div className="relative">
+          {renderIconBefore()}
+          {type === "select" ? (
+            <select
+              value={editValue || ""}
+              className={`border border-[#DADBE5] rounded ${getInputPadding()} py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors`}
+              onClick={handleClick}
+              readOnly
+            >
+              <option>{getDisplayValue()}</option>
+            </select>
+          ) : type === "checkbox" ? (
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={editValue}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-[#DADBE5] rounded cursor-pointer hover:border-green-600 transition-colors"
+                onClick={handleClick}
+                readOnly
+              />
+            </div>
+          ) : (
             <input
-              type="checkbox"
-              checked={editValue}
-              className="w-4 h-4 text-blue-600 bg-gray-100 border-[#DADBE5] rounded cursor-pointer hover:border-green-600 transition-colors"
+              type={type}
+              value={editValue || ""}
+              placeholder={placeholder}
+              className={`border border-[#DADBE5] rounded ${getInputPadding()} py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors placeholder:text-gray-400`}
               onClick={handleClick}
               readOnly
             />
-          </div>
-        ) : (
-          <input
-            type={type}
-            value={editValue || ""}
-            placeholder={placeholder}
-            className="border border-[#DADBE5] rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors placeholder:text-gray-400"
-            onClick={handleClick}
-            readOnly
-          />
-        )}
+          )}
+        </div>
       </div>
     );
   }
@@ -606,20 +639,40 @@ const SimpleEditableCell = ({
     <div
       className={`${
         disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
-      } ${className}`}
+      } ${className} relative`}
       onClick={handleClick}
     >
-      <span
-        className={`text-xs ${
-          disabled
-            ? "text-gray-400"
-            : hasValue()
-            ? "text-[#323A70]"
-            : "text-gray-400"
-        }`}
-      >
-        {getDisplayValue()}
-      </span>
+      {iconBefore && (
+        <div className="inline-flex items-center">
+          <span className="mr-1">
+            {typeof iconBefore === "function" ? iconBefore() : iconBefore}
+          </span>
+          <span
+            className={`text-xs ${
+              disabled
+                ? "text-gray-400"
+                : hasValue()
+                ? "text-[#323A70]"
+                : "text-gray-400"
+            }`}
+          >
+            {getDisplayValue()}
+          </span>
+        </div>
+      )}
+      {!iconBefore && (
+        <span
+          className={`text-xs ${
+            disabled
+              ? "text-gray-400"
+              : hasValue()
+              ? "text-[#323A70]"
+              : "text-gray-400"
+          }`}
+        >
+          {getDisplayValue()}
+        </span>
+      )}
     </div>
   );
 };
