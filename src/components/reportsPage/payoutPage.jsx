@@ -17,6 +17,7 @@ import {
   getLMTPayPrefill, // You'll need to create this API function
   getPayoutDetails,
   getPayoutHistoryReport,
+  getPayoutOrderDetails,
   getPayoutOrderReport,
   payOutHistory,
   payOutOrderHistory, // You'll need to create this API function
@@ -30,6 +31,7 @@ import OrderInfo from "../orderInfoPopup";
 import DownloadButton from "../DownloadButton";
 import useCSVDownload from "@/Hooks/useCsvDownload";
 import ActiveFiltersBox from "../tabbedLayout/ActiveFilterBoxs";
+import TransactionDetailsPopup from "./components/TransactionDetails";
 
 const PayoutPage = (props) => {
   const { apiData } = props;
@@ -151,10 +153,25 @@ const PayoutPage = (props) => {
             (list) => list?.reference_no === referenceNo && list?.id === id
           ) ?? {};
 
-      setEyeViewPopup({
-        flag: true,
-        data: { ...transData, transactionType: selectedTab },
-      });
+      try {
+        const payoutOrderDetails = await getPayoutOrderDetails("", {
+          payout_id: id,
+        });
+        setEyeViewPopup({
+          flag: true,
+          data: {
+            ...transData,
+            transactionType: selectedTab,
+            payoutTableData: payoutOrderDetails,
+          },
+        });
+      } catch (error) {
+        toast.error("Failed to get payout order details. Please try again.");
+        setEyeViewPopup({
+          flag: true,
+          data: { ...transData, transactionType: selectedTab },
+        });
+      }
     } catch (error) {
       console.log("ERROR in handleEyeClick", error);
       setEyeViewPopup({
@@ -658,11 +675,11 @@ const PayoutPage = (props) => {
           showShimmer={eyeViewPopup?.isLoading}
         />
       ) : (
-        <OrderViewPopup
+        <TransactionDetailsPopup
           show={eyeViewPopup?.flag}
-          onClose={() => setEyeViewPopup({ flag: false, data: "" })}
           data={eyeViewPopup?.data}
-          outSideClickClose={false}
+          onClose={() => setEyeViewPopup({ flag: false, data: "" })}
+          refreshPopupData={refreshPopupData}
           showShimmer={eyeViewPopup?.isLoading}
         />
       )}

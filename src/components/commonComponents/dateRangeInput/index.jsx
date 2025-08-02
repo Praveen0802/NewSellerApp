@@ -459,6 +459,10 @@ const FloatingDateRange = ({
       : "border-[#DADBE5]"
   }`;
 
+  console.log(dropdownPosition.top,'',`${inputRef.current?.getBoundingClientRect().bottom + window.scrollY}`,dropdownPosition.top 
+  ? `${inputRef.current?.getBoundingClientRect().bottom + window.scrollY}px`
+  : `${inputRef.current?.getBoundingClientRect().top + window.scrollY - 350}px`,'hererrrrr')
+
   return (
     <div className={`${parentClassName} relative w-full`} ref={dropdownRef}>
       {!hideLabel && (
@@ -513,7 +517,7 @@ const FloatingDateRange = ({
           className={`fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-xl p-2 min-w-[280px]`}
           style={{
             top: dropdownPosition.top 
-              ? `${inputRef.current?.getBoundingClientRect().bottom + window.scrollY + 4}px`
+              ? `${inputRef.current?.getBoundingClientRect().bottom + window.scrollY}px`
               : `${inputRef.current?.getBoundingClientRect().top + window.scrollY - 350}px`,
             left: `${inputRef.current?.getBoundingClientRect().left + window.scrollX + dropdownPosition.left}px`,
             width: `${inputRef.current?.getBoundingClientRect().width}px`,

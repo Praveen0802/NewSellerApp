@@ -1013,7 +1013,7 @@ const UploadTickets = ({
               <Button
                 className={`px-4 py-2 ${
                   isConfirmDisabled ? "bg-gray-300" : "bg-green-500"
-                } text-white rounded text-sm hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed`}
+                } text-white rounded text-sm hover:bg-green-600 disabled:bg-gray-300 flex gap-2 items-center disabled:cursor-not-allowed`}
                 disabled={isConfirmDisabled}
                 loading={isLoading}
                 onClick={handleConfirmCtaClick}
