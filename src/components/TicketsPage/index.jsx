@@ -285,8 +285,7 @@ const Pagination = ({
 
 const TicketsPage = (props) => {
   const { success = "", response } = props;
-  console.log(response, "responseresponse");
-
+console.log(response,'responseresponseresponse')
   // Memoize the overview data to prevent unnecessary re-renders
   const overViewData = useMemo(
     () => response?.overview || {},
@@ -305,7 +304,7 @@ const TicketsPage = (props) => {
 
   // Mock data based on your JSON structure
   const mockListingHistory = useMemo(
-    () => listingHistoryData?.data || [],
+    () => listingHistoryData || [],
     [listingHistoryData]
   );
 
