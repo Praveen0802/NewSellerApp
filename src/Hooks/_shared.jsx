@@ -33,7 +33,12 @@ export const useUserDisplayName = (currentUser) => {
             label:
               firstName.charAt(0).toUpperCase() +
               lastName.charAt(0).toUpperCase(),
-            name: firstName + " " + lastName,
+            name:
+              firstName.charAt(0).toUpperCase() +
+              firstName.slice(1) +
+              " " +
+              lastName.charAt(0).toUpperCase() +
+              lastName.slice(1),
           });
           setIsNameAvailable(true);
         }
