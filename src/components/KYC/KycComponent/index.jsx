@@ -8,6 +8,7 @@ import {
   saveSellerContract,
 } from "@/utils/apiHandler/request";
 import { toast } from "react-toastify";
+import useS3Download from "@/Hooks/useS3Download";
 
 const KycComponent = ({
   photoId,
@@ -155,21 +156,13 @@ const KycComponent = ({
       setUploading((prev) => ({ ...prev, [documentType]: false }));
     }
   };
+  const { downloadFile, isDownloading } = useS3Download();
 
-  const handleDownload = (url, filename) => {
+  const handleDownload = async (url, filename) => {
     try {
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename || "document";
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      await downloadFile(url);
     } catch (error) {
-      console.error("Download failed:", error);
-      // Fallback: open in new tab
-      window.open(url, "_blank", "noopener noreferrer");
+      toast.error("Failed to download document. Please try again.");
     }
   };
 
@@ -241,8 +234,9 @@ const KycComponent = ({
               <button
                 onClick={() => handleDownload(url, title || "document")}
                 className="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 transition-colors"
+                disabled={isDownloading}
               >
-                Download
+                {isDownloading ? "Downloading..." : "Download"}
               </button>
             </div>
           </div>
@@ -336,7 +330,7 @@ const KycComponent = ({
                         `${config.title.replace(/\s+/g, "_")}.pdf`
                       )
                     }
-                    className="flex items-center space-x-1 text-green-600 hover:text-green-700 text-sm font-medium p-1 rounded hover:bg-green-50 transition-colors"
+                    className="flex items-center space-x-1 text-green-600 hover:text-green-700 text-sm font-medium p-1 rounded hover:bg-green-50 transition-colors cursor-pointer"
                   >
                     <Download className="w-4 h-4" />
                     <span>Download</span>
