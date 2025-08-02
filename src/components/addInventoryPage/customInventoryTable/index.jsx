@@ -32,7 +32,8 @@ const CommonInventoryTable = ({
   // New props for different modes
   mode = "single", // "single" for AddInventory, "multiple" for TicketsPage
   showAccordion = true,
-  isCollapsed = false,
+  defaultOpen = false,
+  // isCollapsed = false,
   onToggleCollapse,
   // For multiple matches mode
   matchIndex,
@@ -52,12 +53,19 @@ const CommonInventoryTable = ({
   const [showMarketPlaceModal, setShowMarketPlaceModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(defaultOpen ? false : true); // FIXED: Start with accordions closed
 
-  // MOVED: Dynamic options state to component level to fix hooks issue
+  // OPTIMIZED: Dynamic options state with better structure
   const [dynamicOptions, setDynamicOptions] = useState({});
 
-  // NEW: Track which dynamic options have been fetched to prevent duplicate calls
+  // OPTIMIZED: More granular tracking of fetched options to prevent duplicate calls
   const [fetchedOptionsCache, setFetchedOptionsCache] = useState(new Set());
+  const [isFetchingOptions, setIsFetchingOptions] = useState(new Set());
+
+  // NEW: Animation states for accordion
+  const [isAnimating, setIsAnimating] = useState(false);
+  const contentRef = useRef(null);
+  const [contentHeight, setContentHeight] = useState(0);
 
   // Refs for sticky table functionality
   const containerRef = useRef(null);
@@ -77,6 +85,53 @@ const CommonInventoryTable = ({
     window.addEventListener("resize", checkScreenSize);
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
+
+  // NEW: Handle accordion toggle with smooth animation
+  const handleAccordionToggle = useCallback(() => {
+    if (isAnimating) return; // Prevent multiple rapid clicks during animation
+
+    setIsAnimating(true);
+
+    if (isCollapsed) {
+      // Opening accordion
+      setIsCollapsed(false);
+      // Set height immediately for measurement
+      setTimeout(() => {
+        if (contentRef.current) {
+          const height = contentRef.current.scrollHeight;
+          setContentHeight(height);
+        }
+      }, 0);
+    } else {
+      // Closing accordion
+      if (contentRef.current) {
+        setContentHeight(contentRef.current.scrollHeight);
+        // Force reflow
+        contentRef.current.offsetHeight;
+        setContentHeight(0);
+      }
+
+      setTimeout(() => {
+        setIsCollapsed(true);
+      }, 300); // Match transition duration
+    }
+
+    // Reset animation state after transition
+    setTimeout(() => {
+      setIsAnimating(false);
+      if (!isCollapsed) {
+        setContentHeight("auto");
+      }
+    }, 300);
+  }, [isCollapsed, isAnimating]);
+
+  // NEW: Effect to calculate content height when data changes (only when expanded)
+  useEffect(() => {
+    if (!isCollapsed && contentRef.current) {
+      const height = contentRef.current.scrollHeight;
+      setContentHeight(height);
+    }
+  }, [inventoryData, isCollapsed]);
 
   // Default sticky columns configuration for single mode (AddInventory)
   const getDefaultStickyColumnsForRow = (rowData, rowIndex) => {
@@ -118,7 +173,7 @@ const CommonInventoryTable = ({
   const getStickyColumns =
     getStickyColumnsForRow || getDefaultStickyColumnsForRow;
 
-  // OPTIMIZED: fetchDynamicOptions function with caching
+  // HEAVILY OPTIMIZED: fetchDynamicOptions with better caching and duplicate prevention
   const fetchDynamicOptions = useCallback(
     async (row, header) => {
       if (!header.dynamicOptions) return;
@@ -135,17 +190,19 @@ const CommonInventoryTable = ({
           // Create a unique cache key for this combination
           const cacheKey = `${header.key}-${matchId}-${categoryId}`;
 
-          // Check if we already have this data or are currently fetching it
+          // IMPROVED: Check multiple conditions to prevent duplicate calls
           if (
             fetchedOptionsCache.has(cacheKey) ||
+            isFetchingOptions.has(cacheKey) ||
             (dynamicOptions?.block?.categoryId === categoryId &&
-              dynamicOptions?.block?.matchId === matchId)
+              dynamicOptions?.block?.matchId === matchId &&
+              dynamicOptions?.block?.options?.length > 0)
           ) {
             return;
           }
 
-          // Mark as being fetched to prevent duplicate calls
-          setFetchedOptionsCache((prev) => new Set([...prev, cacheKey]));
+          // Mark as currently being fetched
+          setIsFetchingOptions((prev) => new Set([...prev, cacheKey]));
 
           try {
             const options = await fetchBlockDetails("", {
@@ -157,14 +214,20 @@ const CommonInventoryTable = ({
                 : []
             );
 
+            // Update dynamic options
             setDynamicOptions((prev) => ({
               ...prev,
               [header.key]: { matchId, categoryId, options },
             }));
+
+            // Mark as successfully fetched
+            setFetchedOptionsCache((prev) => new Set([...prev, cacheKey]));
           } catch (error) {
             console.error("Error fetching dynamic options:", error);
-            // Remove from cache on error so it can be retried
-            setFetchedOptionsCache((prev) => {
+            // Don't add to cache on error so it can be retried
+          } finally {
+            // Remove from currently fetching set
+            setIsFetchingOptions((prev) => {
               const newSet = new Set(prev);
               newSet.delete(cacheKey);
               return newSet;
@@ -175,12 +238,12 @@ const CommonInventoryTable = ({
           break;
       }
     },
-    [dynamicOptions, fetchedOptionsCache]
+    [dynamicOptions, fetchedOptionsCache, isFetchingOptions]
   );
 
-  // OPTIMIZED: Effect to fetch dynamic options only when accordion is open and data is available
+  // HEAVILY OPTIMIZED: Only fetch when accordion opens and only once per unique combination
   useEffect(() => {
-    // Only fetch when accordion is open (not collapsed)
+    // CRITICAL: Only fetch when accordion is open (not collapsed)
     if (isCollapsed || inventoryData.length === 0 || headers.length === 0) {
       return;
     }
@@ -188,17 +251,28 @@ const CommonInventoryTable = ({
     const fetchAllDynamicOptions = async () => {
       // Get unique combinations to avoid duplicate API calls
       const uniqueCombinations = new Map();
+      const dynamicHeaders = headers.filter((header) => header.dynamicOptions);
+
+      // Only process if we have dynamic headers
+      if (dynamicHeaders.length === 0) return;
 
       for (const row of inventoryData) {
-        for (const header of headers) {
-          if (header.dynamicOptions && header.key === "block") {
+        for (const header of dynamicHeaders) {
+          if (header.key === "block") {
             const matchId = row.rawTicketData?.match_id;
             const categoryId = row.ticket_category_id;
 
             if (matchId && categoryId) {
-              const key = `${matchId}-${categoryId}`;
-              if (!uniqueCombinations.has(key)) {
-                uniqueCombinations.set(key, { row, header });
+              const uniqueKey = `${matchId}-${categoryId}`;
+              const cacheKey = `${header.key}-${matchId}-${categoryId}`;
+
+              // Only add if not already fetched or currently fetching
+              if (
+                !fetchedOptionsCache.has(cacheKey) &&
+                !isFetchingOptions.has(cacheKey) &&
+                !uniqueCombinations.has(uniqueKey)
+              ) {
+                uniqueCombinations.set(uniqueKey, { row, header });
               }
             }
           }
@@ -206,13 +280,39 @@ const CommonInventoryTable = ({
       }
 
       // Fetch options for unique combinations only
-      for (const [key, { row, header }] of uniqueCombinations) {
-        await fetchDynamicOptions(row, header);
+      const fetchPromises = Array.from(uniqueCombinations.values()).map(
+        ({ row, header }) => fetchDynamicOptions(row, header)
+      );
+
+      // Wait for all fetches to complete
+      if (fetchPromises.length > 0) {
+        await Promise.allSettled(fetchPromises);
       }
     };
 
-    fetchAllDynamicOptions();
-  }, [inventoryData, headers, isCollapsed, fetchDynamicOptions]);
+    // IMPROVED: Add a small delay to prevent rapid successive calls
+    const timeoutId = setTimeout(() => {
+      fetchAllDynamicOptions();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [
+    inventoryData,
+    headers,
+    isCollapsed, // KEY: Only fetch when not collapsed
+    fetchDynamicOptions,
+    fetchedOptionsCache,
+    isFetchingOptions,
+  ]);
+
+  // OPTIMIZED: Clear cache when component unmounts or data significantly changes
+  useEffect(() => {
+    return () => {
+      setFetchedOptionsCache(new Set());
+      setIsFetchingOptions(new Set());
+      setDynamicOptions({});
+    };
+  }, [matchDetails?.match_id]); // Reset when match changes
 
   // Function to check scroll capabilities and update state
   const checkScrollCapabilities = () => {
@@ -449,7 +549,10 @@ const CommonInventoryTable = ({
     >
       {/* Accordion Header - Always show when showAccordion is true */}
       {showAccordion && (
-        <div className="bg-[#343432] cursor-pointer" onClick={onToggleCollapse}>
+        <div
+          className="bg-[#343432] cursor-pointer"
+          onClick={handleAccordionToggle}
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6">
               {/* Radio button for single mode, chevron for multiple mode */}
@@ -584,11 +687,13 @@ const CommonInventoryTable = ({
               <div
                 className={`bg-[#FFFFFF26] ${
                   isMobile ? "p-1.5" : "p-2"
-                } rounded-full cursor-pointer`}
+                } rounded-full cursor-pointer transition-transform duration-200 ${
+                  isAnimating ? "scale-95" : "hover:scale-105"
+                }`}
               >
                 <ChevronDown
                   size={isMobile ? 12 : 14}
-                  className={`text-white transition-transform duration-200 ${
+                  className={`text-white transition-transform duration-300 ease-in-out ${
                     !isCollapsed ? "rotate-180" : ""
                   }`}
                 />
@@ -598,8 +703,20 @@ const CommonInventoryTable = ({
         </div>
       )}
 
-      {/* Table Content */}
-      {!isCollapsed && (
+      {/* NEW: Animated Table Content Container */}
+      <div
+        ref={contentRef}
+        className="overflow-hidden transition-all duration-300 ease-in-out"
+        style={{
+          height: isCollapsed
+            ? 0
+            : contentHeight === "auto"
+            ? "auto"
+            : `${contentHeight}px`,
+          opacity: isCollapsed ? 0 : 1,
+        }}
+      >
+        {/* Table Content */}
         <div
           className="w-full bg-white relative"
           style={{ overflow: "visible" }}
@@ -954,7 +1071,8 @@ const CommonInventoryTable = ({
             </div>
           </div>
         </div>
-      )}
+      </div>
+
       {showMarketPlaceModal && (
         <ListingsMarketplace
           show={showMarketPlaceModal}

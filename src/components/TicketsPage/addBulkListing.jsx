@@ -577,6 +577,7 @@ const BulkInventory = (props) => {
       type: "select",
       name: "split_type",
       label: "Split Type",
+      mandatory: true,
       value: filtersApplied?.split_type,
       options: [
         ...(split_types?.map((note) => ({
@@ -1368,7 +1369,7 @@ const BulkInventory = (props) => {
             {totalTicketCount === 0 && (
               <div className="flex justify-end px-5 py-2 border-b-[1px] border-[#E0E1EA]">
                 <Button
-                  type="blueType"
+                   type="primary"
                   classNames={{
                     root: "px-4 py-2.5",
                     label_: "text-sm font-medium",
@@ -1421,6 +1422,7 @@ const BulkInventory = (props) => {
                     handleUploadAction={(rowData, rowIndex) =>
                       handleUploadAction(rowData, rowIndex, matchId)
                     }
+                    defaultOpen={true}
                     handleSelectAll={() => handleSelectAllForMatch(matchId)}
                     handleDeselectAll={() => handleDeselectAllForMatch(matchId)}
                     matchDetails={matchDetails}

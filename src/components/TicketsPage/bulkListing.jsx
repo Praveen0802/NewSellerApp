@@ -359,7 +359,7 @@ const {showFullDisplay} = useSelector((state) => state.common);
         </div>
 
         <Button
-          type="blueType"
+          type="primary"
           classNames={{
             root: "px-2 md:px-3 py-1.5 md:py-2",
             label_: "text-xs md:text-sm font-medium",
@@ -511,7 +511,7 @@ const {showFullDisplay} = useSelector((state) => state.common);
 
       {/* Sticky Bottom Bar */}
       {selectedRows?.length > 0 && (
-        <div className={`fixed bottom-0 w-full ${showFullDisplay ? 'left-42' : 'left-15' } right-0 bg-white border-t border-[#E5E7EB] shadow-lg z-50`}>
+        <div className={`fixed bottom-0 w-full left-0 ${showFullDisplay ? 'pl-42' : 'pl-15' } right-0 bg-white border-t border-[#E5E7EB] shadow-lg z-50`}>
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-4">
               <span className="text-sm text-[#323A70] font-medium">
@@ -530,7 +530,7 @@ const {showFullDisplay} = useSelector((state) => state.common);
                 label="Cancel"
               />
               <Button
-                type="blueType"
+                type="primary"
                 classNames={{
                   root: "px-4 py-2",
                   label_: "text-sm font-medium",

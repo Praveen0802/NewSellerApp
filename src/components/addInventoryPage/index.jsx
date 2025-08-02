@@ -1506,7 +1506,7 @@ const AddInventoryPage = (props) => {
                 } px-3 sm:px-4 lg:px-5 py-2 border-b-[1px] border-[#E0E1EA]`}
               >
                 <Button
-                  type="blueType"
+                  type="primary"
                   classNames={{
                     root: `${isMobile ? "px-6 py-3" : "px-4 py-2.5"}`,
                     label_: `${isMobile ? "text-base" : "text-sm"} font-medium`,

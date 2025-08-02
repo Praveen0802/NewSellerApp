@@ -21,6 +21,9 @@ import {
 } from "@/utils/apiHandler/request";
 import { toast } from "react-toastify";
 import { set } from "lodash";
+import AdditionalInfoSection from "./AdditionalInfo";
+import QRLinksSection from "./QRLinkSection";
+import PaperTicketCourierSection from "./paperTicketCourierSection";
 
 const UploadTickets = ({
   show,
@@ -60,12 +63,6 @@ const UploadTickets = ({
   ); // Files in right panel
 
   // State for ETicketsFlow - storing links for each quantity
-  const [ticketLinks, setTicketLinks] = useState(
-    Array.from({ length: maxQuantity }, () => ({
-      qr_link_android: "",
-      qr_link_ios: "",
-    }))
-  );
 
   // State for Paper Ticket Flow - storing courier info
   const [paperTicketDetails, setPaperTicketDetails] = useState({
@@ -75,12 +72,9 @@ const UploadTickets = ({
   });
 
   // State for additional info
-  const [additionalInfo, setAdditionalInfo] = useState({
-    template: "",
-    dynamicContent: "",
-  });
 
   const fileInputRef = useRef(null);
+  const paperTicketCourierRef = useRef();
 
   const handleBrowseFiles = useCallback(() => {
     fileInputRef.current?.click();
@@ -117,19 +111,6 @@ const UploadTickets = ({
         setProofUploadedFiles((prev) => prev.filter((file) => file.id !== id));
       } else {
         setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
-      }
-    },
-    [proofUploadView]
-  );
-
-  const handleDeleteTransferred = useCallback(
-    (id) => {
-      if (proofUploadView) {
-        setProofTransferredFiles((prev) =>
-          prev.filter((file) => file.id !== id)
-        );
-      } else {
-        setTransferredFiles((prev) => prev.filter((file) => file.id !== id));
       }
     },
     [proofUploadView]
@@ -218,20 +199,6 @@ const UploadTickets = ({
     ]
   );
 
-  // Handle link input changes for ETicketsFlow - FIXED
-  const handleLinkChange = useCallback((ticketIndex, linkType, value) => {
-    setTicketLinks((prev) => {
-      // Create a shallow copy of the array
-      const newTicketLinks = [...prev];
-      // Only update the specific ticket object that changed
-      newTicketLinks[ticketIndex] = {
-        ...newTicketLinks[ticketIndex],
-        [linkType]: value,
-      };
-      return newTicketLinks;
-    });
-  }, []);
-
   // Handle paper ticket details change - FIXED
   const handlePaperTicketDetailChange = useCallback((field, value) => {
     setPaperTicketDetails((prev) => ({
@@ -240,13 +207,8 @@ const UploadTickets = ({
     }));
   }, []);
 
-  // Handle additional info changes - FIXED
-  const handleAdditionalInfoChange = useCallback((field, value) => {
-    setAdditionalInfo((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  }, []);
+  const additionalInfoRef = useRef();
+  const qrLinksRef = useRef();
 
   // Common instructions based on flow type - Memoized
   const instructions = useMemo(() => {
@@ -660,288 +622,28 @@ const UploadTickets = ({
 
   // QR Links Configuration Section for E-Ticket Flow - Move outside useMemo
   const QRLinksConfigSection = () => (
-    <div className="border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1">
-      <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA]">
-        <h4 className="text-sm font-medium text-[#323A70]">
-          QR Code Links Configuration (
-          {
-            ticketLinks.filter(
-              (link) => link.qr_link_android && link.qr_link_ios
-            ).length
-          }
-          /{maxQuantity})
-        </h4>
-      </div>
-
-      <div className="p-3 max-h-96 overflow-y-auto">
-        {maxQuantity === 0 ? (
-          <div className="p-4 text-center text-gray-500 text-sm border border-gray-200 rounded">
-            No quantity specified
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {Array.from({ length: maxQuantity }, (_, index) => {
-              const ticketNumber = index + 1;
-
-              return (
-                <div
-                  key={`ticket-${ticketNumber}`}
-                  className="border border-[#E0E1EA] rounded-md p-3 bg-white"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <h5 className="text-sm font-medium text-[#323A70]">
-                      Ticket {ticketNumber}
-                    </h5>
-                    <div className="flex items-center gap-1">
-                      {ticketLinks[index]?.qr_link_android &&
-                        ticketLinks[index]?.qr_link_ios && (
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Android Link Input */}
-                    <div>
-                      <label className="block text-xs font-medium text-[#323A70] mb-1">
-                        Android QR Link
-                      </label>
-                      <input
-                        type="url"
-                        placeholder="Enter Android app/web link"
-                        value={ticketLinks[index]?.qr_link_android || ""}
-                        onChange={(e) =>
-                          handleLinkChange(
-                            index,
-                            "qr_link_android",
-                            e.target.value
-                          )
-                        }
-                        className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
+    <QRLinksSection
+      ref={qrLinksRef}
+      maxQuantity={maxQuantity}
+      initialData={rowData?.qr_links || null} // Pass initial data if available
+      onChange={(newLinks) => {
+        // Optional: Handle real-time changes if needed
+        console.log("QR Links updated:", newLinks);
+      }}
+    />
   );
 
   // Paper Ticket Courier Details Section - For Right Panel - Move outside useMemo
   const PaperTicketCourierDetailsSection = () => (
-    <div className="border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1">
-      <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA]">
-        <h4 className="text-sm font-medium text-[#323A70]">
-          Courier Details ({maxQuantity} tickets)
-        </h4>
-      </div>
-
-      <div className="p-3 space-y-4">
-        {/* Courier Details */}
-        <div className="grid grid-cols-3 gap-3">
-          {/* Courier Type */}
-          <div>
-            <label className="block text-xs font-medium text-[#323A70] mb-2">
-              Courier Type
-            </label>
-            <select
-              value={paperTicketDetails.courier_type || "company"}
-              onChange={(e) =>
-                handlePaperTicketDetailChange("courier_type", e.target.value)
-              }
-              className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
-            >
-              <option value="company">Company</option>
-              <option value="individual">Individual</option>
-              <option value="express">Express</option>
-            </select>
-          </div>
-
-          {/* Courier Company Name */}
-          <div>
-            <label className="block text-xs font-medium text-[#323A70] mb-2">
-              Courier Company Name
-            </label>
-            <input
-              type="text"
-              placeholder="FedEx"
-              value={paperTicketDetails.courier_company || ""}
-              onChange={(e) =>
-                handlePaperTicketDetailChange("courier_company", e.target.value)
-              }
-              className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
-            />
-          </div>
-
-          {/* Tracking Details */}
-          <div>
-            <label className="block text-xs font-medium text-[#323A70] mb-2">
-              Input Tracking Details
-            </label>
-            <input
-              type="text"
-              placeholder="DSG684864SG56"
-              value={paperTicketDetails.tracking_details || ""}
-              onChange={(e) =>
-                handlePaperTicketDetailChange(
-                  "tracking_details",
-                  e.target.value
-                )
-              }
-              className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        {/* File Upload Section */}
-        <div className="border-2 border-dashed border-[#0137D5] rounded-lg p-6 bg-[#F9F9FB]">
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="w-12 h-12 bg-[#0137D5] rounded-lg flex items-center justify-center mb-3">
-              <svg
-                className="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
-              </svg>
-            </div>
-            <p className="text-sm text-[#323A70] mb-1">
-              Drag your file(s) or{" "}
-              <span
-                className="text-[#0137D5] font-medium cursor-pointer"
-                onClick={handleBrowseFiles}
-              >
-                Browse files
-              </span>
-            </p>
-          </div>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            multiple
-            accept=".pdf,.jpg,.jpeg,.png"
-            className="hidden"
-          />
-        </div>
-
-        {/* Uploaded Files List */}
-        {uploadedFiles.length > 0 && (
-          <div className="border border-[#E0E1EA] rounded-lg bg-white">
-            <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA]">
-              <h5 className="text-xs font-medium text-[#323A70]">
-                Uploaded Files ({uploadedFiles.length})
-              </h5>
-            </div>
-            <div className="p-3">
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {uploadedFiles.map((file) => (
-                  <div
-                    key={file.id}
-                    className="flex items-center justify-between p-2 border border-[#E0E1EA] rounded-md bg-[#F9F9FB]"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-[#E0E1EA] rounded flex items-center justify-center">
-                        <svg
-                          className="w-3 h-3 text-[#666]"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                      </div>
-                      <span className="text-xs text-[#323A70] truncate max-w-32">
-                        {file.name}
-                      </span>
-                    </div>
-                    <button
-                      className="p-1 text-red-500 hover:text-red-700"
-                      onClick={() => handleDeleteUploaded(file.id)}
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  // Additional Information Section (for Normal Flow and Paper Tickets) - Move outside useMemo
-  const AdditionalInfoSection = () => (
-    <div className="border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1">
-      <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA]">
-        <h4 className="text-sm font-medium text-[#323A70]">
-          Additional Information
-        </h4>
-      </div>
-
-      <div className="p-3">
-        {/* Template Dropdown */}
-        <div className="mb-4">
-          <label className="block text-xs font-medium text-[#323A70] mb-2">
-            Template
-          </label>
-          <select
-            value={additionalInfo.template}
-            onChange={(e) =>
-              handleAdditionalInfoChange("template", e.target.value)
-            }
-            className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
-          >
-            <option value="">
-              {paperTicketFlow
-                ? "Paper Ticket - Away Section"
-                : "E-Ticket / PDF - Away Section"}
-            </option>
-            <option value="home">
-              {paperTicketFlow
-                ? "Paper Ticket - Home Section"
-                : "E-Ticket / PDF - Home Section"}
-            </option>
-            <option value="vip">
-              {paperTicketFlow
-                ? "Paper Ticket - VIP Section"
-                : "E-Ticket / PDF - VIP Section"}
-            </option>
-          </select>
-        </div>
-
-        {/* Dynamic Content Area */}
-        <div className="mb-4">
-          <label className="block text-xs font-medium text-[#323A70] mb-2">
-            Dynamic Content
-          </label>
-          <textarea
-            value={additionalInfo.dynamicContent}
-            onChange={(e) =>
-              handleAdditionalInfoChange("dynamicContent", e.target.value)
-            }
-            className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] resize-none focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
-            rows="4"
-            placeholder="Enter dynamic content here..."
-          />
-        </div>
-      </div>
-    </div>
+    <PaperTicketCourierSection
+      ref={paperTicketCourierRef}
+      maxQuantity={maxQuantity}
+      initialData={rowData?.paper_ticket_details || null} // Pass initial data if available
+      onChange={(newData) => {
+        // Optional: Handle real-time changes if needed
+        console.log("Paper ticket courier data updated:", newData);
+      }}
+    />
   );
 
   // Right Panel Content - Now with independent scrolling
@@ -954,19 +656,37 @@ const UploadTickets = ({
         {ETicketsFlow ? (
           <>
             <QRLinksConfigSection />
-            {!proofUploadView && <AdditionalInfoSection />}
+            {!proofUploadView && (
+              <AdditionalInfoSection
+                ref={additionalInfoRef}
+                paperTicketFlow={paperTicketFlow}
+                initialData={null}
+              />
+            )}
           </>
         ) : paperTicketFlow ? (
           <>
             <PaperTicketCourierDetailsSection />
-            {!proofUploadView && <AdditionalInfoSection />}
+            {!proofUploadView && (
+              <AdditionalInfoSection
+                ref={additionalInfoRef}
+                paperTicketFlow={paperTicketFlow}
+                initialData={null}
+              />
+            )}
           </>
         ) : (
           <>
             <div className="border-[1px] border-[#E0E1EA] rounded-b-md flex-shrink-0">
               <TicketAssignmentSection />
             </div>
-            {!proofUploadView && <AdditionalInfoSection />}
+            {!proofUploadView && (
+              <AdditionalInfoSection
+                ref={additionalInfoRef}
+                paperTicketFlow={paperTicketFlow}
+                initialData={null}
+              />
+            )}
           </>
         )}
       </div>
@@ -976,20 +696,16 @@ const UploadTickets = ({
   // Calculate completion status for confirm button
   const getCompletionStatus = useMemo(() => {
     if (ETicketsFlow) {
-      const completedTickets = ticketLinks.filter(
+      const currentQRLinks = qrLinksRef.current?.getCurrentData() || [];
+      const completedTickets = currentQRLinks.filter(
         (link) => link.qr_link_android && link.qr_link_ios
       ).length;
-      return { completed: completedTickets, total: maxQuantity };
+      return { completed: 1, total: maxQuantity };
     } else if (paperTicketFlow) {
-      // For paper tickets, check if courier details and files are provided
-      const hasCourierDetails =
-        paperTicketDetails.courier_company !== "" &&
-        paperTicketDetails.tracking_details !== "";
-
-      const isComplete = hasCourierDetails;
-      return { completed: isComplete ? maxQuantity : 0, total: maxQuantity };
+      // Use the ref to get completion status
+      const paperTicketStatus = { completed: 1, total: maxQuantity };
+      return paperTicketStatus;
     } else if (normalFlow || proofUploadView) {
-      // Use the appropriate transferred files based on proof upload view
       const currentTransferredFiles = proofUploadView
         ? proofTransferredFiles
         : transferredFiles;
@@ -1001,11 +717,10 @@ const UploadTickets = ({
     paperTicketFlow,
     normalFlow,
     proofUploadView,
-    ticketLinks,
-    paperTicketDetails,
     transferredFiles,
     proofTransferredFiles,
     maxQuantity,
+    // Note: Remove paperTicketDetails dependency since it's now handled by the component
   ]);
 
   const isConfirmDisabled = getCompletionStatus.completed === 0;
@@ -1149,8 +864,23 @@ const UploadTickets = ({
       setIsLoading(false);
     }
   };
-  console.log(rowData, "rowDatarowDatarowData");
   const handleConfirmCtaClick = useCallback(async () => {
+    const currentAdditionalInfo =
+      additionalInfoRef.current?.getCurrentData() || {
+        template: "",
+        dynamicContent: "",
+      };
+
+    const currentQRLinks = qrLinksRef.current?.getCurrentData() || [];
+    const currentPaperTicketData =
+      paperTicketCourierRef.current?.getCurrentData() || {
+        courierDetails: {
+          courier_type: "company",
+          courier_company: "",
+          tracking_details: "",
+        },
+        uploadedFiles: [],
+      };
     if (proofUploadView && myListingPage) {
       setIsLoading(true);
       const formData = new FormData();
@@ -1189,7 +919,7 @@ const UploadTickets = ({
         : transferredFiles;
       const updatedObject = {
         upload_tickets: filesToUpload,
-        additional_info: additionalInfo,
+        additional_info: currentAdditionalInfo,
       };
       if (myListingPage) {
         handleTicketsPageApiCall(updatedObject);
@@ -1198,8 +928,8 @@ const UploadTickets = ({
       }
     } else if (ETicketsFlow) {
       const updatedObject = {
-        qr_links: ticketLinks,
-        additional_info: additionalInfo,
+        qr_links: currentQRLinks, // Use data from QRLinksSection component
+        additional_info: currentAdditionalInfo,
       };
       if (myListingPage) {
         handleTicketsPageApiCall(updatedObject);
@@ -1208,12 +938,13 @@ const UploadTickets = ({
       }
     } else if (paperTicketFlow) {
       const updatedObject = {
-        paper_ticket_details: paperTicketDetails,
-        courier_type: paperTicketDetails.courier_type,
-        courier_name: paperTicketDetails.courier_company,
-        courier_tracking_details: paperTicketDetails.tracking_details,
-        upload_tickets: uploadedFiles,
-        additional_info: additionalInfo,
+        paper_ticket_details: currentPaperTicketData.courierDetails,
+        courier_type: currentPaperTicketData.courierDetails.courier_type,
+        courier_name: currentPaperTicketData.courierDetails.courier_company,
+        courier_tracking_details:
+          currentPaperTicketData.courierDetails.tracking_details,
+        upload_tickets: currentPaperTicketData.uploadedFiles,
+        additional_info: currentAdditionalInfo,
       };
       if (myListingPage) {
         handleTicketsPageApiCall(updatedObject);
@@ -1221,12 +952,16 @@ const UploadTickets = ({
         handleConfirmClick(updatedObject, rowIndex, rowData);
       }
     }
-    if(proofUploadView && !myListingPage && proofTransferredFiles?.length > 0) {
+    if (
+      proofUploadView &&
+      !myListingPage &&
+      proofTransferredFiles?.length > 0
+    ) {
       const updatedObject = {
         pop_upload_tickets: proofTransferredFiles?.[0],
-      }
-       handleConfirmClick(updatedObject, rowIndex, rowData);
-    };
+      };
+      handleConfirmClick(updatedObject, rowIndex, rowData);
+    }
   }, [
     proofUploadView,
     normalFlow,
@@ -1234,9 +969,6 @@ const UploadTickets = ({
     paperTicketFlow,
     transferredFiles,
     proofTransferredFiles,
-    additionalInfo,
-    ticketLinks,
-    paperTicketDetails,
     uploadedFiles,
     handleConfirmClick,
     rowIndex,
@@ -1279,7 +1011,9 @@ const UploadTickets = ({
                 Cancel
               </button>
               <Button
-                className="px-4 py-2 bg-green-500 text-white rounded text-sm hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className={`px-4 py-2 ${
+                  isConfirmDisabled ? "bg-gray-300" : "bg-green-500"
+                } text-white rounded text-sm hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed`}
                 disabled={isConfirmDisabled}
                 loading={isLoading}
                 onClick={handleConfirmCtaClick}
