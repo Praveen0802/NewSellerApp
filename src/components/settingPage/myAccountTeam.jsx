@@ -9,6 +9,8 @@ import { toast } from "react-toastify";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import { getAuthToken } from "@/utils/helperFunctions";
 import useCountryCodes from "@/Hooks/useCountryCodes";
+import { updateCurrentUser } from "@/utils/redux/currentUser/action";
+import { useDispatch } from "react-redux";
 
 const MyAccountTeam = (props) => {
   const { profileDetails } = props;
@@ -28,6 +30,8 @@ const MyAccountTeam = (props) => {
   // });
 
   const { allCountryCodeOptions } = useCountryCodes();
+
+  const dispatch = useDispatch()
 
   const [formData, setFormData] = useState(initialValues);
   const [submitLoader, setSubmitLoader] = useState(false);
@@ -64,9 +68,12 @@ const MyAccountTeam = (props) => {
         "PUT",
         payload
       );
+      console.log(response,'responseresponse')
+      dispatch(updateCurrentUser(response));
       toast.success("Account information updated successfully.");
       setEdit(false); // Close edit mode after successful update
     } catch (error) {
+      console.log("ERROR in updateProfileDetailsSubmit", error);
       toast.error("Failed to update account information");
     } finally {
       setSubmitLoader(false);

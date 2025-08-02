@@ -20,6 +20,49 @@ import { Clock, Eye } from "lucide-react";
 import { inventoryLog } from "@/data/testOrderDetails";
 import useTeamMembersDetails from "@/Hooks/useTeamMembersDetails";
 
+function convertISOToMMDDYYYY(isoTimestamp, options = {}) {
+  // Handle null, undefined, empty string, or non-string inputs
+  if (!isoTimestamp || typeof isoTimestamp !== 'string') {
+    return options.returnNullOnError ? null : '';
+  }
+
+  try {
+    // Create date object from ISO string
+    const date = new Date(isoTimestamp);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return options.returnNullOnError ? null : '';
+    }
+
+    // Extract date components
+    const month = date.getMonth() + 1; // getMonth() returns 0-11
+    const day = date.getDate();
+    const year = date.getFullYear();
+
+    // Handle invalid date components
+    if (!month || !day || !year || month < 1 || month > 12 || day < 1 || day > 31) {
+      return options.returnNullOnError ? null : '';
+    }
+
+    // Format with or without zero padding
+    const mm = options.noPadding ? month.toString() : month.toString().padStart(2, '0');
+    const dd = options.noPadding ? day.toString() : day.toString().padStart(2, '0');
+    
+    // Custom separator (default is '/')
+    const separator = options.separator || '/';
+    
+    return `${mm}${separator}${dd}${separator}${year}`;
+    
+  } catch (error) {
+    // Handle any parsing errors
+    if (options.throwOnError) {
+      throw new Error(`Failed to convert ISO timestamp: ${error.message}`);
+    }
+    return options.returnNullOnError ? null : '';
+  }
+}
+
 const SalesPage = (props) => {
   const { profile, response = {} } = props;
   const { tournamentList } = response;
@@ -28,7 +71,7 @@ const SalesPage = (props) => {
     label: item.tournament_name,
   }));
   const [pageLoader, setPageLoader] = useState(false);
-
+console.log(response,'responseresponse')
   const [filtersApplied, setFiltersApplied] = useState({
     order_status: profile,
   });
@@ -47,8 +90,8 @@ const SalesPage = (props) => {
 
   // Define table headers - filter based on visible columns
   const allHeaders = [
-    { key: "booking_no", label: "Booking No" },
-    { key: "total_amount", label: "Total Amount" },
+    { key: "booking_no", label: "Order Id" },
+    { key: "created_date", label: "Order Date" },
     { key: "currency_type", label: "Currency Type" },
     { key: "match_id", label: "Match ID" },
     { key: "match_name", label: "Match Name" },
@@ -60,7 +103,7 @@ const SalesPage = (props) => {
     { key: "ticket_block", label: "Ticket Block" },
     { key: "section", label: "Section" },
     { key: "ticket_type", label: "Ticket Type" },
-    { key: "listing_note", label: "Listing Note" },
+    // { key: "listing_note", label: "Listing Note" },
     { key: "split", label: "Split" },
     { key: "stadium_name", label: "Stadium Name" },
     { key: "seat_category", label: "Seat Category" },

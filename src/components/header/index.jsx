@@ -51,9 +51,7 @@ const Header = () => {
     if (router.pathname.includes("my-listings")) {
       return "Inventory";
     } else {
-      return isNameAvailable
-        ? `${getGreeting()}, ${userDisplayName.name}`
-        : `Welcome back`;
+      return getGreeting();
     }
   };
 
