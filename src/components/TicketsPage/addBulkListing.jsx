@@ -577,6 +577,7 @@ const BulkInventory = (props) => {
       type: "select",
       name: "split_type",
       label: "Split Type",
+      mandatory: true,
       value: filtersApplied?.split_type,
       options: [
         ...(split_types?.map((note) => ({
@@ -1421,6 +1422,7 @@ const BulkInventory = (props) => {
                     handleUploadAction={(rowData, rowIndex) =>
                       handleUploadAction(rowData, rowIndex, matchId)
                     }
+                    defaultOpen={true}
                     handleSelectAll={() => handleSelectAllForMatch(matchId)}
                     handleDeselectAll={() => handleDeselectAllForMatch(matchId)}
                     matchDetails={matchDetails}

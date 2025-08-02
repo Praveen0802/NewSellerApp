@@ -36,7 +36,7 @@ import {
   getMyListingHistory,
   getViewDetailsPopup,
   updateMyListing,
-  deleteMyListing, // Add this import if it exists
+  deleteMyListing,
 } from "@/utils/apiHandler/request";
 import UploadTickets from "../ModalComponents/uploadTickets";
 import InventoryLogsInfo from "../inventoryLogsInfo";
@@ -55,7 +55,7 @@ import {
   constructHeadersFromFilters,
 } from "../addInventoryPage/customInventoryTable/utils";
 import CommonInventoryTable from "../addInventoryPage/customInventoryTable";
-import BulkActionBar from "../addInventoryPage/bulkActionBar"; // Import the BulkActionBar
+import BulkActionBar from "../addInventoryPage/bulkActionBar";
 import Tooltip from "../addInventoryPage/simmpleTooltip";
 
 const ShimmerCard = () => (
@@ -190,7 +190,6 @@ const ActiveFilterPills = ({
   );
 };
 
-// Pagination Component - keep the same as before
 const Pagination = ({
   currentPage = 1,
   totalPages = 1,
@@ -285,7 +284,7 @@ const Pagination = ({
 
 const TicketsPage = (props) => {
   const { success = "", response } = props;
-console.log(response,'responseresponseresponse')
+
   // Memoize the overview data to prevent unnecessary re-renders
   const overViewData = useMemo(
     () => response?.overview || {},
@@ -301,10 +300,13 @@ console.log(response,'responseresponseresponse')
   const [itemsPerPage, setItemsPerPage] = useState(50);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  
+  // MAIN STATE: Using ticketsByMatch instead of ticketsData
+  const [ticketsByMatch, setTicketsByMatch] = useState({});
 
   // Mock data based on your JSON structure
   const mockListingHistory = useMemo(
-    () => listingHistoryData || [],
+    () => listingHistoryData?.data || listingHistoryData || [],
     [listingHistoryData]
   );
 
@@ -321,10 +323,10 @@ console.log(response,'responseresponseresponse')
   const [filtersApplied, setFiltersApplied] = useState({
     page: 1,
   });
-  console.log(filtersApplied,'filtersAppliedfiltersApplied')
+  console.log(filtersApplied, "filtersAppliedfiltersApplied");
   const [isLoading, setIsLoading] = useState(false);
 
-  // ENHANCED: Global selection state similar to BulkInventory
+  // ENHANCED: Global selection state
   const [globalSelectedTickets, setGlobalSelectedTickets] = useState([]);
   const [globalEditingTickets, setGlobalEditingTickets] = useState([]);
   const [isGlobalEditMode, setIsGlobalEditMode] = useState(false);
@@ -334,9 +336,6 @@ console.log(response,'responseresponseresponse')
     show: false,
     rowData: null,
   });
-
-  // State for tickets data
-  const [ticketsData, setTicketsData] = useState([]);
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [collapsedMatches, setCollapsedMatches] = useState({});
 
@@ -349,129 +348,144 @@ console.log(response,'responseresponseresponse')
     }
   }, [success]);
 
-  // Initialize tickets data from mock data
+  // Initialize tickets data from mock data - UPDATED FOR ticketsByMatch
   useEffect(() => {
-    const transformedData = [];
+    const ticketsByMatchObj = {};
 
     mockListingHistory.forEach((item, matchIndex) => {
       const matchInfo = item.match_info || {};
       const tickets = item.tickets || [];
 
-      tickets.forEach((ticket, ticketIndex) => {
-        transformedData.push({
-          id: `${matchIndex}-${ticketIndex}`,
-          uniqueId: `${matchIndex}_${ticketIndex}`, // Add uniqueId for global selection
-          s_no: ticket.s_no || "",
-          matchIndex: matchIndex,
-          ticketIndex: ticketIndex,
-          match_name: matchInfo.match_name || "",
-          venue: matchInfo.stadium_name || "",
-          tournament: matchInfo.tournament_name || "",
-          match_date:
-            new Date(matchInfo.match_date).toLocaleDateString() || "",
-          match_time: matchInfo.match_time || "",
-          ticket_type: ticket.ticket_type || "",
-          ticket_type_id: ticket.ticket_type_id || "",
-          ticket_category: ticket.ticket_category || "",
-          ticket_category_id: ticket.ticket_category_id || "",
-          quantity: ticket.quantity || 0,
-          price: ticket.price || 0,
-          price_type: ticket.price_type || "GBP",
-          status:
-            ticket.status === 1
-              ? "Active"
-              : ticket.status === 2
-              ? "Sold"
-              : "Inactive",
-          sell_date: ticket.sell_date || "",
-          row: ticket.row || "",
-          block: ticket.ticket_block || "",
-          first_seat: ticket.first_seat || "",
-          web_price: ticket.web_price || "",
-          home_town: ticket.home_town || "",
-          split_type: ticket.split?.name || "",
-          split_type_id: ticket.split?.id || "",
-          ship_date: ticket.ship_date || "",
-          ticket_in_hand: ticket.ticket_in_hand || false,
-          listing_note: ticket.listing_note?.map((note) => `${note.id}`),
-          rawTicketData: ticket,
-          rawMatchData: matchInfo,
-        });
-      });
+      const transformedTickets = tickets.map((ticket, ticketIndex) => ({
+        id: `${matchIndex}-${ticketIndex}`,
+        uniqueId: `${matchIndex}_${ticketIndex}`,
+        s_no: ticket.s_no || "",
+        matchIndex: matchIndex,
+        ticketIndex: ticketIndex,
+        match_name: matchInfo.match_name || "",
+        venue: matchInfo.stadium_name || "",
+        tournament: matchInfo.tournament_name || "",
+        match_date: new Date(matchInfo.match_date).toLocaleDateString() || "",
+        match_time: matchInfo.match_time || "",
+        ticket_type: ticket.ticket_type || "",
+        ticket_type_id: ticket.ticket_type_id || "",
+        ticket_category: ticket.ticket_category || "",
+        ticket_category_id: ticket.ticket_category_id || "",
+        quantity: ticket.quantity || 0,
+        price: ticket.price || 0,
+        price_type: ticket.price_type || "GBP",
+        status:
+          ticket.status === 1
+            ? "Active"
+            : ticket.status === 2
+            ? "Sold"
+            : "Inactive",
+        sell_date: ticket.sell_date || "",
+        row: ticket.row || "",
+        block: ticket.ticket_block || "",
+        first_seat: ticket.first_seat || "",
+        web_price: ticket.web_price || "",
+        home_town: ticket.home_town || "",
+        split_type: ticket.split?.name || "",
+        split_type_id: ticket.split?.id || "",
+        ship_date: ticket.ship_date || "",
+        ticket_in_hand: ticket.ticket_in_hand || false,
+        listing_note: ticket.listing_note?.map((note) => `${note.id}`),
+        rawTicketData: ticket,
+        rawMatchData: matchInfo,
+      }));
+
+      if (transformedTickets.length > 0) {
+        ticketsByMatchObj[matchIndex] = {
+          matchInfo,
+          tickets: transformedTickets,
+          filters: item.filter,
+        };
+      }
     });
 
-    setTicketsData(transformedData);
+    setTicketsByMatch(ticketsByMatchObj);
   }, [mockListingHistory]);
 
-  // ENHANCED: Global selection handlers similar to BulkInventory
-  const handleGlobalSelectAll = () => {
-    const allTicketIds = ticketsData.map((ticket) => ticket.uniqueId);
+  // Helper function to get all tickets as flat array from ticketsByMatch
+  const getAllTicketsFromMatches = useCallback(() => {
+    const allTickets = [];
+    Object.values(ticketsByMatch).forEach((matchData) => {
+      allTickets.push(...matchData.tickets);
+    });
+    return allTickets;
+  }, [ticketsByMatch]);
+
+  // ENHANCED: Global selection handlers - UPDATED FOR ticketsByMatch
+  const handleGlobalSelectAll = useCallback(() => {
+    const allTickets = getAllTicketsFromMatches();
+    const allTicketIds = allTickets.map((ticket) => ticket.uniqueId);
     setGlobalSelectedTickets(allTicketIds);
-  };
+  }, [getAllTicketsFromMatches]);
 
-  const handleGlobalDeselectAll = () => {
+  const handleGlobalDeselectAll = useCallback(() => {
     setGlobalSelectedTickets([]);
-  };
+  }, []);
 
-  // Handle select all for specific match
-  const handleSelectAllForMatch = (matchIndex) => {
-    const matchTickets = ticketsData.filter(
-      (ticket) => ticket.matchIndex === matchIndex
-    );
-    const matchTicketIds = matchTickets.map((ticket) => ticket.uniqueId);
+  // Handle select all for specific match - UPDATED FOR ticketsByMatch
+  const handleSelectAllForMatch = useCallback((matchIndex) => {
+    const matchData = ticketsByMatch[matchIndex];
+    if (!matchData) return;
+
+    const matchTicketIds = matchData.tickets.map((ticket) => ticket.uniqueId);
 
     // Remove existing selections for this match and add new ones
-    const filteredGlobalSelection = globalSelectedTickets.filter((uniqueId) => {
-      const [ticketMatchIndex] = uniqueId.split("_");
-      return parseInt(ticketMatchIndex) !== matchIndex;
+    setGlobalSelectedTickets((prevSelected) => {
+      const filteredGlobalSelection = prevSelected.filter((uniqueId) => {
+        const [ticketMatchIndex] = uniqueId.split("_");
+        return parseInt(ticketMatchIndex) !== parseInt(matchIndex);
+      });
+      return [...filteredGlobalSelection, ...matchTicketIds];
     });
+  }, [ticketsByMatch]);
 
-    setGlobalSelectedTickets([...filteredGlobalSelection, ...matchTicketIds]);
-  };
-
-  // Handle deselect all for specific match
-  const handleDeselectAllForMatch = (matchIndex) => {
-    const filteredGlobalSelection = globalSelectedTickets.filter((uniqueId) => {
-      const [ticketMatchIndex] = uniqueId.split("_");
-      return parseInt(ticketMatchIndex) !== matchIndex;
+  // Handle deselect all for specific match - UPDATED FOR ticketsByMatch
+  const handleDeselectAllForMatch = useCallback((matchIndex) => {
+    setGlobalSelectedTickets((prevSelected) => {
+      return prevSelected.filter((uniqueId) => {
+        const [ticketMatchIndex] = uniqueId.split("_");
+        return parseInt(ticketMatchIndex) !== parseInt(matchIndex);
+      });
     });
+  }, []);
 
-    setGlobalSelectedTickets(filteredGlobalSelection);
-  };
-
-  // Get selected rows for a specific match (convert uniqueId to local indices)
-  const getSelectedRowsForMatch = (matchIndex) => {
+  // Get selected rows for a specific match - UPDATED FOR ticketsByMatch
+  const getSelectedRowsForMatch = useCallback((matchIndex) => {
     const selectedRows = [];
     globalSelectedTickets.forEach((uniqueId) => {
       const [ticketMatchIndex, ticketIndex] = uniqueId.split("_");
-      if (parseInt(ticketMatchIndex) === matchIndex) {
+      if (parseInt(ticketMatchIndex) === parseInt(matchIndex)) {
         selectedRows.push(parseInt(ticketIndex));
       }
     });
     return selectedRows;
-  };
+  }, [globalSelectedTickets]);
 
-  // Handle row selection for individual match tables
-  const handleSetSelectedRowsForMatch = (matchIndex, newSelectedRows) => {
+  // Handle row selection for individual match tables - UPDATED FOR ticketsByMatch
+  const handleSetSelectedRowsForMatch = useCallback((matchIndex, newSelectedRows) => {
     // Remove existing selections for this match
-    const filteredGlobalSelection = globalSelectedTickets.filter((uniqueId) => {
-      const [ticketMatchIndex] = uniqueId.split("_");
-      return parseInt(ticketMatchIndex) !== matchIndex;
+    setGlobalSelectedTickets((prevSelected) => {
+      const filteredGlobalSelection = prevSelected.filter((uniqueId) => {
+        const [ticketMatchIndex] = uniqueId.split("_");
+        return parseInt(ticketMatchIndex) !== parseInt(matchIndex);
+      });
+
+      // Add new selections for this match
+      const newGlobalSelections = newSelectedRows.map(
+        (rowIndex) => `${matchIndex}_${rowIndex}`
+      );
+
+      return [...filteredGlobalSelection, ...newGlobalSelections];
     });
+  }, []);
 
-    // Add new selections for this match
-    const newGlobalSelections = newSelectedRows.map(
-      (rowIndex) => `${matchIndex}_${rowIndex}`
-    );
-
-    setGlobalSelectedTickets([
-      ...filteredGlobalSelection,
-      ...newGlobalSelections,
-    ]);
-  };
-
-  // ENHANCED: Global bulk actions
-  const handleGlobalEdit = () => {
+  // ENHANCED: Global bulk actions - UPDATED FOR ticketsByMatch
+  const handleGlobalEdit = useCallback(() => {
     if (globalSelectedTickets.length === 0) {
       toast.error("Please select tickets to edit");
       return;
@@ -487,9 +501,9 @@ console.log(response,'responseresponseresponse')
         `Bulk edit mode activated for ${globalSelectedTickets.length} tickets`
       );
     }
-  };
+  }, [globalSelectedTickets]);
 
-  const handleGlobalSaveEdit = () => {
+  const handleGlobalSaveEdit = useCallback(() => {
     setGlobalEditingTickets([]);
     setIsGlobalEditMode(false);
     setGlobalSelectedTickets([]);
@@ -501,47 +515,78 @@ console.log(response,'responseresponseresponse')
     } else {
       toast.success("Changes saved successfully");
     }
-  };
+  }, [globalEditingTickets.length]);
 
-  const handleGlobalCancelEdit = () => {
+  const handleGlobalCancelEdit = useCallback(() => {
     setGlobalEditingTickets([]);
     setIsGlobalEditMode(false);
     setGlobalSelectedTickets([]);
     toast.info("Edit cancelled");
-  };
+  }, []);
 
-  const handleGlobalDelete = async () => {
+  const handleGlobalDelete = useCallback(async () => {
     if (globalSelectedTickets.length === 0) {
       toast.error("Please select tickets to delete");
       return;
     }
 
-    console.log("Deleting selected tickets:", globalSelectedTickets);
-
     try {
       setLoader(true);
 
-      // Get the actual tickets to delete
-      const ticketsToDelete = ticketsData.filter((ticket) =>
+      // Get tickets to delete for API call
+      const allTickets = getAllTicketsFromMatches();
+      const ticketsToDelete = allTickets.filter((ticket) =>
         globalSelectedTickets.includes(ticket.uniqueId)
       );
       const ticketIds = ticketsToDelete.map((ticket) => ticket.s_no).join(",");
-      console.log(ticketsToDelete, "ticketsToDeleteticketsToDelete");
-      // Delete each ticket via API
+
+      // API call to delete tickets
       try {
-        const deletePromises = await deleteMyListing("", {
+        await deleteMyListing("", {
           ticket_id: ticketIds,
-        }); // Assuming this API exists
-      } catch {
-        console.log("error");
+        });
+      } catch (error) {
+        console.error("API delete error:", error);
       }
 
-      // Remove tickets from local state
-      setTicketsData((prevData) =>
-        prevData.filter(
-          (ticket) => !globalSelectedTickets.includes(ticket.uniqueId)
-        )
-      );
+      // Group tickets by match for deletion
+      const ticketsByMatchIndex = {};
+      globalSelectedTickets.forEach((uniqueId) => {
+        const [matchIndex, ticketIndex] = uniqueId.split("_");
+        if (!ticketsByMatchIndex[matchIndex]) {
+          ticketsByMatchIndex[matchIndex] = [];
+        }
+        ticketsByMatchIndex[matchIndex].push(parseInt(ticketIndex));
+      });
+
+      // Remove tickets from state
+      setTicketsByMatch((prevData) => {
+        const newData = { ...prevData };
+
+        Object.entries(ticketsByMatchIndex).forEach(([matchIndex, indices]) => {
+          if (newData[matchIndex]) {
+            // Sort indices in descending order to avoid index shifting
+            const sortedIndices = indices.sort((a, b) => b - a);
+            const newTickets = [...newData[matchIndex].tickets];
+
+            sortedIndices.forEach((index) => {
+              newTickets.splice(index, 1);
+            });
+
+            // Remove match if no tickets left
+            if (newTickets.length === 0) {
+              delete newData[matchIndex];
+            } else {
+              newData[matchIndex] = {
+                ...newData[matchIndex],
+                tickets: newTickets,
+              };
+            }
+          }
+        });
+
+        return newData;
+      });
 
       setGlobalSelectedTickets([]);
       toast.success(
@@ -556,49 +601,71 @@ console.log(response,'responseresponseresponse')
     } finally {
       setLoader(false);
     }
-  };
+  }, [globalSelectedTickets, getAllTicketsFromMatches, filtersApplied]);
 
-  const handleGlobalClone = () => {
+  const handleGlobalClone = useCallback(() => {
     if (globalSelectedTickets.length === 0) {
       toast.error("Please select tickets to clone");
       return;
     }
 
-    console.log("Cloning selected tickets:", globalSelectedTickets);
-
-    // Get the tickets to clone
-    const ticketsToClone = ticketsData.filter((ticket) =>
+    const allTickets = getAllTicketsFromMatches();
+    const ticketsToClone = allTickets.filter((ticket) =>
       globalSelectedTickets.includes(ticket.uniqueId)
     );
 
-    // Create cloned tickets with new IDs
-    const clonedTickets = ticketsToClone.map((ticket) => ({
-      ...ticket,
-      id: `${ticket.matchIndex}-${Date.now()}-${Math.random()}`,
-      uniqueId: `${ticket.matchIndex}_${Date.now()}_${Math.random()}`,
-      s_no: `CLONE_${ticket.s_no}`, // Prefix to indicate it's a clone
-      rawTicketData: {
-        ...ticket.rawTicketData,
-        s_no: `CLONE_${ticket.rawTicketData.s_no}`,
-      },
-    }));
+    // Group cloned tickets by match
+    const clonedTicketsByMatch = {};
+    
+    ticketsToClone.forEach((ticket) => {
+      const matchIndex = ticket.matchIndex;
+      if (!clonedTicketsByMatch[matchIndex]) {
+        clonedTicketsByMatch[matchIndex] = [];
+      }
+
+      const clonedTicket = {
+        ...ticket,
+        id: `${matchIndex}-${Date.now()}-${Math.random()}`,
+        uniqueId: `${matchIndex}_${Date.now()}_${Math.random()}`,
+        s_no: `CLONE_${ticket.s_no}`,
+        rawTicketData: {
+          ...ticket.rawTicketData,
+          s_no: `CLONE_${ticket.rawTicketData.s_no}`,
+        },
+      };
+
+      clonedTicketsByMatch[matchIndex].push(clonedTicket);
+    });
 
     // Add cloned tickets to state
-    setTicketsData((prevData) => [...prevData, ...clonedTickets]);
+    setTicketsByMatch((prevData) => {
+      const newData = { ...prevData };
+      
+      Object.entries(clonedTicketsByMatch).forEach(([matchIndex, clonedTickets]) => {
+        if (newData[matchIndex]) {
+          newData[matchIndex] = {
+            ...newData[matchIndex],
+            tickets: [...newData[matchIndex].tickets, ...clonedTickets],
+          };
+        }
+      });
+
+      return newData;
+    });
 
     setGlobalSelectedTickets([]);
     toast.success(
       `${globalSelectedTickets.length} ticket(s) cloned successfully`
     );
-  };
+  }, [globalSelectedTickets, getAllTicketsFromMatches]);
 
-  // Check if a specific ticket is in edit mode
-  const isTicketInEditMode = (matchIndex, ticketIndex) => {
+  // Check if a specific ticket is in edit mode - UPDATED FOR ticketsByMatch
+  const isTicketInEditMode = useCallback((matchIndex, ticketIndex) => {
     const uniqueId = `${matchIndex}_${ticketIndex}`;
     return isGlobalEditMode && globalEditingTickets.includes(uniqueId);
-  };
+  }, [isGlobalEditMode, globalEditingTickets]);
 
-  // NEW: Construct headers dynamically from filters
+  // NEW: Construct headers dynamically from filters - REMAINS SAME
   const constructHeadersFromListingHistory = useMemo(() => {
     if (!mockListingHistory || mockListingHistory.length === 0) return [];
 
@@ -684,12 +751,6 @@ console.log(response,'responseresponseresponse')
         type: "text",
       },
       {
-        key: "web_price",
-        label: "Web Price",
-        editable: true,
-        type: "text",
-      },
-      {
         key: "listing_note",
         label: "Listing Note",
         editable: true,
@@ -767,7 +828,7 @@ console.log(response,'responseresponseresponse')
 
         // Listing Notes
         if (filter.restriction_left || filter.restriction_right) {
-          [...filter.restriction_left, ...filter.restriction_right].forEach(
+          [...(filter.restriction_left || []), ...(filter.restriction_right || [])].forEach(
             (note) => {
               allListingNotes.set(note.id.toString(), note.name);
             }
@@ -819,113 +880,107 @@ console.log(response,'responseresponseresponse')
     return headers;
   }, [mockListingHistory]);
 
-  // Group tickets by match for the accordion-style display using CommonInventoryTable
-  const groupedTicketsData = useMemo(() => {
-    const grouped = [];
-
-    // Group tickets by matchIndex
-    const groupedByMatch = ticketsData.reduce((acc, ticket) => {
-      const matchIndex = ticket.matchIndex;
-      if (!acc[matchIndex]) {
-        acc[matchIndex] = {
-          matchIndex,
-          matchInfo: ticket.rawMatchData,
-          tickets: [],
-          filters: mockListingHistory[matchIndex]?.filter,
-        };
-      }
-      acc[matchIndex].tickets.push(ticket);
-      return acc;
-    }, {});
-
-    // Convert to array
-    Object.values(groupedByMatch).forEach((group) => {
-      grouped.push({
-        ...group,
-        ticketCount: group.tickets.length,
+  // Enhanced handleCellEdit to work with ticketsByMatch
+  const handleCellEdit = useCallback(
+    (rowIndex, columnKey, value, ticket, matchIndexParam) => {
+      console.log("Cell edited:", {
+        rowIndex,
+        columnKey,
+        value,
+        matchIndex: matchIndexParam,
       });
-    });
 
-    return grouped;
-  }, [ticketsData, mockListingHistory]);
+      const matchIndex = matchIndexParam.toString();
 
-  console.log("groupedTicketsData", groupedTicketsData);
-  const [eventDate, setEventDate] = useState(null);
-  // Enhanced handleCellEdit to work with multiple matches and use match-specific filters
-  const handleCellEdit = (rowIndex, columnKey, value, ticket, matchIndex) => {
-    console.log("Cell edited:", {
-      rowIndex,
-      columnKey,
-      value,
-      valueType: typeof value,
-      ticket: ticket?.rawTicketData?.s_no,
-      matchIndex,
-    });
-
-    // Find the header configuration for this column
-    const headerConfig = constructHeadersFromListingHistory.find(
-      (h) => h.key === columnKey
-    );
-
-    // For select fields, ensure we're working with the value, not label
-    let processedValue = value;
-    if (headerConfig?.type === "select" && headerConfig?.options) {
-      // If value is already a valid option value, use it
-      const isValidValue = headerConfig.options.some(
-        (opt) => opt.value === value
+      // Find header config
+      const headerConfig = constructHeadersFromListingHistory.find(
+        (h) => h.key === columnKey
       );
-      if (!isValidValue) {
-        // Try to find by label and convert to value
-        const optionByLabel = headerConfig.options.find(
-          (opt) => opt.label === value
+
+      let processedValue = value;
+      if (headerConfig?.type === "select" && headerConfig?.options) {
+        const isValidValue = headerConfig.options.some(
+          (opt) => opt.value === value
         );
-        if (optionByLabel) {
-          processedValue = optionByLabel.value;
-          console.warn(
-            `Converted label "${value}" to value "${processedValue}" for column ${columnKey}`
+        if (!isValidValue) {
+          const optionByLabel = headerConfig.options.find(
+            (opt) => opt.label === value
           );
+          if (optionByLabel) {
+            processedValue = optionByLabel.value;
+          }
         }
       }
-    }
 
-    // ENHANCED: In global edit mode, update all selected tickets
-    if (isGlobalEditMode && globalEditingTickets.length > 0) {
-      setTicketsData((prevData) =>
-        prevData.map((ticketItem) => {
-          if (globalEditingTickets.includes(ticketItem.uniqueId)) {
-            return { ...ticketItem, [columnKey]: processedValue };
-          }
-          return ticketItem;
-        })
-      );
+      if (isGlobalEditMode && globalEditingTickets.length > 0) {
+        // Update all selected tickets across matches
+        setTicketsByMatch((prevData) => {
+          const newData = { ...prevData };
 
-      // Update all selected tickets via API
-      const selectedTickets = ticketsData.filter((t) =>
-        globalEditingTickets.includes(t.uniqueId)
-      );
-      const updateParams = { [columnKey]: processedValue };
+          // Group editing tickets by match
+          const ticketsByMatchIndex = {};
+          globalEditingTickets.forEach((uniqueId) => {
+            const [ticketMatchIndex, originalIndex] = uniqueId.split("_");
+            if (!ticketsByMatchIndex[ticketMatchIndex]) {
+              ticketsByMatchIndex[ticketMatchIndex] = [];
+            }
+            ticketsByMatchIndex[ticketMatchIndex].push(parseInt(originalIndex));
+          });
 
-      selectedTickets.forEach((selectedTicket) => {
-        updateCellValues(updateParams, selectedTicket?.rawTicketData?.s_no);
-      });
-    } else {
-      // Single ticket edit mode
-      setTicketsData((prevData) =>
-        prevData.map((ticketItem) =>
-          ticketItem.id === ticket.id
-            ? { ...ticketItem, [columnKey]: processedValue }
-            : ticketItem
-        )
-      );
+          // Update only affected matches
+          Object.entries(ticketsByMatchIndex).forEach(
+            ([editMatchIndex, indices]) => {
+              if (newData[editMatchIndex]) {
+                newData[editMatchIndex] = {
+                  ...newData[editMatchIndex],
+                  tickets: newData[editMatchIndex].tickets.map(
+                    (ticketItem, index) => {
+                      if (indices.includes(index)) {
+                        return { ...ticketItem, [columnKey]: processedValue };
+                      }
+                      return ticketItem;
+                    }
+                  ),
+                };
+              }
+            }
+          );
 
-      // Prepare update parameters
-      const updateParams = { [columnKey]: processedValue };
-      console.log("Sending update params:", updateParams);
+          return newData;
+        });
 
-      // Call API update
-      updateCellValues(updateParams, ticket?.rawTicketData?.s_no);
-    }
-  };
+        // Update all selected tickets via API
+        const allTickets = getAllTicketsFromMatches();
+        const selectedTickets = allTickets.filter((t) =>
+          globalEditingTickets.includes(t.uniqueId)
+        );
+        const updateParams = { [columnKey]: processedValue };
+
+        selectedTickets.forEach((selectedTicket) => {
+          updateCellValues(updateParams, selectedTicket?.rawTicketData?.s_no);
+        });
+      } else {
+        // Single ticket edit - only update specific match
+        setTicketsByMatch((prevData) => ({
+          ...prevData,
+          [matchIndex]: {
+            ...prevData[matchIndex],
+            tickets: prevData[matchIndex].tickets.map((ticketItem, index) => {
+              if (index === rowIndex) {
+                return { ...ticketItem, [columnKey]: processedValue };
+              }
+              return ticketItem;
+            }),
+          },
+        }));
+
+        // API call logic
+        const updateParams = { [columnKey]: processedValue };
+        updateCellValues(updateParams, ticket?.rawTicketData?.s_no);
+      }
+    },
+    [isGlobalEditMode, globalEditingTickets, constructHeadersFromListingHistory, getAllTicketsFromMatches]
+  );
 
   // Enhanced updateCellValues function with better error handling
   const updateCellValues = async (updatedParams, id) => {
@@ -937,10 +992,8 @@ console.log(response,'responseresponseresponse')
         id
       );
 
-      // Validate that we have an ID
       if (!id) {
         console.error("No ID provided for update");
-        // toast.error("Unable to update: Missing ticket ID");
         return;
       }
 
@@ -949,19 +1002,17 @@ console.log(response,'responseresponseresponse')
       if (update?.success) {
         // toast.success("Listing updated successfully");
       } else {
-        console.error("Update failed:", update);
+        console.error("Update failed:");
         // toast.error("Failed to update listing");
       }
 
       return update;
     } catch (error) {
       console.error("Error updating listing:", error);
-      // toast.error("Error updating listing");
-      throw error;
     }
   };
 
-  const handleHandAction = (rowData, rowIndex) => {
+  const handleHandAction = useCallback((rowData, rowIndex) => {
     console.log("Hand action clicked for row:", rowData, rowIndex);
     handleCellEdit(
       rowIndex,
@@ -970,12 +1021,10 @@ console.log(response,'responseresponseresponse')
       rowData,
       rowData?.matchIndex
     );
-  };
+  }, [handleCellEdit]);
 
-  // Custom sticky columns configuration for TicketsPage (HIDE CHEVRON DOWN)
-  // Custom sticky columns configuration for TicketsPage (HIDE CHEVRON DOWN)
-  const getStickyColumnsForRow = (rowData, rowIndex) => {
-    // Check if we're in global bulk edit mode
+  // Custom sticky columns configuration
+  const getStickyColumnsForRow = useCallback((rowData, rowIndex) => {
     const isBulkEditMode = isGlobalEditMode && globalEditingTickets.length > 1;
 
     return [
@@ -1060,12 +1109,11 @@ console.log(response,'responseresponseresponse')
         tooltipPosition: "top",
         onClick: () => handleViewDetails(rowData),
       },
-      // REMOVED THE CHEVRON DOWN FROM HERE
     ];
-  };
+  }, [isGlobalEditMode, globalEditingTickets, handleHandAction]);
 
   // Action handlers for sticky columns
-  const handleUploadAction = (rowData, rowIndex) => {
+  const handleUploadAction = useCallback((rowData, rowIndex) => {
     console.log("Upload action clicked for row:", rowData, rowIndex);
     setShowUploadPopup({
       show: true,
@@ -1073,9 +1121,9 @@ console.log(response,'responseresponseresponse')
       rowIndex,
       matchDetails: rowData?.rawMatchData,
     });
-  };
+  }, []);
 
-  const handleViewDetails = async (item) => {
+  const handleViewDetails = useCallback(async (item) => {
     console.log("View details:", item?.rawTicketData?.s_no);
     const fetchViewDetailsPopup = await getViewDetailsPopup("", {
       ticket_id: item?.rawTicketData?.s_no,
@@ -1084,17 +1132,7 @@ console.log(response,'responseresponseresponse')
       show: true,
       rowData: fetchViewDetailsPopup,
     });
-  };
-
-  const handleEditListing = (item) => {
-    console.log("Edit listing:", item);
-    // Implement edit logic
-  };
-
-  const handleDeleteListing = (item) => {
-    console.log("Delete listing:", item);
-    // Implement delete logic
-  };
+  }, []);
 
   const createInitialVisibleColumns = useCallback(() => {
     return constructHeadersFromListingHistory.reduce((acc, header) => {
@@ -1109,14 +1147,14 @@ console.log(response,'responseresponseresponse')
 
   const [columnOrder, setColumnOrder] = useState([]);
 
-  const handleColumnToggle = (columnKey) => {
+  const handleColumnToggle = useCallback((columnKey) => {
     setVisibleColumns((prev) => ({
       ...prev,
       [columnKey]: !prev[columnKey],
     }));
-  };
+  }, []);
 
-  // NEW: Memoized function to get filtered headers in the correct order
+  // Memoized function to get filtered headers in the correct order
   const getFilteredHeadersInOrder = useMemo(() => {
     // First, filter headers based on visibility
     const visibleHeadersMap = new Map();
@@ -1212,20 +1250,6 @@ console.log(response,'responseresponseresponse')
           className: "!py-[6px] !px-[12px] mobile:text-xs",
           labelClassName: "!text-[11px]",
         },
-        // {
-        //   type: "select",
-        //   name: "listing_status",
-        //   label: "Listing Status",
-        //   value: filtersApplied?.listing_status,
-        //   options: [
-        //     { value: 0, label: "Published" },
-        //     { value: 1, label: "Unpublished" },
-        //   ],
-        //   parentClassName:
-        //     "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
-        //   className: "!py-[6px] !px-[12px] max-md:text-xs",
-        //   labelClassName: "!text-[11px]",
-        // },
         {
           type: "select",
           name: "ticket_type",
@@ -1376,10 +1400,10 @@ console.log(response,'responseresponseresponse')
     };
   }, []);
 
-  const handleConfirmClick = (data, index, rowData) => {
+  const handleConfirmClick = useCallback((data, index, rowData) => {
     updateCellValues(data, rowData?.s_no);
     setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
-  };
+  }, []);
 
   const [searchValue, setSearchValue] = useState("");
   const [searchedEvents, setSearchedEvents] = useState([]);
@@ -1388,22 +1412,6 @@ console.log(response,'responseresponseresponse')
   const [hasSearched, setHasSearched] = useState(false);
   const [showRequestPopup, setShowRequestPopup] = useState(false);
 
-  const fetchApiCall = async (query) => {
-    if (!query.trim()) return;
-
-    try {
-      setSearchEventLoader(true);
-      setSearchedEvents([]);
-      const response = await FetchEventSearch("", { query });
-      setSearchedEvents(response?.events || []);
-      setSearchEventLoader(false);
-    } catch (error) {
-      setSearchEventLoader(false);
-      console.error("Search error:", error);
-      setSearchedEvents([]);
-    }
-  };
-
   const debouncedFetchApiCall = useCallback(
     debounce((query) => {
       fetchSearchResults(query);
@@ -1411,67 +1419,35 @@ console.log(response,'responseresponseresponse')
     []
   );
 
-  const handleOnChangeEvents = (e) => {
+  const handleOnChangeEvents = useCallback((e) => {
     const newValue = e.target.value;
     setSearchValue(newValue);
-    console.log(newValue, "oooooo");
     if (newValue.trim()) {
       debouncedFetchApiCall(newValue);
     } else {
-      // If search is cleared, fetch initial results
       fetchSearchResults("", true);
     }
-  };
+  }, [debouncedFetchApiCall]);
 
-  const handleSearchedEventClick = (event) => {
+  const handleSearchedEventClick = useCallback((event) => {
     setSearchValue(event?.match_name);
     handleFilterChange("match_id", event?.m_id);
     setSearchedEvents([]);
-  };
+  }, [handleFilterChange]);
 
-  const searchedViewComponent = () => {
-    return (
-      <>
-        {searchedEvents?.length > 0 && (
-          <div className="max-h-[300px] overflow-y-auto p-5 flex flex-col gap-3 shadow-sm border border-[#E0E1EA]">
-            {searchedEvents?.map((item, index) => {
-              return (
-                <div
-                  key={index}
-                  onClick={() => handleSearchedEventClick(item)}
-                  className="hover:scale-105 cursor-pointer transition-transform duration-300"
-                >
-                  <SearchedList item={item} />
-                </div>
-              );
-            })}
-          </div>
-        )}
-        {searchEventLoader && (
-          <div className="max-h-[300px] items-center justify-center overflow-y-auto p-5 flex flex-col gap-3 shadow-sm border border-[#E0E1EA]">
-            <Loader2 className="animate-spin" />
-          </div>
-        )}
-      </>
-    );
-  };
-  const fetchSearchResults = async (query, isInitialLoad = false) => {
+  const fetchSearchResults = useCallback(async (query, isInitialLoad = false) => {
     try {
       setSearchEventLoader(true);
       setSearchedEvents([]);
       setHasSearched(true);
 
-      // For initial load or empty query, send empty string to get default/popular results
       const searchQuery = isInitialLoad ? "" : query ? query.trim() : "";
-
-      console.log("Making API call with searchQuery:", searchQuery); // Debug log
 
       let response = await FetchPerformerOrVenueListing("", {
         query: searchQuery,
       });
       delete response?.data?.venues;
       delete response?.data?.performers;
-      console.log("Search response:", response);
       setSearchedEvents(response?.data || []);
       setSearchEventLoader(false);
       setShowSearchDropdown(true);
@@ -1481,11 +1457,10 @@ console.log(response,'responseresponseresponse')
       setSearchedEvents([]);
       setShowSearchDropdown(true);
     }
-  };
+  }, []);
 
-  const handleSearchFocus = (e) => {
+  const handleSearchFocus = useCallback((e) => {
     if (!searchValue || searchValue.trim() === "") {
-      // First time focus without any search value - call with empty query
       fetchSearchResults("", true);
     } else if (
       searchedEvents?.length == 0 &&
@@ -1494,40 +1469,19 @@ console.log(response,'responseresponseresponse')
     ) {
       setShowSearchDropdown(false);
     } else if (searchValue && searchValue.trim()) {
-      // If there's already a search value, show existing results
       setShowSearchDropdown(true);
     }
-  };
-  const handleSearchBlur = () => {
-    // Delay hiding dropdown to allow for clicks
+  }, [searchValue, searchedEvents, fetchSearchResults]);
+
+  const handleSearchBlur = useCallback(() => {
     setTimeout(() => {
       setShowSearchDropdown(false);
     }, 150);
-  };
+  }, []);
 
-  const filterSearch = () => {
+  const filterSearch = useCallback(() => {
     return (
       <div className="pb-4">
-        {/* <FloatingLabelInput
-          key="searchMatch"
-          id="searchMatch"
-          name="searchMatch"
-          keyValue={"searchMatch"}
-          value={searchValue}
-          onChange={(e) => handleOnChangeEvents(e)}
-          type="text"
-          showDropdown={true}
-          dropDownComponent={searchedViewComponent()}
-          label="Search Match"
-          className={"!py-[8px] !px-[14px] !text-[#323A70] !text-[14px] "}
-          paddingClassName=""
-          autoComplete="off"
-          showDelete={true}
-          deleteFunction={() => {
-            setSearchValue("");
-          }}
-          parentClassName="!w-[40%]"
-        /> */}
         <FloatingLabelInput
           key="searchMatch"
           id="searchMatch"
@@ -1535,13 +1489,13 @@ console.log(response,'responseresponseresponse')
           keyValue={"searchMatch"}
           value={searchValue}
           checkLength={true}
-          onChange={(e) => handleOnChangeEvents(e)}
+          onChange={handleOnChangeEvents}
           onFocus={handleSearchFocus}
           onBlur={handleSearchBlur}
           type="text"
           showDropdown={showSearchDropdown}
           iconBefore={<SearchIcon size={16} />}
-          iconBeforeTooltip="Search" // Pass tooltip text here
+          iconBeforeTooltip="Search"
           dropDownComponent={
             <SearchedViewComponent
               searchEventLoader={searchEventLoader}
@@ -1551,7 +1505,6 @@ console.log(response,'responseresponseresponse')
               handleSearchedEventClick={handleSearchedEventClick}
               show={showRequestPopup}
               setShow={setShowRequestPopup}
-              // handleBulkNavigateClick={handleBulkNavigateClick}
             />
           }
           label="Choose Match Event"
@@ -1571,21 +1524,34 @@ console.log(response,'responseresponseresponse')
         />
       </div>
     );
-  };
-console.log(filtersApplied,'filtersAppliedfiltersAppliedfiltersApplied')
-  const handleClearAllFilters = () => {
-    const clearedFilters = { page: 1 }; // Keep only page
+  }, [
+    searchValue,
+    showSearchDropdown,
+    searchEventLoader,
+    searchedEvents,
+    hasSearched,
+    showRequestPopup,
+    handleOnChangeEvents,
+    handleSearchFocus,
+    handleSearchBlur,
+    handleSearchedEventClick,
+    filtersApplied,
+    fetchData,
+  ]);
+
+  const handleClearAllFilters = useCallback(() => {
+    const clearedFilters = { page: 1 };
     fetchData(clearedFilters);
-  };
+  }, [fetchData]);
 
   const router = useRouter();
-  const handleAddInventory = () => {
+  const handleAddInventory = useCallback(() => {
     router.push("/add-listings");
-  };
+  }, [router]);
 
-  const handleColumnsReorder = (newColumns) => {
+  const handleColumnsReorder = useCallback((newColumns) => {
     setColumnOrder(newColumns);
-  };
+  }, []);
 
   // Initialize column order when headers change
   useEffect(() => {
@@ -1607,83 +1573,96 @@ console.log(filtersApplied,'filtersAppliedfiltersAppliedfiltersApplied')
     }
   }, [constructHeadersFromListingHistory, createInitialVisibleColumns]);
 
-  // Calculate total ticket count across all matches
-  const getTotalTicketCount = () => {
-    return ticketsData.length;
-  };
+  // Calculate total ticket count across all matches - UPDATED FOR ticketsByMatch
+  const getTotalTicketCount = useCallback(() => {
+    let totalCount = 0;
+    Object.values(ticketsByMatch).forEach((matchData) => {
+      totalCount += matchData.tickets.length;
+    });
+    return totalCount;
+  }, [ticketsByMatch]);
 
   const totalTicketCount = getTotalTicketCount();
 
-  // Enhanced Custom Match Table Component using CommonInventoryTable
-  const CustomMatchTable = ({ matchData }) => {
-    const { matchInfo, tickets, matchIndex, filters } = matchData;
-    const [isCollapsed, setIsCollapsed] = useState(
-      collapsedMatches[matchIndex] ?? true
-    );
+  // Render match tables using ticketsByMatch
+  const renderMatchTables = useCallback(() => {
+    return Object.entries(ticketsByMatch).map(([matchIndex, matchData]) => {
+     
 
-    const handleToggleCollapse = () => {
-      const newState = !isCollapsed;
-      setIsCollapsed(newState);
-      setCollapsedMatches((prev) => ({
-        ...prev,
-        [matchIndex]: newState,
-      }));
-    };
-
-    // Convert match info to the format expected by CommonInventoryTable
-    const matchDetails = {
-      match_name: matchInfo?.match_name,
-      match_date_format: new Date(matchInfo?.match_date).toLocaleDateString(),
-      match_time: matchInfo?.match_time,
-      stadium_name: matchInfo?.stadium_name,
-      country_name: matchInfo?.country_name,
-      city_name: matchInfo?.city_name,
-      match_id: matchInfo?.m_id,
-    };
-
-    return (
-      <CommonInventoryTable
-        inventoryData={tickets}
-        headers={filteredHeaders}
-        selectedRows={getSelectedRowsForMatch(matchIndex)}
-        setSelectedRows={(newSelectedRows) =>
-          handleSetSelectedRowsForMatch(matchIndex, newSelectedRows)
-        }
-        handleCellEdit={handleCellEdit}
-        handleHandAction={handleHandAction}
-        handleUploadAction={handleUploadAction}
-        handleSelectAll={() => handleSelectAllForMatch(matchIndex)}
-        handleDeselectAll={() => handleDeselectAllForMatch(matchIndex)}
-        matchDetails={matchDetails}
-        isEditMode={isGlobalEditMode}
-        editingRowIndex={
-          isGlobalEditMode
-            ? tickets
-                .map((_, index) =>
-                  isTicketInEditMode(matchIndex, index) ? index : null
-                )
-                .filter((index) => index !== null)
-            : null
-        }
-        mode="multiple"
-        showAccordion={true}
-        isCollapsed={isCollapsed}
-        onToggleCollapse={handleToggleCollapse}
-        matchIndex={matchIndex}
-        totalTicketsCount={tickets.length}
-        getStickyColumnsForRow={getStickyColumnsForRow}
-        stickyHeaders={["", "", "", ""]}
-        myListingPage={true}
-        stickyColumnsWidth={170}
-      />
-    );
-  };
-
+      return (
+        <div key={`match-${matchIndex}`} className="not-last:mb-4">
+          <CommonInventoryTable
+            inventoryData={matchData.tickets}
+            headers={filteredHeaders}
+            selectedRows={getSelectedRowsForMatch(parseInt(matchIndex))}
+            setSelectedRows={(newSelectedRows) =>
+              handleSetSelectedRowsForMatch(
+                parseInt(matchIndex),
+                newSelectedRows
+              )
+            }
+            handleCellEdit={(rowIndex, columnKey, value, ticket) =>
+              handleCellEdit(rowIndex, columnKey, value, ticket, matchIndex)
+            }
+            handleHandAction={handleHandAction}
+            handleUploadAction={handleUploadAction}
+            handleSelectAll={() => handleSelectAllForMatch(matchIndex)}
+            handleDeselectAll={() => handleDeselectAllForMatch(matchIndex)}
+            matchDetails={{
+              match_name: matchData.matchInfo?.match_name,
+              match_date_format: new Date(
+                matchData.matchInfo?.match_date
+              ).toLocaleDateString(),
+              match_time: matchData.matchInfo?.match_time,
+              stadium_name: matchData.matchInfo?.stadium_name,
+              country_name: matchData.matchInfo?.country_name,
+              city_name: matchData.matchInfo?.city_name,
+              match_id: matchData.matchInfo?.m_id,
+            }}
+            isEditMode={isGlobalEditMode}
+            editingRowIndex={
+              isGlobalEditMode
+                ? matchData.tickets
+                    .map((_, index) =>
+                      isTicketInEditMode(matchIndex, index) ? index : null
+                    )
+                    .filter((index) => index !== null)
+                : null
+            }
+            mode="multiple"
+            showAccordion={true}
+            // isCollapsed={isCollapsed}
+            // onToggleCollapse={handleToggleCollapse}
+            matchIndex={matchIndex}
+            totalTicketsCount={matchData.tickets.length}
+            getStickyColumnsForRow={getStickyColumnsForRow}
+            stickyHeaders={["", "", "", ""]}
+            myListingPage={true}
+            stickyColumnsWidth={170}
+          />
+        </div>
+      );
+    });
+  }, [
+    ticketsByMatch,
+    collapsedMatches,
+    filteredHeaders,
+    getSelectedRowsForMatch,
+    handleSetSelectedRowsForMatch,
+    handleCellEdit,
+    handleHandAction,
+    handleUploadAction,
+    handleSelectAllForMatch,
+    handleDeselectAllForMatch,
+    isGlobalEditMode,
+    isTicketInEditMode,
+    getStickyColumnsForRow,
+  ]);
   return (
     <div className="bg-[#F5F7FA] w-full max-h-[calc(100vh-100px)] overflow-auto relative ">
       <div className="bg-white">
         <TabbedLayout
-          tabs={[]} // No tabs needed as per your requirement
+          tabs={[]}
           initialTab="tickets"
           listItemsConfig={listItemsConfig}
           filterConfig={filterConfig}
@@ -1695,8 +1674,8 @@ console.log(filtersApplied,'filtersAppliedfiltersAppliedfiltersApplied')
           currentFilterValues={{ ...filtersApplied, page: "" }}
           showSelectedFilterPills={false}
           onCheckboxToggle={() => {}}
-          hideVisibleColumns={false} // Show column controls
-          disableTransitions={true} // New prop to disable transitions
+          hideVisibleColumns={false}
+          disableTransitions={true}
           useHeaderV2={true}
           onAddInventory={handleAddInventory}
           addInventoryText="Add Inventory"
@@ -1707,8 +1686,6 @@ console.log(filtersApplied,'filtersAppliedfiltersAppliedfiltersApplied')
           onColumnsReorder={handleColumnsReorder}
         />
 
-        {/* Pagination Component - Positioned below filters */}
-        {/* {groupedTicketsData.length > 0 && ( */}
         <div className="border-[1px] border-[#E0E1EA]">
           <Pagination
             currentPage={currentPage}
@@ -1724,56 +1701,46 @@ console.log(filtersApplied,'filtersAppliedfiltersAppliedfiltersApplied')
             currentTab="tickets"
           />
         </div>
-        {/* )} */}
       </div>
 
-      {/* Main Content Area with Common Tables */}
+      {/* Main Content Area */}
       {isLoading ? (
         <ShimmerLoader />
       ) : (
-        <>
-          <div className="m-6  pb-[100px]">
-            {groupedTicketsData.length > 0 ? (
-              groupedTicketsData.map((matchData, index) => (
-                <div
-                  key={`match-${matchData.matchIndex}`}
-                  className="not-last:mb-4"
-                >
-                  <CustomMatchTable matchData={matchData} />
+        <div className="m-6 pb-[100px]">
+          {Object.keys(ticketsByMatch).length > 0 ? (
+            renderMatchTables()
+          ) : (
+            <div className="bg-white rounded p-8 text-center">
+              <div className="max-w-md mx-auto">
+                <div className="mb-4">
+                  <svg
+                    className="mx-auto h-12 w-12 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
                 </div>
-              ))
-            ) : (
-              <div className="bg-white rounded p-8 text-center">
-                <div className="max-w-md mx-auto">
-                  <div className="mb-4">
-                    <svg
-                      className="mx-auto h-12 w-12 text-gray-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No tickets found
-                  </h3>
-                  <p className="text-gray-500 mb-4">
-                    There are no tickets to display at the moment.
-                  </p>
-                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No tickets found
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  There are no tickets to display at the moment.
+                </p>
               </div>
-            )}
-          </div>
-        </>
+            </div>
+          )}
+        </div>
       )}
 
-      {/* ENHANCED: Global Bulk Action Bar - Only show when tickets are selected */}
+      {/* Global Bulk Action Bar */}
       {globalSelectedTickets.length > 0 && (
         <BulkActionBar
           selectedCount={globalSelectedTickets.length}
@@ -1784,7 +1751,6 @@ console.log(filtersApplied,'filtersAppliedfiltersAppliedfiltersApplied')
           onEdit={handleGlobalEdit}
           onDelete={handleGlobalDelete}
           onPublishLive={() => {
-            // You can implement publish functionality if needed
             toast.info("Publish functionality not implemented for this page");
           }}
           onSaveEdit={handleGlobalSaveEdit}

@@ -21,6 +21,7 @@ import {
 } from "@/utils/apiHandler/request";
 import { toast } from "react-toastify";
 import { set } from "lodash";
+import FloatingLabelInput from "@/components/floatinginputFields";
 
 const UploadTickets = ({
   show,
@@ -658,7 +659,7 @@ const UploadTickets = ({
     );
   };
 
-  // QR Links Configuration Section for E-Ticket Flow - Move outside useMemo
+  // QR Links Configuration Section for E-Ticket Flow - Updated with FloatingLabelInput
   const QRLinksConfigSection = () => (
     <div className="border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1">
       <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA]">
@@ -701,14 +702,12 @@ const UploadTickets = ({
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    {/* Android Link Input */}
+                    {/* Android Link Input - Using FloatingLabelInput */}
                     <div>
-                      <label className="block text-xs font-medium text-[#323A70] mb-1">
-                        Android QR Link
-                      </label>
-                      <input
+                      <FloatingLabelInput
+                        id={`android-link-${index}`}
+                        label="Android QR Link"
                         type="url"
-                        placeholder="Enter Android app/web link"
                         value={ticketLinks[index]?.qr_link_android || ""}
                         onChange={(e) =>
                           handleLinkChange(
@@ -717,7 +716,29 @@ const UploadTickets = ({
                             e.target.value
                           )
                         }
-                        className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
+                        placeholder="Enter Android app/web link"
+                        className="text-xs"
+                        labelClassName="text-xs"
+                      />
+                    </div>
+
+                    {/* iOS Link Input - Using FloatingLabelInput */}
+                    <div>
+                      <FloatingLabelInput
+                        id={`ios-link-${index}`}
+                        label="iOS QR Link"
+                        type="url"
+                        value={ticketLinks[index]?.qr_link_ios || ""}
+                        onChange={(e) =>
+                          handleLinkChange(
+                            index,
+                            "qr_link_ios",
+                            e.target.value
+                          )
+                        }
+                        placeholder="Enter iOS app/web link"
+                        className="text-xs"
+                        labelClassName="text-xs"
                       />
                     </div>
                   </div>
@@ -730,7 +751,7 @@ const UploadTickets = ({
     </div>
   );
 
-  // Paper Ticket Courier Details Section - For Right Panel - Move outside useMemo
+  // Paper Ticket Courier Details Section - Updated with FloatingLabelInput
   const PaperTicketCourierDetailsSection = () => (
     <div className="border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1">
       <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA]">
@@ -760,30 +781,28 @@ const UploadTickets = ({
             </select>
           </div>
 
-          {/* Courier Company Name */}
+          {/* Courier Company Name - Using FloatingLabelInput */}
           <div>
-            <label className="block text-xs font-medium text-[#323A70] mb-2">
-              Courier Company Name
-            </label>
-            <input
+            <FloatingLabelInput
+              id="courier-company"
+              label="Courier Company Name"
               type="text"
-              placeholder="FedEx"
               value={paperTicketDetails.courier_company || ""}
               onChange={(e) =>
                 handlePaperTicketDetailChange("courier_company", e.target.value)
               }
-              className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
+              placeholder="FedEx"
+              className="text-xs"
+              labelClassName="text-xs"
             />
           </div>
 
-          {/* Tracking Details */}
+          {/* Tracking Details - Using FloatingLabelInput */}
           <div>
-            <label className="block text-xs font-medium text-[#323A70] mb-2">
-              Input Tracking Details
-            </label>
-            <input
+            <FloatingLabelInput
+              id="tracking-details"
+              label="Input Tracking Details"
               type="text"
-              placeholder="DSG684864SG56"
               value={paperTicketDetails.tracking_details || ""}
               onChange={(e) =>
                 handlePaperTicketDetailChange(
@@ -791,7 +810,9 @@ const UploadTickets = ({
                   e.target.value
                 )
               }
-              className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
+              placeholder="DSG684864SG56"
+              className="text-xs"
+              labelClassName="text-xs"
             />
           </div>
         </div>
@@ -885,7 +906,7 @@ const UploadTickets = ({
     </div>
   );
 
-  // Additional Information Section (for Normal Flow and Paper Tickets) - Move outside useMemo
+  // Additional Information Section - Updated with FloatingLabelInput
   const AdditionalInfoSection = () => (
     <div className="border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1">
       <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA]">
@@ -925,19 +946,19 @@ const UploadTickets = ({
           </select>
         </div>
 
-        {/* Dynamic Content Area */}
+        {/* Dynamic Content Area - Using FloatingLabelInput with textarea-like styling */}
         <div className="mb-4">
-          <label className="block text-xs font-medium text-[#323A70] mb-2">
-            Dynamic Content
-          </label>
-          <textarea
+          <FloatingLabelInput
+            id="dynamic-content"
+            label="Dynamic Content"
+            type="text"
             value={additionalInfo.dynamicContent}
             onChange={(e) =>
               handleAdditionalInfoChange("dynamicContent", e.target.value)
             }
-            className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] resize-none focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
-            rows="4"
             placeholder="Enter dynamic content here..."
+            className="text-xs min-h-[80px]"
+            labelClassName="text-xs"
           />
         </div>
       </div>
