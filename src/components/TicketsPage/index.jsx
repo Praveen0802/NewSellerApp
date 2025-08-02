@@ -1218,7 +1218,7 @@ const TicketsPage = (props) => {
         {
           name: "Published Listings",
           value: overViewData.published_listings || 0,
-          showCheckbox: true,
+          // showCheckbox: true,
           key: "total_tickets",
         },
         {

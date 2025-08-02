@@ -481,7 +481,7 @@ const PayoutPage = (props) => {
   };
 
   return (
-    <div className="bg-[#F5F7FA] w-full h-full flex flex-col overflow-auto">
+    <div className="bg-[#F5F7FA] w-full h-full flex flex-col overflow-auto pb-[50px]">
       {/* Payout Overview Section */}
       <div className="bg-white flex border-b-[1px] border-[#eaeaf1] justify-end px-3 py-3 flex-shrink-0">
         <div className="flex gap-2 items-center">
@@ -518,7 +518,7 @@ const PayoutPage = (props) => {
       </div>
 
       {/* History Section */}
-      <div className="p-3 md:p-4 mobile:p-2 flex-grow">
+      <div className="p-3 md:p-4 mobile:p-2 flex-grow pb-[100px]">
         <div className="flex flex-col h-full bg-white">
           {/* Header with Tabs */}
           <div className="flex items-center gap-3 md:gap-4 px-3 md:px-4 pt-3 md:pt-4 border-b-[1px] border-[#eaeaf1] overflow-x-auto mobile:gap-2 mobile:px-2 flex-shrink-0">
@@ -636,14 +636,16 @@ const PayoutPage = (props) => {
         showShimmer={payOutPopup?.isLoading}
       />
 
-      <div className="fixed bottom-0 w-full left-15 right-0 z-[999] bg-[white] py-[16px] px-[16px]  border-t border-gray-200 shadow-lg ">
-        <DownloadButton
-          label={`Download ${isOrderTab ? "Order" : "Payout"} Report`}
-          loader={csvLoader}
-          onClick={handleDownloadCSV}
-          disabled={csvLoader}
-          className="min-w-[200px]"
-        />
+      <div className="fixed bottom-0 w-full left-0 right-0 z-50  bg-[white] py-[16px] px-[16px]  border-t border-gray-200 shadow-lg ">
+        <div className="flex items-center justify-end">
+          <DownloadButton
+            label={`Download ${isOrderTab ? "Order" : "Payout"} Report`}
+            loader={csvLoader}
+            onClick={handleDownloadCSV}
+            disabled={csvLoader}
+            className="min-w-[200px]"
+          />
+        </div>
       </div>
 
       {isOrderTab ? (

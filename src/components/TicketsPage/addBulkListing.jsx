@@ -1369,7 +1369,7 @@ const BulkInventory = (props) => {
             {totalTicketCount === 0 && (
               <div className="flex justify-end px-5 py-2 border-b-[1px] border-[#E0E1EA]">
                 <Button
-                  type="blueType"
+                   type="primary"
                   classNames={{
                     root: "px-4 py-2.5",
                     label_: "text-sm font-medium",

@@ -681,6 +681,7 @@ console.log(currentFilterValues,'currentFilterValuescurrentFilterValues')
                 onFilterChange={onFilterChange}
                 onClearAllFilters={handleClearAllFilters}
                 currentTab={selectedTab}
+                filterConfig={filterConfig}
               />
             </div>
           )}
