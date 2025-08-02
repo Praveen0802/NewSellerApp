@@ -20,9 +20,9 @@ const FloatingDateRange = ({
   singleDateMode = false,
   hideLabel = false,
   subParentClassName = "",
-  minDate = null, // New prop: minimum selectable date (YYYY-MM-DD format)
-  maxDate = null, // New prop: maximum selectable date (YYYY-MM-DD format)
-  openUpward = true, // New prop: open calendar upward
+  minDate = null,
+  maxDate = null,
+  openUpward = false,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -32,17 +32,15 @@ const FloatingDateRange = ({
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [tempStartDate, setTempStartDate] = useState(null);
   const [tempEndDate, setTempEndDate] = useState(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: true, left: 0 });
+  
   const dropdownRef = useRef(null);
+  const inputRef = useRef(null);
 
   // Helper function to parse a date string in local timezone
   const parseLocalDate = (dateString) => {
     if (!dateString) return new Date();
-
-    // Split the date string (assuming YYYY-MM-DD format)
     const [year, month, day] = dateString.split("-").map(Number);
-
-    // Create a new date using local timezone
-    // Month is 0-indexed in JavaScript Date
     return new Date(year, month - 1, day);
   };
 
@@ -50,10 +48,49 @@ const FloatingDateRange = ({
   const minDateObj = minDate ? parseLocalDate(minDate) : null;
   const maxDateObj = maxDate ? parseLocalDate(maxDate) : null;
 
+  // Function to calculate optimal dropdown position
+  const calculateDropdownPosition = () => {
+    if (!inputRef.current) return { top: true, left: 0 };
+
+    const inputRect = inputRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+    
+    // Estimated dropdown height (adjust based on your actual dropdown size)
+    const dropdownHeight = 350;
+    const dropdownWidth = inputRect.width;
+    
+    // Check if there's enough space below
+    const spaceBelow = viewportHeight - inputRect.bottom;
+    const spaceAbove = inputRect.top;
+    
+    // Determine vertical position
+    const shouldOpenUpward = openUpward || spaceBelow < dropdownHeight && spaceAbove > dropdownHeight;
+    
+    // Determine horizontal position
+    let leftOffset = 0;
+    const spaceRight = viewportWidth - inputRect.left;
+    
+    if (spaceRight < dropdownWidth) {
+      // If not enough space on the right, align to the right edge
+      leftOffset = Math.min(0, spaceRight - dropdownWidth);
+    }
+
+    return {
+      top: !shouldOpenUpward,
+      left: leftOffset
+    };
+  };
+
+  // Update dropdown position when opening
+  const updateDropdownPosition = () => {
+    const position = calculateDropdownPosition();
+    setDropdownPosition(position);
+  };
+
   // Format and set display value when value prop changes
   useEffect(() => {
     if (singleDateMode) {
-      // For single date mode
       if (value?.startDate) {
         const formattedDate = formatDate(value.startDate);
         setDisplayValue(formattedDate);
@@ -64,7 +101,6 @@ const FloatingDateRange = ({
         setStartDate("");
       }
     } else {
-      // For date range mode
       if (value?.startDate && value?.endDate) {
         const formattedStart = formatDate(value.startDate);
         const formattedEnd = formatDate(value.endDate);
@@ -93,11 +129,28 @@ const FloatingDateRange = ({
       }
     };
 
+    const handleResize = () => {
+      if (isOpen) {
+        updateDropdownPosition();
+      }
+    };
+
+    const handleScroll = () => {
+      if (isOpen) {
+        updateDropdownPosition();
+      }
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("scroll", handleScroll, true);
+    
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("scroll", handleScroll, true);
     };
-  }, []);
+  }, [isOpen]);
 
   // Convert a Date object to YYYY-MM-DD string without timezone shift
   const toLocalDateString = (date) => {
@@ -110,15 +163,10 @@ const FloatingDateRange = ({
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
-
-    // Parse the date string (assuming YYYY-MM-DD format)
     const [year, month, day] = dateString.split("-").map(Number);
-
-    // Format as DD/MM/YY using local parts
     const formattedDay = String(day).padStart(2, "0");
     const formattedMonth = String(month).padStart(2, "0");
-    const formattedYear = String(year); // removed the slicing
-
+    const formattedYear = String(year);
     return `${formattedDay}/${formattedMonth}/${formattedYear}`;
   };
 
@@ -144,9 +192,11 @@ const FloatingDateRange = ({
 
   const handleInputClick = () => {
     if (!readOnly) {
+      if (!isOpen) {
+        updateDropdownPosition();
+      }
       setIsOpen(!isOpen);
       setIsFocused(true);
-      // Reset temp dates when opening
       setTempStartDate(startDate ? parseLocalDate(startDate) : null);
       setTempEndDate(endDate ? parseLocalDate(endDate) : null);
     }
@@ -205,15 +255,13 @@ const FloatingDateRange = ({
   };
 
   const handleDateClick = (date) => {
-    // Check if the date is within allowed range
     if (!isDateInRange(date)) {
-      return; // Don't allow selection of dates outside range
+      return;
     }
 
     if (singleDateMode) {
-      // In single date mode, just set the start date and auto-apply
       setTempStartDate(date);
-      setTempEndDate(date); // Set end date same as start for consistent data format
+      setTempEndDate(date);
 
       const formattedDate = toLocalDateString(date);
       setStartDate(formattedDate);
@@ -227,20 +275,15 @@ const FloatingDateRange = ({
         );
       }
 
-      // Auto close in single date mode
       setIsOpen(false);
     } else {
-      // Original date range selection logic
       if (!tempStartDate || (tempStartDate && tempEndDate)) {
-        // If no start date selected or both are selected, start new selection
         setTempStartDate(date);
         setTempEndDate(null);
       } else if (date < tempStartDate) {
-        // If selected date is before start date, make it the new start date
         setTempStartDate(date);
         setTempEndDate(null);
       } else {
-        // Otherwise set as end date
         setTempEndDate(date);
       }
     }
@@ -260,10 +303,10 @@ const FloatingDateRange = ({
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
 
-    const startingDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // Adjust for Monday start
+    const startingDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
 
     const prevMonthDays = new Date(year, month, 0).getDate();
-    const nextMonthDays = 42 - (daysInMonth + startingDay); // 6 weeks display
+    const nextMonthDays = 42 - (daysInMonth + startingDay);
 
     const days = [];
 
@@ -277,7 +320,7 @@ const FloatingDateRange = ({
         isCurrentMonth: false,
         isSelected: false,
         isInRange: false,
-        isDisabled: true, // Previous month days are always disabled
+        isDisabled: true,
       });
     }
 
@@ -329,12 +372,12 @@ const FloatingDateRange = ({
         isCurrentMonth: false,
         isSelected: false,
         isInRange: false,
-        isDisabled: true, // Next month days are always disabled
+        isDisabled: true,
       });
     }
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time part for accurate comparison
+    today.setHours(0, 0, 0, 0);
 
     return (
       <div className={`w-full`}>
@@ -373,7 +416,6 @@ const FloatingDateRange = ({
             const isInRange = dayObj.isInRange;
             const isDisabled = dayObj.isDisabled;
 
-            // Compare just the date parts for "today" check
             const dayDate = new Date(dayObj.date);
             dayDate.setHours(0, 0, 0, 0);
             const isToday =
@@ -418,7 +460,7 @@ const FloatingDateRange = ({
   }`;
 
   return (
-    <div className={`${parentClassName}  relative w-full`} ref={dropdownRef}>
+    <div className={`${parentClassName} relative w-full`} ref={dropdownRef}>
       {!hideLabel && (
         <FloatingPlaceholder
           className={`${labelClassName} ${!hideCalendarIcon && "!pl-5"} ${
@@ -439,7 +481,7 @@ const FloatingDateRange = ({
         </FloatingPlaceholder>
       )}
 
-      <div className={`${subParentClassName} relative`}>
+      <div className={`${subParentClassName} relative`} ref={inputRef}>
         {!hideCalendarIcon && (
           <div
             className="absolute left-2 z-10 bg-white top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
@@ -468,9 +510,15 @@ const FloatingDateRange = ({
 
       {isOpen && (
         <div
-          className={`absolute z-[99] ${
-            openUpward ? "bottom-full mb-1" : "mt-1"
-          } bg-white border border-gray-200 rounded shadow w-full p-2`}
+          className={`fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-xl p-2 min-w-[280px]`}
+          style={{
+            top: dropdownPosition.top 
+              ? `${inputRef.current?.getBoundingClientRect().bottom + window.scrollY + 4}px`
+              : `${inputRef.current?.getBoundingClientRect().top + window.scrollY - 350}px`,
+            left: `${inputRef.current?.getBoundingClientRect().left + window.scrollX + dropdownPosition.left}px`,
+            width: `${inputRef.current?.getBoundingClientRect().width}px`,
+            maxWidth: '95vw',
+          }}
         >
           <div className="space-y-2">
             <div className="text-xs font-medium text-gray-700">

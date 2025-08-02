@@ -102,6 +102,8 @@ const LoginForm = () => {
               currentTimeEpochTimeInMilliseconds()
             );
             setCookie("user_token", response?.user_id);
+            setCookie("first_name", first_name);
+            setCookie("last_name", last_name);
             router.push("/dashboard");
           } else {
             const errorMessage =

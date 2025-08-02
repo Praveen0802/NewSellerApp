@@ -901,6 +901,8 @@ const LeftMenuBar = () => {
   const { notificationCountData, showFullDisplay } = useSelector(
     (state) => state.common
   );
+
+  console.log(currentUser,'currentUsercurrentUser')
   const name = currentUser?.first_name?.slice(0, 2).toUpperCase();
   const userName = currentUser?.first_name;
 
@@ -961,8 +963,8 @@ const LeftMenuBar = () => {
       name: "Minimise",
     },
     {
-      text: userDisplayName.label,
-      name: userDisplayName.name,
+      text: name,
+      name: userName,
       key: "name",
       route: "settings/myAccount",
     },

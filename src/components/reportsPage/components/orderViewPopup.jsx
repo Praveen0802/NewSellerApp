@@ -14,8 +14,6 @@ const OrderViewPopup = ({
 }) => {
   // if (!data && !showShimmer) return null;
 
-  console.log("data", data);
-
   return (
     <RightViewModal
       show={show}
