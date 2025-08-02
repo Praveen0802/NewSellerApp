@@ -2255,3 +2255,18 @@ export const getPayoutOrderReport = async (token, params) => {
     throw error;
   }
 };
+
+export const getPayoutOrderDetails = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_PAYOUT_ORDERS,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getPayoutOrderDetails", error);
+    throw error;
+  }
+};
