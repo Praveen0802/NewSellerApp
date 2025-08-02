@@ -19,6 +19,7 @@ import {
 import { Clock, Eye } from "lucide-react";
 import { inventoryLog } from "@/data/testOrderDetails";
 import useTeamMembersDetails from "@/Hooks/useTeamMembersDetails";
+import { toast } from "react-toastify";
 
 const SalesPage = (props) => {
   const { profile, response = {} } = props;
@@ -328,6 +329,7 @@ const SalesPage = (props) => {
       route: "/sales/cancelled",
     },
   ];
+  const { downloadCSV } = useCSVDownload();
 
   const handleDownloadCSV = async () => {
     setCsvLoader(true);
@@ -335,37 +337,15 @@ const SalesPage = (props) => {
       const response = await downloadSalesCSVReport();
       // Check if response is successful
       if (response) {
-        // Create a blob from the response data
-        const blob = new Blob([response], {
-          type: "application/csv;charset=utf-8;",
-        });
-
-        // Create a temporary URL for the blob
-        const url = window.URL.createObjectURL(blob);
-
-        // Create a temporary anchor element
-        const link = document.createElement("a");
-        link.href = url;
-
-        // Set the filename (you can customize this)
-        const filename = `export_${new Date().toISOString().slice(0, 10)}.csv`;
-        link.download = filename;
-
-        // Append to body, click, and remove
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        // Clean up the URL object
-        window.URL.revokeObjectURL(url);
-
-        // Optional: Show success message
-        console.log("CSV downloaded successfully");
+        downloadCSV(response);
+        toast.success("Report downloaded");
       } else {
         console.error("No data received from server");
+        toast.error("No data received");
       }
     } catch (error) {
       console.error("Error downloading CSV:", error);
+      toast.error("Error downloading Report");
       // Handle error (show toast, alert, etc.)
     } finally {
       setCsvLoader(false);
