@@ -615,7 +615,6 @@ const BulkInventory = (props) => {
       type: "select",
       name: "max_quantity",
       label: "Max Display Quantity",
-      mandatory: true,
       value: filtersApplied?.max_quantity,
       options: [
         { value: "1", label: "1" },

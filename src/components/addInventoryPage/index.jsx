@@ -291,7 +291,6 @@ const AddInventoryPage = (props) => {
       type: "text",
       name: "max_display_qty",
       label: "Max Display Quantity",
-      mandatory: true,
       value: filtersApplied?.max_display_qty,
       options: [
         { value: "1", label: "1" },

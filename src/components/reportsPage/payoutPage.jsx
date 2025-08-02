@@ -15,7 +15,9 @@ import {
   fetchBankAccountDetails,
   fetchPayoutHistoryMonthly,
   getLMTPayPrefill, // You'll need to create this API function
-  getPayoutDetails, // You'll need to create this API function
+  getPayoutDetails,
+  getPayoutHistoryReport,
+  getPayoutOrderReport, // You'll need to create this API function
 } from "@/utils/apiHandler/request";
 import Button from "../commonComponents/button";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
@@ -24,6 +26,10 @@ import { getAuthToken } from "@/utils/helperFunctions";
 import { toast } from "react-toastify";
 import { formatDate } from "../tradePage/components/stickyDataTable";
 import OrderInfo from "../orderInfoPopup";
+import DownloadButton from "../DownloadButton";
+import useCSVDownload from "@/Hooks/useCsvDownload";
+import ActiveFiltersBox from "../tabbedLayout/ActiveFilterBoxs";
+import { set } from "lodash";
 
 const PayoutPage = (props) => {
   const { apiData } = props;
@@ -88,26 +94,6 @@ const PayoutPage = (props) => {
       },
     };
   });
-
-  // const handleRequestPayout = async (item) => {
-  //   const currency = item?.keys?.currency;
-  //   setPayOutPopup((prev) => ({ ...prev, flag: true, isLoading: true }));
-  //   const response = await fetchBankAccountDetails("", "", "GET", "", {
-  //     currency: currency,
-  //   })
-  //     .then((response) => {
-  //       setPayOutPopup({
-  //         flag: true,
-  //         data: { ...response[0], currency: currency },
-  //       });
-  //     })
-  //     .catch(() => {
-  //       toast.error("Failed to get payout account details. Please try again.");
-  //     })
-  //     .finally(() => {
-  //       setPayOutPopup((prev) => ({ ...prev, isLoading: false }));
-  //     });
-  // };
 
   const handleRequestPayout = async (item) => {
     const currency = item?.keys?.currency;
@@ -317,9 +303,11 @@ const PayoutPage = (props) => {
     filterChange(filteredParams);
   };
 
+  const [isPayoutEntered, setIsPayoutEntered] = useState(false);
+
   const handleInputBlurOrEnter = (e, isBlur = false) => {
     if (!isBlur && e.key !== "Enter") return;
-
+    setIsPayoutEntered(true);
     const params = {
       ...(paymentReference && { reference_no: paymentReference }),
       ...(statusFilter && { status: statusFilter }),
@@ -354,6 +342,119 @@ const PayoutPage = (props) => {
 
   const handleTabChange = (tab) => {
     setSelectedTab(tab);
+  };
+
+  // Helper function to get status label from value
+  const getStatusLabel = (value) => {
+    const statusMap = {
+      0: "Paid",
+      1: "Pending",
+      2: "Processing",
+      3: "Failed",
+    };
+    return statusMap[value] || value;
+  };
+
+  // Create active filters object for ActiveFiltersBox
+  const getActiveFilters = () => {
+    const filters = {};
+
+    if (paymentReference && isPayoutEntered) {
+      filters.paymentReference = paymentReference;
+    }
+
+    if (statusFilter) {
+      filters.status = getStatusLabel(statusFilter);
+    }
+
+    if (dateRange?.startDate && dateRange?.endDate) {
+      filters.dateRange = `${dateRange.startDate} to ${dateRange.endDate}`;
+    }
+
+    return filters;
+  };
+
+  // Handle filter changes from ActiveFiltersBox
+  const handleFilterChange = (filterKey, filterValue, allFilters) => {
+    switch (filterKey) {
+      case "paymentReference":
+        setPaymentReference("");
+        setIsPayoutEntered(false);
+        break;
+      case "status":
+        setStatusFilter("");
+        break;
+      case "dateRange":
+        setDateRange({ startDate: "", endDate: "" });
+        break;
+      case "clearAll":
+        setPaymentReference("");
+        setStatusFilter("");
+        setDateRange({ startDate: "", endDate: "" });
+        break;
+      default:
+        break;
+    }
+
+    // Trigger filter change with cleared values
+    const params = {
+      ...(filterKey !== "paymentReference" &&
+        filterKey !== "clearAll" &&
+        paymentReference && { reference_no: paymentReference }),
+      ...(filterKey !== "status" &&
+        filterKey !== "clearAll" &&
+        statusFilter && { status: statusFilter }),
+      ...(filterKey !== "dateRange" &&
+        filterKey !== "clearAll" &&
+        dateRange?.startDate && { start_date: dateRange?.startDate }),
+      ...(filterKey !== "dateRange" &&
+        filterKey !== "clearAll" &&
+        dateRange?.endDate && { end_date: dateRange?.endDate }),
+      tab: selectedTab,
+    };
+
+    const filteredParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v != null)
+    );
+
+    filterChange(filteredParams);
+  };
+
+  // Handle clear all filters
+  const handleClearAllFilters = () => {
+    setPaymentReference("");
+    setStatusFilter("");
+    setDateRange({ startDate: "", endDate: "" });
+    setIsPayoutEntered(false);
+    // Trigger filter change with no filters
+    filterChange({ tab: selectedTab });
+  };
+
+  const [csvLoader, setCsvLoader] = useState(false);
+
+  const { downloadCSV } = useCSVDownload();
+
+  const handleDownloadCSV = async () => {
+    setCsvLoader(true);
+    try {
+      const response = isOrderTab
+        ? await getPayoutOrderReport()
+        : await getPayoutHistoryReport();
+
+      if (response) {
+        downloadCSV(response);
+        toast.success(`${isOrderTab ? "Order" : "Payout"} report downloaded`);
+      } else {
+        console.error("No data received from server");
+        toast.error("No data received");
+      }
+    } catch (error) {
+      console.error("Error downloading CSV:", error);
+      toast.error("Error downloading Report");
+      // Handle error (show toast, alert, etc.)
+    } finally {
+      setCsvLoader(false);
+    }
   };
 
   return (
@@ -479,8 +580,16 @@ const PayoutPage = (props) => {
               </div>
             </div>
 
+            {/* Active Filters Box */}
+            <ActiveFiltersBox
+              activeFilters={getActiveFilters()}
+              onFilterChange={handleFilterChange}
+              onClearAllFilters={handleClearAllFilters}
+              currentTab={selectedTab}
+            />
+
             {/* Table Section */}
-            <div className="flex-grow mb-[8%]">
+            <div className="flex-grow pb-[10%]">
               <CollapsablePaymentTable
                 sections={getTransformedData()}
                 selectedTab={selectedTab}
@@ -503,6 +612,16 @@ const PayoutPage = (props) => {
         countriesList={countriesList}
         showShimmer={payOutPopup?.isLoading}
       />
+
+      <div className="fixed bottom-0 w-full left-15 right-0 z-[999] bg-[white] py-[16px] px-[16px]  border-t border-gray-200 shadow-lg ">
+        <DownloadButton
+          label={`Download ${isOrderTab ? "Order" : "Payout"} Report`}
+          loader={csvLoader}
+          onClick={handleDownloadCSV}
+          disabled={csvLoader}
+          className="min-w-[200px]"
+        />
+      </div>
 
       {isOrderTab ? (
         <OrderInfo

@@ -7,7 +7,7 @@ const ActiveFiltersBox = ({
   currentTab = "home",
 }) => {
   console.log("activeFilters", activeFilters);
-  
+
   // Helper function to format filter values for display
   const formatFilterValue = (key, value) => {
     switch (key) {
@@ -26,8 +26,10 @@ const ActiveFiltersBox = ({
         if (Array.isArray(value)) {
           if (value.length === 0) return null;
           if (value.length === 1) return `Team Member: ${value[0]}`;
-          if (value.length <= 3) return `Team Members: ${value.join(', ')}`;
-          return `Team Members: ${value.slice(0, 2).join(', ')} +${value.length - 2} more`;
+          if (value.length <= 3) return `Team Members: ${value.join(", ")}`;
+          return `Team Members: ${value.slice(0, 2).join(", ")} +${
+            value.length - 2
+          } more`;
         }
         return value;
       default:
@@ -35,8 +37,8 @@ const ActiveFiltersBox = ({
         if (Array.isArray(value)) {
           if (value.length === 0) return null;
           if (value.length === 1) return value[0];
-          if (value.length <= 3) return value.join(', ');
-          return `${value.slice(0, 2).join(', ')} +${value.length - 2} more`;
+          if (value.length <= 3) return value.join(", ");
+          return `${value.slice(0, 2).join(", ")} +${value.length - 2} more`;
         }
         return value;
     }
@@ -70,7 +72,11 @@ const ActiveFiltersBox = ({
       if (value === null || value === undefined || value === "") return false;
       if (value === "none") return false; // Exclude "none" values from selects
       if (Array.isArray(value) && value.length === 0) return false; // Exclude empty arrays
-      if (typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0)
+      if (
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        Object.keys(value).length === 0
+      )
         return false;
       if (
         typeof value === "object" &&
@@ -141,22 +147,20 @@ const ActiveFiltersBox = ({
     <div className="rounded px-3 py-2">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs font-medium text-gray-700 hover:text-gray-900 whitespace-nowrap transition-colors cursor-default">
+          <span className="text-xs font-medium text-gray-700 hover:text-gray-900 whitespace-nowrap transition-colors cursor-default">
             Active Filters
           </span>
           <span className="text-gray-400">|</span>
           {activeFilterEntries.map(([key, value]) => {
             const formattedValue = formatFilterValue(key, value);
             if (formattedValue === null) return null;
-            
+
             return (
               <div
                 key={key}
                 className="inline-flex items-center gap-1.5 bg-white border border-gray-300 px-2 py-1 rounded-xl text-sm"
               >
-                <span className="text-gray-700 text-xs">
-                  {formattedValue}
-                </span>
+                <span className="text-gray-700 text-xs">{formattedValue}</span>
                 <button
                   onClick={() => handleClearFilter(key)}
                   className="text-gray-400 hover:text-gray-600 cursor-pointer flex items-center justify-center"
@@ -183,7 +187,8 @@ const ActiveFiltersBox = ({
 
         <button
           onClick={handleClearAllFilters}
-          className="text-sm text-gray-600 hover:text-gray-800 font-medium underline"
+          className="text-sm text-gray-600 hover:text-gray-800 font-medium underline cursor-pointer"
+          title="Clear all filters"
         >
           Clear all
         </button>

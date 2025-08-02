@@ -361,18 +361,18 @@ console.log(response,'responseresponseresponse')
         transformedData.push({
           id: `${matchIndex}-${ticketIndex}`,
           uniqueId: `${matchIndex}_${ticketIndex}`, // Add uniqueId for global selection
-          s_no: ticket.s_no || "N/A",
+          s_no: ticket.s_no || "",
           matchIndex: matchIndex,
           ticketIndex: ticketIndex,
-          match_name: matchInfo.match_name || "N/A",
-          venue: matchInfo.stadium_name || "N/A",
-          tournament: matchInfo.tournament_name || "N/A",
+          match_name: matchInfo.match_name || "",
+          venue: matchInfo.stadium_name || "",
+          tournament: matchInfo.tournament_name || "",
           match_date:
-            new Date(matchInfo.match_date).toLocaleDateString() || "N/A",
-          match_time: matchInfo.match_time || "N/A",
-          ticket_type: ticket.ticket_type || "N/A",
+            new Date(matchInfo.match_date).toLocaleDateString() || "",
+          match_time: matchInfo.match_time || "",
+          ticket_type: ticket.ticket_type || "",
           ticket_type_id: ticket.ticket_type_id || "",
-          ticket_category: ticket.ticket_category || "N/A",
+          ticket_category: ticket.ticket_category || "",
           ticket_category_id: ticket.ticket_category_id || "",
           quantity: ticket.quantity || 0,
           price: ticket.price || 0,
@@ -383,15 +383,15 @@ console.log(response,'responseresponseresponse')
               : ticket.status === 2
               ? "Sold"
               : "Inactive",
-          sell_date: ticket.sell_date || "N/A",
-          row: ticket.row || "N/A",
-          block: ticket.ticket_block || "N/A",
-          first_seat: ticket.first_seat || "N/A",
-          web_price: ticket.web_price || "N/A",
-          home_town: ticket.home_town || "N/A",
-          split_type: ticket.split?.name || "N/A",
+          sell_date: ticket.sell_date || "",
+          row: ticket.row || "",
+          block: ticket.ticket_block || "",
+          first_seat: ticket.first_seat || "",
+          web_price: ticket.web_price || "",
+          home_town: ticket.home_town || "",
+          split_type: ticket.split?.name || "",
           split_type_id: ticket.split?.id || "",
-          ship_date: ticket.ship_date || "N/A",
+          ship_date: ticket.ship_date || "",
           ticket_in_hand: ticket.ticket_in_hand || false,
           listing_note: ticket.listing_note?.map((note) => `${note.id}`),
           rawTicketData: ticket,
@@ -940,23 +940,23 @@ console.log(response,'responseresponseresponse')
       // Validate that we have an ID
       if (!id) {
         console.error("No ID provided for update");
-        toast.error("Unable to update: Missing ticket ID");
+        // toast.error("Unable to update: Missing ticket ID");
         return;
       }
 
       const update = await updateMyListing("", id, updatedParams);
 
       if (update?.success) {
-        toast.success("Listing updated successfully");
+        // toast.success("Listing updated successfully");
       } else {
         console.error("Update failed:", update);
-        toast.error("Failed to update listing");
+        // toast.error("Failed to update listing");
       }
 
       return update;
     } catch (error) {
       console.error("Error updating listing:", error);
-      toast.error("Error updating listing");
+      // toast.error("Error updating listing");
       throw error;
     }
   };

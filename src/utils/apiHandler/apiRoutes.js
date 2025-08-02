@@ -25,7 +25,7 @@ export const API_ROUTES = {
   REPORTS_INVENTORY_LOGS: `/reports/inventory-logs`,
   SALES_ORDER_LOG: `/sales/order-logs`,
   SALES_INVENTORY_LOG: `/sales/inventory-logs`,
-  VENUE_LIST:`/events/venue-list`,
+  VENUE_LIST: `/events/venue-list`,
   FETCH_BULK_LISTING: `/my-listings/events-search`,
   MY_LISTING_UPLOAD_TICKETS:`/my-listings/upload-ticket`,
   GET_BULK_LISTING_FILTERS: `/bulk-listing/get-bulk-listing-event`,
@@ -134,4 +134,6 @@ export const API_ROUTES = {
   GET_EVENT_LISTING: "/my-listings/events-search",
   GET_LMT_PAY_PREFILL: "/settings/lmt-pay/linked-accounts",
   GET_PAYOUT_DETAILS: "/payouts/payout-details",
+  GET_PAYOUT_HISTORY_REPORT: `/payouts/payout-export`,
+  GET_PAYOUT_ORDER_REPORT: `/payouts/myorder-export`,
 };
