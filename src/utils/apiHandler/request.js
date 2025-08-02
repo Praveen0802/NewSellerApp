@@ -2234,7 +2234,7 @@ export const getPayoutHistoryReport = async (token, params) => {
       ...(params && { params: params }),
       ...(token && { token: token }),
     });
-    return response?.data?.success ? response?.data?.data : {};
+    return response?.data || {};
   } catch (error) {
     console.log("ERROR in getPayoutHistory", error);
     throw error;
@@ -2249,7 +2249,7 @@ export const getPayoutOrderReport = async (token, params) => {
       ...(params && { params: params }),
       ...(token && { token: token }),
     });
-    return response?.data?.success ? response?.data?.data : {};
+    return response?.data || {};
   } catch (error) {
     console.log("ERROR in getPayoutOrderReport", error);
     throw error;
