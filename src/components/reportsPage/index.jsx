@@ -84,7 +84,7 @@ const ReportsPage = (props) => {
   const [paymentReference, setPaymentReference] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [dateRange, setDateRange] = useState({ startDate: "", endDate: "" });
-  const [isPayoutEntered, setIsPayoutEntered] = useState(false);
+  const [isPayoutEntered, setIsPayoutEntered] = useState(null);
 
   const tabValues = [
     { key: "Transactions", value: "transaction" },
@@ -243,7 +243,7 @@ const ReportsPage = (props) => {
 
   const handleInputBlurOrEnter = (e, isBlur = false) => {
     if (!isBlur && e.key !== "Enter") return;
-    setIsPayoutEntered(true);
+    setIsPayoutEntered(e?.target?.value);
     const params = {
       ...(paymentReference && { reference_no: paymentReference }),
       ...(transactionTab &&
@@ -297,9 +297,9 @@ const ReportsPage = (props) => {
   const getActiveFilters = () => {
     const filters = {};
 
-    if (paymentReference && isPayoutEntered) {
+    if (isPayoutEntered !== null) {
       // store the payment reference in ref
-      filters.paymentReference = paymentReference;
+      filters.paymentReference = isPayoutEntered;
     }
 
     if (transactionTab && transactionType) {
@@ -322,7 +322,7 @@ const ReportsPage = (props) => {
     switch (filterKey) {
       case "paymentReference":
         setPaymentReference("");
-        setIsPayoutEntered(false);
+        setIsPayoutEntered(null);
         break;
       case "transactionType":
         setTransactionType("");
@@ -377,7 +377,7 @@ const ReportsPage = (props) => {
     setTransactionType("");
     setStatusFilter("");
     setDateRange({ startDate: "", endDate: "" });
-    setIsPayoutEntered(false);
+    setIsPayoutEntered(null);
 
     // Trigger filter change with no filters
     filterChange({});
