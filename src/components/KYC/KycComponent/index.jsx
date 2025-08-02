@@ -1,4 +1,12 @@
-import { FileText, Check, AlertCircle, Eye, X, Download, ExternalLink } from "lucide-react";
+import {
+  FileText,
+  Check,
+  AlertCircle,
+  Eye,
+  X,
+  Download,
+  ExternalLink,
+} from "lucide-react";
 import { useState } from "react";
 import DocumentUpload from "../DocumentUpload";
 import RightViewModal from "@/components/commonComponents/rightViewModal";
@@ -8,6 +16,7 @@ import {
   saveSellerContract,
 } from "@/utils/apiHandler/request";
 import { toast } from "react-toastify";
+import useS3Download from "@/Hooks/useS3Download";
 
 const KycComponent = ({
   photoId,
@@ -155,21 +164,13 @@ const KycComponent = ({
       setUploading((prev) => ({ ...prev, [documentType]: false }));
     }
   };
+  const { downloadFile, isDownloading } = useS3Download();
 
-  const handleDownload = (url, filename) => {
+  const handleDownload = async (url, filename) => {
     try {
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename || "document";
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      await downloadFile(url);
     } catch (error) {
-      console.error("Download failed:", error);
-      // Fallback: open in new tab
-      window.open(url, "_blank", "noopener noreferrer");
+      toast.error("Failed to download document. Please try again.");
     }
   };
 
@@ -201,17 +202,21 @@ const KycComponent = ({
           <div className="flex-1 relative bg-gray-100">
             {/* Try to render PDF using Google Docs Viewer first */}
             <iframe
-              src={`https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`}
+              src={`https://docs.google.com/gview?url=${encodeURIComponent(
+                url
+              )}&embedded=true`}
               className="w-full h-full border-0"
               title={`Preview: ${title}`}
               onLoad={(e) => {
-                const loader = e.target.parentElement.querySelector(".pdf-loader");
+                const loader =
+                  e.target.parentElement.querySelector(".pdf-loader");
                 if (loader) loader.style.display = "none";
               }}
               onError={(e) => {
                 console.log("Google Docs viewer failed, showing fallback");
                 e.target.style.display = "none";
-                const fallback = e.target.parentElement.querySelector(".pdf-fallback");
+                const fallback =
+                  e.target.parentElement.querySelector(".pdf-fallback");
                 if (fallback) fallback.style.display = "flex";
               }}
             />
@@ -221,7 +226,9 @@ const KycComponent = ({
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
                 <p className="text-sm text-gray-600">Loading PDF...</p>
-                <p className="text-xs text-gray-500 mt-1">This may take a moment</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  This may take a moment
+                </p>
               </div>
             </div>
 
@@ -229,9 +236,12 @@ const KycComponent = ({
             <div className="pdf-fallback hidden absolute inset-0 flex-col items-center justify-center text-gray-600 bg-gray-100">
               <div className="text-center max-w-md p-6">
                 <div className="text-6xl mb-4">📄</div>
-                <h3 className="text-lg font-semibold mb-2 text-gray-800">PDF Document</h3>
+                <h3 className="text-lg font-semibold mb-2 text-gray-800">
+                  PDF Document
+                </h3>
                 <p className="text-sm text-gray-600 mb-6">
-                  This PDF cannot be previewed in the browser. You can download it or open it in a new tab.
+                  This PDF cannot be previewed in the browser. You can download
+                  it or open it in a new tab.
                 </p>
                 <div className="flex flex-col space-y-3">
                   <button
@@ -288,12 +298,14 @@ const KycComponent = ({
               alt={title}
               className="max-w-full max-h-full object-contain rounded"
               onLoad={(e) => {
-                const loader = e.target.parentElement.querySelector(".image-loader");
+                const loader =
+                  e.target.parentElement.querySelector(".image-loader");
                 if (loader) loader.style.display = "none";
               }}
               onError={(e) => {
                 e.target.style.display = "none";
-                const error = e.target.parentElement.querySelector(".image-error");
+                const error =
+                  e.target.parentElement.querySelector(".image-error");
                 if (error) error.style.display = "flex";
               }}
             />
@@ -343,7 +355,7 @@ const KycComponent = ({
                 onClick={() => handleDownload(url, title || "image")}
                 className="text-blue-600 hover:text-blue-700 underline cursor-pointer"
               >
-                Download
+                {isDownloading ? "Downloading..." : "Download"}
               </button>
             </div>
           </div>
@@ -444,7 +456,7 @@ const KycComponent = ({
                         `${config.title.replace(/\s+/g, "_")}.pdf`
                       )
                     }
-                    className="flex items-center space-x-1 text-green-600 hover:text-green-700 text-sm font-medium p-1 rounded hover:bg-green-50 transition-colors"
+                    className="flex items-center space-x-1 text-green-600 hover:text-green-700 text-sm font-medium p-1 rounded hover:bg-green-50 transition-colors cursor-pointer"
                   >
                     <Download className="w-4 h-4" />
                     <span>Download</span>
