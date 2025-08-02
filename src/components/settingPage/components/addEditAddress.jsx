@@ -59,7 +59,7 @@ const AddEditAddress = ({
     zipCode: zip_code,
     is_default: primary_address == 1 ? true : false,
   });
-  console.log(formFieldValues,cityOptions , "formFieldValues");
+  console.log(formFieldValues, cityOptions, "formFieldValues");
   const fetchCityDetails = async (id) => {
     if (!id) return;
     try {
@@ -241,7 +241,7 @@ const AddEditAddress = ({
               <FormFields
                 formFields={[
                   {
-                    type: "text",
+                    type: "number",
                     id: "mobile_number",
                     label: "Phone Number",
                     name: "mobile_number",

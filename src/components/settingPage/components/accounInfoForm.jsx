@@ -51,7 +51,7 @@ const AccounInfoForm = ({
       />
 
       <div className="flex gap-2 items-center">
-        <div className="md:w-1/4">
+        <div className="md:w-[140px]">
           <FloatingSelect
             id="phone_code"
             name="phone_code"
@@ -68,12 +68,12 @@ const AccounInfoForm = ({
             className={" !text-[#343432] !text-[13px]"}
           />
         </div>
-        <div className="md:w-3/4">
+        <div className="w-full">
           <FloatingLabelInput
             id="phoneNumber"
             name="phoneNumber"
             keyValue={"phoneNumber"}
-            type="tel"
+            type="number"
             label="Mobile Number"
             value={formData?.phoneNumber}
             onChange={handleChange}

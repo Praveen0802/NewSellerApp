@@ -2,90 +2,85 @@ import React, { useState, useMemo, memo, useCallback } from "react";
 import { X, ChevronDown, ChevronUp, CreditCard, FileText } from "lucide-react";
 import RightViewModal from "@/components/commonComponents/rightViewModal";
 
-// Memoized shimmer loading component to prevent unnecessary re-renders
+// Enhanced shimmer loading component with better visual hierarchy
 const ShimmerLoader = memo(() => (
-  <div className="p-4">
+  <div className="bg-white">
     {/* Header Shimmer */}
-    <div className="flex justify-between items-center px-6 py-4 border-b border-gray-300">
+    <div className="flex justify-between items-center px-8 py-6 border-b border-slate-200 bg-slate-50">
       <div>
-        <div className="h-6 bg-gray-300 rounded w-48 mb-2 animate-pulse"></div>
-        <div className="h-4 bg-gray-300 rounded w-32 animate-pulse"></div>
+        <div className="h-7 bg-slate-200 rounded-md w-56 mb-3 animate-pulse"></div>
+        <div className="h-4 bg-slate-200 rounded w-40 animate-pulse"></div>
       </div>
-      <div className="h-8 w-8 bg-gray-300 rounded-full animate-pulse"></div>
+      <div className="h-10 w-10 bg-slate-200 rounded-lg animate-pulse"></div>
     </div>
 
-    <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
-      {/* Transaction Section Shimmer */}
-      <div className="border-b border-gray-300">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-3">
-              <div className="h-5 w-5 bg-gray-300 rounded animate-pulse"></div>
-              <div className="h-5 bg-gray-300 rounded w-40 animate-pulse"></div>
-            </div>
-            <div className="h-5 w-5 bg-gray-300 rounded animate-pulse"></div>
+    <div className="overflow-y-auto max-h-[calc(90vh-120px)] p-6">
+      {/* Status Card Shimmer */}
+      <div className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-6 mb-8 border border-slate-200">
+        <div className="flex justify-between items-start">
+          <div className="space-y-3">
+            <div className="h-4 bg-slate-200 rounded w-32 animate-pulse"></div>
+            <div className="h-8 bg-slate-200 rounded w-28 animate-pulse"></div>
+          </div>
+          <div className="text-right space-y-3">
+            <div className="h-4 bg-slate-200 rounded w-24 animate-pulse"></div>
+            <div className="h-8 bg-slate-200 rounded w-32 animate-pulse"></div>
           </div>
         </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {Array.from({ length: 2 }, (_, colIndex) => (
-              <div key={colIndex} className="space-y-4">
-                {Array.from({ length: 4 }, (_, rowIndex) => (
-                  <div
-                    key={rowIndex}
-                    className="flex justify-between items-center py-2 border-b border-gray-200"
-                  >
-                    <div className="h-4 bg-gray-300 rounded w-24 animate-pulse"></div>
-                    <div className="h-4 bg-gray-300 rounded w-20 animate-pulse"></div>
-                  </div>
-                ))}
+        <div className="h-4 bg-slate-200 rounded w-48 mt-4 animate-pulse"></div>
+      </div>
+
+      {/* Transaction Details Shimmer */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {Array.from({ length: 2 }, (_, colIndex) => (
+          <div key={colIndex} className="space-y-6">
+            {Array.from({ length: 4 }, (_, rowIndex) => (
+              <div
+                key={rowIndex}
+                className="bg-white rounded-lg border border-slate-200 p-4"
+              >
+                <div className="h-4 bg-slate-200 rounded w-24 mb-3 animate-pulse"></div>
+                <div className="h-5 bg-slate-200 rounded w-32 animate-pulse"></div>
               </div>
             ))}
           </div>
-        </div>
+        ))}
       </div>
 
-      {/* Booking Section Shimmer */}
-      <div>
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-3">
-              <div className="h-5 w-5 bg-gray-300 rounded animate-pulse"></div>
-              <div className="h-5 bg-gray-300 rounded w-40 animate-pulse"></div>
-            </div>
-            <div className="h-5 w-5 bg-gray-300 rounded animate-pulse"></div>
-          </div>
+      {/* Table Shimmer */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
+          <div className="h-6 bg-slate-200 rounded w-40 animate-pulse"></div>
         </div>
         <div className="p-6">
-          <div className="overflow-x-auto">
-            <div className="min-w-full">
-              <div className="grid grid-cols-7 gap-4 mb-4 pb-2 border-b border-gray-300">
-                {Array.from({ length: 7 }, (_, i) => (
-                  <div
-                    key={i}
-                    className="h-4 bg-gray-300 rounded animate-pulse"
-                  ></div>
-                ))}
-              </div>
-              {Array.from({ length: 4 }, (_, row) => (
-                <div key={row} className="grid grid-cols-7 gap-4 mb-3 py-2">
-                  {Array.from({ length: 7 }, (_, col) => (
-                    <div
-                      key={col}
-                      className="h-4 bg-gray-300 rounded animate-pulse"
-                    ></div>
-                  ))}
-                </div>
+          <div className="grid grid-cols-7 gap-4 mb-6">
+            {Array.from({ length: 7 }, (_, i) => (
+              <div
+                key={i}
+                className="h-4 bg-slate-200 rounded animate-pulse"
+              ></div>
+            ))}
+          </div>
+          {Array.from({ length: 4 }, (_, row) => (
+            <div
+              key={row}
+              className="grid grid-cols-7 gap-4 mb-4 p-4 bg-slate-50 rounded-lg"
+            >
+              {Array.from({ length: 7 }, (_, col) => (
+                <div
+                  key={col}
+                  className="h-4 bg-slate-200 rounded animate-pulse"
+                ></div>
               ))}
             </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>
   </div>
 ));
 
-// Transaction details row component
+// Simple transaction details row component (back to original style)
 const TransactionDetailRow = memo(({ label, value }) => (
   <div className="flex justify-between items-center py-3 border-b border-gray-200">
     <span className="text-sm font-medium text-gray-600">{label}</span>
@@ -93,80 +88,101 @@ const TransactionDetailRow = memo(({ label, value }) => (
   </div>
 ));
 
-// Booking table row component
+// Enhanced booking table row component
 const BookingRow = memo(({ booking, index }) => (
   <div
     key={booking.booking_id || index}
-    className="grid grid-cols-7 gap-4 py-3 hover:bg-gray-50 transition-colors duration-150 rounded-lg border-b border-gray-100"
+    className="grid grid-cols-7 gap-4 p-4 hover:bg-slate-50 transition-all duration-200 rounded-lg border border-slate-100 bg-white mb-3"
   >
     <div className="flex items-center">
-      <span className="text-sm font-medium text-gray-900">
-        {booking.booking_no || "-"}
+      <span className="text-sm font-semibold text-slate-900 font-mono">
+        {booking.booking_no || "—"}
       </span>
     </div>
     <div className="flex items-center">
       <span
-        className="text-sm text-gray-900 truncate max-w-[160px]"
+        className="text-sm text-slate-700 truncate max-w-[160px] font-medium"
         title={booking.match_name}
       >
-        {booking.match_name || "-"}
+        {booking.match_name || "—"}
       </span>
     </div>
     <div className="flex items-center">
       <span
-        className="text-sm text-gray-700 truncate max-w-[130px]"
+        className="text-sm text-slate-600 truncate max-w-[130px]"
         title={booking.customer_name}
       >
-        {booking.customer_name || "-"}
+        {booking.customer_name || "—"}
       </span>
     </div>
     <div className="flex items-center justify-center">
-      <span className="text-sm text-gray-600">
-        {booking.ticket_type || "-"}
+      <span className="text-sm text-slate-600 text-center">
+        {booking.ticket_type || "—"}
       </span>
     </div>
     <div className="flex items-center justify-center">
-      <span className="text-sm font-medium text-gray-700">
-        {booking.quantity || "-"}
+      <span className="text-sm font-semibold text-slate-800 bg-slate-50 px-3 py-1 rounded-full">
+        {booking.quantity || "—"}
       </span>
     </div>
     <div className="flex items-center justify-end">
-      <span className="text-sm font-medium text-gray-900">
-        {booking.amount || "-"}
+      <span className="text-sm font-bold text-slate-900">
+        {booking.amount || "—"}
       </span>
     </div>
     <div className="flex items-center justify-center">
-      <span className="text-xs font-medium px-2 py-1 rounded border border-gray-300 bg-white text-gray-800">
-        {booking.booking_status || "-"}
+      <span className="text-xs font-medium px-3 py-1.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">
+        {booking.booking_status || "—"}
       </span>
     </div>
   </div>
 ));
 
-// Accordion section component
+// Enhanced accordion section component
 const AccordionSection = memo(
-  ({ title, icon: Icon, isOpen, onToggle, itemCount, children }) => (
-    <div className="border-b border-gray-300">
-      <button
-        onClick={onToggle}
-        className="w-full px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 border-b border-gray-200"
-        aria-expanded={isOpen}
-      >
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <Icon className="h-5 w-5 text-gray-600" />
-            <span className="text-lg font-medium text-gray-900 cursor-pointer">
-              {title} {itemCount !== undefined && `(${itemCount} items)`}
-            </span>
+  ({
+    title,
+    icon: Icon,
+    isOpen,
+    onToggle,
+    itemCount,
+    children,
+    showHeader = true,
+  }) => (
+    <div className="mb-6">
+      {showHeader && title && (
+        <button
+          onClick={onToggle}
+          className="w-full bg-white rounded-xl border border-slate-200 p-6 hover:shadow-sm transition-all duration-200 mb-4"
+          aria-expanded={isOpen}
+        >
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <div className="p-2 bg-slate-100 rounded-lg">
+                <Icon className="h-5 w-5 text-slate-600" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {title}
+                </h3>
+                {itemCount !== undefined && (
+                  <p className="text-sm text-slate-500 mt-1">
+                    {itemCount} {itemCount === 1 ? "item" : "items"}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="p-2 bg-slate-50 rounded-lg">
+              {isOpen ? (
+                <ChevronUp className="h-5 w-5 text-slate-500" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-slate-500" />
+              )}
+            </div>
           </div>
-          {isOpen ? (
-            <ChevronUp className="h-5 w-5 text-gray-500" />
-          ) : (
-            <ChevronDown className="h-5 w-5 text-gray-500" />
-          )}
-        </div>
-      </button>
-      {isOpen && <div className="p-6 bg-white">{children}</div>}
+        </button>
+      )}
+      {isOpen && <div>{children}</div>}
     </div>
   )
 );
@@ -188,7 +204,7 @@ const TransactionDetailsPopup = ({
     const bookings = data?.payoutTableData?.payout_orders || [];
 
     const formatDate = (dateString) => {
-      if (!dateString) return "-";
+      if (!dateString) return "—";
       const date = new Date(dateString);
       return date.toLocaleDateString("en-GB", {
         day: "2-digit",
@@ -205,7 +221,7 @@ const TransactionDetailsPopup = ({
     return { transactionData, bookings, formattedDates };
   }, [data]);
 
-  // Memoize transaction details configuration
+  // Simple transaction details configuration (back to original)
   const transactionDetails = useMemo(
     () => [
       [
@@ -224,14 +240,14 @@ const TransactionDetailsPopup = ({
     [transactionData, formattedDates]
   );
 
-  // Memoize table headers
+  // Enhanced table headers
   const tableHeaders = useMemo(
     () => [
       "Booking ID",
       "Match Details",
       "Customer",
       "Type",
-      "Qty",
+      "Quantity",
       "Amount",
       "Status",
     ],
@@ -254,7 +270,11 @@ const TransactionDetailsPopup = ({
   // Early return for shimmer state
   if (showShimmer) {
     return (
-      <RightViewModal show={show} onClose={handleClose} className="!w-[50%]">
+      <RightViewModal
+        show={show}
+        onClose={handleClose}
+        className="!w-[60%] !max-w-6xl"
+      >
         <ShimmerLoader />
       </RightViewModal>
     );
@@ -279,13 +299,14 @@ const TransactionDetailsPopup = ({
           </button>
         </div>
 
-        <div className="overflow-y-auto max-h-[calc(90vh-80px)] m-2">
+        <div className="overflow-y-auto hideScrollbar max-h-[calc(90vh-80px)] m-2">
           {/* Transaction Information Accordion */}
           <AccordionSection
-            title="Transaction Information"
+            title=""
             icon={CreditCard}
             isOpen={isTransactionOpen}
             onToggle={handleTransactionToggle}
+            showHeader={false}
           >
             {/* Status and Amount Section */}
             <div className="bg-gray-50 rounded-lg p-6 mb-6 border border-gray-200">
@@ -326,22 +347,28 @@ const TransactionDetailsPopup = ({
             </div>
           </AccordionSection>
 
-          {/* Booking Details Accordion */}
+          {/* Enhanced Booking Details */}
           <AccordionSection
-            title="Booking Details"
+            title=""
             icon={FileText}
             isOpen={isBookingOpen}
             onToggle={handleBookingToggle}
             itemCount={bookings.length}
           >
-            <div className="overflow-x-auto">
-              <div className="min-w-full">
-                {/* Table Header */}
-                <div className="grid grid-cols-7 gap-4 mb-4 pb-3 border-b-2 border-gray-300">
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                <h4 className="text-lg font-semibold text-slate-900">
+                  Order Information
+                </h4>
+              </div>
+
+              <div className="p-6">
+                {/* Enhanced Table Header */}
+                <div className="grid grid-cols-7 gap-4 mb-6 pb-4 border-b-2 border-slate-200">
                   {tableHeaders.map((header, index) => (
                     <div
                       key={index}
-                      className={`text-xs font-semibold text-gray-700 uppercase tracking-wider ${
+                      className={`text-xs font-bold text-slate-700 uppercase tracking-wider ${
                         index === 3 || index === 4 || index === 6
                           ? "text-center"
                           : index === 5
@@ -354,7 +381,7 @@ const TransactionDetailsPopup = ({
                   ))}
                 </div>
 
-                {/* Table Body */}
+                {/* Enhanced Table Body */}
                 <div className="space-y-3">
                   {bookings.length > 0 ? (
                     bookings.map((booking, index) => (
@@ -365,8 +392,14 @@ const TransactionDetailsPopup = ({
                       />
                     ))
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      No booking details available
+                    <div className="text-center py-12 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
+                      <FileText className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                      <p className="text-lg font-medium text-slate-500 mb-2">
+                        No booking details available
+                      </p>
+                      <p className="text-sm text-slate-400">
+                        Booking information will appear here when available
+                      </p>
                     </div>
                   )}
                 </div>

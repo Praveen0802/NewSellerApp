@@ -111,7 +111,7 @@ const AddressDetails = ({
               <FormFields
                 formFields={[
                   {
-                    type: "text",
+                    type: "number",
                     id: "mobile_no",
                     label: "Phone Number",
                     name: "mobile_no",
@@ -145,7 +145,6 @@ const AddressDetails = ({
         onChange: (e) => handleChange(e, "address"),
         className: `!py-[4px] !px-4 ${fieldStyle}`,
         labelClassName: "!text-[12px] text-gray-600  block",
-       
       },
     ],
     [
@@ -212,7 +211,7 @@ const AddressDetails = ({
                   className="w-3 h-3 text-blue-600 cursor-pointer"
                   checked={selectedAddress == index}
                   onChange={() => {
-                    handleAddressChange(index,field);
+                    handleAddressChange(index, field);
                   }}
                 />
                 <div className="ml-3 flex items-center">

@@ -32,8 +32,11 @@ const FloatingDateRange = ({
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [tempStartDate, setTempStartDate] = useState(null);
   const [tempEndDate, setTempEndDate] = useState(null);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: true, left: 0 });
-  
+  const [dropdownPosition, setDropdownPosition] = useState({
+    top: true,
+    left: 0,
+  });
+
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -55,22 +58,24 @@ const FloatingDateRange = ({
     const inputRect = inputRef.current.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
-    
+
     // Estimated dropdown height (adjust based on your actual dropdown size)
     const dropdownHeight = 350;
     const dropdownWidth = inputRect.width;
-    
+
     // Check if there's enough space below
     const spaceBelow = viewportHeight - inputRect.bottom;
     const spaceAbove = inputRect.top;
-    
+
     // Determine vertical position
-    const shouldOpenUpward = openUpward || spaceBelow < dropdownHeight && spaceAbove > dropdownHeight;
-    
+    const shouldOpenUpward =
+      openUpward ||
+      (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight);
+
     // Determine horizontal position
     let leftOffset = 0;
     const spaceRight = viewportWidth - inputRect.left;
-    
+
     if (spaceRight < dropdownWidth) {
       // If not enough space on the right, align to the right edge
       leftOffset = Math.min(0, spaceRight - dropdownWidth);
@@ -78,7 +83,7 @@ const FloatingDateRange = ({
 
     return {
       top: !shouldOpenUpward,
-      left: leftOffset
+      left: leftOffset,
     };
   };
 
@@ -144,7 +149,7 @@ const FloatingDateRange = ({
     document.addEventListener("mousedown", handleClickOutside);
     window.addEventListener("resize", handleResize);
     window.addEventListener("scroll", handleScroll, true);
-    
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("resize", handleResize);
@@ -459,10 +464,6 @@ const FloatingDateRange = ({
       : "border-[#DADBE5]"
   }`;
 
-  console.log(dropdownPosition.top,'',`${inputRef.current?.getBoundingClientRect().bottom + window.scrollY}`,dropdownPosition.top 
-  ? `${inputRef.current?.getBoundingClientRect().bottom + window.scrollY}px`
-  : `${inputRef.current?.getBoundingClientRect().top + window.scrollY - 350}px`,'hererrrrr')
-
   return (
     <div className={`${parentClassName} relative w-full`} ref={dropdownRef}>
       {!hideLabel && (
@@ -516,12 +517,23 @@ const FloatingDateRange = ({
         <div
           className={`fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-xl p-2 min-w-[280px]`}
           style={{
-            top: dropdownPosition.top 
-              ? `${inputRef.current?.getBoundingClientRect().bottom + window.scrollY}px`
-              : `${inputRef.current?.getBoundingClientRect().top + window.scrollY - 350}px`,
-            left: `${inputRef.current?.getBoundingClientRect().left + window.scrollX + dropdownPosition.left}px`,
+            top: dropdownPosition.top
+              ? `${
+                  inputRef.current?.getBoundingClientRect().bottom +
+                  window.scrollY
+                }px`
+              : `${
+                  inputRef.current?.getBoundingClientRect().top +
+                  window.scrollY -
+                  350
+                }px`,
+            left: `${
+              inputRef.current?.getBoundingClientRect().left +
+              window.scrollX +
+              dropdownPosition.left
+            }px`,
             width: `${inputRef.current?.getBoundingClientRect().width}px`,
-            maxWidth: '95vw',
+            maxWidth: "95vw",
           }}
         >
           <div className="space-y-2">

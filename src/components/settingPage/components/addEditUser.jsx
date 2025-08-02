@@ -238,7 +238,7 @@ const AddEditUser = ({
               <FormFields
                 formFields={[
                   {
-                    type: "text",
+                    type: "number",
                     id: "phone_number",
                     name: "phone_number",
                     value: formFieldValues?.phone_number,
