@@ -17,19 +17,19 @@ import {
   getLMTPayPrefill, // You'll need to create this API function
   getPayoutDetails,
   getPayoutHistoryReport,
-  getPayoutOrderReport, // You'll need to create this API function
+  getPayoutOrderReport,
+  payOutHistory,
+  payOutOrderHistory, // You'll need to create this API function
 } from "@/utils/apiHandler/request";
 import Button from "../commonComponents/button";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import FloatingDateRange from "../commonComponents/dateRangeInput";
-import { getAuthToken } from "@/utils/helperFunctions";
 import { toast } from "react-toastify";
 import { formatDate } from "../tradePage/components/stickyDataTable";
 import OrderInfo from "../orderInfoPopup";
 import DownloadButton from "../DownloadButton";
 import useCSVDownload from "@/Hooks/useCsvDownload";
 import ActiveFiltersBox from "../tabbedLayout/ActiveFilterBoxs";
-import { set } from "lodash";
 
 const PayoutPage = (props) => {
   const { apiData } = props;
@@ -213,6 +213,7 @@ const PayoutPage = (props) => {
           title: list?.month,
           headers: [
             "Payment Reference",
+            "To Account",
             "Amount",
             "Payout Date",
             "Expected Date",
@@ -223,6 +224,7 @@ const PayoutPage = (props) => {
             // const status = getStatusText(listItems?.status);
             return {
               referenceNo: listItems?.reference_no,
+              to_account: listItems?.to_account,
               amount: listItems?.price_with_currency,
               payoutDate: formatDate(listItems?.payout_date, "dateOnly"),
               expectedDate: formatDate(listItems?.expected_date, "dateOnly"),
@@ -267,19 +269,39 @@ const PayoutPage = (props) => {
 
   const filterChange = async (params) => {
     setIsLoading(true);
+
     try {
       // Uncomment when API is ready
-      // const response = await fetchPayoutHistoryMonthly("", params);
-      // if (selectedTab === "payout") {
-      //   setCurrentHistoryData(response?.payoutHistory?.payout_history);
-      // } else {
-      //   setCurrentHistoryData(response?.payoutOrders?.payout_history);
-      // }
-
+      const { tab, reference_no = null, ...restParams } = params ?? {};
+      const payoutParamsQuery = {
+        ...(reference_no && { payout_reference: reference_no }),
+        ...restParams,
+      };
+      const orderHistoryParams = {
+        ...(reference_no && { reference: reference_no }),
+        ...restParams,
+      };
+      if (selectedTab === "payout") {
+        try {
+          const response = await payOutHistory("", payoutParamsQuery);
+          setCurrentHistoryData(response?.payout_history);
+        } catch (error) {
+          toast.error("Failed to get payout history. Please try again.");
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      } else {
+        try {
+          const response = await payOutOrderHistory("", orderHistoryParams);
+          setCurrentHistoryData(response?.payout_history);
+        } catch (error) {
+          toast.error("Failed to get order history. Please try again.");
+        } finally {
+          setIsLoading(false);
+        }
+      }
       // For now, we'll just simulate loading
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 1000);
     } catch (error) {
       console.log("Error in filterChange:", error);
       setIsLoading(false);
@@ -303,11 +325,11 @@ const PayoutPage = (props) => {
     filterChange(filteredParams);
   };
 
-  const [isPayoutEntered, setIsPayoutEntered] = useState(false);
+  const [isPayoutEntered, setIsPayoutEntered] = useState(null);
 
   const handleInputBlurOrEnter = (e, isBlur = false) => {
     if (!isBlur && e.key !== "Enter") return;
-    setIsPayoutEntered(true);
+    setIsPayoutEntered(e?.target?.value);
     const params = {
       ...(paymentReference && { reference_no: paymentReference }),
       ...(statusFilter && { status: statusFilter }),
@@ -359,8 +381,9 @@ const PayoutPage = (props) => {
   const getActiveFilters = () => {
     const filters = {};
 
-    if (paymentReference && isPayoutEntered) {
-      filters.paymentReference = paymentReference;
+    if (isPayoutEntered !== null) {
+      // filters.paymentReference = paymentReference;
+      filters.paymentReference = isPayoutEntered;
     }
 
     if (statusFilter) {
@@ -379,7 +402,7 @@ const PayoutPage = (props) => {
     switch (filterKey) {
       case "paymentReference":
         setPaymentReference("");
-        setIsPayoutEntered(false);
+        setIsPayoutEntered(null);
         break;
       case "status":
         setStatusFilter("");
@@ -425,7 +448,7 @@ const PayoutPage = (props) => {
     setPaymentReference("");
     setStatusFilter("");
     setDateRange({ startDate: "", endDate: "" });
-    setIsPayoutEntered(false);
+    setIsPayoutEntered(null);
     // Trigger filter change with no filters
     filterChange({ tab: selectedTab });
   };
