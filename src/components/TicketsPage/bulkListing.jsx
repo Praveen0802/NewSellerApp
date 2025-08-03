@@ -30,15 +30,18 @@ const useDebounce = (value, delay) => {
 };
 
 const BulkListings = (props) => {
-  const { response, filters={} } = props;
+  const { response, filters = {} } = props;
   const [selectedRows, setSelectedRows] = useState([]);
-  const [filtersApplied, setFiltersApplied] = useState({venue: filters?.venue, searchValue: filters?.query ||""});
+  const [filtersApplied, setFiltersApplied] = useState({
+    venue: filters?.venue,
+    searchValue: filters?.query || "",
+  });
   const [eventDate, setEventDate] = useState("");
   const [eventsData, setEventsData] = useState(
     response?.bulkListingData?.value?.events
   );
 
-  const [searchValue, setSearchValue] = useState(filters?.query ||"");
+  const [searchValue, setSearchValue] = useState(filters?.query || "");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [visibleFilters, setVisibleFilters] = useState({
     search: true,
@@ -46,7 +49,7 @@ const BulkListings = (props) => {
     venue: true,
     eventDate: true,
   });
-const [activeFilters, setActiveFilters] = useState({});
+  const [activeFilters, setActiveFilters] = useState({});
   const dispatch = useDispatch();
   const [loader, setLoader] = useState(false);
   const router = useRouter();
@@ -57,9 +60,19 @@ const [activeFilters, setActiveFilters] = useState({});
   // Available filters configuration
   const filterOptions = [
     { key: "search", label: "Search", component: "input", name: "Search" },
-    { key: "tournament", label: "Tournament", component: "select", name: "Tournament" },
+    {
+      key: "tournament",
+      label: "Tournament",
+      component: "select",
+      name: "Tournament",
+    },
     { key: "venue", label: "Venue", component: "select", name: "Venue" },
-    { key: "eventDate", label: "Event Date", component: "dateRange", name: "Event Date" },
+    {
+      key: "eventDate",
+      label: "Event Date",
+      component: "dateRange",
+      name: "Event Date",
+    },
   ];
 
   // Effect for debounced search
@@ -117,18 +130,18 @@ const [activeFilters, setActiveFilters] = useState({});
 
   const fetchApiCall = async (params) => {
     function filterPresentKeys(obj) {
-    const result = {};
-    for (const [key, value] of Object.entries(obj)) {
+      const result = {};
+      for (const [key, value] of Object.entries(obj)) {
         if (value !== null && value !== undefined && value !== "") {
-            result[key] = value;
+          result[key] = value;
         }
+      }
+      return result;
     }
-    return result;
-}
-  let values = filterPresentKeys(params);
+    let values = filterPresentKeys(params);
     setLoader(true);
     try {
-      const response = await fetchBulkListing("",values);
+      const response = await fetchBulkListing("", values);
       setEventsData(response?.events);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -182,115 +195,120 @@ const [activeFilters, setActiveFilters] = useState({});
   const activeFiltersCount =
     Object.values(visibleFilters).filter(Boolean).length;
 
-
   const onFilterChange = async (filterKey, value) => {
-  const params = { ...filtersApplied, [filterKey]: value };
+    const params = { ...filtersApplied, [filterKey]: value };
 
-  switch (filterKey) {
-    case "search":
-      params.query = "";
-      setSearchValue("");
-      break;
-    case "tournament":
-      params.tournament_id = "";
-      delete params.tournament;
-      break;
-    case "venue":
-      delete params.venue; 
-      break;
-    case "eventDate":
-      delete params.eventDate;
-      setEventDate("");
-      break;
-    default:
-      break;
-  }
+    switch (filterKey) {
+      case "search":
+        params.query = "";
+        setSearchValue("");
+        break;
+      case "tournament":
+        params.tournament_id = "";
+        delete params.tournament;
+        break;
+      case "venue":
+        delete params.venue;
+        break;
+      case "eventDate":
+        delete params.eventDate;
+        setEventDate("");
+        break;
+      default:
+        break;
+    }
 
-  setFiltersApplied(params);
-  setActiveFilters((prev) => ({
-    ...prev,
-    [filterKey]: value,
-  }));
+    setFiltersApplied(params);
+    setActiveFilters((prev) => ({
+      ...prev,
+      [filterKey]: value,
+    }));
 
-  await fetchApiCall(params);
-};
+    await fetchApiCall(params);
+  };
 
-  const onClearAllFilters = async() =>{
-  const params = { query:filtersApplied?.query };
+  const onClearAllFilters = async () => {
+    const params = { query: filtersApplied?.query };
 
-    setActiveFilters({})
-    setFiltersApplied((prev)=>({
+    setActiveFilters({});
+    setFiltersApplied((prev) => ({
       ...prev,
       tournament_id: "",
       venue: "",
-    }))
+    }));
     await fetchApiCall(params);
-  }
+  };
   const ActiveFilterPills = ({
-  activeFilters,
-  filterConfig,
-  onFilterChange,
-  onClearAllFilters,
-  currentTab,
-}) => {
-  const getFilterDisplayValue = (filterKey, value, config) => {
-    if (!value) return null;
+    activeFilters,
+    filterConfig,
+    onFilterChange,
+    onClearAllFilters,
+    currentTab,
+  }) => {
+    const getFilterDisplayValue = (filterKey, value, config) => {
+      if (!value) return null;
 
-    const filterConfig = config?.find((f) => f.key === filterKey);
-    if (!filterConfig) return null;
+      const filterConfig = config?.find((f) => f.key === filterKey);
+      if (!filterConfig) return null;
 
-    if (filterConfig.component === "select" && filterConfig.options) {
-      const option = filterConfig.options.find((opt) => opt.value === value);
-      return option ? option.label : value;
-    }
-
-    return typeof value === "object" ? `${value.startDate} - ${value.endDate}` : value;
-  };
-
-  const getActiveFilterEntries = () => {
-    const entries = [];
-    Object.entries(activeFilters).forEach(([key, value]) => {
-      if (key === "page" || !value || value === "") return; 
-      const displayValue = getFilterDisplayValue(
-        key,
-        value,
-        filterConfig
-      );
-      if (displayValue) {
-        entries.push({ key, value, displayValue });
+      if (filterConfig.component === "select" && filterConfig.options) {
+        const option = filterConfig.options.find((opt) => opt.value === value);
+        return option ? option.label : value;
       }
-    });
-    return entries;
+
+      return typeof value === "object"
+        ? `${value.startDate} - ${value.endDate}`
+        : value;
+    };
+
+    const getActiveFilterEntries = () => {
+      const entries = [];
+      Object.entries(activeFilters).forEach(([key, value]) => {
+        if (key === "page" || !value || value === "") return;
+        const displayValue = getFilterDisplayValue(key, value, filterConfig);
+        if (displayValue) {
+          entries.push({ key, value, displayValue });
+        }
+      });
+      return entries;
+    };
+
+    const activeEntries = getActiveFilterEntries();
+    if (activeEntries.length === 0) return null;
+
+    return (
+      <div className="flex items-center gap-2 flex-wrap px-3">
+        {activeEntries.length > 1 && (
+          <Image
+            onClick={onClearAllFilters}
+            src={reloadIcon}
+            width={30}
+            height={30}
+            alt="image-logo"
+          />
+        )}
+        {activeEntries.map(({ key, value, displayValue }) => (
+          <div
+            key={key}
+            className="inline-flex items-center gap-1 px-3 py-1 border-1 border-gray-300  rounded-sm text-sm"
+          >
+            <span className="font-medium capitalize">
+              {key.replace(/_/g, " ")}:
+            </span>
+            <span>{displayValue}</span>
+            <button
+              onClick={() => onFilterChange(key, "", activeFilters, currentTab)}
+              className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        ))}
+      </div>
+    );
   };
 
-  const activeEntries = getActiveFilterEntries();
-  if (activeEntries.length === 0) return null;
-
-  return (
-    <div className="flex items-center gap-2 flex-wrap px-3">
-      {activeEntries.length > 1 && <Image onClick={onClearAllFilters} src={reloadIcon} width={30} height={30} alt="image-logo" />}
-      {activeEntries.map(({ key, value, displayValue }) => (
-        <div
-          key={key}
-          className="inline-flex items-center gap-1 px-3 py-1 border-1 border-gray-300  rounded-sm text-sm"
-        >
-          <span className="font-medium capitalize">
-            {key.replace(/_/g, " ")}:
-          </span>
-          <span>{displayValue}</span>
-          <button
-            onClick={() => onFilterChange(key, "", activeFilters, currentTab)}
-            className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
-          >
-            <X size={14} />
-          </button>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const {showFullDisplay} = useSelector((state) => state.common);
+  const { showFullDisplay } = useSelector((state) => state.common);
   return (
     <div className="bg-[#F5F7FA] w-full h-full relative">
       <div className="flex bg-white items-center py-2 md:py-2 justify-between px-4 md:px-6 border-b border-[#eaeaf1]">
@@ -344,14 +362,14 @@ const {showFullDisplay} = useSelector((state) => state.common);
                     </label>
                   ))}
 
-                  <div className="border-t border-gray-200 mt-3 pt-3">
+                  {/* <div className="border-t border-gray-200 mt-3 pt-3">
                     <button
                       onClick={clearAllFilters}
                       className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                     >
                       Clear All Filters
                     </button>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             )}
@@ -405,13 +423,13 @@ const {showFullDisplay} = useSelector((state) => state.common);
                 onSelect={(e) => {
                   let obj = response?.tournamentsList?.value?.find(
                     (r) => r.tournament_id == e
-                  )
+                  );
                   setActiveFilters((prev) => {
                     return {
                       ...prev,
                       tournament: obj?.tournament_name,
                     };
-                  })
+                  });
                   handleSelectChange(e, "tournament_id");
                 }}
                 parentClassName="w-full"
@@ -430,14 +448,14 @@ const {showFullDisplay} = useSelector((state) => state.common);
                 onSelect={(e) => {
                   setActiveFilters((prev) => {
                     let obj = response?.venueList?.value?.find(
-                    (r) => r.stadium_id == e
-                  )
+                      (r) => r.stadium_id == e
+                    );
                     return {
                       ...prev,
                       venue: obj?.stadium_name,
                     };
-                  })
-                  
+                  });
+
                   handleSelectChange(e, "venue");
                 }}
                 options={response?.venueList?.value?.map((list) => {
@@ -464,16 +482,15 @@ const {showFullDisplay} = useSelector((state) => state.common);
                 subParentClassName="w-full"
                 className="!py-[8px] !px-[16px] mobile:text-xs"
                 value={eventDate}
-                onChange={(dateValue) =>{
+                onChange={(dateValue) => {
                   setActiveFilters((prev) => {
                     return {
                       ...prev,
                       eventDate: dateValue,
                     };
-                  })
-                  handleDateChange(dateValue, "eventDate")
-                }
-                }
+                  });
+                  handleDateChange(dateValue, "eventDate");
+                }}
               />
             </div>
           )}
@@ -511,7 +528,11 @@ const {showFullDisplay} = useSelector((state) => state.common);
 
       {/* Sticky Bottom Bar */}
       {selectedRows?.length > 0 && (
-        <div className={`fixed bottom-0 w-full left-0 ${showFullDisplay ? 'pl-42' : 'pl-15' } right-0 bg-white border-t border-[#E5E7EB] shadow-lg z-50`}>
+        <div
+          className={`fixed bottom-0 w-full left-0 ${
+            showFullDisplay ? "pl-42" : "pl-15"
+          } right-0 bg-white border-t border-[#E5E7EB] shadow-lg z-50`}
+        >
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-4">
               <span className="text-sm text-[#323A70] font-medium">

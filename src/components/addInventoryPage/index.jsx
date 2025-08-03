@@ -220,7 +220,8 @@ const AddInventoryPage = (props) => {
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[180px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, ticket_types: value })),
     },
@@ -241,7 +242,8 @@ const AddInventoryPage = (props) => {
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[120px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, add_qty_addlist: value })),
     },
@@ -260,7 +262,8 @@ const AddInventoryPage = (props) => {
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[150px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, split_type: value })),
     },
@@ -283,7 +286,8 @@ const AddInventoryPage = (props) => {
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[180px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, split_details: value })),
     },
@@ -303,7 +307,8 @@ const AddInventoryPage = (props) => {
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -323,7 +328,8 @@ const AddInventoryPage = (props) => {
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[140px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, home_town: value })),
     },
@@ -343,7 +349,8 @@ const AddInventoryPage = (props) => {
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[180px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -362,7 +369,8 @@ const AddInventoryPage = (props) => {
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[150px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, ticket_block: value })),
     },
@@ -375,7 +383,8 @@ const AddInventoryPage = (props) => {
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[100px] lg:max-w-[212px]",
       className: "!py-[6px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -390,7 +399,8 @@ const AddInventoryPage = (props) => {
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[120px] lg:max-w-[212px]",
       className: "!py-[6px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -412,7 +422,8 @@ const AddInventoryPage = (props) => {
         </div>
       ),
       className: "!py-[6px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -435,7 +446,8 @@ const AddInventoryPage = (props) => {
         </div>
       ),
       className: "!py-[6px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -463,7 +475,8 @@ const AddInventoryPage = (props) => {
       ],
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, notes: value })),
     },
@@ -488,7 +501,8 @@ const AddInventoryPage = (props) => {
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, restrictions: value })),
     },
@@ -508,7 +522,8 @@ const AddInventoryPage = (props) => {
       singleDateMode: true,
       className:
         "!pb-[10px] !pt-[12px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4]",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, ship_date: value })),
     },
@@ -521,7 +536,8 @@ const AddInventoryPage = (props) => {
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
       className:
         "!py-[4px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4]",
       hideFromTable: true,
       onChange: (e) =>
         setFiltersApplied((prev) => ({
@@ -1302,6 +1318,28 @@ const AddInventoryPage = (props) => {
     matchDetails?.match_date_format,
     "matchDetails?.match_date_format"
   );
+
+  const StadiumLocationDisplay = ({ matchDetails = {}, className } = {}) => {
+    const { stadium_name, city_name, country_name } = matchDetails;
+
+    const locationParts = [stadium_name, city_name, country_name].filter(
+      Boolean
+    );
+
+    if (!locationParts.length) return null;
+    const label = locationParts.join(", ");
+    return (
+      <p
+        className={`text-[#3a3c42] truncate ${
+          isMobile ? "text-[12px] max-w-[200px]" : "text-[14px]"
+        } ${className}`.trim()}
+        title={label}
+      >
+        {label}
+      </p>
+    );
+  };
+
   return (
     <div className="bg-[#F5F7FA] w-full max-h-[calc(100vh-100px)] overflow-auto relative min-h-screen">
       {/* Header with selected match info */}
@@ -1359,6 +1397,7 @@ const AddInventoryPage = (props) => {
               }}
               parentClassName={`${"!w-[40%]"}`}
               data-search-container="true" // Add this
+              labelClassName="text-[#7D82A4]"
             />
 
             {matchDetails && (
@@ -1411,19 +1450,7 @@ const AddInventoryPage = (props) => {
                       size={isMobile ? 14 : 16}
                       className="text-[#00A3ED]"
                     />
-                    <p
-                      className={`text-[#3a3c42] truncate ${
-                        isMobile ? "text-[12px] max-w-[200px]" : "text-[14px]"
-                      }`}
-                    >
-                      {matchDetails?.stadium_name}{" "}
-                      {matchDetails?.country_name
-                        ? `${matchDetails?.country_name},`
-                        : ""}{" "}
-                      {matchDetails?.city_name
-                        ? `${matchDetails?.city_name}`
-                        : ""}
-                    </p>
+                    {StadiumLocationDisplay({ matchDetails })}
                   </div>
                 </div>
               </div>
