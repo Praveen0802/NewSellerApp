@@ -15,6 +15,7 @@ import uploadListing from "../../../../public/uploadlisting.svg";
 import { MultiSelectEditableCell, SimpleEditableCell } from "../selectCell";
 import { fetchBlockDetails } from "@/utils/apiHandler/request";
 import ListingsMarketplace from "@/components/ModalComponents/listSalesModal";
+import { dayOfWeek } from "@/utils/helperFunctions";
 
 const CommonInventoryTable = ({
   inventoryData,
@@ -542,6 +543,26 @@ const CommonInventoryTable = ({
     );
   };
 
+  const renderMatchLocation = (matchDetails) => {
+    if (!matchDetails) return null;
+
+    const { stadium_name, city_name, country_name } = matchDetails;
+
+    const location = [
+      stadium_name ? `${stadium_name},` : "",
+      city_name ? `${city_name},` : "",
+      country_name ? `${country_name}` : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    return (
+      <span className="text-white max-w-xs truncate text-xs" title={location}>
+        {location}
+      </span>
+    );
+  };
+
   return (
     <div
       ref={containerRef}
@@ -619,7 +640,7 @@ const CommonInventoryTable = ({
                       isMobile ? "text-[10px]" : "text-xs"
                     } truncate`}
                   >
-                    {matchDetails?.match_date_format}
+                    {dayOfWeek(matchDetails?.match_date_format)}
                   </span>
                 </div>
 
@@ -643,15 +664,7 @@ const CommonInventoryTable = ({
                 {!isMobile && (
                   <div className="flex items-center space-x-2 py-4 pr-4">
                     <MapPin size={14} className="text-white" />
-                    <span className="text-white max-w-xs truncate text-xs">
-                      {matchDetails?.stadium_name}
-                      {matchDetails?.country_name
-                        ? `${matchDetails?.country_name},`
-                        : ""}
-                      {matchDetails?.city_name
-                        ? `${matchDetails?.city_name}`
-                        : ""}
-                    </span>
+                    {renderMatchLocation(matchDetails)}
                   </div>
                 )}
               </div>

@@ -244,14 +244,62 @@ export function formatDateToBoldDisplay(dateString) {
 }
 
 export function addDayOfWeek(dateString) {
-  if(!dateString) return "";
+  if (!dateString) return "";
   // Parse the input date string
   const date = new Date(dateString);
-  
+
   // Get day of week
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const dayName = days[date.getDay()];
-  
+
   // Return with day name and comma
   return `${dayName}, ${dateString}`;
+}
+
+// export function dayOfWeek(dateString) {
+//   const timestamp = dateString;
+//   const date = new Date(timestamp);
+
+//   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+//   const months = [
+//     "Jan",
+//     "Feb",
+//     "Mar",
+//     "Apr",
+//     "May",
+//     "Jun",
+//     "Jul",
+//     "Aug",
+//     "Sep",
+//     "Oct",
+//     "Nov",
+//     "Dec",
+//   ];
+
+//   const formatted = `${days[date.getDay()]}, ${date.getDate()} ${
+//     months[date.getMonth()]
+//   } ${date.getFullYear()}`;
+//   return formatted;
+// }
+
+export function dayOfWeek(input) {
+  let date;
+
+  // Check if input contains hyphens (YYYY-MM-DD format)
+  if (input.includes("-")) {
+    date = new Date(input);
+  } else {
+    // Handle "DD Month YYYY" format
+    date = new Date(input);
+  }
+
+  // Format to "Sun, 22 Mar 2026" style
+  const options = {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  };
+
+  return date.toLocaleDateString("en-US", options);
 }

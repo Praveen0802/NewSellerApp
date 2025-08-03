@@ -1703,9 +1703,7 @@ const TicketsPage = (props) => {
             handleDeselectAll={() => handleDeselectAllForMatch(matchIndex)}
             matchDetails={{
               match_name: matchData.matchInfo?.match_name,
-              match_date_format: new Date(
-                matchData.matchInfo?.match_date
-              ).toLocaleDateString(),
+              match_date_format: matchData.matchInfo?.match_date,
               match_time: matchData.matchInfo?.match_time,
               stadium_name: matchData.matchInfo?.stadium_name,
               country_name: matchData.matchInfo?.country_name,
