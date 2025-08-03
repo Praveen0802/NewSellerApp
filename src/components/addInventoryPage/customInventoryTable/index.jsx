@@ -549,9 +549,9 @@ const CommonInventoryTable = ({
     const { stadium_name, city_name, country_name } = matchDetails;
 
     const location = [
-      stadium_name,
-      city_name || "",
-      country_name ? `${country_name},` : "",
+      stadium_name ? `${stadium_name},` : "",
+      city_name ? `${city_name},` : "",
+      country_name ? `${country_name}` : "",
     ]
       .filter(Boolean)
       .join(" ");
