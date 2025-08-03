@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import FloatingPlaceholder from "./floatingplaceolder";
 
 const FloatingLabelInput = ({
@@ -8,7 +8,7 @@ const FloatingLabelInput = ({
   onChange = () => {},
   onBlur = null,
   onKeyDown = null,
-  onClick = null, // Add onClick prop
+  onClick = null,
   id,
   keyValue,
   showDropdown = false,
@@ -26,8 +26,8 @@ const FloatingLabelInput = ({
   error = "",
   rightIcon = null,
   checkLength = false,
-  iconBefore = null, // New prop for left icon
-  iconBeforeTooltip = "", // New prop for tooltip text
+  iconBefore = null,
+  iconBeforeTooltip = "",
   autoFocus = false,
   showError = false,
   showDelete = false,
@@ -39,6 +39,11 @@ const FloatingLabelInput = ({
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  
+  // Refs for handling click outside
+  const containerRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const inputRef = useRef(null);
 
   // Update focus state when value changes
   useEffect(() => {
@@ -48,7 +53,7 @@ const FloatingLabelInput = ({
   const handleFocus = (e) => {
     setIsFocused(true);
     if (onFocus) {
-      onFocus(e); // Pass the event to the parent
+      onFocus(e);
     }
   };
 
@@ -66,19 +71,28 @@ const FloatingLabelInput = ({
       (type === "time" && defaultFocus)
     ) {
       setIsFocused(true);
-      // document.getElementById(id).focus();
     }
   }, [defaultFocus]);
 
   const handleBlur = (e) => {
+    // Don't close dropdown immediately - let the timeout handle it
     if (e.target.value === "") {
       setIsFocused(false);
     }
 
-    // Call the onBlur callback if provided
-    if (onBlur) {
-      onBlur(e, true);
-    }
+    // Use setTimeout to delay the onBlur execution
+    // This allows click events in the dropdown to fire first
+    setTimeout(() => {
+      // Check if the new focus target is within our container
+      const activeElement = document.activeElement;
+      const isWithinContainer = containerRef.current?.contains(activeElement);
+      const isWithinDropdown = dropdownRef.current?.contains(activeElement);
+      
+      // Only call onBlur if focus moved outside our component
+      if (!isWithinContainer && !isWithinDropdown && onBlur) {
+        onBlur(e, true);
+      }
+    }, 150); // Increased timeout to ensure click events fire
   };
 
   const handleKeyDown = (e) => {
@@ -121,7 +135,6 @@ const FloatingLabelInput = ({
       }
     }
 
-    // Call the onKeyDown callback if provided
     if (onKeyDown && e.key === "Enter") {
       onKeyDown(e, false);
     }
@@ -131,12 +144,9 @@ const FloatingLabelInput = ({
   const handleInputChange = (e) => {
     let inputValue = e.target.value;
 
-    // For number type, filter out non-numeric characters
     if (type === "number") {
-      // Allow digits, decimal point, and negative sign
       inputValue = inputValue.replace(/[^0-9.-]/g, "");
 
-      // Ensure only one decimal point
       const decimalCount = (inputValue.match(/\./g) || []).length;
       if (decimalCount > 1) {
         const firstDecimalIndex = inputValue.indexOf(".");
@@ -145,7 +155,6 @@ const FloatingLabelInput = ({
           inputValue.substring(firstDecimalIndex + 1).replace(/\./g, "");
       }
 
-      // Ensure negative sign only at the beginning
       if (inputValue.includes("-")) {
         const negativeIndex = inputValue.indexOf("-");
         if (negativeIndex !== 0) {
@@ -155,21 +164,17 @@ const FloatingLabelInput = ({
         }
       }
 
-      // Update the input value
       e.target.value = inputValue;
     }
 
     onChange(e, keyValue);
   };
 
-  // Add click handler for date inputs
   const handleClick = (e) => {
-    // For date inputs, trigger the date picker
     if (type === "date" || type === "datetime-local" || type === "time") {
       e.target.showPicker?.();
     }
 
-    // Call the onClick callback if provided
     if (onClick) {
       onClick(e);
     }
@@ -183,25 +188,30 @@ const FloatingLabelInput = ({
     }
   };
 
-  const actualType = type === "password" && showPassword ? "text" : type;
+  // Handle dropdown item clicks - prevent event bubbling
+  const handleDropdownClick = (e) => {
+    e.stopPropagation();
+    // Keep the input focused to prevent dropdown from closing
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
 
-  // Check if we should show delete button
+  const actualType = type === "password" && showPassword ? "text" : type;
   const shouldShowDelete = showDelete && value && value.length > 0;
 
-  // Determine left padding based on iconBefore
   const getLeftPadding = () => {
     return value.length <= 3 && iconBefore && checkLength
       ? "pl-12"
       : iconBefore && !checkLength
       ? "pl-12"
-      : "px-3"; // Increased from pl-10 to pl-12
+      : "px-3";
   };
 
-  // Determine right padding based on what icons are shown
   const getRightPadding = () => {
-    if (type === "password" && shouldShowDelete) return "pr-16"; // Both password toggle and delete
-    if (type === "password" || shouldShowDelete || rightIcon) return "pr-10"; // Single icon
-    return iconBefore ? "pr-3" : ""; // Only right padding when we have left icon
+    if (type === "password" && shouldShowDelete) return "pr-16";
+    if (type === "password" || shouldShowDelete || rightIcon) return "pr-10";
+    return iconBefore ? "pr-3" : "";
   };
 
   const baseClasses = `block w-full ${getLeftPadding()} py-[14px] font-medium text-[14px] rounded border-[1px] focus:outline-none ${
@@ -219,12 +229,12 @@ const FloatingLabelInput = ({
   }`;
 
   return (
-    <div className={`relative w-full ${parentClassName}`}>
+    <div className={`relative w-full ${parentClassName}`} ref={containerRef}>
       {!hideLabel && (
         <FloatingPlaceholder
           className={`${labelClassName} ${
             value.length <= 3 && iconBefore && "!left-12"
-          } `} // Changed from !left-14 to !left-12
+          } `}
           isFocused={isFocused}
           hasError={!!error}
         >
@@ -251,11 +261,9 @@ const FloatingLabelInput = ({
           >
             {typeof iconBefore === "function" ? iconBefore() : iconBefore}
 
-            {/* Tooltip */}
             {iconBeforeTooltip && showTooltip && (
               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg whitespace-nowrap z-50">
                 {iconBeforeTooltip}
-                {/* Tooltip arrow */}
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-800"></div>
               </div>
             )}
@@ -263,6 +271,7 @@ const FloatingLabelInput = ({
         )}
 
         <input
+          ref={inputRef}
           id={id}
           type={actualType}
           name={name}
@@ -271,7 +280,7 @@ const FloatingLabelInput = ({
           onFocus={handleFocus}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          onClick={handleClick} // Add click handler
+          onClick={handleClick}
           autoComplete={autoComplete}
           required={required}
           readOnly={readOnly}
@@ -281,12 +290,12 @@ const FloatingLabelInput = ({
             type === "date" || type === "datetime-local" || type === "time"
               ? "cursor-pointer"
               : ""
-          }`} // Add cursor pointer for date inputs
+          }`}
           placeholder={isFocused ? placeholder : ""}
           {...(max ? { max } : {})}
         />
 
-        {/* Delete button - positioned furthest right */}
+        {/* Delete button */}
         {shouldShowDelete && (
           <button
             type="button"
@@ -311,7 +320,7 @@ const FloatingLabelInput = ({
           </button>
         )}
 
-        {/* Password toggle button - positioned second from right when delete is present */}
+        {/* Password toggle button */}
         {type === "password" && (
           <button
             type="button"
@@ -361,7 +370,7 @@ const FloatingLabelInput = ({
           </button>
         )}
 
-        {/* Right icon - positioned based on other icons present */}
+        {/* Right icon */}
         {rightIcon && (
           <div
             className={`absolute top-1/2 transform -translate-y-1/2 ${
@@ -376,8 +385,14 @@ const FloatingLabelInput = ({
           </div>
         )}
 
+        {/* Dropdown - with click handler to prevent closing */}
         {showDropdown && dropDownComponent && (
-          <div className="absolute z-[999] shadow-md w-full bg-white">
+          <div 
+            ref={dropdownRef}
+            className="absolute z-[999] shadow-md w-full bg-white"
+            onClick={handleDropdownClick}
+            onMouseDown={(e) => e.preventDefault()} // Prevent input from losing focus
+          >
             {dropDownComponent}
           </div>
         )}

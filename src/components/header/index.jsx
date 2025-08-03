@@ -44,14 +44,11 @@ const Header = () => {
   };
   const router = useRouter();
 
-  const { userDisplayName, isNameAvailable = false } =
-    useUserDisplayName(currentUser);
-
   const title = () => {
     if (router.pathname.includes("my-listings")) {
       return "Inventory";
     } else {
-      return getGreeting();
+      return 'Welcome';
     }
   };
 

@@ -29,6 +29,7 @@ import {
   getPartnerSetting,
   getReferralCode,
   getReferralHistory,
+  getSalesCount,
   getSellerContract,
   LastMinuteEvents,
   lmtOverview,
@@ -118,14 +119,16 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
 };
 
 export const fetchSalesPageDetails = async (profile, token, ctx) => {
-  const [salesPage, tournamentList] = await Promise.allSettled([
+  const [salesPage, tournamentList, salesView] = await Promise.allSettled([
     fetchSalesPageData(token, { order_status: profile }),
     fetchTournamentsList(token),
+    getSalesCount(token),
   ]);
   return {
     salesPage: salesPage?.status === "fulfilled" ? salesPage.value : null,
     tournamentList:
       tournamentList?.status === "fulfilled" ? tournamentList.value : null,
+    salesCount: salesView?.status === "fulfilled" ? salesView?.value : null,
   };
 };
 
@@ -289,7 +292,7 @@ export const fetchBulkListingData = async (token, params) => {
       fetchVenueList(token),
       fetchTournamentsList(token),
     ]);
-    console.log(bulkListingData,'bulkListingDatabulkListingDatabulkListingData')
+  console.log(bulkListingData, "bulkListingDatabulkListingDatabulkListingData");
   return { bulkListingData, venueList, tournamentsList };
 };
 

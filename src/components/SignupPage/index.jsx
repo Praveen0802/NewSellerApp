@@ -8,11 +8,11 @@ import {
   LogIn,
   Mail,
   CheckCircle,
-  Shield,
+  ShieldCheck,
   UserPlus,
 } from "lucide-react";
 import { useRouter } from "next/router";
-
+import logo from "../../../public/template-logo.png";
 import FloatingLabelInput from "../floatinginputFields";
 import FloatingSelect from "../floatinginputFields/floatingSelect";
 import {
@@ -26,6 +26,8 @@ import {
 } from "@/utils/apiHandler/request";
 import useCountryCodes from "@/Hooks/useCountryCodes";
 import { toast } from "react-toastify";
+import Image from "next/image";
+import FloatingDateRange from "../commonComponents/dateRangeInput";
 
 const SignupFlow = ({ refer_code } = {}) => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -99,7 +101,7 @@ const SignupFlow = ({ refer_code } = {}) => {
     {
       id: 4,
       title: "Complete KYC",
-      icon: Shield,
+      icon: ShieldCheck,
       description: "Verify your identity",
       tooltip: "After email verification, Login to complete KYC",
     },
@@ -204,105 +206,142 @@ const SignupFlow = ({ refer_code } = {}) => {
   const handleChange = (e, key, type) => {
     const name = key;
     let value;
-
+  
     if (type === "select") {
       value = e;
     } else if (type === "checkbox") {
       value = e.target.checked;
+    } else if (key === "dob") {
+      // Handle date of birth specially for single date mode
+      value = e; // This will be the date string directly
     } else {
       value = e.target?.value;
     }
-
+    
+    console.log(value, e, type, "valuevalue");
+    
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-
+  
+    // Only clear the error for the specific field that was changed
+    // and only if there was actually an error for that field
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
-        [name]: "",
+        [name]: "", // Clear only this field's error
       }));
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
 
-    if (!formData.first_name.trim()) {
-      newErrors.first_name = "First name is required";
+// 2. Add a helper function to calculate age:
+const calculateAge = (birthDate) => {
+  if (!birthDate) return null;
+  
+  const today = new Date();
+  const birth = new Date(birthDate);
+  
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  
+  return age;
+};
+
+// 3. Update the validateForm function to include age validation:
+const validateForm = () => {
+  console.log(validateForm,'kkkkkkkkk')
+  const newErrors = {};
+
+  if (!formData.first_name.trim()) {
+    newErrors.first_name = "First name is required";
+  }
+
+  if (!formData.last_name.trim()) {
+    newErrors.last_name = "Last name is required";
+  }
+
+  if (!formData.email.trim()) {
+    newErrors.email = "Email is required";
+  } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    newErrors.email = "Please enter a valid email address";
+  }
+
+  if (!formData.password.trim()) {
+    newErrors.password = "Password is required";
+  } else if (formData.password.length < 8) {
+    newErrors.password = "Password must be at least 8 characters";
+  }
+
+  // Validate confirm password
+  if (!formData.confirm_password.trim()) {
+    newErrors.confirm_password = "Please confirm your password";
+  } else if (formData.password !== formData.confirm_password) {
+    newErrors.confirm_password = "Passwords do not match";
+  }
+
+  if (!formData.phone_country_code.trim()) {
+    newErrors.phone_country_code = "Phone country code is required";
+  }
+
+  if (!formData.phone_number.trim()) {
+    newErrors.phone_number = "Phone number is required";
+  }
+
+  if (!formData.address.trim()) {
+    newErrors.address = "Address is required";
+  }
+
+  if (!formData.country.trim()) {
+    newErrors.country = "Country is required";
+  }
+
+  if (!formData.city.trim()) {
+    newErrors.city = "City is required";
+  }
+
+  if (!formData.zip_code.trim()) {
+    newErrors.zip_code = "Zip code is required";
+  }
+
+  // Enhanced DOB validation with age check
+  if (!formData.dob?.startDate?.trim()) {
+    newErrors.dob = "Date of birth is required";
+  } else {
+    const age = calculateAge(formData.dob?.startDate);
+    if (age === null) {
+      newErrors.dob = "Please enter a valid date of birth";
+    } else if (age < 10) {
+      newErrors.dob = "You must be at least 10 years old to register";
+    } else if (age > 120) {
+      newErrors.dob = "Please enter a valid date of birth";
     }
+  }
 
-    if (!formData.last_name.trim()) {
-      newErrors.last_name = "Last name is required";
-    }
+  if (!formData.currency.trim()) {
+    newErrors.currency = "Currency is required";
+  }
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
-    }
+  if (userType === "business" && !formData.business_name.trim()) {
+    newErrors.business_name = "Business name is required";
+  }
 
-    if (!formData.password.trim()) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
+  setErrors(newErrors);
 
-    // Validate confirm password
-    if (!formData.confirm_password.trim()) {
-      newErrors.confirm_password = "Please confirm your password";
-    } else if (formData.password !== formData.confirm_password) {
-      newErrors.confirm_password = "Passwords do not match";
-    }
+  // Scroll to first error if any
+  if (Object.keys(newErrors).length > 0) {
+    setTimeout(() => {
+      scrollToFirstError(newErrors);
+    }, 100);
+  }
 
-    if (!formData.phone_country_code.trim()) {
-      newErrors.phone_country_code = "Phone country code is required";
-    }
-
-    if (!formData.phone_number.trim()) {
-      newErrors.phone_number = "Phone number is required";
-    }
-
-    if (!formData.address.trim()) {
-      newErrors.address = "Address is required";
-    }
-
-    if (!formData.country.trim()) {
-      newErrors.country = "Country is required";
-    }
-
-    if (!formData.city.trim()) {
-      newErrors.city = "City is required";
-    }
-
-    if (!formData.zip_code.trim()) {
-      newErrors.zip_code = "Zip code is required";
-    }
-
-    if (!formData.dob.trim()) {
-      newErrors.dob = "Date of birth is required";
-    }
-
-    if (!formData.currency.trim()) {
-      newErrors.currency = "Currency is required";
-    }
-
-    if (userType === "business" && !formData.business_name.trim()) {
-      newErrors.business_name = "Business name is required";
-    }
-
-    setErrors(newErrors);
-
-    // Scroll to first error if any
-    if (Object.keys(newErrors).length > 0) {
-      setTimeout(() => {
-        scrollToFirstError(newErrors);
-      }, 100);
-    }
-
-    return Object.keys(newErrors).length === 0;
-  };
+  return Object.keys(newErrors).length === 0;
+};
 
   const startRegistrationProcess = async (formData) => {
     // Parse DOB from YYYY-MM-DD to D-M-YYYY format (without leading zeros)
@@ -534,10 +573,10 @@ const SignupFlow = ({ refer_code } = {}) => {
 
   // Step 2: Form Submission
   const renderStep2 = () => (
-    <div className="flex flex-col justify-center h-full px-4 lg:px-0 py-4">
+    <div className="flex flex-col pt-6 h-full px-4 lg:px-0">
       <div className="w-full max-w-2xl mx-auto">
-        <div className="text-center mb-6 lg:mb-8">
-          <h2 className="text-xl lg:text-3xl font-semibold text-gray-800 mb-4">
+        <div className="text-center mb-6">
+          <h2 className="text-xl lg:text-2xl font-semibold text-gray-800 mb-1">
             Seller Account Details
           </h2>
           <p className="text-gray-600 text-sm lg:text-base">
@@ -548,7 +587,7 @@ const SignupFlow = ({ refer_code } = {}) => {
         </div>
 
         <form onSubmit={handleFormSubmit}>
-          <div className="space-y-4 lg:space-y-6 max-h-[60vh]  pr-2">
+          <div className="space-y-5 max-h-[60vh]  pr-2">
             {userType === "business" && (
               <div ref={(el) => (errorRefs.current.business_name = el)}>
                 <FloatingLabelInput
@@ -564,79 +603,84 @@ const SignupFlow = ({ refer_code } = {}) => {
                 />
               </div>
             )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div ref={(el) => (errorRefs.current.first_name = el)}>
-                <FloatingLabelInput
-                  label="First Name"
-                  id="first_name"
-                  keyValue="first_name"
-                  value={formData.first_name}
-                  onChange={handleChange}
-                  error={errors.first_name}
-                  required
-                  showError={true}
-                  className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-                />
+            <div className="space-y-2">
+              <p className="text-[14px] font-medium text-gray-800">Your Name</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div ref={(el) => (errorRefs.current.first_name = el)}>
+                  <FloatingLabelInput
+                    label="First Name"
+                    id="first_name"
+                    keyValue="first_name"
+                    value={formData.first_name}
+                    onChange={handleChange}
+                    error={errors.first_name}
+                    showError={true}
+                    className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                  />
+                </div>
+                <div ref={(el) => (errorRefs.current.last_name = el)}>
+                  <FloatingLabelInput
+                    label="Last Name"
+                    id="last_name"
+                    keyValue="last_name"
+                    value={formData.last_name}
+                    onChange={handleChange}
+                    error={errors.last_name}
+                    showError={true}
+                    className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                  />
+                </div>
               </div>
-              <div ref={(el) => (errorRefs.current.last_name = el)}>
+            </div>
+            <div className="space-y-2">
+              <p className="text-[14px] font-medium text-gray-800">
+                Email Address
+              </p>
+              <div ref={(el) => (errorRefs.current.email = el)}>
                 <FloatingLabelInput
-                  label="Last Name"
-                  id="last_name"
-                  keyValue="last_name"
-                  value={formData.last_name}
+                  label="Email Address"
+                  type="email"
+                  id="email"
+                  keyValue="email"
+                  value={formData.email}
                   onChange={handleChange}
-                  error={errors.last_name}
-                  required
+                  error={errors.email}
                   showError={true}
                   className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
                 />
               </div>
             </div>
-
-            <div ref={(el) => (errorRefs.current.email = el)}>
-              <FloatingLabelInput
-                label="Email Address"
-                type="email"
-                id="email"
-                keyValue="email"
-                value={formData.email}
-                onChange={handleChange}
-                error={errors.email}
-                required
-                showError={true}
-                className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div ref={(el) => (errorRefs.current.password = el)}>
-                <FloatingLabelInput
-                  label="Password"
-                  type="password"
-                  id="password"
-                  keyValue="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  error={errors.password}
-                  required
-                  showError={true}
-                  className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-                />
-              </div>
-              <div ref={(el) => (errorRefs.current.confirm_password = el)}>
-                <FloatingLabelInput
-                  label="Confirm Password"
-                  type="password"
-                  id="confirm_password"
-                  keyValue="confirm_password"
-                  value={formData.confirm_password}
-                  onChange={handleChange}
-                  error={errors.confirm_password}
-                  required
-                  showError={true}
-                  className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-                />
+            <div className="space-y-2">
+              <p className="text-[14px] font-medium text-gray-800">
+                Set a Seat Brokers Password
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div ref={(el) => (errorRefs.current.password = el)}>
+                  <FloatingLabelInput
+                    label="Password"
+                    type="password"
+                    id="password"
+                    keyValue="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    error={errors.password}
+                    showError={true}
+                    className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                  />
+                </div>
+                <div ref={(el) => (errorRefs.current.confirm_password = el)}>
+                  <FloatingLabelInput
+                    label="Confirm Password"
+                    type="password"
+                    id="confirm_password"
+                    keyValue="confirm_password"
+                    value={formData.confirm_password}
+                    onChange={handleChange}
+                    error={errors.confirm_password}
+                    showError={true}
+                    className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                  />
+                </div>
               </div>
             </div>
 
@@ -650,7 +694,6 @@ const SignupFlow = ({ refer_code } = {}) => {
                     onSelect={handleChange}
                     keyValue="phone_country_code"
                     error={errors.phone_country_code}
-                    required
                     searchable={true}
                     showError={true}
                     paddingClassName="px-3 py-[11px]"
@@ -667,7 +710,6 @@ const SignupFlow = ({ refer_code } = {}) => {
                     value={formData.phone_number}
                     onChange={handleChange}
                     error={errors.phone_number}
-                    required
                     showError={true}
                     className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
                   />
@@ -675,21 +717,41 @@ const SignupFlow = ({ refer_code } = {}) => {
               </div>
             </div>
 
-            <div ref={(el) => (errorRefs.current.dob = el)}>
-              <FloatingLabelInput
+            <div
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              ref={(el) => (errorRefs.current.dob = el)}
+            >
+              <FloatingDateRange
                 label="Date of Birth"
                 type="date"
                 id="dob"
                 keyValue="dob"
                 value={formData.dob}
                 onChange={handleChange}
+                singleDateMode={true}
                 error={errors.dob}
-                required
                 showError={true}
-                className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-                defaultFocus={true} // Focus on this field by default
-                max={new Date().toISOString().split("T")[0]} // Prevent future dates
+                showYear={true}
+                showMonth={true}
+                className="!py-[8px] sm:!py-[10px] !text-[14px]"
+                defaultFocus={true}
+                // maxDate={calculateMaxBirthDate()} // This ensures user must be at least 10 years old
+                minDate="1900-01-01" // Optional: set a reasonable minimum date
               />
+              <div ref={(el) => (errorRefs.current.currency = el)}>
+                <FloatingSelect
+                  label="Currency"
+                  options={currencyOptions}
+                  selectedValue={formData.currency}
+                  onSelect={handleChange}
+                  keyValue="currency"
+                  error={errors.currency}
+                  searchable={true}
+                  paddingClassName="px-3 py-[11px]"
+                  showError={true}
+                  openUpward={true}
+                />
+              </div>
             </div>
 
             <div ref={(el) => (errorRefs.current.address = el)}>
@@ -700,13 +762,15 @@ const SignupFlow = ({ refer_code } = {}) => {
                 value={formData.address}
                 onChange={handleChange}
                 error={errors.address}
-                required
                 showError={true}
                 className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
               />
             </div>
 
-            <div ref={(el) => (errorRefs.current.country = el)}>
+            <div
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              ref={(el) => (errorRefs.current.country = el)}
+            >
               <FloatingSelect
                 label="Country"
                 options={countryOptions || []}
@@ -714,13 +778,9 @@ const SignupFlow = ({ refer_code } = {}) => {
                 onSelect={handleChange}
                 keyValue="country"
                 error={errors.country}
-                required
                 showError={true}
                 searchable={true}
               />
-            </div>
-
-            <div ref={(el) => (errorRefs.current.city = el)}>
               <FloatingSelect
                 label={isLoadingCities ? "Loading Cities..." : "City"}
                 options={cityOptions}
@@ -728,7 +788,6 @@ const SignupFlow = ({ refer_code } = {}) => {
                 onSelect={handleChange}
                 keyValue="city"
                 error={errors.city}
-                required
                 disabled={!formData.country || isLoadingCities}
                 placeholder={
                   !formData.country
@@ -751,44 +810,26 @@ const SignupFlow = ({ refer_code } = {}) => {
                   value={formData.zip_code}
                   onChange={handleChange}
                   error={errors.zip_code}
-                  required
                   showError={true}
                   className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
                 />
               </div>
               <div>
-                <div ref={(el) => (errorRefs.current.currency = el)}>
-                  <FloatingSelect
-                    label="Currency"
-                    options={currencyOptions}
-                    selectedValue={formData.currency}
-                    onSelect={handleChange}
-                    keyValue="currency"
-                    error={errors.currency}
-                    required
-                    searchable={true}
-                    paddingClassName="px-3 py-[11px]"
+                <div ref={(el) => (errorRefs.current.refer_code = el)}>
+                  <FloatingLabelInput
+                    label="Referral Code (Optional)"
+                    type="text"
+                    id="refer_code"
+                    keyValue="refer_code"
+                    value={formData.refer_code}
+                    onChange={handleChange}
+                    error={errors.refer_code}
                     showError={true}
-                    openUpward={true}
+                    className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                    readOnly={refer_code ? true : false}
                   />
                 </div>
               </div>
-            </div>
-
-            <div ref={(el) => (errorRefs.current.refer_code = el)}>
-              <FloatingLabelInput
-                label="Referral Code (Optional)"
-                type="text"
-                id="refer_code"
-                keyValue="refer_code"
-                value={formData.refer_code}
-                onChange={handleChange}
-                error={errors.refer_code}
-                required
-                showError={true}
-                className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-                readOnly={refer_code ? true : false}
-              />
             </div>
 
             {errors.general && (
@@ -919,11 +960,7 @@ const SignupFlow = ({ refer_code } = {}) => {
           {/* Header with Sign In */}
           <div className="flex items-center justify-between mb-8 lg:mb-12">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-[#10B981] via-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-lg lg:text-xl">
-                  SB
-                </span>
-              </div>
+              <Image src={logo} alt="logo" width={36} height={36} />
               <div>
                 <span className="text-lg lg:text-xl font-bold text-gray-800">
                   SEATS BROKERS

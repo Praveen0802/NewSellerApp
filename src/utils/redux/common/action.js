@@ -1,8 +1,10 @@
 import {
   ADD_WALLET_POPUP,
   CONFIRM_PURCHASE_POPUP,
+  FETCH_USER_ROLES,
   SHOW_FULL_DISPLAY,
   UPDATE_NOTIFICATION_COUNT,
+  USER_ACCESS_ROUTES,
 } from "./type";
 
 export const updateWalletPopupFlag = (payload) => {
@@ -29,6 +31,20 @@ export const updateNotificationCount = (payload) => {
 export const updateLeftMenuDisplay = (payload) => {
   return {
     type: SHOW_FULL_DISPLAY,
+    payload,
+  };
+};
+
+export const updateRoleAccess = (payload) => {
+  return {
+    type: FETCH_USER_ROLES,
+    payload,
+  };
+};
+
+export const getUserAccessRoutes = (payload) => {
+  return {
+    type: USER_ACCESS_ROUTES,
     payload,
   };
 };

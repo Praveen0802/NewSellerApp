@@ -34,14 +34,14 @@ const TicketCategories = ({
       : "flex flex-col gap-3";
 
   return (
-    <div className={`w-full max-w-4xl mx-auto p-6 bg-white ${className}`}>
-      <h2 className="text-xl font-bold text-gray-800 mb-8">{title}</h2>
+    <div className={`w-full max-w-4xl mx-auto p-4 bg-white border-t-[1px] border-[#DADBE5] ${className}`}>
+      <h2 className="text-[16px] font-semibold text-gray-800 mb-4">{title}</h2>
 
       <div className={layoutClasses}>
         {dynamicCategories.map((category) => (
           <div
             key={category.id}
-            className="flex items-center gap-4 px-2 py-1 rounded-lg border-2 border-gray-200 bg-white"
+            className="flex items-center gap-2 px-2 py-1 bg-white"
           >
             {/* Color indicator circle */}
             <div className="relative flex-shrink-0">
@@ -56,7 +56,7 @@ const TicketCategories = ({
             </div>
 
             {/* Category label */}
-            <span className="text-sm font-medium text-gray-700 text-left flex-grow">
+            <span className="text-[14px] text-gray-700 text-left flex-grow">
               {category.label}
             </span>
           </div>

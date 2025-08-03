@@ -80,16 +80,13 @@ const TabbedLayout = ({
   const [checkboxValues, setCheckboxValues] = useState({});
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
-console.log(currentFilterValues,'currentFilterValuescurrentFilterValues')
   // NEW: State for controlling list items visibility
   const [showListItems, setShowListItems] = useState(true);
-
   // New states for transition handling
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionDirection, setTransitionDirection] = useState("next");
   const [previousListItems, setPreviousListItems] = useState([]);
   const [currentListItems, setCurrentListItems] = useState([]);
-
   // State for managing ordered items
   const [orderedColumns, setOrderedColumns] = useState([]);
   const [orderedFilters, setOrderedFilters] = useState({});
@@ -586,6 +583,7 @@ console.log(currentFilterValues,'currentFilterValuescurrentFilterValues')
                           list={{
                             name: item?.name,
                             value: item?.value,
+                            smallTooptip: item?.smallTooptip,
                             showCheckbox: item?.showCheckbox,
                             isChecked: item?.isChecked,
                             onCheckChange: undefined, // Disable interactions during transition
@@ -638,6 +636,7 @@ console.log(currentFilterValues,'currentFilterValuescurrentFilterValues')
                         name: item?.name,
                         value: item?.value,
                         showCheckbox: item?.showCheckbox,
+                        smallTooptip: item?.smallTooptip,
                         isChecked: item?.isChecked,
                         onCheckChange:
                           item?.showCheckbox &&

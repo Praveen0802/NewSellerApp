@@ -613,10 +613,10 @@ const BulkInventory = (props) => {
         setFiltersApplied((prev) => ({ ...prev, split_details: value })),
     },
     {
-      type: "select",
-      name: "max_quantity",
+      type: "number",
+      name: "max_display_qty",
       label: "Max Display Quantity",
-      value: filtersApplied?.max_quantity,
+      value: filtersApplied?.max_display_qty,
       options: [
         { value: "1", label: "1" },
         { value: "2", label: "2" },
@@ -624,11 +624,16 @@ const BulkInventory = (props) => {
         { value: "4", label: "4" },
         { value: "5", label: "5" },
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, max_quantity: value })),
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
+      className:
+        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
+      onChange: (e) =>
+        setFiltersApplied((prev) => ({
+          ...prev,
+          max_display_qty: e?.target?.value,
+        })),
     },
     {
       type: "select",
@@ -685,7 +690,7 @@ const BulkInventory = (props) => {
       label: "Row",
       value: filtersApplied?.row,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[6px] w-full mobile:text-xs",
+      className: "!py-[10px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
@@ -699,7 +704,7 @@ const BulkInventory = (props) => {
       label: "First Seat",
       value: filtersApplied?.first_seat,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
-      className: "!py-[6px] w-full mobile:text-xs",
+      className: "!py-[10px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
@@ -720,7 +725,7 @@ const BulkInventory = (props) => {
           </p>
         </div>
       ),
-      className: "!py-[6px] w-full mobile:text-xs",
+      className: "!py-[10px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
@@ -742,7 +747,7 @@ const BulkInventory = (props) => {
           </p>
         </div>
       ),
-      className: "!py-[6px] w-full mobile:text-xs",
+      className: "!py-[10px] w-full mobile:text-xs",
       labelClassName: "!text-[11px]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
@@ -1062,6 +1067,10 @@ const BulkInventory = (props) => {
         publishingData.add_pricetype_addlist || "EUR"
       );
       formData.append(`data[${index}][event]`, publishingData.event || "E");
+      formData.append(
+        `data[${index}][max_display_qty]`,
+        publishingData.max_display_qty || ""
+      );
 
       // Add ticket_details (combination of notes and restrictions)
       const ticketDetails = [
@@ -1369,7 +1378,7 @@ const BulkInventory = (props) => {
             {totalTicketCount === 0 && (
               <div className="flex justify-end px-5 py-2 border-b-[1px] border-[#E0E1EA]">
                 <Button
-                   type="primary"
+                  type="primary"
                   classNames={{
                     root: "px-4 py-2.5",
                     label_: "text-sm font-medium",

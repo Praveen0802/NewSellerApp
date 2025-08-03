@@ -249,6 +249,7 @@ const AddInventoryPage = (props) => {
       type: "select",
       name: "split_type",
       label: "Split Type",
+      mandatory: true,
       value: filtersApplied?.split_type,
       options: [
         ...(split_types?.map((note) => ({
@@ -288,7 +289,7 @@ const AddInventoryPage = (props) => {
         setFiltersApplied((prev) => ({ ...prev, split_details: value })),
     },
     {
-      type: "text",
+      type: "number",
       name: "max_display_qty",
       label: "Max Display Quantity",
       value: filtersApplied?.max_display_qty,
@@ -374,7 +375,7 @@ const AddInventoryPage = (props) => {
       value: filtersApplied?.row,
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[100px] lg:max-w-[212px]",
-      className: "!py-[6px] w-full text-xs sm:text-[10px] lg:text-xs",
+      className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
@@ -389,7 +390,7 @@ const AddInventoryPage = (props) => {
       value: filtersApplied?.first_seat,
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[120px] lg:max-w-[212px]",
-      className: "!py-[6px] w-full text-xs sm:text-[10px] lg:text-xs",
+      className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
@@ -411,7 +412,7 @@ const AddInventoryPage = (props) => {
           </p>
         </div>
       ),
-      className: "!py-[6px] w-full text-xs sm:text-[10px] lg:text-xs",
+      className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
@@ -434,7 +435,7 @@ const AddInventoryPage = (props) => {
           </p>
         </div>
       ),
-      className: "!py-[6px] w-full text-xs sm:text-[10px] lg:text-xs",
+      className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
@@ -1101,6 +1102,7 @@ const AddInventoryPage = (props) => {
 
       // Construct FormData for multiple rows
       const formData = constructFormDataAsFields(selectedRowsData);
+      console.log(formData, "formDataformData");
       if (selectedRows?.length > 1) {
         await saveBulkListing("", formData);
       } else {
@@ -1231,20 +1233,26 @@ const AddInventoryPage = (props) => {
   };
 
   const handleSearchBlur = (e) => {
-    // Check if the blur is caused by clicking inside the dropdown
-    const dropdown = document.querySelector(
-      '[data-dropdown="search-dropdown"]'
-    );
-
-    // If the related target (what's being focused) is inside the dropdown, don't close
-    if (dropdown && dropdown.contains(e.relatedTarget)) {
-      return;
-    }
-
-    // Delay hiding dropdown to allow for clicks on dropdown items
+    // Only check after a longer delay to allow clicks to process
     setTimeout(() => {
-      setShowSearchDropdown(false);
-    }, 200); // Increased timeout for better UX
+      const activeElement = document.activeElement;
+      const searchContainer = document.querySelector(
+        '[data-search-container="true"]'
+      );
+      const dropdown = document.querySelector(
+        '[data-dropdown="search-dropdown"]'
+      );
+
+      // Check if focus is still within our components
+      const isFocusInSearch =
+        searchContainer && searchContainer.contains(activeElement);
+      const isFocusInDropdown = dropdown && dropdown.contains(activeElement);
+
+      // Only close if focus has moved completely outside
+      if (!isFocusInSearch && !isFocusInDropdown) {
+        setShowSearchDropdown(false);
+      }
+    }, 250); // Increased timeout
   };
 
   // This comes right after searchedViewComponent()
@@ -1257,6 +1265,7 @@ const AddInventoryPage = (props) => {
     setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
   };
   const handleClickOutside = useCallback((event) => {
+    // Get references to the search container and dropdown
     const searchContainer = document.querySelector(
       '[data-search-container="true"]'
     );
@@ -1264,21 +1273,24 @@ const AddInventoryPage = (props) => {
       '[data-dropdown="search-dropdown"]'
     );
 
-    if (
-      searchContainer &&
-      !searchContainer.contains(event.target) &&
-      dropdown &&
-      !dropdown.contains(event.target)
-    ) {
+    // Check if the click is outside both the search container and dropdown
+    const isOutsideSearch =
+      searchContainer && !searchContainer.contains(event.target);
+    const isOutsideDropdown = dropdown && !dropdown.contains(event.target);
+
+    // Only close if click is outside both elements
+    if (isOutsideSearch && isOutsideDropdown) {
       setShowSearchDropdown(false);
     }
   }, []);
 
+  // Updated useEffect for click outside handling
   useEffect(() => {
     if (showSearchDropdown) {
-      document.addEventListener("mousedown", handleClickOutside);
+      // Use capture phase to handle clicks before they bubble
+      document.addEventListener("mousedown", handleClickOutside, true);
       return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("mousedown", handleClickOutside, true);
       };
     }
   }, [showSearchDropdown, handleClickOutside]);
@@ -1298,10 +1310,7 @@ const AddInventoryPage = (props) => {
   };
 
   const [showRequestPopup, setShowRequestPopup] = useState(false);
-  console.log(
-    matchDetails?.match_date_format,
-    "matchDetails?.match_date_format"
-  );
+  console.log(showUploadPopup?.rowData, "matchDetails?.match_date_format");
   return (
     <div className="bg-[#F5F7FA] w-full max-h-[calc(100vh-100px)] overflow-auto relative min-h-screen">
       {/* Header with selected match info */}

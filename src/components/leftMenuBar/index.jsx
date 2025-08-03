@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import logo from "../../../public//template-logo.png";
+import logo from "../../../public/template-logo.png";
 import arrowRight from "../../../public/arrow-right.svg";
 import category from "../../../public/category.svg";
 import addSquare from "../../../public/add-square.svg";
@@ -23,6 +23,7 @@ import {
   fetchActivityHistory,
   fetchNotificationCount,
   LogoutCall,
+  getSalesCount,
 } from "@/utils/apiHandler/request";
 import { useUserDisplayName } from "@/Hooks/_shared";
 import {
@@ -898,11 +899,11 @@ const LeftMenuBar = () => {
 
   // Use the custom hook for hydration-safe user display name
   const { userDisplayName } = useUserDisplayName(currentUser);
-  const { notificationCountData, showFullDisplay } = useSelector(
+  const { notificationCountData, showFullDisplay, userRoles } = useSelector(
     (state) => state.common
   );
+  const [salesCount, setSalesCount] = useState([]);
 
-  console.log(currentUser,'currentUsercurrentUser')
   const name = currentUser?.first_name?.slice(0, 2).toUpperCase();
   const userName = currentUser?.first_name;
 
@@ -926,6 +927,15 @@ const LeftMenuBar = () => {
     fetchNotificationCountForBadge();
   }, [notificationCountData.isLoaded]);
 
+  const getSalesCountData = async () => {
+    const response = await getSalesCount();
+    setSalesCount(response);
+  };
+
+  useEffect(() => {
+    getSalesCountData();
+  }, []);
+
   function getUnReadNotificationCount(notificationCountData) {
     const notification = Number(notificationCountData?.notification) || 0;
     const activity = Number(notificationCountData?.activity) || 0;
@@ -935,24 +945,29 @@ const LeftMenuBar = () => {
 
   // Updated sales sub items to match your requirements with counts
   const salesSubItems = [
-    { name: "Pending", route: "sales/pending", key: "sales-pending", count: 0 },
+    {
+      name: "Pending",
+      route: "sales/pending",
+      key: "sales-pending",
+      count: salesCount?.find((item) => item.label === "Initiated")?.count || 0,
+    },
     {
       name: "Delivered",
       route: "sales/delivered",
       key: "sales-delivered",
-      count: 0,
+      count: salesCount?.find((item) => item.label === "Delivered")?.count || 0,
     },
     {
       name: "Completed",
       route: "sales/completed",
       key: "sales-completed",
-      count: 19,
+      count: salesCount?.find((item) => item.label === "Confirmed")?.count || 0,
     },
     {
       name: "Cancelled",
       route: "sales/cancelled",
       key: "sales-cancelled",
-      count: 2,
+      count: salesCount?.find((item) => item.label === "Cancelled")?.count || 0,
     },
   ];
 
@@ -966,6 +981,7 @@ const LeftMenuBar = () => {
       text: name,
       name: userName,
       key: "name",
+      canAccessKey: "user",
       route: "settings/myAccount",
     },
     {
@@ -973,6 +989,7 @@ const LeftMenuBar = () => {
       name: "Dashboard",
       route: "dashboard",
       key: "dashboard",
+      canAccessKey: "dashboard",
     },
     {
       icon: <Bell className="size-6 w-[23px] text-white" />,
@@ -980,29 +997,34 @@ const LeftMenuBar = () => {
       key: "notifications",
       isNotification: true,
       badge: getUnReadNotificationCount(notificationCountData),
+      canAccessKey: "notification",
     },
     {
       image: addSquare,
       name: "Add Listings",
       key: "add-listings",
       route: "add-listings",
+      canAccessKey: "event",
     },
     {
       image: listing,
       name: "My Listings",
       key: "my-listings",
       route: "my-listings",
+      canAccessKey: "event",
     },
     {
       image: Bulkticket,
       name: "Bulk Listings",
       key: "bulk-listings",
       route: "bulk-listings",
+      canAccessKey: "event",
     },
     {
       image: shopping,
       name: "Sales",
       key: "sales",
+      canAccessKey: "sales",
       hasSubItems: true,
       route: "sales/pending",
       subItems: salesSubItems,
@@ -1011,21 +1033,62 @@ const LeftMenuBar = () => {
       image: leftMenuTicket,
       name: "Reports",
       key: "report-history",
+      canAccessKey: "reports",
       route: "report-history",
     },
     {
       image: diagram,
       name: "Wallet",
       key: "reports",
+      canAccessKey: "lmt-pay",
       route: "reports/wallet",
     },
     {
       image: Bulkticket,
       name: "SB Trade",
+      canAccessKey: "lmt-trade",
       key: "tx-trade",
       route: "trade/home",
     },
   ];
+
+  // function filterLeftPaneByAccess(leftPaneValues, userRoles = []) {
+  //   // Handle null/undefined inputs
+  //   if (!leftPaneValues || !Array.isArray(leftPaneValues)) {
+  //     return [];
+  //   }
+
+  //   if (!userRoles || !Array.isArray(userRoles)) {
+  //     userRoles = [];
+  //   }
+
+  //   // Create a lookup object for faster access checking
+  //   const accessLookup = userRoles.reduce((acc, role) => {
+  //     // Handle null/undefined role or role.name
+  //     if (role && role.name) {
+  //       acc[role.name] = role.is_can_access === 1;
+  //     }
+  //     return acc;
+  //   }, {});
+
+  //   // Filter the left pane values
+  //   return leftPaneValues.filter((item) => {
+  //     // Handle null/undefined item
+  //     if (!item) {
+  //       return false;
+  //     }
+
+  //     // If no canAccessKey is specified, include the item
+  //     if (!item.canAccessKey) {
+  //       return true;
+  //     }
+
+  //     // Check if user has access to this item
+  //     return accessLookup[item.canAccessKey] === true;
+  //   });
+  // }
+
+  // const leftPaneValues = filterLeftPaneByAccess(leftFullPaneValues, userRoles);
 
   const router = useRouter();
   const isMobile = useIsMobile();
@@ -1054,7 +1117,6 @@ const LeftMenuBar = () => {
       setActive(currentPath);
     }
   }, [router?.pathname]);
-  console.log(showFullDisplay, "showFullDisplayshowFullDisplay");
   const handleSelectedClick = (index, item) => {
     if (index === 0 && !isMobile) {
       // setShowFullDisplay(!showFullDisplay);

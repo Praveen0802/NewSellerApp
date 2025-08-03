@@ -160,12 +160,13 @@ const ActiveFilterPills = ({
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      {activeEntries.length > 1 && (
+      {activeEntries.length > 0 && (
         <Image
           onClick={onClearAllFilters}
           src={reloadIcon}
           width={30}
           height={30}
+          className="cursor-pointer"
           alt="image-logo"
         />
       )}
@@ -300,7 +301,7 @@ const TicketsPage = (props) => {
   const [itemsPerPage, setItemsPerPage] = useState(50);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  
+
   // MAIN STATE: Using ticketsByMatch instead of ticketsData
   const [ticketsByMatch, setTicketsByMatch] = useState({});
 
@@ -428,21 +429,24 @@ const TicketsPage = (props) => {
   }, []);
 
   // Handle select all for specific match - UPDATED FOR ticketsByMatch
-  const handleSelectAllForMatch = useCallback((matchIndex) => {
-    const matchData = ticketsByMatch[matchIndex];
-    if (!matchData) return;
+  const handleSelectAllForMatch = useCallback(
+    (matchIndex) => {
+      const matchData = ticketsByMatch[matchIndex];
+      if (!matchData) return;
 
-    const matchTicketIds = matchData.tickets.map((ticket) => ticket.uniqueId);
+      const matchTicketIds = matchData.tickets.map((ticket) => ticket.uniqueId);
 
-    // Remove existing selections for this match and add new ones
-    setGlobalSelectedTickets((prevSelected) => {
-      const filteredGlobalSelection = prevSelected.filter((uniqueId) => {
-        const [ticketMatchIndex] = uniqueId.split("_");
-        return parseInt(ticketMatchIndex) !== parseInt(matchIndex);
+      // Remove existing selections for this match and add new ones
+      setGlobalSelectedTickets((prevSelected) => {
+        const filteredGlobalSelection = prevSelected.filter((uniqueId) => {
+          const [ticketMatchIndex] = uniqueId.split("_");
+          return parseInt(ticketMatchIndex) !== parseInt(matchIndex);
+        });
+        return [...filteredGlobalSelection, ...matchTicketIds];
       });
-      return [...filteredGlobalSelection, ...matchTicketIds];
-    });
-  }, [ticketsByMatch]);
+    },
+    [ticketsByMatch]
+  );
 
   // Handle deselect all for specific match - UPDATED FOR ticketsByMatch
   const handleDeselectAllForMatch = useCallback((matchIndex) => {
@@ -455,34 +459,40 @@ const TicketsPage = (props) => {
   }, []);
 
   // Get selected rows for a specific match - UPDATED FOR ticketsByMatch
-  const getSelectedRowsForMatch = useCallback((matchIndex) => {
-    const selectedRows = [];
-    globalSelectedTickets.forEach((uniqueId) => {
-      const [ticketMatchIndex, ticketIndex] = uniqueId.split("_");
-      if (parseInt(ticketMatchIndex) === parseInt(matchIndex)) {
-        selectedRows.push(parseInt(ticketIndex));
-      }
-    });
-    return selectedRows;
-  }, [globalSelectedTickets]);
+  const getSelectedRowsForMatch = useCallback(
+    (matchIndex) => {
+      const selectedRows = [];
+      globalSelectedTickets.forEach((uniqueId) => {
+        const [ticketMatchIndex, ticketIndex] = uniqueId.split("_");
+        if (parseInt(ticketMatchIndex) === parseInt(matchIndex)) {
+          selectedRows.push(parseInt(ticketIndex));
+        }
+      });
+      return selectedRows;
+    },
+    [globalSelectedTickets]
+  );
 
   // Handle row selection for individual match tables - UPDATED FOR ticketsByMatch
-  const handleSetSelectedRowsForMatch = useCallback((matchIndex, newSelectedRows) => {
-    // Remove existing selections for this match
-    setGlobalSelectedTickets((prevSelected) => {
-      const filteredGlobalSelection = prevSelected.filter((uniqueId) => {
-        const [ticketMatchIndex] = uniqueId.split("_");
-        return parseInt(ticketMatchIndex) !== parseInt(matchIndex);
+  const handleSetSelectedRowsForMatch = useCallback(
+    (matchIndex, newSelectedRows) => {
+      // Remove existing selections for this match
+      setGlobalSelectedTickets((prevSelected) => {
+        const filteredGlobalSelection = prevSelected.filter((uniqueId) => {
+          const [ticketMatchIndex] = uniqueId.split("_");
+          return parseInt(ticketMatchIndex) !== parseInt(matchIndex);
+        });
+
+        // Add new selections for this match
+        const newGlobalSelections = newSelectedRows.map(
+          (rowIndex) => `${matchIndex}_${rowIndex}`
+        );
+
+        return [...filteredGlobalSelection, ...newGlobalSelections];
       });
-
-      // Add new selections for this match
-      const newGlobalSelections = newSelectedRows.map(
-        (rowIndex) => `${matchIndex}_${rowIndex}`
-      );
-
-      return [...filteredGlobalSelection, ...newGlobalSelections];
-    });
-  }, []);
+    },
+    []
+  );
 
   // ENHANCED: Global bulk actions - UPDATED FOR ticketsByMatch
   const handleGlobalEdit = useCallback(() => {
@@ -616,7 +626,7 @@ const TicketsPage = (props) => {
 
     // Group cloned tickets by match
     const clonedTicketsByMatch = {};
-    
+
     ticketsToClone.forEach((ticket) => {
       const matchIndex = ticket.matchIndex;
       if (!clonedTicketsByMatch[matchIndex]) {
@@ -640,15 +650,17 @@ const TicketsPage = (props) => {
     // Add cloned tickets to state
     setTicketsByMatch((prevData) => {
       const newData = { ...prevData };
-      
-      Object.entries(clonedTicketsByMatch).forEach(([matchIndex, clonedTickets]) => {
-        if (newData[matchIndex]) {
-          newData[matchIndex] = {
-            ...newData[matchIndex],
-            tickets: [...newData[matchIndex].tickets, ...clonedTickets],
-          };
+
+      Object.entries(clonedTicketsByMatch).forEach(
+        ([matchIndex, clonedTickets]) => {
+          if (newData[matchIndex]) {
+            newData[matchIndex] = {
+              ...newData[matchIndex],
+              tickets: [...newData[matchIndex].tickets, ...clonedTickets],
+            };
+          }
         }
-      });
+      );
 
       return newData;
     });
@@ -660,10 +672,13 @@ const TicketsPage = (props) => {
   }, [globalSelectedTickets, getAllTicketsFromMatches]);
 
   // Check if a specific ticket is in edit mode - UPDATED FOR ticketsByMatch
-  const isTicketInEditMode = useCallback((matchIndex, ticketIndex) => {
-    const uniqueId = `${matchIndex}_${ticketIndex}`;
-    return isGlobalEditMode && globalEditingTickets.includes(uniqueId);
-  }, [isGlobalEditMode, globalEditingTickets]);
+  const isTicketInEditMode = useCallback(
+    (matchIndex, ticketIndex) => {
+      const uniqueId = `${matchIndex}_${ticketIndex}`;
+      return isGlobalEditMode && globalEditingTickets.includes(uniqueId);
+    },
+    [isGlobalEditMode, globalEditingTickets]
+  );
 
   // NEW: Construct headers dynamically from filters - REMAINS SAME
   const constructHeadersFromListingHistory = useMemo(() => {
@@ -828,11 +843,12 @@ const TicketsPage = (props) => {
 
         // Listing Notes
         if (filter.restriction_left || filter.restriction_right) {
-          [...(filter.restriction_left || []), ...(filter.restriction_right || [])].forEach(
-            (note) => {
-              allListingNotes.set(note.id.toString(), note.name);
-            }
-          );
+          [
+            ...(filter.restriction_left || []),
+            ...(filter.restriction_right || []),
+          ].forEach((note) => {
+            allListingNotes.set(note.id.toString(), note.name);
+          });
         }
       });
 
@@ -979,7 +995,12 @@ const TicketsPage = (props) => {
         updateCellValues(updateParams, ticket?.rawTicketData?.s_no);
       }
     },
-    [isGlobalEditMode, globalEditingTickets, constructHeadersFromListingHistory, getAllTicketsFromMatches]
+    [
+      isGlobalEditMode,
+      globalEditingTickets,
+      constructHeadersFromListingHistory,
+      getAllTicketsFromMatches,
+    ]
   );
 
   // Enhanced updateCellValues function with better error handling
@@ -1012,105 +1033,114 @@ const TicketsPage = (props) => {
     }
   };
 
-  const handleHandAction = useCallback((rowData, rowIndex) => {
-    console.log("Hand action clicked for row:", rowData, rowIndex);
-    handleCellEdit(
-      rowIndex,
-      "ticket_in_hand",
-      !rowData?.ticket_in_hand,
-      rowData,
-      rowData?.matchIndex
-    );
-  }, [handleCellEdit]);
+  const handleHandAction = useCallback(
+    (rowData, rowIndex) => {
+      console.log("Hand action clicked for row:", rowData, rowIndex);
+      handleCellEdit(
+        rowIndex,
+        "ticket_in_hand",
+        !rowData?.ticket_in_hand,
+        rowData,
+        rowData?.matchIndex
+      );
+    },
+    [handleCellEdit]
+  );
 
   // Custom sticky columns configuration
-  const getStickyColumnsForRow = useCallback((rowData, rowIndex) => {
-    const isBulkEditMode = isGlobalEditMode && globalEditingTickets.length > 1;
+  const getStickyColumnsForRow = useCallback(
+    (rowData, rowIndex) => {
+      const isBulkEditMode =
+        isGlobalEditMode && globalEditingTickets.length > 1;
 
-    return [
-      {
-        key: "hand",
-        icon: (
-          <Tooltip content="Tickets in Hand">
-            <Hand
-              size={14}
-              className={`${
-                rowData?.ticket_in_hand ? "text-green-500" : "text-black"
-              } hover:text-green-500 cursor-pointer`}
-              onClick={() => handleHandAction(rowData, rowIndex)}
-            />
-          </Tooltip>
-        ),
-        className: "py-2 text-center border-r border-[#E0E1EA]",
-      },
-      {
-        key: "upload",
-        toolTipContent: isBulkEditMode ? "Not Available" : "Upload",
-        icon: (
-          <Tooltip content={isBulkEditMode ? "Not Available" : "Upload"}>
-            <IconStore.upload
-              className={`size-4 ${
-                isBulkEditMode
-                  ? "cursor-not-allowed opacity-50 grayscale"
-                  : "cursor-pointer"
-              }`}
-            />
-          </Tooltip>
-        ),
-        className: `${
-          isBulkEditMode ? "cursor-not-allowed pl-2" : "cursor-pointer pl-2"
-        }`,
-        tooltipComponent: <p className="text-center">{rowData.ticket_type}</p>,
-        onClick: () => {
-          if (!isBulkEditMode) {
-            handleUploadAction(rowData, rowIndex);
-          }
+      return [
+        {
+          key: "hand",
+          icon: (
+            <Tooltip content="Tickets in Hand">
+              <Hand
+                size={14}
+                className={`${
+                  rowData?.ticket_in_hand ? "text-green-500" : "text-black"
+                } hover:text-green-500 cursor-pointer`}
+                onClick={() => handleHandAction(rowData, rowIndex)}
+              />
+            </Tooltip>
+          ),
+          className: "py-2 text-center border-r border-[#E0E1EA]",
         },
-      },
-      {
-        key: "",
-        toolTipContent: isBulkEditMode ? "Not Available" : "Upload Pop",
-        icon: (
-          <Tooltip content={isBulkEditMode ? "Not Available" : "Upload Pop"}>
-            <HardDriveUpload
-              onClick={() => {
-                if (!isBulkEditMode) {
-                  handleUploadAction(
-                    { ...rowData, handleProofUpload: true },
-                    rowIndex
-                  );
-                }
-              }}
-              className={`w-[16px] h-[16px] ${
-                isBulkEditMode
-                  ? "cursor-not-allowed opacity-50 text-gray-400"
-                  : "cursor-pointer"
-              }`}
-            />
-          </Tooltip>
-        ),
-        className: "py-2 text-center border-r border-[#E0E1EA]",
-      },
-      {
-        key: "view",
-        icon: (
-          <Tooltip content="logs">
-            <Clock className="size-4" />
-          </Tooltip>
-        ),
-        className: "cursor-pointer px-2",
-        tooltipComponent: (
-          <p className="text-center">
-            Expected Delivery Date:
-            <br />
-            {rowData.match_date}
-          </p>
-        ),
-        tooltipPosition: "top",
-        onClick: () => handleViewDetails(rowData),
-      },
-    ];
-  }, [isGlobalEditMode, globalEditingTickets, handleHandAction]);
+        {
+          key: "upload",
+          toolTipContent: isBulkEditMode ? "Not Available" : "Upload",
+          icon: (
+            <Tooltip content={isBulkEditMode ? "Not Available" : "Upload"}>
+              <IconStore.upload
+                className={`size-4 ${
+                  isBulkEditMode
+                    ? "cursor-not-allowed opacity-50 grayscale"
+                    : "cursor-pointer"
+                }`}
+              />
+            </Tooltip>
+          ),
+          className: `${
+            isBulkEditMode ? "cursor-not-allowed pl-2" : "cursor-pointer pl-2"
+          }`,
+          tooltipComponent: (
+            <p className="text-center">{rowData.ticket_type}</p>
+          ),
+          onClick: () => {
+            if (!isBulkEditMode) {
+              handleUploadAction(rowData, rowIndex);
+            }
+          },
+        },
+        {
+          key: "",
+          toolTipContent: isBulkEditMode ? "Not Available" : "Upload Pop",
+          icon: (
+            <Tooltip content={isBulkEditMode ? "Not Available" : "Upload Pop"}>
+              <HardDriveUpload
+                onClick={() => {
+                  if (!isBulkEditMode) {
+                    handleUploadAction(
+                      { ...rowData, handleProofUpload: true },
+                      rowIndex
+                    );
+                  }
+                }}
+                className={`w-[16px] h-[16px] ${
+                  isBulkEditMode
+                    ? "cursor-not-allowed opacity-50 text-gray-400"
+                    : "cursor-pointer"
+                }`}
+              />
+            </Tooltip>
+          ),
+          className: "py-2 text-center border-r border-[#E0E1EA]",
+        },
+        {
+          key: "view",
+          icon: (
+            <Tooltip content="logs">
+              <Clock className="size-4" />
+            </Tooltip>
+          ),
+          className: "cursor-pointer px-2",
+          tooltipComponent: (
+            <p className="text-center">
+              Expected Delivery Date:
+              <br />
+              {rowData.match_date}
+            </p>
+          ),
+          tooltipPosition: "top",
+          onClick: () => handleViewDetails(rowData),
+        },
+      ];
+    },
+    [isGlobalEditMode, globalEditingTickets, handleHandAction]
+  );
 
   // Action handlers for sticky columns
   const handleUploadAction = useCallback((rowData, rowIndex) => {
@@ -1208,23 +1238,20 @@ const TicketsPage = (props) => {
         {
           name: "Listings",
           value: overViewData.listings || 0,
+          smallTooptip: `${overViewData.tickets} Tickets`,
           key: "active_listings",
-        },
-        {
-          name: "Tickets",
-          value: overViewData.tickets || 0,
-          key: "total_value",
         },
         {
           name: "Published Listings",
           value: overViewData.published_listings || 0,
-          // showCheckbox: true,
-          key: "total_tickets",
+          showCheckbox: true,
+          key: "listing_status_published",
         },
         {
           name: "Unpublished Listings",
           value: overViewData.unpublished_listings || 0,
-          key: "total_tickets_unpublished",
+          showCheckbox: true,
+          key: "listing_status_unpublished",
         },
       ],
     }),
@@ -1237,17 +1264,30 @@ const TicketsPage = (props) => {
       tickets: [
         {
           type: "select",
-          name: "category",
-          label: "Category",
-          value: filtersApplied?.category,
+          name: "team_member",
+          label: "Team Members",
+          value: filtersApplied?.team_member,
           options:
-            response?.filters?.category?.map((category) => ({
+            response?.filters?.user_info?.map((category) => ({
               value: category?.id,
-              label: category?.name,
+              label: category?.first_name,
             })) || [],
           parentClassName:
             "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
-          className: "!py-[6px] !px-[12px] mobile:text-xs",
+          className: "!py-[6px] !px-[12px] max-md:text-xs",
+          labelClassName: "!text-[11px]",
+        },
+        {
+          type: "date",
+          name: "eventDate",
+          label: "Event Date",
+          value: {
+            startDate: filtersApplied?.start_date,
+            endDate: filtersApplied?.end_date,
+          },
+          parentClassName:
+            "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
+          className: "!py-[9px] !px-[12px] max-md:text-xs",
           labelClassName: "!text-[11px]",
         },
         {
@@ -1282,30 +1322,17 @@ const TicketsPage = (props) => {
         },
         {
           type: "select",
-          name: "team_member",
-          label: "Team Members",
-          value: filtersApplied?.team_member,
+          name: "category",
+          label: "Category",
+          value: filtersApplied?.category,
           options:
-            response?.filters?.user_info?.map((category) => ({
+            response?.filters?.category?.map((category) => ({
               value: category?.id,
-              label: category?.first_name,
+              label: category?.name,
             })) || [],
           parentClassName:
             "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
-          className: "!py-[6px] !px-[12px] max-md:text-xs",
-          labelClassName: "!text-[11px]",
-        },
-        {
-          type: "date",
-          name: "eventDate",
-          label: "Event Date",
-          value: {
-            startDate: filtersApplied?.start_date,
-            endDate: filtersApplied?.end_date,
-          },
-          parentClassName:
-            "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
-          className: "!py-[9px] !px-[12px] max-md:text-xs",
+          className: "!py-[6px] !px-[12px] mobile:text-xs",
           labelClassName: "!text-[11px]",
         },
       ],
@@ -1399,7 +1426,7 @@ const TicketsPage = (props) => {
       }
     };
   }, []);
-
+  console.log(ticketsByMatch, "jjjjjjjjjjjj");
   const handleConfirmClick = useCallback((data, index, rowData) => {
     updateCellValues(data, rowData?.s_no);
     setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
@@ -1419,65 +1446,125 @@ const TicketsPage = (props) => {
     []
   );
 
-  const handleOnChangeEvents = useCallback((e) => {
-    const newValue = e.target.value;
-    setSearchValue(newValue);
-    if (newValue.trim()) {
-      debouncedFetchApiCall(newValue);
-    } else {
-      fetchSearchResults("", true);
-    }
-  }, [debouncedFetchApiCall]);
+  const handleOnChangeEvents = useCallback(
+    (e) => {
+      const newValue = e.target.value;
+      setSearchValue(newValue);
+      if (newValue.trim()) {
+        debouncedFetchApiCall(newValue);
+      } else {
+        fetchSearchResults("", true);
+      }
+    },
+    [debouncedFetchApiCall]
+  );
 
-  const handleSearchedEventClick = useCallback((event) => {
-    setSearchValue(event?.match_name);
-    handleFilterChange("match_id", event?.m_id);
-    setSearchedEvents([]);
-  }, [handleFilterChange]);
-
-  const fetchSearchResults = useCallback(async (query, isInitialLoad = false) => {
-    try {
-      setSearchEventLoader(true);
+  const handleSearchedEventClick = useCallback(
+    (event) => {
+      setSearchValue(event?.match_name);
+      handleFilterChange("match_id", event?.m_id);
       setSearchedEvents([]);
-      setHasSearched(true);
+    },
+    [handleFilterChange]
+  );
 
-      const searchQuery = isInitialLoad ? "" : query ? query.trim() : "";
+  const fetchSearchResults = useCallback(
+    async (query, isInitialLoad = false) => {
+      try {
+        setSearchEventLoader(true);
+        setSearchedEvents([]);
+        setHasSearched(true);
 
-      let response = await FetchPerformerOrVenueListing("", {
-        query: searchQuery,
-      });
-      delete response?.data?.venues;
-      delete response?.data?.performers;
-      setSearchedEvents(response?.data || []);
-      setSearchEventLoader(false);
-      setShowSearchDropdown(true);
-    } catch (error) {
-      setSearchEventLoader(false);
-      console.error("Search error:", error);
-      setSearchedEvents([]);
-      setShowSearchDropdown(true);
+        const searchQuery = isInitialLoad ? "" : query ? query.trim() : "";
+
+        let response = await FetchPerformerOrVenueListing("", {
+          query: searchQuery,
+        });
+        delete response?.data?.venues;
+        delete response?.data?.performers;
+        setSearchedEvents(response?.data || []);
+        setSearchEventLoader(false);
+        setShowSearchDropdown(true);
+      } catch (error) {
+        setSearchEventLoader(false);
+        console.error("Search error:", error);
+        setSearchedEvents([]);
+        setShowSearchDropdown(true);
+      }
+    },
+    []
+  );
+
+  const handleSearchFocus = useCallback(
+    (e) => {
+      if (!searchValue || searchValue.trim() === "") {
+        fetchSearchResults("", true);
+      } else if (
+        searchedEvents?.length == 0 &&
+        searchValue &&
+        searchValue.trim()
+      ) {
+        setShowSearchDropdown(false);
+      } else if (searchValue && searchValue.trim()) {
+        setShowSearchDropdown(true);
+      }
+    },
+    [searchValue, searchedEvents, fetchSearchResults]
+  );
+
+  const handleClickOutside = useCallback((event) => {
+    // Get references to the search container and dropdown
+    const searchContainer = document.querySelector(
+      '[data-search-container="true"]'
+    );
+    const dropdown = document.querySelector(
+      '[data-dropdown="search-dropdown"]'
+    );
+
+    // Check if the click is outside both the search container and dropdown
+    const isOutsideSearch =
+      searchContainer && !searchContainer.contains(event.target);
+    const isOutsideDropdown = dropdown && !dropdown.contains(event.target);
+
+    // Only close if click is outside both elements
+    if (isOutsideSearch && isOutsideDropdown) {
+      setShowSearchDropdown(false);
     }
   }, []);
 
-  const handleSearchFocus = useCallback((e) => {
-    if (!searchValue || searchValue.trim() === "") {
-      fetchSearchResults("", true);
-    } else if (
-      searchedEvents?.length == 0 &&
-      searchValue &&
-      searchValue.trim()
-    ) {
-      setShowSearchDropdown(false);
-    } else if (searchValue && searchValue.trim()) {
-      setShowSearchDropdown(true);
+  // Updated useEffect for click outside handling
+  useEffect(() => {
+    if (showSearchDropdown) {
+      // Use capture phase to handle clicks before they bubble
+      document.addEventListener("mousedown", handleClickOutside, true);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside, true);
+      };
     }
-  }, [searchValue, searchedEvents, fetchSearchResults]);
+  }, [showSearchDropdown, handleClickOutside]);
 
-  const handleSearchBlur = useCallback(() => {
+  const handleSearchBlur = (e) => {
+    // Only check after a longer delay to allow clicks to process
     setTimeout(() => {
-      setShowSearchDropdown(false);
-    }, 150);
-  }, []);
+      const activeElement = document.activeElement;
+      const searchContainer = document.querySelector(
+        '[data-search-container="true"]'
+      );
+      const dropdown = document.querySelector(
+        '[data-dropdown="search-dropdown"]'
+      );
+
+      // Check if focus is still within our components
+      const isFocusInSearch =
+        searchContainer && searchContainer.contains(activeElement);
+      const isFocusInDropdown = dropdown && dropdown.contains(activeElement);
+
+      // Only close if focus has moved completely outside
+      if (!isFocusInSearch && !isFocusInDropdown) {
+        setShowSearchDropdown(false);
+      }
+    }, 250); // Increased timeout
+  };
 
   const filterSearch = useCallback(() => {
     return (
@@ -1520,7 +1607,7 @@ const TicketsPage = (props) => {
             setShowSearchDropdown(false);
             setHasSearched(false);
           }}
-          parentClassName="!w-[550px]"
+          parentClassName="!w-[400px]"
         />
       </div>
     );
@@ -1587,8 +1674,6 @@ const TicketsPage = (props) => {
   // Render match tables using ticketsByMatch
   const renderMatchTables = useCallback(() => {
     return Object.entries(ticketsByMatch).map(([matchIndex, matchData]) => {
-     
-
       return (
         <div key={`match-${matchIndex}`} className="not-last:mb-4">
           <CommonInventoryTable
@@ -1658,6 +1743,22 @@ const TicketsPage = (props) => {
     isTicketInEditMode,
     getStickyColumnsForRow,
   ]);
+
+  const handleCheckBoxChange = async (key, value) => {
+    if (key == "listing_status_published") {
+      const params = {
+        ...filtersApplied,
+        ...(value && { listing_status: 1 }),
+      };
+      await fetchData(params);
+    } else if (key == "listing_status_unpublished") {
+      const params = {
+        ...filtersApplied,
+        ...(value && { listing_status: 0 }),
+      };
+      await fetchData(params);
+    }
+  };
   return (
     <div className="bg-[#F5F7FA] w-full max-h-[calc(100vh-100px)] overflow-auto relative ">
       <div className="bg-white">
@@ -1673,7 +1774,7 @@ const TicketsPage = (props) => {
           onFilterChange={handleFilterChange}
           currentFilterValues={{ ...filtersApplied, page: "" }}
           showSelectedFilterPills={false}
-          onCheckboxToggle={() => {}}
+          onCheckboxToggle={handleCheckBoxChange}
           hideVisibleColumns={false}
           disableTransitions={true}
           useHeaderV2={true}

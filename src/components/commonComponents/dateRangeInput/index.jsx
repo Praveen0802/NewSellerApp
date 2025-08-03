@@ -23,6 +23,8 @@ const FloatingDateRange = ({
   minDate = null,
   maxDate = null,
   openUpward = false,
+  showYear = false,
+  showMonth = false,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -36,6 +38,10 @@ const FloatingDateRange = ({
     top: true,
     left: 0,
   });
+  const [showYearDropdown, setShowYearDropdown] = useState(false);
+  const [showMonthDropdown, setShowMonthDropdown] = useState(false);
+  // Add this new state to track if we're in selection mode
+  const [isInSelectionMode, setIsInSelectionMode] = useState(false);
 
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
@@ -50,6 +56,38 @@ const FloatingDateRange = ({
   // Convert string dates to Date objects for comparison
   const minDateObj = minDate ? parseLocalDate(minDate) : null;
   const maxDateObj = maxDate ? parseLocalDate(maxDate) : null;
+
+  // Generate year options based on min/max dates
+  const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const minYear = minDateObj ? minDateObj.getFullYear() : currentYear - 100;
+    const maxYear = maxDateObj ? maxDateObj.getFullYear() : currentYear + 10;
+
+    const years = [];
+    for (let year = maxYear; year >= minYear; year--) {
+      years.push(year);
+    }
+    return years;
+  };
+
+  // Generate month options
+  const generateMonthOptions = () => {
+    const months = [
+      { value: 0, label: "January" },
+      { value: 1, label: "February" },
+      { value: 2, label: "March" },
+      { value: 3, label: "April" },
+      { value: 4, label: "May" },
+      { value: 5, label: "June" },
+      { value: 6, label: "July" },
+      { value: 7, label: "August" },
+      { value: 8, label: "September" },
+      { value: 9, label: "October" },
+      { value: 10, label: "November" },
+      { value: 11, label: "December" },
+    ];
+    return months;
+  };
 
   // Function to calculate optimal dropdown position
   const calculateDropdownPosition = () => {
@@ -131,6 +169,10 @@ const FloatingDateRange = ({
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
+        setShowYearDropdown(false);
+        setShowMonthDropdown(false);
+        // Reset selection mode when closing
+        setIsInSelectionMode(false);
       }
     };
 
@@ -204,6 +246,8 @@ const FloatingDateRange = ({
       setIsFocused(true);
       setTempStartDate(startDate ? parseLocalDate(startDate) : null);
       setTempEndDate(endDate ? parseLocalDate(endDate) : null);
+      // Set selection mode when opening
+      setIsInSelectionMode(true);
     }
   };
 
@@ -245,6 +289,8 @@ const FloatingDateRange = ({
       }
     }
     setIsOpen(false);
+    // Reset selection mode after applying
+    setIsInSelectionMode(false);
   };
 
   const handleClear = () => {
@@ -257,6 +303,8 @@ const FloatingDateRange = ({
       onChange({ startDate: "", endDate: "" }, keyValue);
     }
     setIsOpen(false);
+    // Reset selection mode after clearing
+    setIsInSelectionMode(false);
   };
 
   const handleDateClick = (date) => {
@@ -281,6 +329,8 @@ const FloatingDateRange = ({
       }
 
       setIsOpen(false);
+      // Reset selection mode after date selection
+      setIsInSelectionMode(false);
     } else {
       if (!tempStartDate || (tempStartDate && tempEndDate)) {
         setTempStartDate(date);
@@ -298,6 +348,70 @@ const FloatingDateRange = ({
     const newMonth = new Date(currentMonth);
     newMonth.setMonth(newMonth.getMonth() + direction);
     setCurrentMonth(newMonth);
+  };
+
+  const handleYearSelect = (year) => {
+    const newMonth = new Date(currentMonth);
+    newMonth.setFullYear(year);
+    setCurrentMonth(newMonth);
+    setShowYearDropdown(false);
+  };
+
+  const handleMonthSelect = (month) => {
+    const newMonth = new Date(currentMonth);
+    newMonth.setMonth(month);
+    setCurrentMonth(newMonth);
+    setShowMonthDropdown(false);
+  };
+
+  const renderYearDropdown = () => {
+    const years = generateYearOptions();
+    return (
+      <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto overflow-x-hidden mt-1">
+        {years.map((year) => (
+          <button
+            key={year}
+            onClick={(e) => {
+              e.preventDefault(); // Prevent default behavior
+              e.stopPropagation(); // Stop event bubbling
+              handleYearSelect(year);
+            }}
+            className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-100 whitespace-nowrap ${
+              year === currentMonth.getFullYear()
+                ? "bg-blue-50 text-blue-600"
+                : ""
+            }`}
+          >
+            {year}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  const renderMonthDropdown = () => {
+    const months = generateMonthOptions();
+    return (
+      <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto overflow-x-hidden mt-1">
+        {months.map((month) => (
+          <button
+            key={month.value}
+            onClick={(e) => {
+              e.preventDefault(); // Prevent default behavior
+              e.stopPropagation(); // Stop event bubbling
+              handleMonthSelect(month.value);
+            }}
+            className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-100 whitespace-nowrap ${
+              month.value === currentMonth.getMonth()
+                ? "bg-blue-50 text-blue-600"
+                : ""
+            }`}
+          >
+            {month.label}
+          </button>
+        ))}
+      </div>
+    );
   };
 
   const renderCalendar = () => {
@@ -385,23 +499,77 @@ const FloatingDateRange = ({
     today.setHours(0, 0, 0, 0);
 
     return (
-      <div className={`w-full`}>
-        <div className="flex justify-between items-center mb-1">
+      <div className={`w-full relative`}>
+        <div className="flex justify-between items-center mb-1 relative">
           <button
-            onClick={() => navigateMonth(-1)}
-            className="p-0.5 text-xs rounded cursor-pointer hover:bg-gray-100"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigateMonth(-1);
+            }}
+            className="p-0.5 text-xs rounded cursor-pointer hover:bg-gray-100 flex-shrink-0"
           >
             &lt;
           </button>
-          <div className="text-xs font-medium">
-            {currentMonth.toLocaleDateString("default", {
-              month: "short",
-              year: "numeric",
-            })}
+
+          <div className="flex items-center gap-1 flex-1 justify-center">
+            {showMonth && (
+              <div className="relative flex-1 max-w-[120px]">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault(); // Add this
+                    e.stopPropagation(); // Add this
+                    setShowMonthDropdown(!showMonthDropdown);
+                    setShowYearDropdown(false);
+                  }}
+                  className="w-full text-xs font-medium hover:bg-gray-100 px-2 py-0.5 rounded cursor-pointer flex items-center justify-center"
+                >
+                  <span className="truncate">
+                    {currentMonth.toLocaleDateString("default", {
+                      month: "short",
+                    })}
+                  </span>
+                  <span className="ml-1 flex-shrink-0">▼</span>
+                </button>
+                {showMonthDropdown && renderMonthDropdown()}
+              </div>
+            )}
+
+            {showYear && (
+              <div className="relative flex-1 max-w-[80px]">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault(); // Add this
+                    e.stopPropagation(); // Add this
+                    setShowYearDropdown(!showYearDropdown);
+                    setShowMonthDropdown(false);
+                  }}
+                  className="w-full text-xs font-medium hover:bg-gray-100 px-2 py-0.5 rounded cursor-pointer flex items-center justify-center"
+                >
+                  <span className="truncate">{currentMonth.getFullYear()}</span>
+                  <span className="ml-1 flex-shrink-0">▼</span>
+                </button>
+                {showYearDropdown && renderYearDropdown()}
+              </div>
+            )}
+
+            {!showMonth && !showYear && (
+              <div className="text-xs font-medium text-center">
+                {currentMonth.toLocaleDateString("default", {
+                  month: "short",
+                  year: "numeric",
+                })}
+              </div>
+            )}
           </div>
+
           <button
-            onClick={() => navigateMonth(1)}
-            className="p-0.5 cursor-pointer text-xs rounded hover:bg-gray-100"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigateMonth(1);
+            }}
+            className="p-0.5 cursor-pointer text-xs rounded hover:bg-gray-100 flex-shrink-0"
           >
             &gt;
           </button>
@@ -454,10 +622,13 @@ const FloatingDateRange = ({
     );
   };
 
+  // Modify the error display logic to consider selection mode
+  const shouldShowError = error && !isInSelectionMode;
+
   const baseClasses = `block w-full px-2 py-2 text-xs  rounded border-[1px] focus:outline-none ${
-    error ? "border-red-500" : "border-[#DADBE5]"
+    shouldShowError ? "border-red-500" : "border-[#DADBE5]"
   } text-[#231F20] caret-[#022B50] ${
-    error
+    shouldShowError
       ? "border-red-500"
       : isFocused
       ? "border-[#DADBE5] focus:border-indigo-300 focus:ring-1 focus:ring-indigo-300"
@@ -472,12 +643,12 @@ const FloatingDateRange = ({
             readOnly && "bg-gray-100 "
           }`}
           isFocused={isFocused}
-          hasError={!!error}
+          hasError={shouldShowError}
         >
           <span
             style={{ fontSize: isFocused ? "10px" : "11px" }}
             className={`${labelClassName} ${readOnly && "bg-gray-100"} ${
-              error ? "text-red-500" : "text-[#808082]"
+              shouldShowError ? "text-red-500" : "text-[#808082]"
             }`}
           >
             {label}
@@ -511,7 +682,10 @@ const FloatingDateRange = ({
         />
       </div>
 
-      {error && <p className="mt-0.5 text-xs text-red-500">{error}</p>}
+      {/* Only show error when not in selection mode */}
+      {shouldShowError && (
+        <p className="mt-0.5 text-xs text-red-500">{error}</p>
+      )}
 
       {isOpen && (
         <div

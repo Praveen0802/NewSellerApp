@@ -1,8 +1,10 @@
 import {
   ADD_WALLET_POPUP,
   CONFIRM_PURCHASE_POPUP,
+  FETCH_USER_ROLES,
   SHOW_FULL_DISPLAY,
   UPDATE_NOTIFICATION_COUNT,
+  USER_ACCESS_ROUTES,
 } from "./type";
 
 const initalState = {
@@ -17,6 +19,8 @@ const initalState = {
     isLoaded: false,
   },
   showFullDisplay: false,
+  userRoles: [],
+  userAccessableRoutes: [],
 };
 
 const CommonReducers = (state = initalState, action) => {
@@ -44,6 +48,16 @@ const CommonReducers = (state = initalState, action) => {
           ...state.notificationCountData,
           ...action.payload,
         },
+      };
+    case FETCH_USER_ROLES:
+      return {
+        ...state,
+        userRoles: action.payload,
+      };
+    case USER_ACCESS_ROUTES:
+      return {
+        ...state,
+        userAccessableRoutes: action.payload,
       };
     default:
       return state;

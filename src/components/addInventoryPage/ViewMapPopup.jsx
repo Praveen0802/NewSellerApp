@@ -30,12 +30,12 @@ const ViewMapPopup = ({
             width={350}
             height={200}
             alt="View Map"
-            className=""
+            className="pb-4"
           />
           <TicketCategories
             blockData={blockData}
             blockDataColor={blockDataColor}
-            title="Stadium Seating Areas"
+            title="Ticket Categories"
             layout="grid"
             onCategorySelect={(categoryId) => {
               console.log("Selected category:", categoryId);

@@ -67,13 +67,14 @@ function convertISOToMMDDYYYY(isoTimestamp, options = {}) {
 
 const SalesPage = (props) => {
   const { profile, response = {} } = props;
+  console.log(response,'responseresponseresponse')
   const { tournamentList } = response;
   const tournamentOptions = tournamentList?.map((item) => ({
     value: item.tournament_id,
     label: item.tournament_name,
   }));
   const [pageLoader, setPageLoader] = useState(false);
-console.log(response,'responseresponse')
+
   const [filtersApplied, setFiltersApplied] = useState({
     order_status: profile,
   });
@@ -347,29 +348,29 @@ console.log(response,'responseresponse')
     {
       name: "Pending",
       key: "pending",
-      count: listData.length,
-      amount: listData.reduce((sum, item) => sum + item.amount, 0),
+      count: response?.salesCount?.find(item => item.label === "Initiated")?.count || 0,
+      amount: response?.salesCount?.find(item => item.label === "Initiated")?.count || 0,
       route: "/sales/pending",
     },
     {
       name: "Delivered",
       key: "delivered",
-      count: listData.length,
-      amount: listData.reduce((sum, item) => sum + item.amount, 0),
+      count: response?.salesCount?.find(item => item.label === "Delivered")?.count || 0,
+      amount: response?.salesCount?.find(item => item.label === "Delivered")?.count || 0,
       route: "/sales/delivered",
     },
     {
       name: "Completed",
       key: "completed",
-      count: listData.length,
-      amount: listData.reduce((sum, item) => sum + item.amount, 0),
+      count: response?.salesCount?.find(item => item.label === "Confirmed")?.count || 0,
+      amount: response?.salesCount?.find(item => item.label === "Confirmed")?.count || 0,
       route: "/sales/completed",
     },
     {
       name: "Cancelled",
       key: "cancelled",
-      count: listData.length,
-      amount: listData.reduce((sum, item) => sum + item.amount, 0),
+      count: response?.salesCount?.find(item => item.label === "Cancelled")?.count || 0,
+      amount: response?.salesCount?.find(item => item.label === "Cancelled")?.count || 0,
       route: "/sales/cancelled",
     },
   ];

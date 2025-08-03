@@ -15,7 +15,6 @@ const AvailableList = ({ list }) => {
       list.onClick();
     }
   };
-
   return (
     <div
       className={`border border-gray-200 rounded-md bg-white py-2 px-2 w-full flex flex-col gap-2 ${
@@ -32,7 +31,10 @@ const AvailableList = ({ list }) => {
         }
       }}
     >
-      <p className="text-[18px] text-[#343432]">{list?.value}</p>
+      <div className="flex justify-between items-center">
+        <p className="text-[18px] text-[#343432]">{list?.value}</p>
+        {list?.smallTooptip && <p className="bg-[#F8F8FA] rounded-xl px-3 py-1 text-[10px]">{list?.smallTooptip}</p>}
+      </div>
       <div className="flex items-center gap-2 justify-between">
         <p className="text-[11px] text-gray-500 font-normal">{list?.name}</p>
         {list?.showCheckbox && (

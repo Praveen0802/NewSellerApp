@@ -88,6 +88,7 @@ const KycComponent = ({
 
   const getDocumentStatus = (docType) => {
     const docData = getDocumentData(docType);
+    console.log(docData,'docDatadocData')
     if (!docData) return "pending";
 
     if (docData.status === 1 && docData.data) return "uploaded";
@@ -394,6 +395,7 @@ const KycComponent = ({
     const config = documentConfig[docType];
     const docData = getDocumentData(docType);
     const status = getDocumentStatus(docType);
+    console.log(status,'statusstatus')
     const Icon = config.icon;
     const isUploading = uploading[docType];
 
@@ -483,10 +485,10 @@ const KycComponent = ({
 
           {status === "error" && (
             <div className="space-y-3">
-              <div className="flex items-center space-x-2 text-red-600 py-2">
-                <AlertCircle className="w-4 h-4" />
+              <div className="flex items-center space-x-2 py-2">
+                {/* <AlertCircle className="w-4 h-4" /> */}
                 <span className="text-sm">
-                  {docData?.message || "Error loading document"}
+                  {docData?.message}
                 </span>
               </div>
               <DocumentUpload

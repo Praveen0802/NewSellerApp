@@ -9,11 +9,16 @@ import Header from "../header";
 import RightViewModal from "../commonComponents/rightViewModal";
 import {
   updateConfirmPurchasePopup,
+  updateRoleAccess,
   updateWalletPopupFlag,
 } from "@/utils/redux/common/action";
 import { ADD_WALLET_POPUP } from "@/utils/redux/common/type";
 import AddDepositSummary from "../addDepositSummary";
-import { fetchProfileDetails } from "@/utils/apiHandler/request";
+import {
+  fetchProfileDetails,
+  getKYCStatus,
+  getUserRoleAccess,
+} from "@/utils/apiHandler/request";
 import { updateCurrentUser } from "@/utils/redux/currentUser/action";
 import ConfirmPurchasePopup from "../confirmPurchasePopup";
 
@@ -48,8 +53,22 @@ const SecureLayout = ({ children }) => {
     dispatch(updateCurrentUser(response));
   };
 
+  const getUserCanAccessRoles = async () => {
+    const response = await getUserRoleAccess();
+    dispatch(updateRoleAccess(response));
+  };
+  const getUserKYCStatus = async () => {
+    const response = await getKYCStatus();
+    console.log(response?.kyc_status == 0,response,'response?.kyc_status == 0response?.kyc_status == 0')
+    // if (response?.kyc_status == 0 && window.location.pathname != '/settings/kyc') {
+    //   router.push("/settings/kyc?handle=true");
+    // }
+  };
+
   useEffect(() => {
     fetchUserName();
+    getUserCanAccessRoles();
+    getUserKYCStatus();
   }, [router]);
 
   const closeAddWalletPopup = () => {

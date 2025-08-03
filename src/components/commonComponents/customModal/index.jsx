@@ -22,7 +22,7 @@ const CustomModal = (props) => {
   if (!show) return null;
 
   return (
-    <div className={`fixed inset-0 overflow-y-auto bg-black/30 z-[99999]`}>
+    <div className={`fixed inset-0 overflow-y-auto bg-black/30 z-[99]`}>
       <div className="flex items-center justify-center min-h-[100vh]">
         <div ref={ref} className={props.className}>
           {children}

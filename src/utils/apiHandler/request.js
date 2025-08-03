@@ -508,6 +508,48 @@ export const sendResetRequest = async (data) => {
   }
 };
 
+export const getUserRoleAccess = async (token) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_USER_CAN_ACCESS,
+      method: "GET",
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getUserRoleAccess", error);
+    throw error;
+  }
+}
+
+export const getSalesCount = async (token) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_SALES_COUNT,
+      method: "GET",
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getSalesCount", error);
+    throw error;
+  }
+}
+
+export const getKYCStatus = async (token) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_KYC_STATUS,
+      method: "GET",
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getSalesCount", error);
+    throw error;
+  }
+}
+
 export const dashboardAwaitingDelivery = async (token, params) => {
   try {
     const response = await makeRequest({
