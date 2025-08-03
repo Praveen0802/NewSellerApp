@@ -58,16 +58,34 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
       // return { addressDetails, profileDetails, fetchCountries, dialingCode };
     } else if (profile === "addressBook") {
       const results = await Promise.allSettled([
-        fetchAddressBookDetails(token, "", "GET", "", { primary_address: 1 }),
         fetchAddressBookDetails(token, "", "GET", ""),
         fetchProfileDetails(token, "GET"),
         fetchCountrieList(token),
       ]);
 
-      const [primaryAddress, defaultAddress, profileDetails, fetchCountries] =
+      const [defaultAddressDetails, profileDetails, fetchCountries] =
         results.map((result) =>
           result.status === "fulfilled" ? result.value : null
         );
+
+      if (!Array.isArray(defaultAddressDetails)) {
+        return {
+          primaryAddress: [],
+          defaultAddress: [],
+          profileDetails,
+          fetchCountries,
+        };
+      }
+      const primaryAddress = [];
+      const defaultAddress = [];
+      defaultAddressDetails.forEach((item) => {
+        if (item?.primary_address === 1) {
+          primaryAddress.push(item);
+        } else {
+          defaultAddress.push(item);
+        }
+      });
+
       return { primaryAddress, defaultAddress, profileDetails, fetchCountries };
     } else if (profile === "bankAccounts") {
       const [bankDetails, fetchCountries] = await Promise.all([
@@ -289,7 +307,7 @@ export const fetchBulkListingData = async (token, params) => {
       fetchVenueList(token),
       fetchTournamentsList(token),
     ]);
-    console.log(bulkListingData,'bulkListingDatabulkListingDatabulkListingData')
+  console.log(bulkListingData, "bulkListingDatabulkListingDatabulkListingData");
   return { bulkListingData, venueList, tournamentsList };
 };
 
