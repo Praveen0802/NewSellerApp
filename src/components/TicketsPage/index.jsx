@@ -300,7 +300,7 @@ const TicketsPage = (props) => {
   const [itemsPerPage, setItemsPerPage] = useState(50);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  
+
   // MAIN STATE: Using ticketsByMatch instead of ticketsData
   const [ticketsByMatch, setTicketsByMatch] = useState({});
 
@@ -428,21 +428,24 @@ const TicketsPage = (props) => {
   }, []);
 
   // Handle select all for specific match - UPDATED FOR ticketsByMatch
-  const handleSelectAllForMatch = useCallback((matchIndex) => {
-    const matchData = ticketsByMatch[matchIndex];
-    if (!matchData) return;
+  const handleSelectAllForMatch = useCallback(
+    (matchIndex) => {
+      const matchData = ticketsByMatch[matchIndex];
+      if (!matchData) return;
 
-    const matchTicketIds = matchData.tickets.map((ticket) => ticket.uniqueId);
+      const matchTicketIds = matchData.tickets.map((ticket) => ticket.uniqueId);
 
-    // Remove existing selections for this match and add new ones
-    setGlobalSelectedTickets((prevSelected) => {
-      const filteredGlobalSelection = prevSelected.filter((uniqueId) => {
-        const [ticketMatchIndex] = uniqueId.split("_");
-        return parseInt(ticketMatchIndex) !== parseInt(matchIndex);
+      // Remove existing selections for this match and add new ones
+      setGlobalSelectedTickets((prevSelected) => {
+        const filteredGlobalSelection = prevSelected.filter((uniqueId) => {
+          const [ticketMatchIndex] = uniqueId.split("_");
+          return parseInt(ticketMatchIndex) !== parseInt(matchIndex);
+        });
+        return [...filteredGlobalSelection, ...matchTicketIds];
       });
-      return [...filteredGlobalSelection, ...matchTicketIds];
-    });
-  }, [ticketsByMatch]);
+    },
+    [ticketsByMatch]
+  );
 
   // Handle deselect all for specific match - UPDATED FOR ticketsByMatch
   const handleDeselectAllForMatch = useCallback((matchIndex) => {
@@ -455,34 +458,40 @@ const TicketsPage = (props) => {
   }, []);
 
   // Get selected rows for a specific match - UPDATED FOR ticketsByMatch
-  const getSelectedRowsForMatch = useCallback((matchIndex) => {
-    const selectedRows = [];
-    globalSelectedTickets.forEach((uniqueId) => {
-      const [ticketMatchIndex, ticketIndex] = uniqueId.split("_");
-      if (parseInt(ticketMatchIndex) === parseInt(matchIndex)) {
-        selectedRows.push(parseInt(ticketIndex));
-      }
-    });
-    return selectedRows;
-  }, [globalSelectedTickets]);
+  const getSelectedRowsForMatch = useCallback(
+    (matchIndex) => {
+      const selectedRows = [];
+      globalSelectedTickets.forEach((uniqueId) => {
+        const [ticketMatchIndex, ticketIndex] = uniqueId.split("_");
+        if (parseInt(ticketMatchIndex) === parseInt(matchIndex)) {
+          selectedRows.push(parseInt(ticketIndex));
+        }
+      });
+      return selectedRows;
+    },
+    [globalSelectedTickets]
+  );
 
   // Handle row selection for individual match tables - UPDATED FOR ticketsByMatch
-  const handleSetSelectedRowsForMatch = useCallback((matchIndex, newSelectedRows) => {
-    // Remove existing selections for this match
-    setGlobalSelectedTickets((prevSelected) => {
-      const filteredGlobalSelection = prevSelected.filter((uniqueId) => {
-        const [ticketMatchIndex] = uniqueId.split("_");
-        return parseInt(ticketMatchIndex) !== parseInt(matchIndex);
+  const handleSetSelectedRowsForMatch = useCallback(
+    (matchIndex, newSelectedRows) => {
+      // Remove existing selections for this match
+      setGlobalSelectedTickets((prevSelected) => {
+        const filteredGlobalSelection = prevSelected.filter((uniqueId) => {
+          const [ticketMatchIndex] = uniqueId.split("_");
+          return parseInt(ticketMatchIndex) !== parseInt(matchIndex);
+        });
+
+        // Add new selections for this match
+        const newGlobalSelections = newSelectedRows.map(
+          (rowIndex) => `${matchIndex}_${rowIndex}`
+        );
+
+        return [...filteredGlobalSelection, ...newGlobalSelections];
       });
-
-      // Add new selections for this match
-      const newGlobalSelections = newSelectedRows.map(
-        (rowIndex) => `${matchIndex}_${rowIndex}`
-      );
-
-      return [...filteredGlobalSelection, ...newGlobalSelections];
-    });
-  }, []);
+    },
+    []
+  );
 
   // ENHANCED: Global bulk actions - UPDATED FOR ticketsByMatch
   const handleGlobalEdit = useCallback(() => {
@@ -616,7 +625,7 @@ const TicketsPage = (props) => {
 
     // Group cloned tickets by match
     const clonedTicketsByMatch = {};
-    
+
     ticketsToClone.forEach((ticket) => {
       const matchIndex = ticket.matchIndex;
       if (!clonedTicketsByMatch[matchIndex]) {
@@ -640,15 +649,17 @@ const TicketsPage = (props) => {
     // Add cloned tickets to state
     setTicketsByMatch((prevData) => {
       const newData = { ...prevData };
-      
-      Object.entries(clonedTicketsByMatch).forEach(([matchIndex, clonedTickets]) => {
-        if (newData[matchIndex]) {
-          newData[matchIndex] = {
-            ...newData[matchIndex],
-            tickets: [...newData[matchIndex].tickets, ...clonedTickets],
-          };
+
+      Object.entries(clonedTicketsByMatch).forEach(
+        ([matchIndex, clonedTickets]) => {
+          if (newData[matchIndex]) {
+            newData[matchIndex] = {
+              ...newData[matchIndex],
+              tickets: [...newData[matchIndex].tickets, ...clonedTickets],
+            };
+          }
         }
-      });
+      );
 
       return newData;
     });
@@ -660,10 +671,13 @@ const TicketsPage = (props) => {
   }, [globalSelectedTickets, getAllTicketsFromMatches]);
 
   // Check if a specific ticket is in edit mode - UPDATED FOR ticketsByMatch
-  const isTicketInEditMode = useCallback((matchIndex, ticketIndex) => {
-    const uniqueId = `${matchIndex}_${ticketIndex}`;
-    return isGlobalEditMode && globalEditingTickets.includes(uniqueId);
-  }, [isGlobalEditMode, globalEditingTickets]);
+  const isTicketInEditMode = useCallback(
+    (matchIndex, ticketIndex) => {
+      const uniqueId = `${matchIndex}_${ticketIndex}`;
+      return isGlobalEditMode && globalEditingTickets.includes(uniqueId);
+    },
+    [isGlobalEditMode, globalEditingTickets]
+  );
 
   // NEW: Construct headers dynamically from filters - REMAINS SAME
   const constructHeadersFromListingHistory = useMemo(() => {
@@ -828,11 +842,12 @@ const TicketsPage = (props) => {
 
         // Listing Notes
         if (filter.restriction_left || filter.restriction_right) {
-          [...(filter.restriction_left || []), ...(filter.restriction_right || [])].forEach(
-            (note) => {
-              allListingNotes.set(note.id.toString(), note.name);
-            }
-          );
+          [
+            ...(filter.restriction_left || []),
+            ...(filter.restriction_right || []),
+          ].forEach((note) => {
+            allListingNotes.set(note.id.toString(), note.name);
+          });
         }
       });
 
@@ -979,7 +994,12 @@ const TicketsPage = (props) => {
         updateCellValues(updateParams, ticket?.rawTicketData?.s_no);
       }
     },
-    [isGlobalEditMode, globalEditingTickets, constructHeadersFromListingHistory, getAllTicketsFromMatches]
+    [
+      isGlobalEditMode,
+      globalEditingTickets,
+      constructHeadersFromListingHistory,
+      getAllTicketsFromMatches,
+    ]
   );
 
   // Enhanced updateCellValues function with better error handling
@@ -1012,105 +1032,114 @@ const TicketsPage = (props) => {
     }
   };
 
-  const handleHandAction = useCallback((rowData, rowIndex) => {
-    console.log("Hand action clicked for row:", rowData, rowIndex);
-    handleCellEdit(
-      rowIndex,
-      "ticket_in_hand",
-      !rowData?.ticket_in_hand,
-      rowData,
-      rowData?.matchIndex
-    );
-  }, [handleCellEdit]);
+  const handleHandAction = useCallback(
+    (rowData, rowIndex) => {
+      console.log("Hand action clicked for row:", rowData, rowIndex);
+      handleCellEdit(
+        rowIndex,
+        "ticket_in_hand",
+        !rowData?.ticket_in_hand,
+        rowData,
+        rowData?.matchIndex
+      );
+    },
+    [handleCellEdit]
+  );
 
   // Custom sticky columns configuration
-  const getStickyColumnsForRow = useCallback((rowData, rowIndex) => {
-    const isBulkEditMode = isGlobalEditMode && globalEditingTickets.length > 1;
+  const getStickyColumnsForRow = useCallback(
+    (rowData, rowIndex) => {
+      const isBulkEditMode =
+        isGlobalEditMode && globalEditingTickets.length > 1;
 
-    return [
-      {
-        key: "hand",
-        icon: (
-          <Tooltip content="Tickets in Hand">
-            <Hand
-              size={14}
-              className={`${
-                rowData?.ticket_in_hand ? "text-green-500" : "text-black"
-              } hover:text-green-500 cursor-pointer`}
-              onClick={() => handleHandAction(rowData, rowIndex)}
-            />
-          </Tooltip>
-        ),
-        className: "py-2 text-center border-r border-[#E0E1EA]",
-      },
-      {
-        key: "upload",
-        toolTipContent: isBulkEditMode ? "Not Available" : "Upload",
-        icon: (
-          <Tooltip content={isBulkEditMode ? "Not Available" : "Upload"}>
-            <IconStore.upload
-              className={`size-4 ${
-                isBulkEditMode
-                  ? "cursor-not-allowed opacity-50 grayscale"
-                  : "cursor-pointer"
-              }`}
-            />
-          </Tooltip>
-        ),
-        className: `${
-          isBulkEditMode ? "cursor-not-allowed pl-2" : "cursor-pointer pl-2"
-        }`,
-        tooltipComponent: <p className="text-center">{rowData.ticket_type}</p>,
-        onClick: () => {
-          if (!isBulkEditMode) {
-            handleUploadAction(rowData, rowIndex);
-          }
+      return [
+        {
+          key: "hand",
+          icon: (
+            <Tooltip content="Tickets in Hand">
+              <Hand
+                size={14}
+                className={`${
+                  rowData?.ticket_in_hand ? "text-green-500" : "text-black"
+                } hover:text-green-500 cursor-pointer`}
+                onClick={() => handleHandAction(rowData, rowIndex)}
+              />
+            </Tooltip>
+          ),
+          className: "py-2 text-center border-r border-[#E0E1EA]",
         },
-      },
-      {
-        key: "",
-        toolTipContent: isBulkEditMode ? "Not Available" : "Upload Pop",
-        icon: (
-          <Tooltip content={isBulkEditMode ? "Not Available" : "Upload Pop"}>
-            <HardDriveUpload
-              onClick={() => {
-                if (!isBulkEditMode) {
-                  handleUploadAction(
-                    { ...rowData, handleProofUpload: true },
-                    rowIndex
-                  );
-                }
-              }}
-              className={`w-[16px] h-[16px] ${
-                isBulkEditMode
-                  ? "cursor-not-allowed opacity-50 text-gray-400"
-                  : "cursor-pointer"
-              }`}
-            />
-          </Tooltip>
-        ),
-        className: "py-2 text-center border-r border-[#E0E1EA]",
-      },
-      {
-        key: "view",
-        icon: (
-          <Tooltip content="logs">
-            <Clock className="size-4" />
-          </Tooltip>
-        ),
-        className: "cursor-pointer px-2",
-        tooltipComponent: (
-          <p className="text-center">
-            Expected Delivery Date:
-            <br />
-            {rowData.match_date}
-          </p>
-        ),
-        tooltipPosition: "top",
-        onClick: () => handleViewDetails(rowData),
-      },
-    ];
-  }, [isGlobalEditMode, globalEditingTickets, handleHandAction]);
+        {
+          key: "upload",
+          toolTipContent: isBulkEditMode ? "Not Available" : "Upload",
+          icon: (
+            <Tooltip content={isBulkEditMode ? "Not Available" : "Upload"}>
+              <IconStore.upload
+                className={`size-4 ${
+                  isBulkEditMode
+                    ? "cursor-not-allowed opacity-50 grayscale"
+                    : "cursor-pointer"
+                }`}
+              />
+            </Tooltip>
+          ),
+          className: `${
+            isBulkEditMode ? "cursor-not-allowed pl-2" : "cursor-pointer pl-2"
+          }`,
+          tooltipComponent: (
+            <p className="text-center">{rowData.ticket_type}</p>
+          ),
+          onClick: () => {
+            if (!isBulkEditMode) {
+              handleUploadAction(rowData, rowIndex);
+            }
+          },
+        },
+        {
+          key: "",
+          toolTipContent: isBulkEditMode ? "Not Available" : "Upload Pop",
+          icon: (
+            <Tooltip content={isBulkEditMode ? "Not Available" : "Upload Pop"}>
+              <HardDriveUpload
+                onClick={() => {
+                  if (!isBulkEditMode) {
+                    handleUploadAction(
+                      { ...rowData, handleProofUpload: true },
+                      rowIndex
+                    );
+                  }
+                }}
+                className={`w-[16px] h-[16px] ${
+                  isBulkEditMode
+                    ? "cursor-not-allowed opacity-50 text-gray-400"
+                    : "cursor-pointer"
+                }`}
+              />
+            </Tooltip>
+          ),
+          className: "py-2 text-center border-r border-[#E0E1EA]",
+        },
+        {
+          key: "view",
+          icon: (
+            <Tooltip content="logs">
+              <Clock className="size-4" />
+            </Tooltip>
+          ),
+          className: "cursor-pointer px-2",
+          tooltipComponent: (
+            <p className="text-center">
+              Expected Delivery Date:
+              <br />
+              {rowData.match_date}
+            </p>
+          ),
+          tooltipPosition: "top",
+          onClick: () => handleViewDetails(rowData),
+        },
+      ];
+    },
+    [isGlobalEditMode, globalEditingTickets, handleHandAction]
+  );
 
   // Action handlers for sticky columns
   const handleUploadAction = useCallback((rowData, rowIndex) => {
@@ -1419,59 +1448,71 @@ const TicketsPage = (props) => {
     []
   );
 
-  const handleOnChangeEvents = useCallback((e) => {
-    const newValue = e.target.value;
-    setSearchValue(newValue);
-    if (newValue.trim()) {
-      debouncedFetchApiCall(newValue);
-    } else {
-      fetchSearchResults("", true);
-    }
-  }, [debouncedFetchApiCall]);
+  const handleOnChangeEvents = useCallback(
+    (e) => {
+      const newValue = e.target.value;
+      setSearchValue(newValue);
+      if (newValue.trim()) {
+        debouncedFetchApiCall(newValue);
+      } else {
+        fetchSearchResults("", true);
+      }
+    },
+    [debouncedFetchApiCall]
+  );
 
-  const handleSearchedEventClick = useCallback((event) => {
-    setSearchValue(event?.match_name);
-    handleFilterChange("match_id", event?.m_id);
-    setSearchedEvents([]);
-  }, [handleFilterChange]);
-
-  const fetchSearchResults = useCallback(async (query, isInitialLoad = false) => {
-    try {
-      setSearchEventLoader(true);
+  const handleSearchedEventClick = useCallback(
+    (event) => {
+      setSearchValue(event?.match_name);
+      handleFilterChange("match_id", event?.m_id);
       setSearchedEvents([]);
-      setHasSearched(true);
+    },
+    [handleFilterChange]
+  );
 
-      const searchQuery = isInitialLoad ? "" : query ? query.trim() : "";
+  const fetchSearchResults = useCallback(
+    async (query, isInitialLoad = false) => {
+      try {
+        setSearchEventLoader(true);
+        setSearchedEvents([]);
+        setHasSearched(true);
 
-      let response = await FetchPerformerOrVenueListing("", {
-        query: searchQuery,
-      });
-      delete response?.data?.venues;
-      delete response?.data?.performers;
-      setSearchedEvents(response?.data || []);
-      setSearchEventLoader(false);
-      setShowSearchDropdown(true);
-    } catch (error) {
-      setSearchEventLoader(false);
-      console.error("Search error:", error);
-      setSearchedEvents([]);
-      setShowSearchDropdown(true);
-    }
-  }, []);
+        const searchQuery = isInitialLoad ? "" : query ? query.trim() : "";
 
-  const handleSearchFocus = useCallback((e) => {
-    if (!searchValue || searchValue.trim() === "") {
-      fetchSearchResults("", true);
-    } else if (
-      searchedEvents?.length == 0 &&
-      searchValue &&
-      searchValue.trim()
-    ) {
-      setShowSearchDropdown(false);
-    } else if (searchValue && searchValue.trim()) {
-      setShowSearchDropdown(true);
-    }
-  }, [searchValue, searchedEvents, fetchSearchResults]);
+        let response = await FetchPerformerOrVenueListing("", {
+          query: searchQuery,
+        });
+        delete response?.data?.venues;
+        delete response?.data?.performers;
+        setSearchedEvents(response?.data || []);
+        setSearchEventLoader(false);
+        setShowSearchDropdown(true);
+      } catch (error) {
+        setSearchEventLoader(false);
+        console.error("Search error:", error);
+        setSearchedEvents([]);
+        setShowSearchDropdown(true);
+      }
+    },
+    []
+  );
+
+  const handleSearchFocus = useCallback(
+    (e) => {
+      if (!searchValue || searchValue.trim() === "") {
+        fetchSearchResults("", true);
+      } else if (
+        searchedEvents?.length == 0 &&
+        searchValue &&
+        searchValue.trim()
+      ) {
+        setShowSearchDropdown(false);
+      } else if (searchValue && searchValue.trim()) {
+        setShowSearchDropdown(true);
+      }
+    },
+    [searchValue, searchedEvents, fetchSearchResults]
+  );
 
   const handleSearchBlur = useCallback(() => {
     setTimeout(() => {
@@ -1587,8 +1628,6 @@ const TicketsPage = (props) => {
   // Render match tables using ticketsByMatch
   const renderMatchTables = useCallback(() => {
     return Object.entries(ticketsByMatch).map(([matchIndex, matchData]) => {
-     
-
       return (
         <div key={`match-${matchIndex}`} className="not-last:mb-4">
           <CommonInventoryTable
@@ -1610,9 +1649,7 @@ const TicketsPage = (props) => {
             handleDeselectAll={() => handleDeselectAllForMatch(matchIndex)}
             matchDetails={{
               match_name: matchData.matchInfo?.match_name,
-              match_date_format: new Date(
-                matchData.matchInfo?.match_date
-              ).toLocaleDateString(),
+              match_date_format: matchData.matchInfo?.match_date,
               match_time: matchData.matchInfo?.match_time,
               stadium_name: matchData.matchInfo?.stadium_name,
               country_name: matchData.matchInfo?.country_name,
