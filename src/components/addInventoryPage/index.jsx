@@ -1548,6 +1548,7 @@ const AddInventoryPage = (props) => {
               isEditMode={isEditMode}
               editingRowIndex={editingRowIndex}
               mode="single"
+              defaultOpen={true}
               showAccordion={true}
               isCollapsed={isTableCollapsed}
               onToggleCollapse={handleToggleCollapse}
