@@ -3,6 +3,7 @@ import AddressList from "./addressList";
 
 const AddressView = ({
   title,
+  titleIcon,
   handleEditClick,
   handleDeleteClick,
   addressValues,
@@ -11,7 +12,9 @@ const AddressView = ({
   return (
     <>
       <div className="flex justify-between items-center">
-        <p className="text-sm font-medium md:text-base">{title}</p>
+        <p className="text-sm font-medium md:text-base flex items-center gap-1">
+          {title} {titleIcon && titleIcon}
+        </p>
         {component && component}
       </div>
       <div className="grid grid-cols-1 gap-4">

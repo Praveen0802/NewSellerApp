@@ -21,6 +21,7 @@ const FormFields = ({ formFields }) => {
           onChange,
           className,
           labelClassName,
+          currencyFormat,
           iconBefore,
           mandatory,
           disabled,
@@ -110,6 +111,7 @@ const FormFields = ({ formFields }) => {
                 hideLabel={hideLabel}
                 mandatory={mandatory}
                 dropDownComponent={dropDownComponent}
+                currencyFormat={currencyFormat}
                 readOnly={readOnly || disabled}
                 className={className}
                 iconBefore={iconBefore}

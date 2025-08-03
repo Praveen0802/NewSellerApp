@@ -12,6 +12,7 @@ import {
 import AddressList from "./components/addressView/addressList";
 import AddressView from "./components/addressView";
 import DeleteConfirmation from "../commonComponents/deleteConfirmation";
+import { Star } from "lucide-react";
 
 // Shimmer loader component
 // Shimmer loader component
@@ -72,6 +73,7 @@ const AddressBook = (props) => {
   const [addressViewPopup, setAddressViewPopup] = useState({
     show: false,
     type: "",
+    isLoading: false,
   });
   const [editAdressValues, setEditAdressValues] = useState();
   const [isLoading, setIsLoading] = useState(false);
@@ -79,7 +81,6 @@ const AddressBook = (props) => {
     flag: false,
     id: null,
   });
-
   const addressValues = addressBookDetails?.map((item) => {
     const title = `${item?.address_type ? item?.address_type : "Address"} - ${
       item.zip_code || "N/A"
@@ -140,18 +141,28 @@ const AddressBook = (props) => {
   });
 
   const handleEditClick = async (item) => {
-    setIsLoading(true);
+    // setIsLoading(true);
+    setAddressViewPopup({
+      show: true,
+      isLoading: true,
+      type: "edit",
+    });
     try {
+      const Id = item?.id;
       const response = await fetchAddressBookDetails("", "", "GET", "", {
-        id: item?.id,
+        id: Id,
       });
-      setEditAdressValues({ id: item?.id, ...response[0] });
-      setAddressViewPopup({
-        show: true,
-        type: "edit",
-      });
+      const selectedPopupData = response.filter((item) => item.id === Id);
+      console.log("selectedPopupData", selectedPopupData);
+
+      setEditAdressValues({ id: Id, ...selectedPopupData?.[0] });
     } finally {
-      setIsLoading(false);
+      setAddressViewPopup((prev) => {
+        return {
+          ...prev,
+          isLoading: false,
+        };
+      });
     }
   };
 
@@ -191,24 +202,21 @@ const AddressBook = (props) => {
     if (submit?.submit) {
       setIsLoading(true);
       try {
-        const primaryAddress = await fetchAddressBookDetails(
+        const defaultAddressDetails = await fetchAddressBookDetails(
           "",
           "",
           "GET",
-          "",
-          {
-            is_primary_address: 1,
-          }
+          ""
         );
-        const defaultAddress = await fetchAddressBookDetails(
-          "",
-          "",
-          "GET",
-          "",
-          {
-            is_primary_address: 0,
+        let primaryAddress = [];
+        let defaultAddress = [];
+        defaultAddressDetails.forEach((item) => {
+          if (item?.primary_address == 1) {
+            primaryAddress.push(item);
+          } else {
+            defaultAddress.push(item);
           }
-        );
+        });
         setPrimaryAddressData(primaryAddress);
         setAddressBookDetails(defaultAddress);
       } finally {
@@ -232,6 +240,7 @@ const AddressBook = (props) => {
             <>
               <AddressView
                 title="Primary address"
+                titleIcon=<Star fill="#F59E0B" color="#F59E0B" />
                 handleEditClick={handleEditClick}
                 handleDeleteClick={handleDeleteConfirmation}
                 addressValues={primaryValues}
@@ -283,6 +292,7 @@ const AddressBook = (props) => {
           addressDetails={editAdressValues}
           onClose={handleClosePopup}
           fetchCountries={fetchCountries}
+          showShimmer={addressViewPopup?.isLoading}
         />
       </RightViewModal>
     </div>

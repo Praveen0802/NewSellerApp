@@ -539,7 +539,7 @@ const BulkInventory = (props) => {
     {
       type: "select",
       name: "ticket_types",
-      label: "Ticket Types",
+      label: "Ticket Type",
       value: filtersApplied?.ticket_types,
       mandatory: true,
       options: [
@@ -550,12 +550,13 @@ const BulkInventory = (props) => {
       ],
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, ticket_types: value })),
     },
     {
-      type: "select",
+      type: "number",
       name: "add_qty_addlist",
       label: "Quantity",
       mandatory: true,
@@ -569,7 +570,8 @@ const BulkInventory = (props) => {
       ],
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, add_qty_addlist: value })),
     },
@@ -587,14 +589,19 @@ const BulkInventory = (props) => {
       ],
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, split_type: value })),
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      onChange: (e) =>
+        setFiltersApplied((prev) => ({
+          ...prev,
+          split_type: e?.target?.value,
+        })),
     },
     {
       type: "select",
       name: "split_details",
       label: "Seating Arrangement",
+      mandatory: true,
       value: filtersApplied?.split_details,
       options: [
         ...(split_details_left?.map((note) => ({
@@ -608,7 +615,8 @@ const BulkInventory = (props) => {
       ],
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, split_details: value })),
     },
@@ -646,7 +654,8 @@ const BulkInventory = (props) => {
       })),
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, home_town: value })),
     },
@@ -663,7 +672,8 @@ const BulkInventory = (props) => {
       })),
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -680,7 +690,8 @@ const BulkInventory = (props) => {
       disabled: !filtersApplied?.ticket_category,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, ticket_block: value })),
     },
@@ -691,7 +702,8 @@ const BulkInventory = (props) => {
       value: filtersApplied?.row,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[10px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -705,7 +717,8 @@ const BulkInventory = (props) => {
       value: filtersApplied?.first_seat,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[10px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -726,7 +739,8 @@ const BulkInventory = (props) => {
         </div>
       ),
       className: "!py-[10px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -748,7 +762,8 @@ const BulkInventory = (props) => {
         </div>
       ),
       className: "!py-[10px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
@@ -759,7 +774,6 @@ const BulkInventory = (props) => {
       type: "select",
       name: "notes",
       label: "Benefits",
-      mandatory: true,
       value: filtersApplied?.notes,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       multiselect: true,
@@ -774,7 +788,8 @@ const BulkInventory = (props) => {
         })) || []),
       ],
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, notes: value })),
     },
@@ -782,7 +797,6 @@ const BulkInventory = (props) => {
       type: "select",
       name: "restrictions",
       label: "Restrictions",
-      mandatory: true,
       value: filtersApplied?.restrictions,
       multiselect: true,
       options: [
@@ -797,7 +811,8 @@ const BulkInventory = (props) => {
       ],
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, restrictions: value })),
     },
@@ -814,7 +829,8 @@ const BulkInventory = (props) => {
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       singleDateMode: true,
       className: "!py-[10px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, ship_date: value })),
     },
@@ -825,7 +841,8 @@ const BulkInventory = (props) => {
       value: filtersApplied?.tickets_in_hand || false,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[4px] !px-[12px] w-full mobile:text-xs",
-      labelClassName: "!text-[11px]",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       hideFromTable: true,
       onChange: (e) =>
         setFiltersApplied((prev) => ({

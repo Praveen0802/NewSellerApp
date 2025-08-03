@@ -234,7 +234,7 @@ const TransactionDetailsPopup = ({
         { label: "Payout Date", value: formattedDates.payoutDate },
         { label: "Expected Date", value: formattedDates.expectedDate },
         { label: "To Account", value: transactionData.to_account },
-        { label: "Transaction ID", value: transactionData.id },
+        // { label: "Transaction ID", value: transactionData.id },
       ],
     ],
     [transactionData, formattedDates]

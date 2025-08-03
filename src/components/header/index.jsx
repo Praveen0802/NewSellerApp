@@ -45,10 +45,22 @@ const Header = () => {
   const router = useRouter();
 
   const title = () => {
-    if (router.pathname.includes("my-listings")) {
+    const { pathname } = router;
+    if (pathname.includes("my-listings")) {
       return "Inventory";
+    } else if (pathname.includes("add-listings")) {
+      return "Add Inventory";
+    } else if (pathname.includes("bulk-listings")) {
+      return "Bulk Inventory";
     } else {
-      return 'Welcome';
+      return (
+        <>
+          Welcome,
+          <span className="capitalize">
+            {currentUser?.first_name ? `, ${currentUser?.first_name}` : ""}
+          </span>
+        </>
+      );
     }
   };
 
@@ -56,9 +68,6 @@ const Header = () => {
     <div className="px-4 sm:px-[24px] h-auto max-md:flex-row min-h-[60px] sm:h-[80px] py-3 sm:py-0 bg-white border-b-[1px] flex flex-col sm:flex-row w-full justify-between items-start sm:items-center border-[#eaeaf1] gap-3 sm:gap-0">
       <p className="text-[18px] sm:text-[24px] font-semibold text-[#343432]">
         {title()}
-        <span className="capitalize">
-          {currentUser?.first_name ? `, ${currentUser?.first_name}` : ""}
-        </span>
       </p>
       <div className="flex gap-3 items-center self-end sm:self-auto">
         <button

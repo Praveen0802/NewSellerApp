@@ -56,11 +56,6 @@ const SettingsPage = (props) => {
       key: "sbPay",
     },
     {
-      icon: <IconStore.referral className={IconclassName} />,
-      title: "My Referral",
-      key: "myRefferal",
-    },
-    {
       icon: <IconStore.myTeams className={IconclassName} />,
       title: "My Team",
       key: "myTeam",
@@ -79,6 +74,11 @@ const SettingsPage = (props) => {
       icon: <IconStore.kyc className={IconclassName} />,
       title: "KYC",
       key: "kyc",
+    },
+    {
+      icon: <IconStore.referral className={IconclassName} />,
+      title: "My Referral",
+      key: "myRefferal",
     },
     {
       icon: <IconStore.glitter className={IconclassName} />,

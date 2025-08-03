@@ -41,9 +41,9 @@ const UploadTickets = ({
   handleConfirmClick,
   myListingPage = false,
 }) => {
-  console.log(rowData, "rowDatarowDatarowData");
+
   const proofUploadView = rowData?.handleProofUpload || false;
-  console.log(proofUploadView, "proofUploadView");
+
   const ticketTypes = !isNaN(parseInt(rowData?.ticket_type))
     ? rowData?.ticket_type
     : rowData?.ticket_types || rowData?.ticket_type_id;
@@ -333,15 +333,6 @@ const UploadTickets = ({
     ]
   );
 
-  // Handle paper ticket details change
-  const handlePaperTicketDetailChange = useCallback((field, value) => {
-    setPaperTicketDetails((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  }, []);
-
-  const [qrLinksUpdateTrigger, setQrLinksUpdateTrigger] = useState(0);
 
   const additionalInfoRef = useRef();
   const qrLinksRef = useRef();
@@ -852,6 +843,7 @@ const UploadTickets = ({
       ref={paperTicketCourierRef}
       maxQuantity={maxQuantity}
       initialData={rowData?.paper_ticket_details || null}
+      rowData={rowData}
       onChange={(newData) => {
         console.log("Paper ticket courier data updated:", newData);
       }}

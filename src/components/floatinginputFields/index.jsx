@@ -13,6 +13,7 @@ const FloatingLabelInput = ({
   keyValue,
   showDropdown = false,
   name,
+  currencyFormat=false,
   required = false,
   autoComplete = "on",
   mandatory = false,

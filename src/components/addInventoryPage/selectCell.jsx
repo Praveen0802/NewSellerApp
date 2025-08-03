@@ -103,10 +103,11 @@ const MultiSelectEditableCell = ({
     }
   }, [isDropdownOpen, calculateDropdownPosition]);
 
-  // Prevent editing if disabled
+  // FIXED: Handle click to open dropdown immediately
   const handleClick = () => {
     if (disabled) return;
     setIsEditing(true);
+    setIsDropdownOpen(true); // Open dropdown immediately
   };
 
   // Close dropdown when clicking outside
@@ -233,6 +234,12 @@ const MultiSelectEditableCell = ({
     }
   };
 
+  // FIXED: Handle input field click to toggle dropdown
+  const handleInputClick = (e) => {
+    e.stopPropagation();
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
   const getDisplayValue = () => {
     const normalizedValue = normalizeValue(value);
     if (normalizedValue.length === 0) return placeholder;
@@ -256,7 +263,7 @@ const MultiSelectEditableCell = ({
               ? "border-green-500 ring-2 ring-green-600"
               : "border-[#DADBE5] hover:border-green-600"
           }`}
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          onClick={handleInputClick} // FIXED: Use the new click handler
           onKeyDown={handleKeyPress}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
@@ -421,6 +428,8 @@ const MultiSelectEditableCell = ({
 };
 
 // Updated SimpleEditableCell component with iconBefore support
+// Updated SimpleEditableCell component with DD/MM/YYYY date formatting
+// Updated SimpleEditableCell component with DD/MM/YYYY date formatting and fixed click issues
 const SimpleEditableCell = ({
   value,
   type = "text",
@@ -431,26 +440,133 @@ const SimpleEditableCell = ({
   disabled = false,
   placeholder = "Enter...",
   saveOnChange = true,
-  // NEW: Add iconBefore prop
   iconBefore = null,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef(null);
+  const [shouldFocusInput, setShouldFocusInput] = useState(false);
+
+  // Helper function to format date from YYYY-MM-DD to DD/MM/YYYY
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return "";
+    
+    try {
+      // If it's already in DD/MM/YYYY format, return as is
+      if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        return dateString;
+      }
+      
+      // If it's in YYYY-MM-DD format (from input[type="date"])
+      if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month, day] = dateString.split('-');
+        return `${day}/${month}/${year}`;
+      }
+      
+      // Try to parse other date formats
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return dateString; // Return original if can't parse
+      }
+      
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return dateString;
+    }
+  };
+
+  // Helper function to convert DD/MM/YYYY to YYYY-MM-DD for input[type="date"]
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return "";
+    
+    try {
+      // If it's already in YYYY-MM-DD format, return as is
+      if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return dateString;
+      }
+      
+      // If it's in DD/MM/YYYY format
+      if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+        const [day, month, year] = dateString.split('/');
+        return `${year}-${month}-${day}`;
+      }
+      
+      // Try to parse other formats
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return ""; // Return empty if can't parse
+      }
+      
+      return date.toISOString().split('T')[0];
+    } catch (error) {
+      console.error('Error formatting date for input:', error);
+      return "";
+    }
+  };
+
+  // Helper function to convert YYYY-MM-DD back to DD/MM/YYYY when saving
+  const formatDateForSave = (dateString) => {
+    if (!dateString) return "";
+    
+    try {
+      // If it's in YYYY-MM-DD format (from input[type="date"])
+      if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month, day] = dateString.split('-');
+        return `${day}/${month}/${year}`;
+      }
+      
+      return dateString; // Return as is if not in YYYY-MM-DD format
+    } catch (error) {
+      console.error('Error formatting date for save:', error);
+      return dateString;
+    }
+  };
 
   useEffect(() => {
-    setEditValue(value);
-  }, [value]);
+    if (type === "date") {
+      // For date inputs, store the display format but show input format when editing
+      setEditValue(value);
+    } else {
+      setEditValue(value);
+    }
+  }, [value, type]);
 
   const handleClick = () => {
     if (disabled) return;
     setIsEditing(true);
+    setShouldFocusInput(true);
+  };
+
+  // Handle date input click - prevent double click issue
+  const handleDateInputClick = (e) => {
+    e.stopPropagation();
+    if (!isEditing) {
+      setIsEditing(true);
+      setShouldFocusInput(true);
+    } else {
+      // If already editing, let the browser handle the date picker
+      if (inputRef.current && type === "date") {
+        inputRef.current.showPicker?.(); // Modern browsers support this
+      }
+    }
   };
 
   const handleSave = () => {
-    if (editValue !== value) {
-      onSave(editValue);
+    let valueToSave = editValue;
+    
+    // Format date value before saving
+    if (type === "date") {
+      valueToSave = formatDateForSave(editValue);
+    }
+    
+    if (valueToSave !== value) {
+      onSave(valueToSave);
     }
     setIsEditing(false);
   };
@@ -464,7 +580,14 @@ const SimpleEditableCell = ({
     setEditValue(newValue);
 
     if (saveOnChange && newValue !== value) {
-      onSave(newValue);
+      let valueToSave = newValue;
+      
+      // Format date value before saving
+      if (type === "date") {
+        valueToSave = formatDateForSave(newValue);
+      }
+      
+      onSave(valueToSave);
     }
   };
 
@@ -483,13 +606,29 @@ const SimpleEditableCell = ({
   };
 
   useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      if (inputRef.current.select && type !== "select") {
-        inputRef.current.select();
+    if (isEditing && shouldFocusInput && inputRef.current) {
+      setShouldFocusInput(false);
+      
+      if (type === "date") {
+        // For date inputs, focus and try to open picker immediately
+        inputRef.current.focus();
+        setTimeout(() => {
+          if (inputRef.current && inputRef.current.showPicker) {
+            inputRef.current.showPicker();
+          }
+        }, 0);
+      } else if (type !== "select") {
+        // For other input types, focus and select
+        inputRef.current.focus();
+        if (inputRef.current.select) {
+          inputRef.current.select();
+        }
+      } else {
+        // For select inputs, just focus
+        inputRef.current.focus();
       }
     }
-  }, [isEditing, type]);
+  }, [isEditing, type, shouldFocusInput]);
 
   const getDisplayValue = () => {
     if (type === "select" && options.length > 0) {
@@ -498,6 +637,9 @@ const SimpleEditableCell = ({
     }
     if (type === "checkbox") {
       return value ? "Yes" : "No";
+    }
+    if (type === "date") {
+      return value ? formatDateForDisplay(value) : placeholder;
     }
     return value || placeholder;
   };
@@ -508,15 +650,18 @@ const SimpleEditableCell = ({
       const option = options.find((opt) => opt.value === value);
       return !!option;
     }
+    if (type === "date") {
+      return !!(value && value.toString().trim());
+    }
     return !!(value && value.toString().trim());
   };
 
-  // NEW: Helper function to get padding based on iconBefore
+  // Helper function to get padding based on iconBefore
   const getInputPadding = () => {
     return iconBefore ? "pl-10 pr-2" : "px-2";
   };
 
-  // NEW: Render iconBefore if present
+  // Render iconBefore if present
   const renderIconBefore = () => {
     if (!iconBefore) return null;
 
@@ -573,6 +718,22 @@ const SimpleEditableCell = ({
               }`}
             />
           </div>
+        ) : type === "date" ? (
+          <input
+            ref={inputRef}
+            type="date"
+            value={formatDateForInput(editValue) || ""}
+            onChange={(e) => handleChange(e.target.value)}
+            onKeyDown={handleKeyPress}
+            onBlur={handleBlur}
+            onFocus={() => setIsFocused(true)}
+            onClick={handleDateInputClick}
+            className={`border rounded ${getInputPadding()} py-1 text-xs focus:outline-none w-full bg-white text-[#323A70] transition-colors ${
+              isFocused
+                ? "border-green-500 ring-2 ring-green-500"
+                : "border-[#DADBE5] hover:border-green-400"
+            }`}
+          />
         ) : (
           <input
             ref={inputRef}
@@ -622,11 +783,11 @@ const SimpleEditableCell = ({
             </div>
           ) : (
             <input
-              type={type}
-              value={editValue || ""}
+              type={type === "date" ? "text" : type}
+              value={type === "date" ? formatDateForDisplay(editValue) : (editValue || "")}
               placeholder={placeholder}
               className={`border border-[#DADBE5] rounded ${getInputPadding()} py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors placeholder:text-gray-400`}
-              onClick={handleClick}
+              onClick={type === "date" ? handleClick : handleClick}
               readOnly
             />
           )}

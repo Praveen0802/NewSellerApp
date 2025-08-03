@@ -33,9 +33,9 @@ const AddressList = ({ handleEditClick, handleDeleteClick, item, index }) => {
       <p className="p-3 md:p-4 max-w-[150px] min-h-[120px] w-full text-xs md:text-sm">
         {item?.address}
       </p>
-      <p className="p-3 md:p-4 border-t-[1px] text-xs md:text-sm border-[#eaeaf1]">
+      {/* <p className="p-3 md:p-4 border-t-[1px] text-xs md:text-sm border-[#eaeaf1]">
         {item?.phoneNumber}
-      </p>
+      </p> */}
     </div>
   );
 };

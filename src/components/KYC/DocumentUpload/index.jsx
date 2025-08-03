@@ -26,7 +26,7 @@ const DocumentUpload = ({
   }
 
   return (
-    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors">
+    <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 hover:border-blue-400 transition-colors">
       <input
         ref={fileInputRef}
         type="file"
@@ -38,19 +38,21 @@ const DocumentUpload = ({
       />
       <label
         htmlFor={`upload-${documentType}`}
-        className="cursor-pointer flex flex-col items-center space-y-2"
+        className="cursor-pointer flex items-center justify-center space-x-2"
       >
         {isUploading ? (
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
         ) : (
-          <Upload className="w-6 h-6 text-gray-400" />
+          <Upload className="w-4 h-4 text-gray-400" />
         )}
-        <span className="text-sm font-medium text-gray-600">
-          {isUploading ? "Uploading..." : "Click to upload"}
-        </span>
-        <span className="text-xs text-gray-500">
-          {config.acceptedFormats.replace(/\./g, "").toUpperCase()}
-        </span>
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-gray-600">
+            {isUploading ? "Uploading..." : "Click to upload"}
+          </span>
+          <span className="text-xs text-gray-500">
+            {config.acceptedFormats.replace(/\./g, "").toUpperCase()}
+          </span>
+        </div>
       </label>
     </div>
   );

@@ -6,6 +6,7 @@ export const API_ROUTES = {
   LMT_TRADE_TRACKING: `/purchase/lmt-trade/tracking/history`,
   GET_SALES_COUNT: `/sales/get-sales-count`,
   GET_KYC_STATUS: `/settings/get-user-status`,
+  GET_ADDITIONAL_TEMPLATE:`/settings/add-additional-template`,
   LMT_TRADE_ORDERS: `/purchase/lmt-trade/history`,
   GET_MY_LISTING_OVERVIEW: `/my-listings/overview`,
   GET_MY_LISTING_TICKET_HISTORY: `/my-listings/ticket-history`,

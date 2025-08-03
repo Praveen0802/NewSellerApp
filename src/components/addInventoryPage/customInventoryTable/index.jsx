@@ -581,7 +581,9 @@ const CommonInventoryTable = ({
               {/* Match name with pipe separator */}
               <div
                 className={`flex items-center space-x-2 sm:space-x-4 ${
-                  isMobile ? "py-3 px-2" : "py-4 px-4"
+                  isMobile
+                    ? "py-3 px-2"
+                    : `py-4 ${mode == "single" ? "" : "px-4"}`
                 } border-r-[1px] border-[#51428E] ${
                   isMobile ? "w-[200px]" : "w-[280px]"
                 }`}

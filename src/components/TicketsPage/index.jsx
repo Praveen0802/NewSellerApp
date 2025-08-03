@@ -1017,8 +1017,17 @@ const TicketsPage = (props) => {
         console.error("No ID provided for update");
         return;
       }
+      const key =
+        Object?.keys(updatedParams)[0] == "ticket_type_id"
+          ? "ticket_type"
+          : Object?.keys(updatedParams)[0] == "ticket_category_id"
+          ? "ticket_category"
+          : `${Object?.keys(updatedParams)[0]}`;
+      const params = {
+        [key]: Object?.values(updatedParams)[0],
+      };
 
-      const update = await updateMyListing("", id, updatedParams);
+      const update = await updateMyListing("", id, params);
 
       if (update?.success) {
         // toast.success("Listing updated successfully");
@@ -1426,7 +1435,6 @@ const TicketsPage = (props) => {
       }
     };
   }, []);
-  console.log(ticketsByMatch, "jjjjjjjjjjjj");
   const handleConfirmClick = useCallback((data, index, rowData) => {
     updateCellValues(data, rowData?.s_no);
     setShowUploadPopup({ show: false, rowData: null, rowIndex: null });

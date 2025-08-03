@@ -13,11 +13,69 @@ import FooterButton from "@/components/footerButton";
 import useIsMobile from "@/utils/helperFunctions/useIsmobile";
 import useCountryCodes from "@/Hooks/useCountryCodes";
 
+// Shimmer Component
+const ShimmerField = ({ className = "" }) => (
+  <div className={`animate-pulse ${className}`}>
+    <div className="h-3 bg-gray-200 rounded mb-2 w-1/3"></div>
+    <div className="h-10 bg-gray-200 rounded"></div>
+  </div>
+);
+
+const ShimmerForm = () => (
+  <div className="p-6 flex flex-col gap-5">
+    {/* Address Title Shimmer */}
+    <ShimmerField />
+
+    {/* First Name and Last Name Shimmer */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <ShimmerField />
+      <ShimmerField />
+    </div>
+
+    {/* Email Shimmer */}
+    <ShimmerField />
+
+    {/* Phone Section Shimmer */}
+    <div className="flex space-x-2 w-full">
+      <div className="w-1/4">
+        <ShimmerField />
+      </div>
+      <div className="w-3/4">
+        <ShimmerField />
+      </div>
+    </div>
+
+    {/* Company Name Shimmer */}
+    <ShimmerField />
+
+    {/* Address Lines Shimmer */}
+    <ShimmerField />
+    <ShimmerField />
+    <ShimmerField />
+
+    {/* Country Shimmer */}
+    <ShimmerField />
+
+    {/* City and Zip Code Shimmer */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <ShimmerField />
+      <ShimmerField />
+    </div>
+
+    {/* Checkbox Shimmer */}
+    <div className="flex items-center mt-2">
+      <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+      <div className="ml-2 h-4 bg-gray-200 rounded w-48 animate-pulse"></div>
+    </div>
+  </div>
+);
+
 const AddEditAddress = ({
   onClose,
   type,
   addressDetails = {},
   fetchCountries = [],
+  showShimmer = false, // New prop for shimmer state
 }) => {
   const {
     country = "",
@@ -33,12 +91,12 @@ const AddEditAddress = ({
     address_line3 = "",
     last_name = "",
     mobile_number = "",
-    // address_line1 = "",
     company_name = "",
     email = "",
     country_code: phone_code = "",
   } = addressDetails;
-  console.log(addressDetails, "");
+
+  console.log(addressDetails, "xxxxxxxxxxxxxxxxxxxx");
   const editType = type === "edit";
   const [loader, setLoader] = useState(false);
   const [cityOptions, setCityOptions] = useState([]);
@@ -59,7 +117,33 @@ const AddEditAddress = ({
     zipCode: zip_code,
     is_default: primary_address == 1 ? true : false,
   });
+
   console.log(formFieldValues, cityOptions, "formFieldValues");
+
+  useEffect(() => {
+    if (addressDetails && editType) {
+      setFormFieldValues((prev) => {
+        return {
+          ...prev,
+          first_name: addressDetails?.first_name,
+          last_name: addressDetails?.last_name,
+          company_name: addressDetails?.company_name,
+          address_type: addressDetails?.address_type,
+          email: addressDetails?.email,
+          mobile_number: addressDetails?.mobile_number,
+          phone_code: `+${addressDetails?.country_code}`,
+          address: addressDetails?.address,
+          address_line_2: addressDetails?.address_line2,
+          address_line_3: addressDetails?.address_line3,
+          country: addressDetails?.country_id,
+          city: addressDetails?.city_id,
+          zipCode: addressDetails?.zip_code,
+          is_default: addressDetails?.primary_address == 1 ? true : false,
+        };
+      });
+    }
+  }, [addressDetails]);
+
   const fetchCityDetails = async (id) => {
     if (!id) return;
     try {
@@ -78,16 +162,10 @@ const AddEditAddress = ({
   };
 
   const fetchPhoneCodeOptions = async () => {
-    // const response = await getDialingCode();
-    // const phoneCodeField = response?.data?.map((item) => {
-    //   return {
-    //     value: `${item?.phone_code}`,
-    //     label: `${item?.country_short_name} ${item?.country_code}`,
-    //   };
-    // });
     const { allCountryCodeOptions } = useCountryCodes();
     setPhoneCodeOptions(allCountryCodeOptions);
   };
+
   useEffect(() => {
     fetchPhoneCodeOptions();
   }, []);
@@ -114,7 +192,6 @@ const AddEditAddress = ({
       "first_name",
       "last_name",
       "address",
-      // "email",
       "address_type",
       "mobile_number",
       "phone_code",
@@ -128,6 +205,7 @@ const AddEditAddress = ({
   const countryList = fetchCountries?.map((list) => {
     return { value: `${list?.id}`, label: list?.name };
   });
+
   const fieldStyle =
     "w-full rounded-md border border-gray-300 p-3 text-gray-700 focus:border-indigo-300 focus:ring-1 focus:ring-indigo-300 focus:outline-none transition-all duration-200";
 
@@ -196,7 +274,6 @@ const AddEditAddress = ({
         label: "Email",
         type: "email",
         id: "email",
-        // mandatory: true,
         name: "email",
         value: formFieldValues?.email,
         onChange: (e) => handleChange(e, "email"),
@@ -284,7 +361,6 @@ const AddEditAddress = ({
           : null,
       },
     ],
-
     [
       {
         label: "Address Line 1",
@@ -460,74 +536,89 @@ const AddEditAddress = ({
         </button>
       </div>
 
-      <div className="p-6 flex flex-col gap-5 overflow-y-auto h-full">
-        {/* Address Title */}
-        <div className="w-full">
-          <FormFields formFields={addressFormFields[0]} />
-        </div>
-        {/* First Name and Last Name */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormFields formFields={[addressFormFields[1][0]]} />
-          <FormFields formFields={[addressFormFields[1][1]]} />
-        </div>
+      {/* Conditional rendering: Show shimmer or actual form */}
+      {showShimmer ? (
+        <ShimmerForm />
+      ) : (
+        <div className="p-6 flex flex-col gap-5 overflow-y-auto h-full">
+          {/* Address Title */}
+          <div className="w-full">
+            <FormFields formFields={addressFormFields?.[0]} />
+          </div>
+          {/* First Name and Last Name */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormFields formFields={[addressFormFields[1][0]]} />
+            <FormFields formFields={[addressFormFields[1][1]]} />
+          </div>
 
-        {/* Company Name */}
-        <div className="w-full">
-          <FormFields formFields={addressFormFields[2]} />
-        </div>
+          {/* Email */}
+          <div className="w-full">
+            <FormFields formFields={addressFormFields[2]} />
+          </div>
 
-        {/* Address Line 1 */}
-        <div className="w-full">
-          <FormFields formFields={addressFormFields[3]} />
-        </div>
+          {/* Phone */}
+          <div className="w-full">
+            <FormFields formFields={addressFormFields[3]} />
+          </div>
 
-        {/* Address Line 2 */}
-        <div className="w-full">
-          <FormFields formFields={addressFormFields[4]} />
-        </div>
+          {/* Company Name */}
+          <div className="w-full">
+            <FormFields formFields={addressFormFields[4]} />
+          </div>
 
-        {/* Address Line 3 */}
-        <div className="w-full">
-          <FormFields formFields={addressFormFields[5]} />
-        </div>
+          {/* Address Line 1 */}
+          <div className="w-full">
+            <FormFields formFields={addressFormFields[5]} />
+          </div>
 
-        {/* Country */}
-        <div className="w-full">
-          <FormFields formFields={addressFormFields[6]} />
-        </div>
-        <div className="w-full">
-          <FormFields formFields={addressFormFields[7]} />
-        </div>
-        <FormFields formFields={[addressFormFields[8][0]]} />
-        {/* City and Zip Code */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormFields formFields={[addressFormFields[9][0]]} />
-          <FormFields formFields={[addressFormFields[9][1]]} />
-        </div>
+          {/* Address Line 2 */}
+          <div className="w-full">
+            <FormFields formFields={addressFormFields[6]} />
+          </div>
 
-        <div className="flex items-center mt-2 cursor-pointer">
-          <input
-            type="checkbox"
-            id="is_default"
-            checked={formFieldValues.is_default}
-            onChange={handleCheckboxChange}
-            className="h-4 w-4 text-green-500 focus:ring-green-500 border-gray-300 rounded"
-          />
-          <label
-            htmlFor="is_default"
-            className="ml-2 cursor-pointer text-sm text-gray-700"
-          >
-            Use as default address?
-          </label>
-        </div>
-      </div>
+          {/* Address Line 3 */}
+          <div className="w-full">
+            <FormFields formFields={addressFormFields[7]} />
+          </div>
 
-      <FooterButton
-        isFormValid={isFormValid}
-        onClose={() => onClose({ submit: false })}
-        handleSubmit={handleSubmit}
-        loader={loader}
-      />
+          {/* Country */}
+          <div className="w-full">
+            <FormFields formFields={addressFormFields[8]} />
+          </div>
+
+          {/* City and Zip Code */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormFields formFields={[addressFormFields[9][0]]} />
+            <FormFields formFields={[addressFormFields[9][1]]} />
+          </div>
+
+          <div className="flex items-center mt-2 cursor-pointer">
+            <input
+              type="checkbox"
+              id="is_default"
+              checked={formFieldValues.is_default}
+              onChange={handleCheckboxChange}
+              className="h-4 w-4 text-green-500 focus:ring-green-500 border-gray-300 rounded"
+            />
+            <label
+              htmlFor="is_default"
+              className="ml-2 cursor-pointer text-sm text-gray-700"
+            >
+              Use as default address?
+            </label>
+          </div>
+        </div>
+      )}
+
+      {/* Footer Button - Only show when not in shimmer state */}
+      {!showShimmer && (
+        <FooterButton
+          isFormValid={isFormValid}
+          onClose={() => onClose({ submit: false })}
+          handleSubmit={handleSubmit}
+          loader={loader}
+        />
+      )}
     </div>
   );
 };

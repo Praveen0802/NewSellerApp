@@ -90,7 +90,6 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
   const [listValueData, setListvalueData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  console.log(matchInfo, "matchInfomatchInfomatchInfo");
   const getInsightsData = async () => {
     try {
       setIsLoading(true);
@@ -100,7 +99,6 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
         match_id: matchInfo?.match_id,
       });
 
-      console.log(res, "res");
       setListvalueData(res);
     } catch (err) {
       console.error("Error fetching insights:", err);
@@ -342,9 +340,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
                   return (
                     <div
                       key={item.ticket_id || index}
-                      className={`grid grid-cols-6 border-b border-gray-200 hover:bg-gray-50 ${
-                        item.flag === 1 ? "bg-blue-50" : ""
-                      }`}
+                      className={`grid grid-cols-6 border-b border-gray-200 hover:bg-gray-50 `}
                     >
                       <div className="p-3 text-sm">{item.block_id || "-"}</div>
                       <div className="p-3 text-sm">-</div>

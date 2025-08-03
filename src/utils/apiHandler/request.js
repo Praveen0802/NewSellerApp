@@ -550,6 +550,20 @@ export const getKYCStatus = async (token) => {
   }
 }
 
+
+export const getAdditionalTemplate = async (token) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_ADDITIONAL_TEMPLATE,
+      method: "GET",
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getSalesCount", error);
+  }
+}
+
 export const dashboardAwaitingDelivery = async (token, params) => {
   try {
     const response = await makeRequest({
