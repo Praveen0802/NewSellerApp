@@ -28,10 +28,9 @@ const SecureLayout = ({ children }) => {
   const hideHeader = hideHeaderPages?.includes(router?.pathname);
   const dispatch = useDispatch();
   const { pageLoader } = useSelector((state) => state.pageLoader);
-  const { addWalletflag, confirmPurchasePopupFields } = useSelector(
+  const { addWalletflag, confirmPurchasePopupFields, userRoles } = useSelector(
     (state) => state.common
   );
-
   useEffect(() => {
     // dispatch(showpageLoader());
     const handleStart = () => dispatch(showpageLoader());
@@ -59,10 +58,13 @@ const SecureLayout = ({ children }) => {
   };
   const getUserKYCStatus = async () => {
     const response = await getKYCStatus();
-    console.log(response?.kyc_status == 0,response,'response?.kyc_status == 0response?.kyc_status == 0')
-    // if (response?.kyc_status == 0 && window.location.pathname != '/settings/kyc') {
-    //   router.push("/settings/kyc?handle=true");
-    // }
+    if (
+      response?.kyc_status == 1 &&
+      window.location.pathname != "/settings/kyc" &&
+      userRoles?.user_type == "sellers"
+    ) {
+      router.push("/settings/kyc?handle=true");
+    }
   };
 
   useEffect(() => {

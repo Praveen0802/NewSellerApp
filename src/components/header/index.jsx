@@ -55,7 +55,7 @@ const Header = () => {
     } else {
       return (
         <>
-          Welcome,
+          Welcome
           <span className="capitalize">
             {currentUser?.first_name ? `, ${currentUser?.first_name}` : ""}
           </span>

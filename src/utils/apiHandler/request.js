@@ -532,7 +532,6 @@ export const getSalesCount = async (token) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in getSalesCount", error);
-    throw error;
   }
 }
 

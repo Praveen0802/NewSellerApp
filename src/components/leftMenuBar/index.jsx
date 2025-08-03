@@ -971,7 +971,7 @@ const LeftMenuBar = () => {
     },
   ];
 
-  const leftPaneValues = [
+  const leftFullPaneValues = [
     {
       image: showFullDisplay ? "" : arrowRight,
       icon: <LeftArrowIcon className="size-4 stroke-white" />,
@@ -1052,43 +1052,44 @@ const LeftMenuBar = () => {
     },
   ];
 
-  // function filterLeftPaneByAccess(leftPaneValues, userRoles = []) {
-  //   // Handle null/undefined inputs
-  //   if (!leftPaneValues || !Array.isArray(leftPaneValues)) {
-  //     return [];
-  //   }
 
-  //   if (!userRoles || !Array.isArray(userRoles)) {
-  //     userRoles = [];
-  //   }
+  function filterLeftPaneByAccess(leftPaneValues, userRoles = []) {
+    // Handle null/undefined inputs
+    if (!leftPaneValues || !Array.isArray(leftPaneValues)) {
+      return [];
+    }
 
-  //   // Create a lookup object for faster access checking
-  //   const accessLookup = userRoles.reduce((acc, role) => {
-  //     // Handle null/undefined role or role.name
-  //     if (role && role.name) {
-  //       acc[role.name] = role.is_can_access === 1;
-  //     }
-  //     return acc;
-  //   }, {});
+    if (!userRoles || !Array.isArray(userRoles)) {
+      userRoles = [];
+    }
 
-  //   // Filter the left pane values
-  //   return leftPaneValues.filter((item) => {
-  //     // Handle null/undefined item
-  //     if (!item) {
-  //       return false;
-  //     }
+    // Create a lookup object for faster access checking
+    const accessLookup = userRoles.reduce((acc, role) => {
+      // Handle null/undefined role or role.name
+      if (role && role.name) {
+        acc[role.name] = role.is_can_access === 1;
+      }
+      return acc;
+    }, {});
 
-  //     // If no canAccessKey is specified, include the item
-  //     if (!item.canAccessKey) {
-  //       return true;
-  //     }
+    // Filter the left pane values
+    return leftPaneValues.filter((item) => {
+      // Handle null/undefined item
+      if (!item) {
+        return false;
+      }
 
-  //     // Check if user has access to this item
-  //     return accessLookup[item.canAccessKey] === true;
-  //   });
-  // }
+      // If no canAccessKey is specified, include the item
+      if (!item.canAccessKey) {
+        return true;
+      }
 
-  // const leftPaneValues = filterLeftPaneByAccess(leftFullPaneValues, userRoles);
+      // Check if user has access to this item
+      return accessLookup[item.canAccessKey] === true;
+    });
+  }
+
+  const leftPaneValues = filterLeftPaneByAccess(leftFullPaneValues, userRoles?.permission);
 
   const router = useRouter();
   const isMobile = useIsMobile();
