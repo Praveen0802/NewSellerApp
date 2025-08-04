@@ -89,7 +89,7 @@ const LoginForm = () => {
           const {
             first_name,
             last_name,
-            kyc_status,
+            kyc_status = 0,
             token: authToken,
           } = response;
           if (authToken) {
@@ -102,6 +102,9 @@ const LoginForm = () => {
               currentTimeEpochTimeInMilliseconds()
             );
             setCookie("user_token", response?.user_id);
+            let redirectPath =
+              kyc_status == 0 ? "/kyc-verification" : "/dashboard";
+            //TODO : add check for kyc status
             router.push("/dashboard");
           } else {
             const errorMessage =
