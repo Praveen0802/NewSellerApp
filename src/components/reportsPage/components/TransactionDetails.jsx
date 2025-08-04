@@ -244,10 +244,10 @@ const TransactionDetailsPopup = ({
   const tableHeaders = useMemo(
     () => [
       "Booking ID",
-      "Match Details",
+      "Match Name",
       "Customer",
-      "Type",
-      "Quantity",
+      "Ticket Type",
+      "Qty",
       "Amount",
       "Status",
     ],

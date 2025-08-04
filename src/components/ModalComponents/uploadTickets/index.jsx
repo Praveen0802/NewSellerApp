@@ -30,6 +30,7 @@ import { max, set } from "lodash";
 import AdditionalInfoSection from "./AdditionalInfo";
 import QRLinksSection from "./QRLinkSection";
 import PaperTicketCourierSection from "./paperTicketCourierSection";
+import TemplateContentRenderer from "./templateContent";
 
 const UploadTickets = ({
   show,
@@ -41,7 +42,6 @@ const UploadTickets = ({
   handleConfirmClick,
   myListingPage = false,
 }) => {
-
   const proofUploadView = rowData?.handleProofUpload || false;
 
   const ticketTypes = !isNaN(parseInt(rowData?.ticket_type))
@@ -226,6 +226,19 @@ const UploadTickets = ({
     [proofUploadView]
   );
 
+  const [selectedTemplateData, setSelectedTemplateData] = useState({
+    templateName: "",
+    templateContent: "",
+    selectedTemplate: null,
+  });
+
+  // ... existing useEffect and other functions
+
+  // New function to handle template selection from AdditionalInfoSection
+  const handleTemplateSelection = useCallback((templateData) => {
+    setSelectedTemplateData(templateData);
+  }, []);
+
   // Enhanced handleRemoveFromSlot for proof upload
   const handleRemoveFromSlot = useCallback(
     (slotIndex) => {
@@ -332,7 +345,6 @@ const UploadTickets = ({
       hasPartialUploads,
     ]
   );
-
 
   const additionalInfoRef = useRef();
   const qrLinksRef = useRef();
@@ -718,9 +730,35 @@ const UploadTickets = ({
             )}
           </>
         ) : ETicketsFlow ? (
-          <ETicketInfoSection />
+          <>
+            <ETicketInfoSection />
+            {/* Template Content Preview for E-Tickets */}
+            {selectedTemplateData.templateContent && (
+              <TemplateContentRenderer
+                templateContent={selectedTemplateData.templateContent}
+                dynamicContent={
+                  additionalInfoRef.current?.getCurrentData()?.dynamicContent ||
+                  ""
+                }
+                className="mt-4"
+              />
+            )}
+          </>
         ) : paperTicketFlow ? (
-          <PaperTicketInfoSection />
+          <>
+            <PaperTicketInfoSection />
+            {/* Template Content Preview for Paper Tickets */}
+            {selectedTemplateData.templateContent && (
+              <TemplateContentRenderer
+                templateContent={selectedTemplateData.templateContent}
+                dynamicContent={
+                  additionalInfoRef.current?.getCurrentData()?.dynamicContent ||
+                  ""
+                }
+                className="mt-4"
+              />
+            )}
+          </>
         ) : (
           <>
             <FileUploadSection />
@@ -732,6 +770,17 @@ const UploadTickets = ({
                     : "Upload Instructions"
                 }
                 instructions={instructions}
+              />
+            )}
+            {/* Template Content Preview for Normal Flow */}
+            {selectedTemplateData.templateContent && (
+              <TemplateContentRenderer
+                templateContent={selectedTemplateData.templateContent}
+                dynamicContent={
+                  additionalInfoRef.current?.getCurrentData()?.dynamicContent ||
+                  ""
+                }
+                className="mt-4"
               />
             )}
           </>
@@ -805,7 +854,6 @@ const UploadTickets = ({
                               <Eye className="w-3 h-3" />
                             </button>
                           )}
-                          
                         </div>
                       </div>
                     ) : (
@@ -867,6 +915,7 @@ const UploadTickets = ({
                 ref={additionalInfoRef}
                 paperTicketFlow={paperTicketFlow}
                 initialData={null}
+                onTemplateSelect={handleTemplateSelection} // Pass the handler
               />
             )}
           </>
@@ -878,6 +927,7 @@ const UploadTickets = ({
                 ref={additionalInfoRef}
                 paperTicketFlow={paperTicketFlow}
                 initialData={null}
+                onTemplateSelect={handleTemplateSelection} // Pass the handler
               />
             )}
           </>
@@ -889,6 +939,7 @@ const UploadTickets = ({
                 ref={additionalInfoRef}
                 paperTicketFlow={paperTicketFlow}
                 initialData={null}
+                onTemplateSelect={handleTemplateSelection} // Pass the handler
               />
             )}
           </>
@@ -902,6 +953,7 @@ const UploadTickets = ({
                 ref={additionalInfoRef}
                 paperTicketFlow={paperTicketFlow}
                 initialData={null}
+                onTemplateSelect={handleTemplateSelection} // Pass the handler
               />
             )}
           </>
@@ -1082,12 +1134,15 @@ const UploadTickets = ({
   };
 
   const handleConfirmCtaClick = useCallback(async () => {
-    const currentAdditionalInfo =
-      additionalInfoRef.current?.getCurrentData() || {
-        template: "",
-        dynamicContent: "",
-      };
+    const additionalData = additionalInfoRef.current?.getCurrentData() || {
+      template: "",
+      dynamicContent: "",
+    };
 
+    const currentAdditionalInfo = {
+      template: selectedTemplateData?.templateName,
+      dynamicContent: additionalData?.dynamicContent,
+    };
     const currentQRLinks = qrLinksRef.current?.getCurrentData() || [];
 
     const currentPaperTicketData =

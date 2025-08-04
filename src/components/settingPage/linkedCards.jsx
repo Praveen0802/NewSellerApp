@@ -1,137 +1,230 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { toast } from "react-toastify";
 import {
   getLinkedCards,
-  getPaymentDetails,
-  removeLinkedCard,
-  storePaymentMethod,
+  paymentConfig,
+  removeSavedCards,
 } from "@/utils/apiHandler/request";
-import { readCookie } from "@/utils/helperFunctions/cookie";
-import { toast } from "react-toastify";
-import Image from "next/image";
+import { Trash2 } from "lucide-react";
+import DeleteConfirmation from "../commonComponents/deleteConfirmation";
 
 const LinkedCards = (props) => {
-  const [savedCards, setSavedCards] = useState(props?.linkedCards?.data);
+  const [savedCards, setSavedCards] = useState(
+    props?.linkedCards?.data?.linked_cards || []
+  );
   const [isLoading, setIsLoading] = useState(false);
-  const [adyenLoaded, setAdyenLoaded] = useState(false);
+  const [stripeLoaded, setStripeLoaded] = useState(false);
   const [showAddCard, setShowAddCard] = useState(false);
-  const adyenInitializedRef = useRef(false);
-  const shopperReference = props?.shopperRefernce;
+  const [deleteConfirmPopup, setDeleteConfirmPopup] = useState(false); // Add delete confirmation state
+  const [deleteCardId, setDeleteCardId] = useState(null); // Add state to store card ID to be deleted
+  const [deleteLoader, setDeleteLoader] = useState(false); // Add delete loader state
+  const stripeRef = useRef(null);
+  const elementsRef = useRef(null);
+  const cardElementRef = useRef(null);
+  const stripeInitializedRef = useRef(false);
 
-  const getAuthToken = () => `Bearer ${readCookie("auth_token")}`;
-
+  // Load Stripe SDK
   useEffect(() => {
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href =
-      "https://checkoutshopper-test.adyen.com/checkoutshopper/sdk/5.16.0/adyen.css";
-    document.head.appendChild(link);
-
     const script = document.createElement("script");
-    script.src =
-      "https://checkoutshopper-test.adyen.com/checkoutshopper/sdk/5.16.0/adyen.js";
-    script.onload = () => setAdyenLoaded(true);
-    script.onerror = (err) => console.error("Adyen load error", err);
+    script.src = "https://js.stripe.com/v3/";
+    script.onload = () => {
+      stripeRef.current = window.Stripe(process.env.STRIPE_PUBLIC_KEY);
+      setStripeLoaded(true);
+    };
+    script.onerror = (err) => console.error("Stripe load error", err);
     document.head.appendChild(script);
 
     return () => {
-      document.head.removeChild(link);
-      document.head.removeChild(script);
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
     };
   }, []);
 
+  // Fetch saved cards from API
   const fetchSavedCards = useCallback(async () => {
     try {
-      const cards = await getLinkedCards("", "", shopperReference);
-      if (cards.success) setSavedCards(cards.data);
+      const response = await getLinkedCards();
+
+      const result = response;
+      if (result.success) {
+        setSavedCards(result.data.linked_cards);
+      }
     } catch (err) {
       console.error("Error fetching cards", err);
+      toast.error("Failed to fetch saved cards");
     }
-  }, []);
+  }, [props?.email]);
 
-  const removeSavedCard = async (recurringDetailReference) => {
+  // Handle delete click - show confirmation popup
+  const handleDeleteClick = (paymentMethodId) => {
+    setDeleteCardId(paymentMethodId);
+    setDeleteConfirmPopup(true);
+  };
+
+  // Handle the actual delete operation
+  const handleDeleteCard = async () => {
+    if (!deleteCardId) return;
+
+    setDeleteLoader(true);
     try {
-      const result = await removeLinkedCard("", {
-        recurringDetailReference,
-        shopperReference,
+      const response = await removeSavedCards("", {
+        gateway: "stripe",
+        card_id: deleteCardId,
       });
 
-      if (result.success) {
+      if (response.success) {
         fetchSavedCards();
         toast.success("Card removed successfully!");
+        setDeleteConfirmPopup(false);
+        setDeleteCardId(null);
+      } else {
+        toast.error(response.error || "Failed to remove card");
       }
     } catch (err) {
       console.error("Remove card error", err);
+      toast.error("Error removing card");
+    } finally {
+      setDeleteLoader(false);
     }
   };
 
-  const initializeAdyen = useCallback(async () => {
-    if (isLoading || !adyenLoaded || adyenInitializedRef.current) return;
+  // Handle closing delete confirmation popup
+  const handleCloseDeleteConfirm = () => {
+    setDeleteConfirmPopup(false);
+    setDeleteCardId(null);
+  };
+
+  // Get card logo URL based on brand
+  const getCardLogoUrl = (brand) => {
+    const brandMap = {
+      visa: "visa.png",
+      mastercard: "mastercard-logo.png",
+      amex: "amex.png",
+      discover: "discover.png",
+      diners: "diners-club.png",
+      jcb: "jcb.png",
+      unionpay: "unionpay.png",
+    };
+
+    const slug = brand.toLowerCase();
+    const fileName = brandMap[slug] || "bank-card-back-side.png";
+    return `https://img.icons8.com/color/48/${fileName}`;
+  };
+
+  // Initialize Stripe Elements
+  const initializeStripe = useCallback(async () => {
+    if (
+      isLoading ||
+      !stripeLoaded ||
+      stripeInitializedRef.current ||
+      !stripeRef.current
+    )
+      return;
+
     setIsLoading(true);
-    adyenInitializedRef.current = true;
+    stripeInitializedRef.current = true;
 
     try {
-      const container = document.getElementById("dropin-container");
-      if (container) container.innerHTML = "";
+      // Get payment config for setup intent
+      const response = await paymentConfig("", {
+        gateway: "stripe",
+      });
 
-      const config = await getPaymentDetails();
-      if (!config?.clientKey || !config?.paymentMethods)
-        throw new Error("Invalid config");
+      const config = response;
+      if (!config.data?.client_secret) {
+        throw new Error("Invalid config response");
+      }
 
-      const checkout = await window.AdyenCheckout({
-        environment: "test",
-        clientKey: config.clientKey,
-        paymentMethodsResponse: config.paymentMethods,
-        merchantOrigin: window.location.origin,
-        showPayButton: true,
-        translations: { en_US: { payButton: "Link Card" } },
-        onSubmit: async (state, component) => {
-          try {
-            const payload = {
-              paymentMethod: {
-                ...state.data.paymentMethod,
-                holderName: state.data.paymentMethod.holderName || "Unknown",
-                billingAddress: {
-                  country:
-                    state.data.paymentMethod.billingAddress?.country || "US",
-                },
-              },
-              shopperReference,
-            };
-            const result = await storePaymentMethod("", payload);
-            if (result.success) {
-              alert("Card linked successfully!");
-              component.setStatus("success");
-              fetchSavedCards();
-              setShowAddCard(false);
-              adyenInitializedRef.current = false;
-            } else {
-              alert("Failed to link card");
-              component.setStatus("error");
-            }
-          } catch (err) {
-            console.error("onSubmit error", err);
-            component.setStatus("error");
-          }
+      // Create Stripe Elements
+      elementsRef.current = stripeRef.current.elements();
+      cardElementRef.current = elementsRef.current.create("card", {
+        hidePostalCode: true,
+        style: {
+          base: {
+            fontSize: "16px",
+            color: "#424770",
+            "::placeholder": {
+              color: "#aab7c4",
+            },
+          },
         },
       });
 
-      checkout.create("card").mount("#dropin-container");
+      // Mount card element
+      const container = document.getElementById("stripe-card-element");
+      if (container) {
+        container.innerHTML = "";
+        cardElementRef.current.mount("#stripe-card-element");
+      }
+
+      // Handle card validation errors
+      cardElementRef.current.on("change", (event) => {
+        const displayError = document.getElementById("card-errors");
+        if (displayError) {
+          displayError.textContent = event.error ? event.error.message : "";
+        }
+      });
     } catch (err) {
-      console.error("Adyen init error", err);
+      console.error("Stripe init error", err);
+      toast.error("Failed to initialize payment form");
     } finally {
       setIsLoading(false);
     }
-  }, [adyenLoaded, fetchSavedCards, isLoading]);
+  }, [stripeLoaded, props?.email]);
 
-  useEffect(() => {
-    if (showAddCard && adyenLoaded && !adyenInitializedRef.current) {
-      initializeAdyen();
+  // Handle card saving
+  const handleSaveCard = async () => {
+    if (!stripeRef.current || !cardElementRef.current) return;
+
+    setIsLoading(true);
+    try {
+      // Get setup intent client secret
+      const response = await paymentConfig({ gateway: "stripe" });
+
+      const config = await response;
+      const { client_secret } = config.data;
+
+      // Confirm card setup
+      const result = await stripeRef.current.confirmCardSetup(client_secret, {
+        payment_method: {
+          card: cardElementRef.current,
+          billing_details: {
+            name: props?.customerName || "Customer",
+          },
+        },
+      });
+
+      if (result.error) {
+        toast.error("Error saving card: " + result.error.message);
+      } else {
+        toast.success("Card saved successfully!");
+        fetchSavedCards();
+        setShowAddCard(false);
+        stripeInitializedRef.current = false;
+      }
+    } catch (err) {
+      console.error("Save card error", err);
+      toast.error("Failed to save card");
+    } finally {
+      setIsLoading(false);
     }
-  }, [showAddCard, adyenLoaded, initializeAdyen]);
+  };
+
+  // Initialize Stripe when add card is shown
+  useEffect(() => {
+    if (showAddCard && stripeLoaded && !stripeInitializedRef.current) {
+      initializeStripe();
+    }
+  }, [showAddCard, stripeLoaded, initializeStripe]);
 
   const handleCancelClick = () => {
     setShowAddCard(false);
-    adyenInitializedRef.current = false;
+    stripeInitializedRef.current = false;
+    if (cardElementRef.current) {
+      cardElementRef.current.unmount();
+      cardElementRef.current = null;
+    }
   };
 
   return (
@@ -140,92 +233,66 @@ const LinkedCards = (props) => {
         Linked Cards
       </p>
       <div className="bg-white p-3 sm:p-4 border-[1px] flex flex-col gap-3 sm:gap-4 border-[#eaeaf1] w-full h-full">
-        <div className="md:w-[40%]">
+        <div className="">
           {savedCards?.length > 0 ? (
-            <div className="mb-6">
+            <div className="mb-6 grid grid-cols-2 gap-4">
               {savedCards?.map((card, index) => {
-                const info = card.RecurringDetail;
-                const cardType = info.variant || "Mastercard";
-                const lastFour = info.card.number || "XXXX";
+                const cardInfo = card.card;
+                const cardType = cardInfo.brand || "visa";
+                const lastFour = cardInfo.last4 || "XXXX";
+                const logoUrl = getCardLogoUrl(cardType);
+
                 return (
                   <div
-                    key={index}
+                    key={card.id}
                     className="border border-gray-200 rounded-md p-4 mb-2"
                   >
-                    <div className="font-medium mb-2 flex gap-2 items-center">
-                      <Image
-                        src={`https://cdf6519016.cdn.adyen.com/checkoutshopper/images/logos/${card?.RecurringDetail?.variant}.svg`}
-                        alt="Card Image"
-                        width={50}
-                        height={50}
-                        className="h-full"
-                      />
-                      {cardType}
+                    <div className="flex justify-between items-center">
+                      <div className="font-medium mb-2 flex gap-2 items-center">
+                        <img
+                          src={logoUrl}
+                          alt={`${cardType} logo`}
+                          width={50}
+                          height={32}
+                          className="h-8 w-12 object-contain"
+                          onError={(e) => {
+                            e.target.src =
+                              "https://img.icons8.com/ios-filled/50/bank-card-back-side.png";
+                          }}
+                        />
+                        {cardType.toUpperCase()}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteClick(card.id)} // Updated to use handleDeleteClick
+                        className="mt-2 text-sm text-red-600 hover:text-red-800 cursor-pointer flex items-center gap-1 transition-colors duration-200"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                     <div className="text-gray-600 text-sm">
                       <div>Card details</div>
                       <div>•••• •••• •••• {lastFour}</div>
+                      <div>
+                        Expires: {cardInfo.exp_month}/{cardInfo.exp_year}
+                      </div>
                     </div>
-                    <button
-                      onClick={() =>
-                        removeSavedCard(
-                          card?.RecurringDetail?.recurringDetailReference
-                        )
-                      }
-                      className="mt-2 text-sm  cursor-pointer  flex items-center gap-1 transition-colors duration-200"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="10"
-                        height="12.5"
-                        viewBox="0 0 10 12.5"
-                        className="w-2.5 h-[.8125rem]"
-                      >
-                        <g
-                          id="Group_24"
-                          data-name="Group 24"
-                          transform="translate(-433.5 -128.5)"
-                        >
-                          <path
-                            id="Rectangle_71"
-                            data-name="Rectangle 71"
-                            d="M0,0H9A0,0,0,0,1,9,0V8A1,1,0,0,1,8,9H1A1,1,0,0,1,0,8V0A0,0,0,0,1,0,0Z"
-                            transform="translate(434 132)"
-                          ></path>
-                          <rect
-                            id="Rectangle_72"
-                            data-name="Rectangle 72"
-                            width="10"
-                            height="1.5"
-                            transform="translate(433.5 129.5)"
-                          ></rect>
-                          <rect
-                            id="Rectangle_73"
-                            data-name="Rectangle 73"
-                            width="5"
-                            height="2"
-                            transform="translate(436 128.5)"
-                          ></rect>
-                        </g>
-                      </svg>
-                    </button>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="border border-gray-200 rounded-md p-4 mb-6 text-gray-600">
+            <div className="border md:w-[40%]  border-gray-200 rounded-md p-4 mb-6 text-gray-600">
               <p>No saved cards</p>
             </div>
           )}
 
           <button
             onClick={() => {
-              adyenInitializedRef.current = false;
+              stripeInitializedRef.current = false;
               setShowAddCard(true);
             }}
-            className="flex items-center cursor-pointer justify-center gap-2 bg-purple-700 text-white py-2 px-4 rounded-md text-sm"
-            disabled={isLoading || !adyenLoaded}
+            className="flex items-center cursor-pointer justify-center gap-2 bg-purple-700 text-white py-2 px-4 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading || !stripeLoaded}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -241,10 +308,10 @@ const LinkedCards = (props) => {
               <rect x="3" y="5" width="18" height="14" rx="2" />
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
-            Add card
+            {isLoading ? "Loading..." : "Add card"}
           </button>
 
-          {/* Keep the rest of your code for adding a new card */}
+          {/* Add Card Form */}
           {showAddCard && (
             <div className="bg-white border border-gray-200 rounded-lg p-6 mt-6">
               <div className="flex justify-between items-center mb-5">
@@ -253,10 +320,7 @@ const LinkedCards = (props) => {
                 </h3>
                 <button
                   className="p-2 text-gray-500 hover:bg-gray-100 cursor-pointer rounded-full"
-                  onClick={() => {
-                    setShowAddCard(false);
-                    adyenInitializedRef.current = false;
-                  }}
+                  onClick={handleCancelClick}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -275,13 +339,54 @@ const LinkedCards = (props) => {
                 </button>
               </div>
 
-              <div id="dropin-container" className="mb-6"></div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Card Information
+                </label>
+                <div
+                  id="stripe-card-element"
+                  className="p-3 border border-gray-300 rounded-md"
+                ></div>
+                <div
+                  id="card-errors"
+                  className="text-red-600 text-sm mt-2"
+                  role="alert"
+                ></div>
+              </div>
 
-              {/* Keep existing cancel button and encryption message */}
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSaveCard}
+                  disabled={isLoading}
+                  className="flex-1 bg-purple-700 text-white py-2 px-4 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? "Saving..." : "Save Card"}
+                </button>
+                <button
+                  onClick={handleCancelClick}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              <div className="mt-4 text-xs text-gray-500">
+                <p>Your card information is encrypted and secure.</p>
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmPopup && (
+        <DeleteConfirmation
+          content="Are you sure you want to remove this saved card?"
+          handleClose={handleCloseDeleteConfirm}
+          handleDelete={handleDeleteCard}
+          loader={deleteLoader}
+        />
+      )}
     </div>
   );
 };

@@ -31,7 +31,7 @@ import {
 
 const DashboardPage = (props) => {
   const [resultData, setResultData] = useState(props?.response);
-
+console.log(props,'propsprops')
   const [loader, setLoader] = useState({
     salesOverView: false,
     awaitingDelivery: false,
@@ -251,6 +251,7 @@ const DashboardPage = (props) => {
     }
   };
 
+
   const listValues = [
     {
       title: "Sales",
@@ -291,12 +292,14 @@ const DashboardPage = (props) => {
       title: "Awaiting Delivery",
       keyValue: "awaitingDelivery",
       options: [
+        { value: "today", label: "Today" },
         { value: "past_events", label: "Past Events" },
         { value: "next_24hours", label: "Events in next 24 hours" },
         { value: "next_48hours", label: "Events in next 48 hours" },
         { value: "next_7days", label: "Events in next 7 days" },
         { value: "next_14days", label: "Events in next 14 days" },
         { value: "next_30days", label: "Events in next 30 days" },
+        
         { value: "next_180days", label: "Events in next 6 months" },
       ],
       selectedOption: filters?.awaitingDelivery,
@@ -307,7 +310,7 @@ const DashboardPage = (props) => {
         {
           image: Pound,
           text: "Orders",
-          count: resultData?.awaitingDelivery?.orders_count || 0,
+          count: resultData?.awaitingDelivery?.order_count || 0,
         },
         {
           image: Shopping,

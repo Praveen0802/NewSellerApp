@@ -14,7 +14,7 @@ const TopPopupModal = ({ bankAccountDetails }) => {
     accountName: bankAccountDetails?.bank_account_details?.account_name,
     iban: bankAccountDetails?.bank_account_details?.iban,
     swift: bankAccountDetails?.bank_account_details?.swiftcode || "-",
-    refernce: bankAccountDetails?.reference,
+    refernce: bankAccountDetails?.bank_account_details?.reference,
     note: "Please include the reference when making the bank transfer. This ensures your funds are transferred directly to your SB pay wallet",
     fundingAccount: {
       name: "first Abu Dhabi Bank",

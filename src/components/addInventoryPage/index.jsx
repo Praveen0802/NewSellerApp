@@ -104,7 +104,6 @@ const AddInventoryPage = (props) => {
   const [showTable, setShowTable] = useState(false);
 
   const router = useRouter();
-
   const [filtersApplied, setFiltersApplied] = useState({});
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
@@ -1120,7 +1119,6 @@ const AddInventoryPage = (props) => {
 
       // Construct FormData for multiple rows
       const formData = constructFormDataAsFields(selectedRowsData);
-      console.log(formData, "formDataformData");
       if (selectedRows?.length > 1) {
         await saveBulkListing("", formData);
       } else {
@@ -1136,7 +1134,6 @@ const AddInventoryPage = (props) => {
       setLoader(false);
     }
   };
-  console.log("matchDetails?.ship_date", filtersApplied?.ship_date?.startDate);
   // Function to create inventory item from filter values
   const createInventoryItemFromFilters = () => {
     const newItem = {

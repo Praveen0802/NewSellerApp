@@ -42,6 +42,7 @@ import {
   purchaseEvents,
   purchaseHistory,
   purchaseTracking,
+  reportFilters,
   reportHistory,
   reportsOverview,
   topSellingEvents,
@@ -105,11 +106,10 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
       ]);
       return { userDetails, fetchCountries };
     } else if (profile == "linkedCards") {
-      const shopperRefernce = ctx?.req?.cookies?.user_token;
+      // const shopperRefernce = ctx?.req?.cookies?.user_token;
 
-      const linkedCards = await getLinkedCards(token, "", shopperRefernce);
-
-      return { linkedCards, shopperRefernce };
+      const linkedCards = await getLinkedCards(token, "");
+      return { linkedCards };
     } else if (profile == "ticketDelivery") {
       const partnerDetails = await getPartnerSetting(token);
       return { partnerDetails };
@@ -314,11 +314,13 @@ export const fetchTradePageData = async (tradeType, token, matchId) => {
 };
 
 export const reportHistoryData = async (token) => {
-  const [reportsOverviewData, reportHistoryData] = await Promise.allSettled([
-    reportsOverview(token),
-    reportHistory(token),
-  ]);
-  return { reportsOverviewData, reportHistoryData };
+  const [reportsOverviewData, reportHistoryData, reportFilter] =
+    await Promise.allSettled([
+      reportsOverview(token),
+      reportHistory(token),
+      reportFilters(token),
+    ]);
+  return { reportsOverviewData, reportHistoryData, reportFilter };
 };
 
 export const fetchBulkListingData = async (token, params) => {

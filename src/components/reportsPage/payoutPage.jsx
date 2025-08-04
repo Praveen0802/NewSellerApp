@@ -35,10 +35,8 @@ import TransactionDetailsPopup from "./components/TransactionDetails";
 
 const PayoutPage = (props) => {
   const { apiData } = props;
-
   const { payout_overview, payoutHistory, payoutOrders, countriesList } =
     apiData;
-
   const flagMap = {
     GBP: ukFlag,
     USD: usFlag,
@@ -230,6 +228,7 @@ const PayoutPage = (props) => {
           title: list?.month,
           headers: [
             "Payment Reference",
+
             "To Account",
             "Amount",
             "Payout Date",
@@ -241,6 +240,7 @@ const PayoutPage = (props) => {
             // const status = getStatusText(listItems?.status);
             return {
               referenceNo: listItems?.reference_no,
+
               to_account: listItems?.to_account,
               amount: listItems?.price_with_currency,
               payoutDate: formatDate(listItems?.payout_date, "dateOnly"),
@@ -259,6 +259,7 @@ const PayoutPage = (props) => {
           title: list?.month,
           headers: [
             "Booking No",
+            "Payout Number",
             "Match Name",
             "Amount",
             "Payment Date",
@@ -269,6 +270,7 @@ const PayoutPage = (props) => {
           data: list?.transactions?.map((listItems) => {
             return {
               bookingNo: listItems?.booking_no,
+              payoutNo: listItems?.payout_no,
               matchName: listItems?.match_name,
               amount: listItems?.amount_with_currency,
               paymentDate:
@@ -585,38 +587,27 @@ const PayoutPage = (props) => {
 
               {/* Select and Date Range */}
               <div className="flex flex-col sm:flex-row gap-3 w-full">
-                <FloatingSelect
-                  label={
-                    selectedTab === "payout" ? "Payout status" : "Order status"
-                  }
-                  options={[
-                    { value: "0", label: "Paid" },
-                    { value: "1", label: "Pending" },
-                    { value: "2", label: "Processing" },
-                    { value: "3", label: "Failed" },
-                  ]}
-                  selectedValue={statusFilter}
-                  keyValue={
-                    selectedTab === "payout" ? "payoutStatus" : "orderStatus"
-                  }
-                  className="!w-full sm:!w-[50%]"
-                  onSelect={handleSelectChange}
-                  paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
-                />
-                <FloatingDateRange
-                  id={selectedTab === "payout" ? "payoutDate" : "orderDate"}
-                  name={selectedTab === "payout" ? "payoutDate" : "orderDate"}
-                  keyValue={
-                    selectedTab === "payout" ? "payoutDate" : "orderDate"
-                  }
-                  parentClassName="!w-full sm:!w-[50%]"
-                  label={
-                    selectedTab === "payout" ? "Payout date" : "Order date"
-                  }
-                  className="!py-[8px] !px-[16px] mobile:text-xs"
-                  value={dateRange}
-                  onChange={handleDateChange}
-                />
+                {selectedTab != "payout" && (
+                  <FloatingSelect
+                    label={
+                      selectedTab === "payout"
+                        ? "Payout status"
+                        : "Order status"
+                    }
+                    options={[
+                      { value: "1", label: "Paid" },
+                      { value: "0", label: "Pending" },
+                    ]}
+                    selectedValue={statusFilter}
+                    keyValue={
+                      selectedTab === "payout" ? "payoutStatus" : "status"
+                    }
+                    className="!w-full sm:!w-[50%]"
+                    onSelect={handleSelectChange}
+                    paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
+                  />
+                )}
+
               </div>
             </div>
 

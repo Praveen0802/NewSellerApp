@@ -8,6 +8,7 @@ import {
 } from "@/utils/helperFunctions";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import { fetchWalletPageDetails } from "@/utils/serverSideRequests";
+import { WalletMinimal } from "lucide-react";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 
@@ -28,7 +29,7 @@ const Reports = (props) => {
       key: "payouts",
       route: "/payouts",
       icon: (
-        <IconStore.wallet className="text-[#3E2E7E] stroke-[#3E2E7E] size-4" />
+        <WalletMinimal className="text-[#3E2E7E] stroke-[#3E2E7E] size-4" />
       ),
     },
   ];

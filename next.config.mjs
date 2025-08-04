@@ -3,7 +3,8 @@ const nextConfig = {
   env: {
     API_BASE_URL: "https://seller.listmyticket.com/seller",
     DOMAIN_KEY:
-      "Y7K9DzQDttNcQR4Pw+KTpE63M3LzUNB8Zql5MBL21T76E3gVHmWuSV+eKTJxp1z9",
+      "jgcvdp9FwDg94kpEQY9yb9nnlOGW39srytB7YTOXHb1jnWfPf1za8Dr0FVqrM0BK",
+    STRIPE_PUBLIC_KEY: "pk_test_2OILO1IBPQEElum3BhNRLnqZ00w9hwCz6b",
   },
 
   // Add the rewrites configuration using ES module syntax
