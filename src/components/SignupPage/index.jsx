@@ -678,9 +678,9 @@ const SignupFlow = ({ refer_code } = {}) => {
         {/* Stepper Navigation */}
         <div className="flex items-center justify-center mb-2">
           {[
-            { id: 1, label: "Details" },
+            { id: 1, label: "Basic Details" },
             { id: 2, label: "Password" },
-            { id: 3, label: "Info" }
+            { id: 3, label: "Address" }
           ].map((step) => (
             <React.Fragment key={step.id}>
               <div className="flex flex-col items-center cursor-pointer"
