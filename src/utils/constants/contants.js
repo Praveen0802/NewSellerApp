@@ -3,12 +3,14 @@ export const hideLeftMenuPages = [
   "/reset-password/token/[index]",
   "/verify-email/token/[index]",
   "/signup",
+  "/kyc-verification",
 ];
 export const hideHeaderPages = [
   "/login",
   "/reset-password/token/[index]",
   "/verify-email/token/[index]",
   "/signup",
+  "/kyc-verification",
 ];
 
 export const nonAuthRequiredAPI = [

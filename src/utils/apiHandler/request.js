@@ -2061,14 +2061,26 @@ export const zohoEmbed = async (token, data) => {
       method: "POST",
       ...(token && { token: token }),
       data: data,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
-    return response?.data?.success ? response?.data?.data : {};
+    return response ?? {};
   } catch (error) {
     console.log("ERROR in updateNotification", error);
     return error?.response?.data;
+  }
+};
+
+export const getZohoDocStatus = async (token, data) => {
+  try {
+    const { id } = data ?? {};
+    const response = await makeRequest({
+      url: `${API_ROUTES.ZOHO_EMBED}${id ? `/${id}` : ""}`,
+      method: "GET",
+      ...(token && { token: token }),
+    });
+    return response ?? {};
+  } catch (error) {
+    console.log("ERROR in fetchSalesPageData", error);
+    throw error;
   }
 };
 
