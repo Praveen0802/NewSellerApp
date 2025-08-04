@@ -59,7 +59,7 @@ const SecureLayout = ({ children }) => {
   const getUserKYCStatus = async () => {
     const response = await getKYCStatus();
     if (
-      response?.kyc_status == 1 &&
+      response?.kyc_status == 0 &&
       window.location.pathname != "/settings/kyc" &&
       userRoles?.user_type == "sellers"
     ) {
