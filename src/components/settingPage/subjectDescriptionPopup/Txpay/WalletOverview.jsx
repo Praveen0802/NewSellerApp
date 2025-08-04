@@ -55,13 +55,10 @@ const WalletOverview = (data) => {
     return {
       icon: flagMap[item.currency],
       amount: item.available_fund, // Changed from balance_amount to available_fund
-      balance: "Available Balance",
+      balance: "Available Fund",
       keys: {
         pendingDelivery: item?.pending_fund, // This is correct
-        pendingPayment: item?.pending_fund, // Changed from pending_amount to pending_fund
-        confirmedOrder: item?.confirmed_orders, // This property doesn't exist in API data
-        currency: item?.currency,
-        totalRevenue: item?.total_revenue, // Added this new field from API
+        
       },
     };
   });

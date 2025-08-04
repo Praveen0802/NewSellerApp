@@ -16,7 +16,11 @@ const makeRequest = async ({
   headers = {},
 }) => {
   const ROOT_URL = process.env.API_BASE_URL;
-  let modifiedUrl = isClient ? url : `${ROOT_URL}${url}`;
+  let modifiedUrl = formData
+    ? `${ROOT_URL}${url}`
+    : isClient
+    ? url
+    : `${ROOT_URL}${url}`;
   // Appending params if available
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
@@ -30,6 +34,16 @@ const makeRequest = async ({
     const response = isClient
       ? (await method.toLowerCase()) === "get"
         ? AJAX.get(modifiedUrl, { ...(token && { token: token }) })
+        : formData
+        ? await axios({
+            url: modifiedUrl,
+            method,
+            headers: {
+              ...fetchAuthorizationKey(token),
+              domainkey: process.env.DOMAIN_KEY,
+            },
+            ...(formData && { data: formData }),
+          })
         : AJAX.post(
             modifiedUrl,
             data,
@@ -160,6 +174,21 @@ export const reportHistory = async (token, params = {}) => {
   try {
     const response = await makeRequest({
       url: API_ROUTES.REPORT_HISTORY,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in reportHistory", error);
+    return {};
+  }
+};
+
+export const reportFilters = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.REPORT_FILTERS,
       method: "GET",
       ...(token && { token: token }),
       ...(params && { params: params }),
@@ -520,7 +549,7 @@ export const getUserRoleAccess = async (token) => {
     console.log("ERROR in getUserRoleAccess", error);
     throw error;
   }
-}
+};
 
 export const getSalesCount = async (token) => {
   try {
@@ -533,7 +562,7 @@ export const getSalesCount = async (token) => {
   } catch (error) {
     console.log("ERROR in getSalesCount", error);
   }
-}
+};
 
 export const getKYCStatus = async (token) => {
   try {
@@ -547,8 +576,7 @@ export const getKYCStatus = async (token) => {
     console.log("ERROR in getSalesCount", error);
     throw error;
   }
-}
-
+};
 
 export const getAdditionalTemplate = async (token) => {
   try {
@@ -561,7 +589,7 @@ export const getAdditionalTemplate = async (token) => {
   } catch (error) {
     console.log("ERROR in getSalesCount", error);
   }
-}
+};
 
 export const dashboardAwaitingDelivery = async (token, params) => {
   try {
@@ -1162,7 +1190,7 @@ export const storePaymentMethod = async (token, data) => {
 export const getLinkedCards = async (token, params, id) => {
   try {
     const response = await makeRequest({
-      url: `${API_ROUTES.GET_LINKED_CARDS}${id ? `/${id}` : ""}`,
+      url: `${API_ROUTES.GET_LINKED_CARDS}`,
       method: "GET",
       ...(token && { token: token }),
       ...(params && { params: params }),
@@ -1173,6 +1201,38 @@ export const getLinkedCards = async (token, params, id) => {
     throw error;
   }
 };
+
+export const removeSavedCards = async (token, data, id) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.REMOVE_SAVED_CARDS}`,
+      method: "POST",
+      ...(token && { token: token }),
+      ...(data && { data: data }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in getLinkedCards", error);
+    throw error;
+  }
+};
+
+export const paymentConfig = async (token, data, id) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.PAYMENT_CONFIG}`,
+      method: "POST",
+      ...(token && { token: token }),
+      ...(data && { data: data }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in getLinkedCards", error);
+    throw error;
+  }
+};
+
+
 
 export const getCurrencyDetails = async (token, params) => {
   try {
@@ -1231,7 +1291,6 @@ export const accountReference = async (token, params) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in accountReference", error);
-    throw error;
   }
 };
 

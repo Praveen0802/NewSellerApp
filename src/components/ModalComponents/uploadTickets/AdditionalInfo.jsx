@@ -2,17 +2,33 @@ import { getAdditionalTemplate } from "@/utils/apiHandler/request";
 import React, { useState, useCallback, useEffect, useRef } from "react";
 
 const AdditionalInfoSection = React.forwardRef(
-  ({ paperTicketFlow = false, initialData = null, onChange }, ref) => {
+  ({ paperTicketFlow = false, initialData = null, onChange, onTemplateSelect }, ref) => {
     // Internal state for additional information
     const [additionalInfo, setAdditionalInfo] = useState({
       template: initialData?.template || "",
       dynamicContent: initialData?.dynamicContent || "",
     });
     const [templateData, setTemplateData] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [selectedTemplateContent, setSelectedTemplateContent] = useState("");
 
     const getTemplateDetails = async () => {
-      const response = await getAdditionalTemplate();
-      console.log(response,'responseresponse')
+      try {
+        setLoading(true);
+        const response = await getAdditionalTemplate();
+        
+        // Assuming the response contains the array of templates
+        if (response && Array.isArray(response)) {
+          setTemplateData(response);
+        } else if (response && response.data && Array.isArray(response.data)) {
+          setTemplateData(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching templates:', error);
+        setTemplateData([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     useEffect(() => {
@@ -26,6 +42,30 @@ const AdditionalInfoSection = React.forwardRef(
     useEffect(() => {
       additionalInfoRef.current = additionalInfo;
     }, [additionalInfo]);
+
+    // Handle template selection and find corresponding content
+    const handleTemplateChange = useCallback(
+      (templateName) => {
+        const selectedTemplate = templateData.find(
+          template => template.template_name === templateName
+        );
+        
+        const templateContent = selectedTemplate ? selectedTemplate.template_content : "";
+        setSelectedTemplateContent(templateContent);
+        
+        // Call the onTemplateSelect callback to pass data to parent
+        if (onTemplateSelect && typeof onTemplateSelect === "function") {
+          onTemplateSelect({
+            templateName,
+            templateContent,
+            selectedTemplate
+          });
+        }
+        
+        handleAdditionalInfoChange("template", templateName);
+      },
+      [templateData, onTemplateSelect]
+    );
 
     // Handle additional info changes
     const handleAdditionalInfoChange = useCallback(
@@ -59,13 +99,21 @@ const AdditionalInfoSection = React.forwardRef(
         };
         setAdditionalInfo(newData);
         additionalInfoRef.current = newData;
+        
+        // If there's an initial template, find and set its content
+        if (initialData.template) {
+          handleTemplateChange(initialData.template);
+        }
       }
-    }, [initialData]);
+    }, [initialData, handleTemplateChange]);
 
     // Method to get current data (primary method for ref access)
     const getCurrentData = useCallback(() => {
-      return additionalInfoRef.current;
-    }, []);
+      return {
+        ...additionalInfoRef.current,
+        selectedTemplateContent
+      };
+    }, [selectedTemplateContent]);
 
     // Method to check if data has any values
     const hasData = useCallback(() => {
@@ -80,6 +128,11 @@ const AdditionalInfoSection = React.forwardRef(
       return true; // Currently no required fields
     }, []);
 
+    // Method to get selected template content
+    const getSelectedTemplateContent = useCallback(() => {
+      return selectedTemplateContent;
+    }, [selectedTemplateContent]);
+
     // Expose methods via ref for parent component access
     React.useImperativeHandle(
       ref,
@@ -90,6 +143,9 @@ const AdditionalInfoSection = React.forwardRef(
         // Alternative method names for flexibility
         getAdditionalInfo: () => additionalInfoRef.current,
         getData: () => additionalInfoRef.current,
+
+        // New method to get template content
+        getSelectedTemplateContent,
 
         // Utility methods
         hasData,
@@ -103,6 +159,10 @@ const AdditionalInfoSection = React.forwardRef(
           };
           setAdditionalInfo(updatedData);
           additionalInfoRef.current = updatedData;
+          
+          if (newData?.template) {
+            handleTemplateChange(newData.template);
+          }
         },
 
         // Method to reset to initial state
@@ -113,6 +173,7 @@ const AdditionalInfoSection = React.forwardRef(
           };
           setAdditionalInfo(resetData);
           additionalInfoRef.current = resetData;
+          setSelectedTemplateContent("");
         },
 
         // Method to clear all data
@@ -123,9 +184,10 @@ const AdditionalInfoSection = React.forwardRef(
           };
           setAdditionalInfo(emptyData);
           additionalInfoRef.current = emptyData;
+          setSelectedTemplateContent("");
         },
       }),
-      [getCurrentData, hasData, isValid, initialData]
+      [getCurrentData, hasData, isValid, getSelectedTemplateContent, initialData, handleTemplateChange]
     );
 
     return (
@@ -144,27 +206,23 @@ const AdditionalInfoSection = React.forwardRef(
             </label>
             <select
               value={additionalInfo.template}
-              onChange={(e) =>
-                handleAdditionalInfoChange("template", e.target.value)
-              }
+              onChange={(e) => handleTemplateChange(e.target.value)}
               className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
+              disabled={loading}
             >
-              <option value="">
-                {paperTicketFlow
-                  ? "Paper Ticket - Away Section"
-                  : "E-Ticket / PDF - Away Section"}
-              </option>
-              <option value="home">
-                {paperTicketFlow
-                  ? "Paper Ticket - Home Section"
-                  : "E-Ticket / PDF - Home Section"}
-              </option>
-              <option value="vip">
-                {paperTicketFlow
-                  ? "Paper Ticket - VIP Section"
-                  : "E-Ticket / PDF - VIP Section"}
-              </option>
+              <option value="">Select a template...</option>
+              {templateData.map((template) => (
+                <option 
+                  key={template.template_name} 
+                  value={template.template_name}
+                >
+                  {template.template_name}
+                </option>
+              ))}
             </select>
+            {loading && (
+              <p className="text-xs text-gray-500 mt-1">Loading templates...</p>
+            )}
           </div>
 
           {/* Dynamic Content Area */}
@@ -181,6 +239,7 @@ const AdditionalInfoSection = React.forwardRef(
               rows="4"
               placeholder="Enter dynamic content here..."
             />
+           
           </div>
         </div>
       </div>

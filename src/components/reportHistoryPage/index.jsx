@@ -150,7 +150,7 @@ const RportHistory = (props) => {
   const [filtersApplied, setFiltersApplied] = useState({
     page: 1,
   });
-
+  console.log(props, "propspropsprops");
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [showLogDetailsModal, setShowLogDetailsModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -203,7 +203,7 @@ const RportHistory = (props) => {
         setSearchMatches([]);
         setShowSearchDropdown(false);
       }
-    }, 300); // 300ms debounce delay
+    }, 1000); // 300ms debounce delay
   }, []);
 
   const searchMatchDropDown = () => {
@@ -490,19 +490,59 @@ const RportHistory = (props) => {
     await apiCall(updatedFilters);
   };
 
+
+  console.log(props?.response?.reportFilter?.values?.stadiums?.map(
+    (item) => ({
+      value: item?.id,
+      label: item?.name,
+    })
+  ),'hiiiiiiiiiii',props?.response?.reportFilter)
   // Configuration for filters
   const filterConfig = {
     reports: [
       {
         type: "text",
-        name: "searchMatch",
-        value: searchValue,
-        showDropdown: true,
-        dropDownComponent: searchMatchDropDown(),
+        name: "query",
+        value: filtersApplied?.query,
+        // showDropdown: true,
+        // dropDownComponent: searchMatchDropDown(),
         label: "Search Match event or Booking number",
         className: "!py-[7px] !px-[12px] !text-[#343432] !text-[14px]",
         parentClassName: "!w-[300px]",
       },
+
+      {
+        type: "select",
+        name: "venue",
+        label: "Venue",
+        value: filtersApplied?.venue,
+        options: props?.response?.reportFilter?.value?.stadiums?.map(
+          (item) => ({
+            value: item?.id,
+            label: item?.name,
+          })
+        ),
+        parentClassName: "!w-[15%]",
+        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+        labelClassName: "!text-[11px]",
+      },
+      {
+        type: "date",
+        name: "transactionDate",
+        singleDateMode: false,
+        label: "Transaction Date",
+        parentClassName: "!w-[200px]",
+        className: "!py-[8px] !px-[16px] mobile:text-xs",
+      },
+      {
+        type: "date",
+        name: "eventDate",
+        singleDateMode: false,
+        label: "Event Date",
+        parentClassName: "!w-[200px]",
+        className: "!py-[8px] !px-[16px] mobile:text-xs",
+      },
+
       {
         type: "select",
         name: "team_members",
@@ -516,49 +556,18 @@ const RportHistory = (props) => {
       },
       {
         type: "select",
-        value: filtersApplied?.ticket_type,
-        name: "ticket_type",
-        label: "Ticket Type",
-        options: [
-          { value: "none", label: "None" },
-          { value: "vip", label: "VIP" },
-          { value: "standard", label: "Standard" },
-          { value: "premium", label: "Premium" },
-        ],
+        name: "category",
+        label: "Category",
+        value: filtersApplied?.category,
+        options: props?.response?.reportFilter?.value?.categories?.map(
+          (item) => ({
+            value: item?.id,
+            label: item?.name,
+          })
+        ),
         parentClassName: "!w-[15%]",
-        className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
+        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
         labelClassName: "!text-[11px]",
-      },
-      {
-        type: "select",
-        name: "order_status",
-        label: "Order Status",
-        value: filtersApplied?.order_status,
-        options: [
-          { value: "completed", label: "Completed" },
-          { value: "fulfilled", label: "Fulfilled" },
-          { value: "pending", label: "Pending" },
-          { value: "cancelled", label: "Cancelled" },
-        ],
-        parentClassName: "!w-[15%]",
-        className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
-        labelClassName: "!text-[11px]",
-      },
-      {
-        type: "date",
-        name: "orderDate",
-        singleDateMode: false,
-        label: "Order Date",
-        parentClassName: "!w-[200px]",
-        className: "!py-[8px] !px-[16px] mobile:text-xs",
-      },
-      {
-        type: "date",
-        name: "transactionDate",
-        singleDateMode: false,
-        label: "Transaction Date",
-        parentClassName: "!w-[200px]",
-        className: "!py-[8px] !px-[16px] mobile:text-xs",
       },
     ],
   };
@@ -588,6 +597,22 @@ const RportHistory = (props) => {
     }
   };
 
+  const apiCallDebounceTimer = useRef(null);
+
+  const debouncedApiCall = useCallback(async (params) => {
+    if (apiCallDebounceTimer.current) {
+      clearTimeout(apiCallDebounceTimer.current);
+    }
+    
+    apiCallDebounceTimer.current = setTimeout(async () => {
+      try {
+        await apiCall(params);
+      } catch (error) {
+        console.error("Debounced API call error:", error);
+      }
+    }, 500); // 500ms debounce delay for API calls
+  }, []);
+
   const handleFilterChange = async (
     filterKey,
     value,
@@ -595,6 +620,7 @@ const RportHistory = (props) => {
     currentTab
   ) => {
     let params = {};
+    
     // Handle different filter types
     if (filterKey === "orderDate") {
       params = {
@@ -620,16 +646,29 @@ const RportHistory = (props) => {
         [filterKey]: value,
       };
     }
-
+  
     const updatedFilters = {
       ...filtersApplied,
       ...params,
       page: 1, // Reset to first page on filter change
     };
-
-    if (filterKey === "searchMatch" && value) {
-      debouncedSearch(value);
-    } else {
+  
+    // Handle query field with both dropdown search and API call debouncing
+    if (filterKey === "query" && value?.target?.value) {
+      // Update the search dropdown (existing functionality)
+      debouncedSearch(value?.target?.value);
+      
+      // Also debounce the API call for filtering
+      debouncedApiCall(updatedFilters);
+    } 
+    // For text inputs, use debounced API call
+    else if (filterKey === "query" || 
+             (typeof value === 'object' && value?.target)) {
+      // This handles text inputs
+      debouncedApiCall(updatedFilters);
+    }
+    // For non-text inputs (selects, dates, etc.), call API immediately
+    else {
       try {
         await apiCall(updatedFilters);
       } catch (error) {
@@ -637,6 +676,21 @@ const RportHistory = (props) => {
       }
     }
   };
+  
+  // Update the cleanup function to clear both timers
+  const cleanup = () => {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+    if (apiCallDebounceTimer.current) {
+      clearTimeout(apiCallDebounceTimer.current);
+    }
+  };
+  
+  // Make sure to call cleanup on unmount
+  useEffect(() => {
+    return cleanup;
+  }, []);
 
   const { downloadCSV } = useCSVDownload();
 
@@ -659,12 +713,6 @@ const RportHistory = (props) => {
     }
   };
 
-  // Cleanup debounce timer on unmount
-  const cleanup = () => {
-    if (debounceTimer.current) {
-      clearTimeout(debounceTimer.current);
-    }
-  };
 
   const refreshPopupData = () => {
     if (showInfoPopup.flag) {

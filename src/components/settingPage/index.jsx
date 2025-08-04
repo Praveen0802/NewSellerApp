@@ -14,6 +14,7 @@ import TicketDelivery from "./ticketDelivery";
 import MyRefferal from "./myRefferal";
 import SubjectDescriptionPopup from "./subjectDescriptionPopup";
 import KYC from "../KYC";
+import { ShieldCheck, WalletMinimal } from "lucide-react";
 
 const SettingsPage = (props) => {
   const { profile, apiData } = props;
@@ -51,7 +52,7 @@ const SettingsPage = (props) => {
     },
 
     {
-      icon: <IconStore.wallet className={IconclassName} />,
+      icon: <WalletMinimal   className={IconclassName} />,
       title: "SB Pay",
       key: "sbPay",
     },
@@ -71,7 +72,7 @@ const SettingsPage = (props) => {
       key: "linkedCards",
     },
     {
-      icon: <IconStore.kyc className={IconclassName} />,
+      icon: <ShieldCheck className={IconclassName} />,
       title: "KYC",
       key: "kyc",
     },
