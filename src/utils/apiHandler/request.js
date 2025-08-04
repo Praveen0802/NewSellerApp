@@ -520,7 +520,7 @@ export const getUserRoleAccess = async (token) => {
     console.log("ERROR in getUserRoleAccess", error);
     throw error;
   }
-}
+};
 
 export const getSalesCount = async (token) => {
   try {
@@ -533,7 +533,7 @@ export const getSalesCount = async (token) => {
   } catch (error) {
     console.log("ERROR in getSalesCount", error);
   }
-}
+};
 
 export const getKYCStatus = async (token) => {
   try {
@@ -547,8 +547,7 @@ export const getKYCStatus = async (token) => {
     console.log("ERROR in getSalesCount", error);
     throw error;
   }
-}
-
+};
 
 export const getAdditionalTemplate = async (token) => {
   try {
@@ -561,7 +560,7 @@ export const getAdditionalTemplate = async (token) => {
   } catch (error) {
     console.log("ERROR in getSalesCount", error);
   }
-}
+};
 
 export const dashboardAwaitingDelivery = async (token, params) => {
   try {
@@ -2157,6 +2156,36 @@ export const savePhotoId = async (data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in savePhotoId", error);
+    throw error;
+  }
+};
+
+export const getSellerBusinessDocuments = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.SELLER_BUSINESS_DOCUMENT,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    console.log(response?.data, "response");
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in getBusinessDocuments", error);
+    throw error;
+  }
+};
+
+export const saveSellerBusinessDocuments = async (data) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.SELLER_BUSINESS_DOCUMENT,
+      method: "POST",
+      formData: data,
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in saveSellerBusinessDocuments", error);
     throw error;
   }
 };

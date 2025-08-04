@@ -30,6 +30,7 @@ import {
   getReferralCode,
   getReferralHistory,
   getSalesCount,
+  getSellerBusinessDocuments,
   getSellerContract,
   LastMinuteEvents,
   lmtOverview,
@@ -116,15 +117,32 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
       const txPay = await fetchSettingsTxPay(token);
       return { txPay };
     } else if (profile === "kyc") {
-      const [photoId, address, contract] = await Promise.allSettled([
+      // TODO: need to add business check
+      let isBusiness = true;
+
+      let promises = [
         getAuthPhotoId(token),
         getAuthAddress(token),
         getSellerContract(token),
-      ]);
+      ];
+      if (isBusiness) {
+        promises.push(getSellerBusinessDocuments(token));
+      } else {
+        promises.push({});
+      }
+      const [photoId, address, contract, business_document] =
+        await Promise.allSettled(promises);
+
       return {
         photoId: photoId?.status === "fulfilled" ? photoId.value : {},
         address: address?.status === "fulfilled" ? address.value : {},
         contract: contract?.status === "fulfilled" ? contract.value : {},
+        ...(isBusiness && {
+          business_document:
+            business_document?.status === "fulfilled"
+              ? business_document?.value
+              : {},
+        }),
       };
     } else if (profile === "myRefferal") {
       const referralCode = (await getReferralCode(token)) ?? {};

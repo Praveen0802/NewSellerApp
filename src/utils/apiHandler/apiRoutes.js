@@ -6,7 +6,7 @@ export const API_ROUTES = {
   LMT_TRADE_TRACKING: `/purchase/lmt-trade/tracking/history`,
   GET_SALES_COUNT: `/sales/get-sales-count`,
   GET_KYC_STATUS: `/settings/get-user-status`,
-  GET_ADDITIONAL_TEMPLATE:`/settings/add-additional-template`,
+  GET_ADDITIONAL_TEMPLATE: `/settings/add-additional-template`,
   LMT_TRADE_ORDERS: `/purchase/lmt-trade/history`,
   GET_MY_LISTING_OVERVIEW: `/my-listings/overview`,
   GET_MY_LISTING_TICKET_HISTORY: `/my-listings/ticket-history`,
@@ -140,5 +140,6 @@ export const API_ROUTES = {
   GET_PAYOUT_DETAILS: "/payouts/payout-details",
   GET_PAYOUT_HISTORY_REPORT: `/payouts/payout-export`,
   GET_PAYOUT_ORDER_REPORT: `/payouts/myorder-export`,
-  GET_PAYOUT_ORDERS: "payouts/payout-orders",
+  GET_PAYOUT_ORDERS: "/payouts/payout-orders",
+  SELLER_BUSINESS_DOCUMENT: "/auth/seller-business-document",
 };
