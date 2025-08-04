@@ -19,6 +19,7 @@ const FloatingDateRange = ({
   error = "",
   singleDateMode = false,
   hideLabel = false,
+  staticLabel = false, // New prop for static label
   subParentClassName = "",
   minDate = null,
   maxDate = null,
@@ -499,6 +500,7 @@ const FloatingDateRange = ({
     today.setHours(0, 0, 0, 0);
 
     return (
+      <>
       <div className={`w-full relative`}>
         <div className="flex justify-between items-center mb-1 relative">
           <button
@@ -619,6 +621,7 @@ const FloatingDateRange = ({
           })}
         </div>
       </div>
+      </>
     );
   };
 
@@ -636,6 +639,12 @@ const FloatingDateRange = ({
   }`;
 
   return (
+    <>
+    {staticLabel && (
+      <div className="mb-2">
+        <label className="text-[14px] font-medium text-gray-800">{label}</label>
+      </div>
+    )}
     <div className={`${parentClassName} relative w-full`} ref={dropdownRef}>
       {!hideLabel && (
         <FloatingPlaceholder
@@ -757,6 +766,7 @@ const FloatingDateRange = ({
         </div>
       )}
     </div>
+    </>
   );
 };
 

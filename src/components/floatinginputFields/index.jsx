@@ -23,6 +23,7 @@ const FloatingLabelInput = ({
   readOnly,
   className = "",
   hideLabel = false,
+  staticLabel = false,
   placeholder = "",
   error = "",
   rightIcon = null,
@@ -230,6 +231,12 @@ const FloatingLabelInput = ({
   }`;
 
   return (
+    <>
+    {staticLabel && (
+      <div className="mb-2">
+        <label className="text-[14px] font-medium text-gray-800">{label}</label>
+      </div>
+    )}
     <div className={`relative w-full ${parentClassName}`} ref={containerRef}>
       {!hideLabel && (
         <FloatingPlaceholder
@@ -403,6 +410,7 @@ const FloatingLabelInput = ({
         <p className="mt-1 text-sm text-red-500">{error}</p>
       )}
     </div>
+    </>
   );
 };
 
