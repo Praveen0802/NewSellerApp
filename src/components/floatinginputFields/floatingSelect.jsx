@@ -19,6 +19,7 @@ const FloatingSelect = ({
   required = false,
   labelClassName = "",
   hideLabel = false,
+  staticLabel = false, // New prop for static label
   disabled = false,
   searchable = false,
   rightIcon = null,
@@ -230,6 +231,12 @@ const FloatingSelect = ({
   };
 
   return (
+    <>
+    {staticLabel && (
+      <div className="mb-2">
+        <label className="text-[14px] font-medium text-gray-800">{label}</label>
+      </div>
+    )}
     <div className={`relative w-full ${className}`} ref={dropdownRef}>
       {!hideLabel && (
         <FloatingPlaceholder
@@ -427,6 +434,7 @@ const FloatingSelect = ({
 
       {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
     </div>
+    </>
   );
 };
 

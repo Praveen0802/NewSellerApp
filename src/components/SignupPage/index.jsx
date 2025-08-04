@@ -28,9 +28,11 @@ import useCountryCodes from "@/Hooks/useCountryCodes";
 import { toast } from "react-toastify";
 import Image from "next/image";
 import FloatingDateRange from "../commonComponents/dateRangeInput";
+import Design from "../../../public/design-1.svg";
 
 const SignupFlow = ({ refer_code } = {}) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [formStep, setFormStep] = useState(1);
   const [userType, setUserType] = useState("");
   const [currentUrl, setCurrentUrl] = useState("/signup");
   const [formData, setFormData] = useState({
@@ -66,6 +68,7 @@ const SignupFlow = ({ refer_code } = {}) => {
   const errorRefs = useRef({});
 
   const totalSteps = 4;
+  const totalFormSteps = 3;
 
   // Get country and phone code options from hook
   const { allCountryCodeOptions, countryOptions } = useCountryCodes();
@@ -206,7 +209,7 @@ const SignupFlow = ({ refer_code } = {}) => {
   const handleChange = (e, key, type) => {
     const name = key;
     let value;
-  
+
     if (type === "select") {
       value = e;
     } else if (type === "checkbox") {
@@ -217,14 +220,14 @@ const SignupFlow = ({ refer_code } = {}) => {
     } else {
       value = e.target?.value;
     }
-    
+
     console.log(value, e, type, "valuevalue");
-    
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-  
+
     // Only clear the error for the specific field that was changed
     // and only if there was actually an error for that field
     if (errors[name]) {
@@ -236,122 +239,206 @@ const SignupFlow = ({ refer_code } = {}) => {
   };
 
 
-// 2. Add a helper function to calculate age:
-const calculateAge = (birthDate) => {
-  if (!birthDate) return null;
-  
-  const today = new Date();
-  const birth = new Date(birthDate);
-  
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  
-  return age;
-};
+  // 2. Add a helper function to calculate age:
+  const calculateAge = (birthDate) => {
+    if (!birthDate) return null;
 
-// 3. Update the validateForm function to include age validation:
-const validateForm = () => {
-  console.log(validateForm,'kkkkkkkkk')
-  const newErrors = {};
+    const today = new Date();
+    const birth = new Date(birthDate);
 
-  if (!formData.first_name.trim()) {
-    newErrors.first_name = "First name is required";
-  }
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
 
-  if (!formData.last_name.trim()) {
-    newErrors.last_name = "Last name is required";
-  }
-
-  if (!formData.email.trim()) {
-    newErrors.email = "Email is required";
-  } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-    newErrors.email = "Please enter a valid email address";
-  }
-
-  if (!formData.password.trim()) {
-    newErrors.password = "Password is required";
-  } else if (formData.password.length < 8) {
-    newErrors.password = "Password must be at least 8 characters";
-  }
-
-  // Validate confirm password
-  if (!formData.confirm_password.trim()) {
-    newErrors.confirm_password = "Please confirm your password";
-  } else if (formData.password !== formData.confirm_password) {
-    newErrors.confirm_password = "Passwords do not match";
-  }
-
-  if (!formData.phone_country_code.trim()) {
-    newErrors.phone_country_code = "Phone country code is required";
-  }
-
-  if (!formData.phone_number.trim()) {
-    newErrors.phone_number = "Phone number is required";
-  }
-
-  if (!formData.address.trim()) {
-    newErrors.address = "Address is required";
-  }
-
-  if (!formData.country.trim()) {
-    newErrors.country = "Country is required";
-  }
-
-  if (!formData.city.trim()) {
-    newErrors.city = "City is required";
-  }
-
-  if (!formData.zip_code.trim()) {
-    newErrors.zip_code = "Zip code is required";
-  }
-
-  // Enhanced DOB validation with age check
-  if (!formData.dob?.startDate?.trim()) {
-    newErrors.dob = "Date of birth is required";
-  } else {
-    const age = calculateAge(formData.dob?.startDate);
-    if (age === null) {
-      newErrors.dob = "Please enter a valid date of birth";
-    } else if (age < 10) {
-      newErrors.dob = "You must be at least 10 years old to register";
-    } else if (age > 120) {
-      newErrors.dob = "Please enter a valid date of birth";
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
     }
-  }
 
-  if (!formData.currency.trim()) {
-    newErrors.currency = "Currency is required";
-  }
+    return age;
+  };
 
-  if (userType === "business" && !formData.business_name.trim()) {
-    newErrors.business_name = "Business name is required";
-  }
+  // 3. Update the validateForm function to include age validation:
+  const validateForm = () => {
+    console.log(validateForm, 'kkkkkkkkk')
+    const newErrors = {};
 
-  setErrors(newErrors);
+    if (!formData.first_name.trim()) {
+      newErrors.first_name = "First name is required";
+    }
 
-  // Scroll to first error if any
-  if (Object.keys(newErrors).length > 0) {
-    setTimeout(() => {
-      scrollToFirstError(newErrors);
-    }, 100);
-  }
+    if (!formData.last_name.trim()) {
+      newErrors.last_name = "Last name is required";
+    }
 
-  return Object.keys(newErrors).length === 0;
-};
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    if (!formData.password.trim()) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+    }
+
+    // Validate confirm password
+    if (!formData.confirm_password.trim()) {
+      newErrors.confirm_password = "Please confirm your password";
+    } else if (formData.password !== formData.confirm_password) {
+      newErrors.confirm_password = "Passwords do not match";
+    }
+
+    if (!formData.phone_country_code.trim()) {
+      newErrors.phone_country_code = "Phone country code is required";
+    }
+
+    if (!formData.phone_number.trim()) {
+      newErrors.phone_number = "Phone number is required";
+    }
+
+    if (!formData.address.trim()) {
+      newErrors.address = "Address is required";
+    }
+
+    if (!formData.country.trim()) {
+      newErrors.country = "Country is required";
+    }
+
+    if (!formData.city.trim()) {
+      newErrors.city = "City is required";
+    }
+
+    if (!formData.zip_code.trim()) {
+      newErrors.zip_code = "Zip code is required";
+    }
+
+    // Enhanced DOB validation with age check
+    if (!formData.dob?.startDate?.trim()) {
+      newErrors.dob = "Date of birth is required";
+    } else {
+      const age = calculateAge(formData.dob?.startDate);
+      if (age === null) {
+        newErrors.dob = "Please enter a valid date of birth";
+      } else if (age < 10) {
+        newErrors.dob = "You must be at least 10 years old to register";
+      } else if (age > 120) {
+        newErrors.dob = "Please enter a valid date of birth";
+      }
+    }
+
+    if (!formData.currency.trim()) {
+      newErrors.currency = "Currency is required";
+    }
+
+    if (userType === "business" && !formData.business_name.trim()) {
+      newErrors.business_name = "Business name is required";
+    }
+
+    setErrors(newErrors);
+
+    // Scroll to first error if any
+    if (Object.keys(newErrors).length > 0) {
+      setTimeout(() => {
+        scrollToFirstError(newErrors);
+      }, 100);
+    }
+
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Form validation and submission on step 2
+  const validateStepperForm = () => {
+    const newErrors = {};
+
+    // Step 1: Basic Info
+    if (formStep === 1) {
+      if (userType === "business" && !formData.business_name.trim()) {
+        newErrors.business_name = "Business name is required";
+      }
+      if (!formData.first_name.trim()) {
+        newErrors.first_name = "First name is required";
+      }
+      if (!formData.last_name.trim()) {
+        newErrors.last_name = "Last name is required";
+      }
+      if (!formData.email.trim()) {
+        newErrors.email = "Email is required";
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = "Please enter a valid email address";
+      }
+    }
+
+    // Step 2: Password
+    if (formStep === 2) {
+      if (!formData.password.trim()) {
+        newErrors.password = "Password is required";
+      } else if (formData.password.length < 8) {
+        newErrors.password = "Password must be at least 8 characters";
+      }
+      if (!formData.confirm_password.trim()) {
+        newErrors.confirm_password = "Please confirm your password";
+      } else if (formData.password !== formData.confirm_password) {
+        newErrors.confirm_password = "Passwords do not match";
+      }
+    }
+
+    // Step 3: Contact Info
+    if (formStep === 3) {
+      if (!formData.phone_country_code.trim()) {
+        newErrors.phone_country_code = "Phone country code is required";
+      }
+      if (!formData.phone_number.trim()) {
+        newErrors.phone_number = "Phone number is required";
+      }
+      if (!formData.address.trim()) {
+        newErrors.address = "Address is required";
+      }
+      if (!formData.country.trim()) {
+        newErrors.country = "Country is required";
+      }
+      if (!formData.city.trim()) {
+        newErrors.city = "City is required";
+      }
+      if (!formData.zip_code.trim()) {
+        newErrors.zip_code = "Zip code is required";
+      }
+      // DOB validation
+      if (!formData.dob?.startDate?.trim()) {
+        newErrors.dob = "Date of birth is required";
+      } else {
+        const age = calculateAge(formData.dob?.startDate);
+        if (age === null) {
+          newErrors.dob = "Please enter a valid date of birth";
+        } else if (age < 10) {
+          newErrors.dob = "You must be at least 10 years old to register";
+        } else if (age > 120) {
+          newErrors.dob = "Please enter a valid date of birth";
+        }
+      }
+      if (!formData.currency.trim()) {
+        newErrors.currency = "Currency is required";
+      }
+    }
+
+    setErrors(newErrors);
+
+    // Scroll to first error if any
+    if (Object.keys(newErrors).length > 0) {
+      setTimeout(() => {
+        scrollToFirstError(newErrors);
+      }, 100);
+    }
+
+    return Object.keys(newErrors).length === 0;
+  };
 
   const startRegistrationProcess = async (formData) => {
     // Parse DOB from YYYY-MM-DD to D-M-YYYY format (without leading zeros)
-    const formatDOB = (dateString) => {
-      if (!dateString) return "";
+    const formatDOB = (dateObj) => {
+      const dateString = typeof dateObj === "string" ? dateObj : dateObj?.startDate;
+      if (!dateString || typeof dateString !== "string") return "";
       const [year, month, day] = dateString.split("-");
-      // Remove leading zeros from day and month
-      return `${parseInt(day)}-${
-        parseInt(month) > 9 ? parseInt(month) : "0" + parseInt(month)
-      }-${year}`;
+      return `${parseInt(day)}-${parseInt(month) > 9 ? parseInt(month) : "0" + parseInt(month)}-${year}`;
     };
 
     // Create payload with formatted DOB and exclude confirm_password
@@ -430,6 +517,7 @@ const validateForm = () => {
       setCookie("user_type", userType, 7);
       updateUrl(`/signup/${userType}`);
       setCurrentStep(2);
+      setFormStep(1);
       return;
     }
 
@@ -439,9 +527,14 @@ const validateForm = () => {
   };
 
   const handleBack = () => {
+    // If child form stepper is not at first step, go back in child
+    if (formStep > 1) {
+      setFormStep(formStep - 1);
+      return;
+    }
+    // Otherwise, go back in parent stepper
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
-
       if (currentStep === 2) {
         updateUrl("/signup");
       }
@@ -503,11 +596,10 @@ const validateForm = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 max-w-3xl mx-auto">
           {/* Individual Seller */}
           <div
-            className={`p-6 lg:p-8 rounded-2xl border-2 cursor-pointer transition-all duration-200 hover:shadow-lg ${
-              userType === "individual"
+            className={`p-6 lg:p-8 rounded-2xl border-2 cursor-pointer transition-all duration-200 hover:shadow-lg ${userType === "individual"
                 ? "border-[#10B981] bg-emerald-50"
                 : "border-gray-200 bg-white hover:border-gray-300"
-            }`}
+              }`}
             onClick={() => setUserType("individual")}
           >
             <div className="flex flex-col items-start">
@@ -522,11 +614,10 @@ const validateForm = () => {
                 attend or reselling tickets.
               </p>
               <button
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors text-sm lg:text-base cursor-pointer ${
-                  userType === "individual"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors text-sm lg:text-base cursor-pointer ${userType === "individual"
                     ? "bg-[#10B981] text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                  }`}
               >
                 {userType === "individual" ? "Selected" : "Select"}
                 <ChevronLeft className="w-4 h-4 rotate-180" />
@@ -536,11 +627,10 @@ const validateForm = () => {
 
           {/* Business Seller */}
           <div
-            className={`p-6 lg:p-8 rounded-2xl border-2 cursor-pointer transition-all duration-200 hover:shadow-lg ${
-              userType === "business"
+            className={`p-6 lg:p-8 rounded-2xl border-2 cursor-pointer transition-all duration-200 hover:shadow-lg ${userType === "business"
                 ? "border-[#10B981] bg-emerald-50"
                 : "border-gray-200 bg-white hover:border-gray-300"
-            }`}
+              }`}
             onClick={() => setUserType("business")}
           >
             <div className="flex flex-col items-start">
@@ -555,11 +645,10 @@ const validateForm = () => {
                 tickets at scale.
               </p>
               <button
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors text-sm lg:text-base cursor-pointer ${
-                  userType === "business"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors text-sm lg:text-base cursor-pointer ${userType === "business"
                     ? "bg-[#10B981] text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                  }`}
               >
                 {userType === "business" ? "Selected" : "Select"}
                 <ChevronLeft className="w-4 h-4 rotate-180" />
@@ -586,251 +675,329 @@ const validateForm = () => {
           </p>
         </div>
 
+        {/* Stepper Navigation */}
+        <div className="flex items-center justify-center mb-2">
+          {[
+            { id: 1, label: "Details" },
+            { id: 2, label: "Password" },
+            { id: 3, label: "Info" }
+          ].map((step) => (
+            <React.Fragment key={step.id}>
+              <div className="flex flex-col items-center cursor-pointer"
+                onClick={() => {
+                  if (step.id < formStep) {
+                    // Going back or to a previous step: no validation
+                    setFormStep(step.id);
+                  } else {
+                    // Going forward: run validation
+                    if (validateStepperForm()) {
+                      setFormStep(step.id);
+                    }
+                  }
+                }}
+                tabIndex={0}
+                role="button"
+                aria-label={`Go to ${step.label} step`}
+              >
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${formStep === step.id
+                      ? "bg-[#10B981] text-white"
+                      : formStep > step.id
+                        ? "bg-emerald-200 text-[#10B981]"
+                        : "bg-gray-200 text-gray-500"
+                    }`}
+                >
+                  {formStep > step.id ? (
+                    <CheckCircle className="w-5 h-5" />
+                  ) : (<>
+                    {step.id}
+                  </>)}
+                </div>
+                <span
+                  className={`mt-1 text-xs font-medium ${formStep === step.id
+                      ? "text-[#10B981]"
+                      : "text-gray-500"
+                    }`}
+                >
+                  {step.label}
+                </span>
+              </div>
+              {step.id < 3 && (
+                <div className={`w-8 h-1 mx-2 rounded-full mb-5 ${formStep > step.id ? "bg-emerald-200" : "bg-gray-200"}`} />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
         <form onSubmit={handleFormSubmit}>
-          <div className="space-y-5 max-h-[60vh]  pr-2">
-            {userType === "business" && (
-              <div ref={(el) => (errorRefs.current.business_name = el)}>
-                <FloatingLabelInput
-                  label="Business Name"
-                  id="business_name"
-                  keyValue="business_name"
-                  value={formData.business_name}
-                  onChange={handleChange}
-                  error={errors.business_name}
-                  required
-                  showError={true}
-                  className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-                />
+          <div className="space-y-3.5 max-h-[60vh] pr-2">
+            {/* Step 1: Basic Info */}
+            {formStep === 1 && (
+              <>
+                {userType === "business" && (
+                  <div ref={(el) => (errorRefs.current.business_name = el)}>
+                    <FloatingLabelInput
+                      label="Business Name"
+                      id="business_name"
+                      keyValue="business_name"
+                      value={formData.business_name}
+                      onChange={handleChange}
+                      error={errors.business_name}
+                      required
+                      staticLabel={true}
+                      showError={true}
+                      className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                    />
+                  </div>
+                )}
+                <div className="space-y-2">
+                  {/* <p className="text-[14px] font-medium text-gray-800">Your Name</p> */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div ref={(el) => (errorRefs.current.first_name = el)}>
+                      <FloatingLabelInput
+                        label="First Name"
+                        id="first_name"
+                        keyValue="first_name"
+                        value={formData.first_name}
+                        onChange={handleChange}
+                        error={errors.first_name}
+                        showError={true}
+                        staticLabel={true}
+                        className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                      />
+                    </div>
+                    <div ref={(el) => (errorRefs.current.last_name = el)}>
+                      <FloatingLabelInput
+                        label="Last Name"
+                        id="last_name"
+                        keyValue="last_name"
+                        value={formData.last_name}
+                        onChange={handleChange}
+                        error={errors.last_name}
+                        showError={true}
+                        staticLabel={true}
+                        className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[14px] font-medium text-gray-800">Email Address</p>
+                  <div ref={(el) => (errorRefs.current.email = el)}>
+                    <FloatingLabelInput
+                      label="Email Address"
+                      type="email"
+                      id="email"
+                      keyValue="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      error={errors.email}
+                      showError={true}
+                      className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Step 2: Password */}
+            {formStep === 2 && (
+              <div className="space-y-2">
+                <p className="text-[14px] font-medium text-gray-800">
+                  Set a Seat Brokers Password
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div ref={(el) => (errorRefs.current.password = el)}>
+                    <FloatingLabelInput
+                      label="Password"
+                      type="password"
+                      id="password"
+                      keyValue="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      error={errors.password}
+                      showError={true}
+                      staticLabel={true}
+                      className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                    />
+                  </div>
+                  <div ref={(el) => (errorRefs.current.confirm_password = el)}>
+                    <FloatingLabelInput
+                      label="Confirm Password"
+                      type="password"
+                      id="confirm_password"
+                      keyValue="confirm_password"
+                      value={formData.confirm_password}
+                      onChange={handleChange}
+                      error={errors.confirm_password}
+                      showError={true}
+                      staticLabel={true}
+                      className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                    />
+                  </div>
+                </div>
               </div>
             )}
-            <div className="space-y-2">
-              <p className="text-[14px] font-medium text-gray-800">Your Name</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div ref={(el) => (errorRefs.current.first_name = el)}>
-                  <FloatingLabelInput
-                    label="First Name"
-                    id="first_name"
-                    keyValue="first_name"
-                    value={formData.first_name}
-                    onChange={handleChange}
-                    error={errors.first_name}
-                    showError={true}
-                    className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-                  />
-                </div>
-                <div ref={(el) => (errorRefs.current.last_name = el)}>
-                  <FloatingLabelInput
-                    label="Last Name"
-                    id="last_name"
-                    keyValue="last_name"
-                    value={formData.last_name}
-                    onChange={handleChange}
-                    error={errors.last_name}
-                    showError={true}
-                    className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <p className="text-[14px] font-medium text-gray-800">
-                Email Address
-              </p>
-              <div ref={(el) => (errorRefs.current.email = el)}>
-                <FloatingLabelInput
-                  label="Email Address"
-                  type="email"
-                  id="email"
-                  keyValue="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  error={errors.email}
-                  showError={true}
-                  className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <p className="text-[14px] font-medium text-gray-800">
-                Set a Seat Brokers Password
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div ref={(el) => (errorRefs.current.password = el)}>
-                  <FloatingLabelInput
-                    label="Password"
-                    type="password"
-                    id="password"
-                    keyValue="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    error={errors.password}
-                    showError={true}
-                    className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-                  />
-                </div>
-                <div ref={(el) => (errorRefs.current.confirm_password = el)}>
-                  <FloatingLabelInput
-                    label="Confirm Password"
-                    type="password"
-                    id="confirm_password"
-                    keyValue="confirm_password"
-                    value={formData.confirm_password}
-                    onChange={handleChange}
-                    error={errors.confirm_password}
-                    showError={true}
-                    className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-                  />
-                </div>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-1">
-                <div ref={(el) => (errorRefs.current.phone_country_code = el)}>
+            {/* Step 3: Contact Info */}
+            {formStep === 3 && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-1">
+                    <div ref={(el) => (errorRefs.current.phone_country_code = el)}>
+                      <FloatingSelect
+                        label="Phone Code"
+                        options={allCountryCodeOptions}
+                        selectedValue={formData.phone_country_code}
+                        onSelect={handleChange}
+                        keyValue="phone_country_code"
+                        error={errors.phone_country_code}
+                        searchable={true}
+                        showError={true}
+                        staticLabel={true}
+                        paddingClassName="px-3 py-[11px]"
+                      />
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <div ref={(el) => (errorRefs.current.phone_number = el)}>
+                      <FloatingLabelInput
+                        label="Phone Number"
+                        type="tel"
+                        id="phone_number"
+                        keyValue="phone_number"
+                        value={formData.phone_number}
+                        onChange={handleChange}
+                        error={errors.phone_number}
+                        showError={true}
+                        staticLabel={true}
+                        className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
+                  <div ref={(el) => (errorRefs.current.dob = el)}>
+                  <FloatingDateRange
+                    label="Date of Birth"
+                    type="date"
+                    id="dob"
+                    keyValue="dob"
+                    value={formData.dob}
+                    onChange={handleChange}
+                    singleDateMode={true}
+                    error={errors.dob}
+                    showError={true}
+                    showYear={true}
+                    showMonth={true}
+                    className="!py-[8px] sm:!py-[10px] !text-[14px]"
+                    defaultFocus={true}
+                    minDate="1900-01-01"
+                    staticLabel={true}
+                  />
+                  </div>
+                  <div ref={(el) => (errorRefs.current.currency = el)}>
+                    <FloatingSelect
+                      label="Currency"
+                      options={currencyOptions}
+                      selectedValue={formData.currency}
+                      onSelect={handleChange}
+                      keyValue="currency"
+                      error={errors.currency}
+                      searchable={true}
+                      paddingClassName="px-3 py-[11px]"
+                      showError={true}
+                      openUpward={true}
+                      staticLabel={true}
+                    />
+                  </div>
+                </div>
+                <div ref={(el) => (errorRefs.current.address = el)}>
+                  <FloatingLabelInput
+                    label="Address"
+                    id="address"
+                    keyValue="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    error={errors.address}
+                    showError={true}
+                    staticLabel={true}
+                    className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                  />
+                </div>
+                <div
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
+                  <div ref={(el) => (errorRefs.current.country = el)}>
                   <FloatingSelect
-                    label="Phone Code"
-                    options={allCountryCodeOptions}
-                    selectedValue={formData.phone_country_code}
+                    label="Country"
+                    options={countryOptions || []}
+                    selectedValue={formData.country}
                     onSelect={handleChange}
-                    keyValue="phone_country_code"
-                    error={errors.phone_country_code}
+                    keyValue="country"
+                    error={errors.country}
+                    showError={true}
+                    searchable={true}
+                    staticLabel={true}
+                  />
+                  </div>
+                  <div>
+                  <FloatingSelect
+                    label={isLoadingCities ? "Loading Cities..." : "City"}
+                    options={cityOptions}
+                    selectedValue={formData.city}
+                    onSelect={handleChange}
+                    keyValue="city"
+                    error={errors.city}
+                    disabled={!formData.country || isLoadingCities}
+                    placeholder={
+                      !formData.country
+                        ? "Select country first"
+                        : isLoadingCities
+                          ? "Loading..."
+                          : "Select city"
+                    }
                     searchable={true}
                     showError={true}
-                    paddingClassName="px-3 py-[11px]"
+                    staticLabel={true}
                   />
+                  </div>
                 </div>
-              </div>
-              <div className="md:col-span-2">
-                <div ref={(el) => (errorRefs.current.phone_number = el)}>
-                  <FloatingLabelInput
-                    label="Phone Number"
-                    type="tel"
-                    id="phone_number"
-                    keyValue="phone_number"
-                    value={formData.phone_number}
-                    onChange={handleChange}
-                    error={errors.phone_number}
-                    showError={true}
-                    className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div ref={(el) => (errorRefs.current.zip_code = el)}>
+                    <FloatingLabelInput
+                      label="Zip Code"
+                      id="zip_code"
+                      keyValue="zip_code"
+                      value={formData.zip_code}
+                      onChange={handleChange}
+                      error={errors.zip_code}
+                      showError={true}
+                      staticLabel={true}
+                      className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                    />
+                  </div>
+                  <div>
+                    <div ref={(el) => (errorRefs.current.refer_code = el)}>
+                      <FloatingLabelInput
+                        label="Referral Code (Optional)"
+                        type="text"
+                        id="refer_code"
+                        keyValue="refer_code"
+                        value={formData.refer_code}
+                        onChange={handleChange}
+                        error={errors.refer_code}
+                        showError={true}
+                        staticLabel={true}
+                        className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                        readOnly={refer_code ? true : false}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-
-            <div
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-              ref={(el) => (errorRefs.current.dob = el)}
-            >
-              <FloatingDateRange
-                label="Date of Birth"
-                type="date"
-                id="dob"
-                keyValue="dob"
-                value={formData.dob}
-                onChange={handleChange}
-                singleDateMode={true}
-                error={errors.dob}
-                showError={true}
-                showYear={true}
-                showMonth={true}
-                className="!py-[8px] sm:!py-[10px] !text-[14px]"
-                defaultFocus={true}
-                // maxDate={calculateMaxBirthDate()} // This ensures user must be at least 10 years old
-                minDate="1900-01-01" // Optional: set a reasonable minimum date
-              />
-              <div ref={(el) => (errorRefs.current.currency = el)}>
-                <FloatingSelect
-                  label="Currency"
-                  options={currencyOptions}
-                  selectedValue={formData.currency}
-                  onSelect={handleChange}
-                  keyValue="currency"
-                  error={errors.currency}
-                  searchable={true}
-                  paddingClassName="px-3 py-[11px]"
-                  showError={true}
-                  openUpward={true}
-                />
-              </div>
-            </div>
-
-            <div ref={(el) => (errorRefs.current.address = el)}>
-              <FloatingLabelInput
-                label="Address"
-                id="address"
-                keyValue="address"
-                value={formData.address}
-                onChange={handleChange}
-                error={errors.address}
-                showError={true}
-                className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-              />
-            </div>
-
-            <div
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-              ref={(el) => (errorRefs.current.country = el)}
-            >
-              <FloatingSelect
-                label="Country"
-                options={countryOptions || []}
-                selectedValue={formData.country}
-                onSelect={handleChange}
-                keyValue="country"
-                error={errors.country}
-                showError={true}
-                searchable={true}
-              />
-              <FloatingSelect
-                label={isLoadingCities ? "Loading Cities..." : "City"}
-                options={cityOptions}
-                selectedValue={formData.city}
-                onSelect={handleChange}
-                keyValue="city"
-                error={errors.city}
-                disabled={!formData.country || isLoadingCities}
-                placeholder={
-                  !formData.country
-                    ? "Select country first"
-                    : isLoadingCities
-                    ? "Loading..."
-                    : "Select city"
-                }
-                searchable={true}
-                showError={true}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div ref={(el) => (errorRefs.current.zip_code = el)}>
-                <FloatingLabelInput
-                  label="Zip Code"
-                  id="zip_code"
-                  keyValue="zip_code"
-                  value={formData.zip_code}
-                  onChange={handleChange}
-                  error={errors.zip_code}
-                  showError={true}
-                  className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-                />
-              </div>
-              <div>
-                <div ref={(el) => (errorRefs.current.refer_code = el)}>
-                  <FloatingLabelInput
-                    label="Referral Code (Optional)"
-                    type="text"
-                    id="refer_code"
-                    keyValue="refer_code"
-                    value={formData.refer_code}
-                    onChange={handleChange}
-                    error={errors.refer_code}
-                    showError={true}
-                    className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-                    readOnly={refer_code ? true : false}
-                  />
-                </div>
-              </div>
-            </div>
+              </>
+            )}
 
             {errors.general && (
               <div className="text-red-500 text-sm mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -838,8 +1005,6 @@ const validateForm = () => {
               </div>
             )}
           </div>
-
-          <button type="submit" style={{ display: "none" }} />
         </form>
       </div>
     </div>
@@ -903,13 +1068,12 @@ const validateForm = () => {
             title={step.tooltip}
           >
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
-                isCompleted
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${isCompleted
                   ? "bg-[#10B981] text-white"
                   : isActive
-                  ? "bg-[#10B981] text-white"
-                  : "bg-gray-200 text-gray-500"
-              }`}
+                    ? "bg-[#10B981] text-white"
+                    : "bg-gray-200 text-gray-500"
+                }`}
             >
               {isCompleted ? (
                 <CheckCircle className="w-5 h-5" />
@@ -919,16 +1083,14 @@ const validateForm = () => {
             </div>
             <div className="flex-1">
               <h4
-                className={`font-medium transition-colors ${
-                  isCompleted || isActive ? "text-gray-800" : "text-gray-500"
-                }`}
+                className={`font-medium transition-colors ${isCompleted || isActive ? "text-gray-800" : "text-gray-500"
+                  }`}
               >
                 {step.title}
               </h4>
               <p
-                className={`text-sm transition-colors ${
-                  isCompleted || isActive ? "text-gray-600" : "text-gray-400"
-                }`}
+                className={`text-sm transition-colors ${isCompleted || isActive ? "text-gray-600" : "text-gray-400"
+                  }`}
               >
                 {step.description}
               </p>
@@ -953,9 +1115,9 @@ const validateForm = () => {
   };
 
   return (
-    <div className="min-h-screen lg:min-h-screen min-h-[100dvh] bg-gradient-to-br from-gray-50 via-white to-emerald-50 flex flex-col lg:flex-row">
+    <div className="min-h-screen lg:min-h-screen min-h-[100dvh] bg-[#f3f4f6] flex flex-col lg:flex-row relative">
       {/* Left Sidebar */}
-      <div className="hidden lg:flex lg:w-2/5 flex-col justify-between p-6 lg:p-8 text-gray-800 bg-white border-r border-gray-200">
+      <div className="hidden lg:flex lg:w-2/5 flex-col justify-between p-6 lg:p-8 text-gray-800 bg-transparent z-20 border-r border-gray-200">
         <div>
           {/* Header with Sign In */}
           <div className="flex items-center justify-between mb-8 lg:mb-12">
@@ -1009,7 +1171,7 @@ const validateForm = () => {
       </div>
 
       {/* Right Content Area */}
-      <div className="flex-1 bg-white flex flex-col min-h-[100dvh] lg:min-h-screen">
+      <div className="flex-1 bg-white z-20 flex flex-col min-h-[100dvh] lg:min-h-screen">
         {/* Mobile Header */}
         <div className="lg:hidden bg-white border-b border-gray-200 sticky top-0 z-50">
           {/* Top Sign In Section */}
@@ -1068,13 +1230,12 @@ const validateForm = () => {
                       className="flex flex-col items-center flex-1 relative"
                     >
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 transition-all duration-200 relative z-10 ${
-                          isCompleted
+                        className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 transition-all duration-200 relative z-10 ${isCompleted
                             ? "bg-[#10B981] text-white"
                             : isActive
-                            ? "bg-[#10B981] text-white"
-                            : "bg-gray-200 text-gray-500"
-                        }`}
+                              ? "bg-[#10B981] text-white"
+                              : "bg-gray-200 text-gray-500"
+                          }`}
                       >
                         {isCompleted ? (
                           <CheckCircle className="w-4 h-4" />
@@ -1083,19 +1244,17 @@ const validateForm = () => {
                         )}
                       </div>
                       <span
-                        className={`text-xs font-medium text-center ${
-                          isCompleted || isActive
+                        className={`text-xs font-medium text-center ${isCompleted || isActive
                             ? "text-gray-800"
                             : "text-gray-500"
-                        }`}
+                          }`}
                       >
                         {step.title}
                       </span>
                       {index < stepperSteps.length - 1 && (
                         <div
-                          className={`absolute top-4 left-full w-full h-0.5 -z-10 ${
-                            isCompleted ? "bg-[#10B981]" : "bg-gray-200"
-                          }`}
+                          className={`absolute top-4 left-full w-full h-0.5 -z-10 ${isCompleted ? "bg-[#10B981]" : "bg-gray-200"
+                            }`}
                           style={{
                             width: `calc(100% - 16px)`,
                             marginLeft: "8px",
@@ -1121,13 +1280,16 @@ const validateForm = () => {
             <button
               onClick={handleBack}
               disabled={
-                currentStep === 1 || currentStep === 3 || currentStep === 4
+                (currentStep === 1 && formStep === 1) ||
+                currentStep === 3 ||
+                currentStep === 4
               }
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                currentStep === 1 || currentStep === 3 || currentStep === 4
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${(currentStep === 1 && formStep === 1) ||
+                  currentStep === 3 ||
+                  currentStep === 4
                   ? "text-gray-400 cursor-not-allowed"
                   : "text-gray-700 hover:bg-gray-100"
-              }`}
+                }`}
             >
               <ChevronLeft className="w-4 h-4" />
               <span className="hidden sm:inline">Back</span>
@@ -1145,11 +1307,10 @@ const validateForm = () => {
               <button
                 onClick={handleNext}
                 disabled={!userType}
-                className={`flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center ${
-                  !userType
+                className={`flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center ${!userType
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                     : "bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg cursor-pointer"
-                }`}
+                  }`}
               >
                 <span>Next</span>
                 <ChevronLeft className="w-4 h-4 rotate-180" />
@@ -1157,38 +1318,58 @@ const validateForm = () => {
             )}
 
             {currentStep === 2 && (
-              <button
-                type="submit"
-                form="signup-form"
-                disabled={isLoading}
-                className={`flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center ${
-                  isLoading
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg"
-                }`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  // Find the form and submit it
-                  const form = document.querySelector("form");
-                  if (form) {
-                    form.dispatchEvent(
-                      new Event("submit", { cancelable: true, bubbles: true })
-                    );
-                  }
-                }}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="hidden sm:inline">Creating...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Create Account</span>
+              <>
+                {formStep < totalFormSteps ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (validateStepperForm()) {
+                        setFormStep((s) => Math.min(totalFormSteps, s + 1));
+                      }
+                    }}
+                    disabled={!userType}
+                    className={`flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center ${!userType
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg cursor-pointer"
+                      }`}
+                  >
+                    <span>Next</span>
                     <ChevronLeft className="w-4 h-4 rotate-180" />
-                  </>
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    form="signup-form"
+                    disabled={isLoading}
+                    className={`flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center ${isLoading
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg"
+                      }`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      // Find the form and submit it
+                      const form = document.querySelector("form");
+                      if (form) {
+                        form.dispatchEvent(
+                          new Event("submit", { cancelable: true, bubbles: true })
+                        );
+                      }
+                    }}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span className="hidden sm:inline">Creating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Create Account</span>
+                        <ChevronLeft className="w-4 h-4 rotate-180" />
+                      </>
+                    )}
+                  </button>
                 )}
-              </button>
+              </>
             )}
 
             {currentStep === 3 && (
@@ -1217,6 +1398,13 @@ const validateForm = () => {
           </div>
         </div>
       </div>
+      <Image
+        src={Design}
+        className="w-full absolute bottom-0 left-0 max-md:hidden opacity-50 z-10"
+        width={100}
+        height={50}
+        alt="background design"
+      />
     </div>
   );
 };
