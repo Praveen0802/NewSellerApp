@@ -1,3 +1,5 @@
+import { Download, ExternalLink } from "lucide-react";
+
 const RenderPreviewContent = ({
   previewModal,
   handleDownload,

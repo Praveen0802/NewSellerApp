@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import {
   ChevronLeft,
   RefreshCw,
@@ -29,9 +29,14 @@ import { toast } from "react-toastify";
 import Image from "next/image";
 import FloatingDateRange from "../commonComponents/dateRangeInput";
 import Design from "../../../public/design-1.svg";
+import { useSelector } from "react-redux";
+import KycDocumentComponent from "./KycDocumentComponent";
 
-const SignupFlow = ({ refer_code } = {}) => {
-  const [currentStep, setCurrentStep] = useState(1);
+const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
+  const isKycScreen = currentScreen === "kyc-verification";
+
+  //TO Avoid flickering
+  const [currentStep, setCurrentStep] = useState(isKycScreen ? 4 : 1);
   const [formStep, setFormStep] = useState(1);
   const [userType, setUserType] = useState("");
   const [currentUrl, setCurrentUrl] = useState("/signup");
@@ -67,7 +72,6 @@ const SignupFlow = ({ refer_code } = {}) => {
   // Refs for error fields
   const errorRefs = useRef({});
 
-  const totalSteps = 4;
   const totalFormSteps = 3;
 
   // Get country and phone code options from hook
@@ -134,6 +138,7 @@ const SignupFlow = ({ refer_code } = {}) => {
 
   // Load saved data from cookies on component mount
   useEffect(() => {
+    if (isKycScreen) return;
     const savedStep = readCookie("signup_step");
     const savedUserType = readCookie("user_type");
     const savedFormData = readCookie("signup_form_data");
@@ -158,6 +163,7 @@ const SignupFlow = ({ refer_code } = {}) => {
 
   // Load cities when country changes
   useEffect(() => {
+    if (isKycScreen) return;
     const loadCities = async () => {
       if (formData.country && formData.country !== "") {
         setIsLoadingCities(true);
@@ -197,6 +203,7 @@ const SignupFlow = ({ refer_code } = {}) => {
 
   // Save current step to cookies
   useEffect(() => {
+    if (isKycScreen) return;
     setCookie("signup_step", currentStep.toString(), 7);
   }, [currentStep]);
 
@@ -238,7 +245,6 @@ const SignupFlow = ({ refer_code } = {}) => {
     }
   };
 
-
   // 2. Add a helper function to calculate age:
   const calculateAge = (birthDate) => {
     if (!birthDate) return null;
@@ -249,7 +255,10 @@ const SignupFlow = ({ refer_code } = {}) => {
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
 
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
       age--;
     }
 
@@ -258,7 +267,6 @@ const SignupFlow = ({ refer_code } = {}) => {
 
   // 3. Update the validateForm function to include age validation:
   const validateForm = () => {
-    console.log(validateForm, 'kkkkkkkkk')
     const newErrors = {};
 
     if (!formData.first_name.trim()) {
@@ -435,10 +443,13 @@ const SignupFlow = ({ refer_code } = {}) => {
   const startRegistrationProcess = async (formData) => {
     // Parse DOB from YYYY-MM-DD to D-M-YYYY format (without leading zeros)
     const formatDOB = (dateObj) => {
-      const dateString = typeof dateObj === "string" ? dateObj : dateObj?.startDate;
+      const dateString =
+        typeof dateObj === "string" ? dateObj : dateObj?.startDate;
       if (!dateString || typeof dateString !== "string") return "";
       const [year, month, day] = dateString.split("-");
-      return `${parseInt(day)}-${parseInt(month) > 9 ? parseInt(month) : "0" + parseInt(month)}-${year}`;
+      return `${parseInt(day)}-${
+        parseInt(month) > 9 ? parseInt(month) : "0" + parseInt(month)
+      }-${year}`;
     };
 
     // Create payload with formatted DOB and exclude confirm_password
@@ -580,6 +591,30 @@ const SignupFlow = ({ refer_code } = {}) => {
     router.push("/login");
   };
 
+  //KYC Component
+
+  const goToKycScreen = () => {
+    router.push("/settings/kyc");
+  };
+  const { currentUser } = useSelector((state) => state.currentUser);
+  // const [kycStatus, setKycStaus] = useState(null);
+
+  const handleKycStatusChange = (status) => {
+    // setKycStaus(status);
+    if (status?.toLowerCase() === "completed") {
+      goToKycScreen();
+    }
+  };
+
+  const renderStep4 = () => {
+    return (
+      <KycDocumentComponent
+        currentUser={currentUser}
+        onStatusChange={handleKycStatusChange}
+      />
+    );
+  };
+
   // Step 1: User Type Selection
   const renderStep1 = () => (
     <div className="flex flex-col items-center justify-center h-full px-4 lg:px-0">
@@ -596,10 +631,11 @@ const SignupFlow = ({ refer_code } = {}) => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 max-w-3xl mx-auto">
           {/* Individual Seller */}
           <div
-            className={`p-6 lg:p-8 rounded-2xl border-2 cursor-pointer transition-all duration-200 hover:shadow-lg ${userType === "individual"
+            className={`p-6 lg:p-8 rounded-2xl border-2 cursor-pointer transition-all duration-200 hover:shadow-lg ${
+              userType === "individual"
                 ? "border-[#10B981] bg-emerald-50"
                 : "border-gray-200 bg-white hover:border-gray-300"
-              }`}
+            }`}
             onClick={() => setUserType("individual")}
           >
             <div className="flex flex-col items-start">
@@ -614,10 +650,11 @@ const SignupFlow = ({ refer_code } = {}) => {
                 attend or reselling tickets.
               </p>
               <button
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors text-sm lg:text-base cursor-pointer ${userType === "individual"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors text-sm lg:text-base cursor-pointer ${
+                  userType === "individual"
                     ? "bg-[#10B981] text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                }`}
               >
                 {userType === "individual" ? "Selected" : "Select"}
                 <ChevronLeft className="w-4 h-4 rotate-180" />
@@ -627,10 +664,11 @@ const SignupFlow = ({ refer_code } = {}) => {
 
           {/* Business Seller */}
           <div
-            className={`p-6 lg:p-8 rounded-2xl border-2 cursor-pointer transition-all duration-200 hover:shadow-lg ${userType === "business"
+            className={`p-6 lg:p-8 rounded-2xl border-2 cursor-pointer transition-all duration-200 hover:shadow-lg ${
+              userType === "business"
                 ? "border-[#10B981] bg-emerald-50"
                 : "border-gray-200 bg-white hover:border-gray-300"
-              }`}
+            }`}
             onClick={() => setUserType("business")}
           >
             <div className="flex flex-col items-start">
@@ -645,10 +683,11 @@ const SignupFlow = ({ refer_code } = {}) => {
                 tickets at scale.
               </p>
               <button
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors text-sm lg:text-base cursor-pointer ${userType === "business"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors text-sm lg:text-base cursor-pointer ${
+                  userType === "business"
                     ? "bg-[#10B981] text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                }`}
               >
                 {userType === "business" ? "Selected" : "Select"}
                 <ChevronLeft className="w-4 h-4 rotate-180" />
@@ -680,10 +719,11 @@ const SignupFlow = ({ refer_code } = {}) => {
           {[
             { id: 1, label: "Basic Details" },
             { id: 2, label: "Password" },
-            { id: 3, label: "Address" }
+            { id: 3, label: "Address" },
           ].map((step) => (
             <React.Fragment key={step.id}>
-              <div className="flex flex-col items-center cursor-pointer"
+              <div
+                className="flex flex-col items-center cursor-pointer"
                 onClick={() => {
                   if (step.id < formStep) {
                     // Going back or to a previous step: no validation
@@ -700,30 +740,34 @@ const SignupFlow = ({ refer_code } = {}) => {
                 aria-label={`Go to ${step.label} step`}
               >
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${formStep === step.id
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                    formStep === step.id
                       ? "bg-[#10B981] text-white"
                       : formStep > step.id
-                        ? "bg-emerald-200 text-[#10B981]"
-                        : "bg-gray-200 text-gray-500"
-                    }`}
+                      ? "bg-emerald-200 text-[#10B981]"
+                      : "bg-gray-200 text-gray-500"
+                  }`}
                 >
                   {formStep > step.id ? (
                     <CheckCircle className="w-5 h-5" />
-                  ) : (<>
-                    {step.id}
-                  </>)}
+                  ) : (
+                    <>{step.id}</>
+                  )}
                 </div>
                 <span
-                  className={`mt-1 text-xs font-medium ${formStep === step.id
-                      ? "text-[#10B981]"
-                      : "text-gray-500"
-                    }`}
+                  className={`mt-1 text-xs font-medium ${
+                    formStep === step.id ? "text-[#10B981]" : "text-gray-500"
+                  }`}
                 >
                   {step.label}
                 </span>
               </div>
               {step.id < 3 && (
-                <div className={`w-8 h-1 mx-2 rounded-full mb-5 ${formStep > step.id ? "bg-emerald-200" : "bg-gray-200"}`} />
+                <div
+                  className={`w-8 h-1 mx-2 rounded-full mb-5 ${
+                    formStep > step.id ? "bg-emerald-200" : "bg-gray-200"
+                  }`}
+                />
               )}
             </React.Fragment>
           ))}
@@ -781,7 +825,9 @@ const SignupFlow = ({ refer_code } = {}) => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-[14px] font-medium text-gray-800">Email Address</p>
+                  <p className="text-[14px] font-medium text-gray-800">
+                    Email Address
+                  </p>
                   <div ref={(el) => (errorRefs.current.email = el)}>
                     <FloatingLabelInput
                       label="Email Address"
@@ -843,7 +889,9 @@ const SignupFlow = ({ refer_code } = {}) => {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="md:col-span-1">
-                    <div ref={(el) => (errorRefs.current.phone_country_code = el)}>
+                    <div
+                      ref={(el) => (errorRefs.current.phone_country_code = el)}
+                    >
                       <FloatingSelect
                         label="Phone Code"
                         options={allCountryCodeOptions}
@@ -875,27 +923,25 @@ const SignupFlow = ({ refer_code } = {}) => {
                     </div>
                   </div>
                 </div>
-                <div
-                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div ref={(el) => (errorRefs.current.dob = el)}>
-                  <FloatingDateRange
-                    label="Date of Birth"
-                    type="date"
-                    id="dob"
-                    keyValue="dob"
-                    value={formData.dob}
-                    onChange={handleChange}
-                    singleDateMode={true}
-                    error={errors.dob}
-                    showError={true}
-                    showYear={true}
-                    showMonth={true}
-                    className="!py-[8px] sm:!py-[10px] !text-[14px]"
-                    defaultFocus={true}
-                    minDate="1900-01-01"
-                    staticLabel={true}
-                  />
+                    <FloatingDateRange
+                      label="Date of Birth"
+                      type="date"
+                      id="dob"
+                      keyValue="dob"
+                      value={formData.dob}
+                      onChange={handleChange}
+                      singleDateMode={true}
+                      error={errors.dob}
+                      showError={true}
+                      showYear={true}
+                      showMonth={true}
+                      className="!py-[8px] sm:!py-[10px] !text-[14px]"
+                      defaultFocus={true}
+                      minDate="1900-01-01"
+                      staticLabel={true}
+                    />
                   </div>
                   <div ref={(el) => (errorRefs.current.currency = el)}>
                     <FloatingSelect
@@ -926,42 +972,40 @@ const SignupFlow = ({ refer_code } = {}) => {
                     className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
                   />
                 </div>
-                <div
-                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div ref={(el) => (errorRefs.current.country = el)}>
-                  <FloatingSelect
-                    label="Country"
-                    options={countryOptions || []}
-                    selectedValue={formData.country}
-                    onSelect={handleChange}
-                    keyValue="country"
-                    error={errors.country}
-                    showError={true}
-                    searchable={true}
-                    staticLabel={true}
-                  />
+                    <FloatingSelect
+                      label="Country"
+                      options={countryOptions || []}
+                      selectedValue={formData.country}
+                      onSelect={handleChange}
+                      keyValue="country"
+                      error={errors.country}
+                      showError={true}
+                      searchable={true}
+                      staticLabel={true}
+                    />
                   </div>
                   <div>
-                  <FloatingSelect
-                    label={isLoadingCities ? "Loading Cities..." : "City"}
-                    options={cityOptions}
-                    selectedValue={formData.city}
-                    onSelect={handleChange}
-                    keyValue="city"
-                    error={errors.city}
-                    disabled={!formData.country || isLoadingCities}
-                    placeholder={
-                      !formData.country
-                        ? "Select country first"
-                        : isLoadingCities
+                    <FloatingSelect
+                      label={isLoadingCities ? "Loading Cities..." : "City"}
+                      options={cityOptions}
+                      selectedValue={formData.city}
+                      onSelect={handleChange}
+                      keyValue="city"
+                      error={errors.city}
+                      disabled={!formData.country || isLoadingCities}
+                      placeholder={
+                        !formData.country
+                          ? "Select country first"
+                          : isLoadingCities
                           ? "Loading..."
                           : "Select city"
-                    }
-                    searchable={true}
-                    showError={true}
-                    staticLabel={true}
-                  />
+                      }
+                      searchable={true}
+                      showError={true}
+                      staticLabel={true}
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1068,12 +1112,13 @@ const SignupFlow = ({ refer_code } = {}) => {
             title={step.tooltip}
           >
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${isCompleted
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
+                isCompleted
                   ? "bg-[#10B981] text-white"
                   : isActive
-                    ? "bg-[#10B981] text-white"
-                    : "bg-gray-200 text-gray-500"
-                }`}
+                  ? "bg-[#10B981] text-white"
+                  : "bg-gray-200 text-gray-500"
+              }`}
             >
               {isCompleted ? (
                 <CheckCircle className="w-5 h-5" />
@@ -1083,14 +1128,16 @@ const SignupFlow = ({ refer_code } = {}) => {
             </div>
             <div className="flex-1">
               <h4
-                className={`font-medium transition-colors ${isCompleted || isActive ? "text-gray-800" : "text-gray-500"
-                  }`}
+                className={`font-medium transition-colors ${
+                  isCompleted || isActive ? "text-gray-800" : "text-gray-500"
+                }`}
               >
                 {step.title}
               </h4>
               <p
-                className={`text-sm transition-colors ${isCompleted || isActive ? "text-gray-600" : "text-gray-400"
-                  }`}
+                className={`text-sm transition-colors ${
+                  isCompleted || isActive ? "text-gray-600" : "text-gray-400"
+                }`}
               >
                 {step.description}
               </p>
@@ -1101,6 +1148,12 @@ const SignupFlow = ({ refer_code } = {}) => {
     </div>
   );
 
+  useLayoutEffect(() => {
+    if (isKycScreen) {
+      setCurrentStep(4);
+    }
+  }, [currentStep]);
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
@@ -1109,6 +1162,8 @@ const SignupFlow = ({ refer_code } = {}) => {
         return renderStep2();
       case 3:
         return renderStep3();
+      case 4:
+        return renderStep4();
       default:
         return renderStep1();
     }
@@ -1132,13 +1187,15 @@ const SignupFlow = ({ refer_code } = {}) => {
                 </p>
               </div>
             </div>
-            <button
-              onClick={handleLogin}
-              className="flex items-center gap-2 px-4 py-2 text-[#10B981] hover:bg-emerald-50 rounded-lg font-medium transition-colors border border-[#10B981]"
-            >
-              <LogIn className="w-4 h-4" />
-              Sign In
-            </button>
+            {!isKycScreen && (
+              <button
+                onClick={handleLogin}
+                className="flex items-center gap-2 px-4 py-2 text-[#10B981] hover:bg-emerald-50 rounded-lg font-medium transition-colors border border-[#10B981]"
+              >
+                <LogIn className="w-4 h-4" />
+                Sign In
+              </button>
+            )}
           </div>
 
           <div className="mb-8">
@@ -1175,22 +1232,24 @@ const SignupFlow = ({ refer_code } = {}) => {
         {/* Mobile Header */}
         <div className="lg:hidden bg-white border-b border-gray-200 sticky top-0 z-50">
           {/* Top Sign In Section */}
-          <div className="bg-gradient-to-r from-emerald-50 to-green-50 px-4 py-2 border-b border-emerald-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">
-                  Already have an account?
-                </span>
+          {!isKycScreen && (
+            <div className="bg-gradient-to-r from-emerald-50 to-green-50 px-4 py-2 border-b border-emerald-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">
+                    Already have an account?
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogin}
+                  className="text-sm font-medium text-[#10B981] hover:text-emerald-700 transition-colors flex items-center gap-1"
+                >
+                  <LogIn className="w-3 h-3" />
+                  Sign In
+                </button>
               </div>
-              <button
-                onClick={handleLogin}
-                className="text-sm font-medium text-[#10B981] hover:text-emerald-700 transition-colors flex items-center gap-1"
-              >
-                <LogIn className="w-3 h-3" />
-                Sign In
-              </button>
             </div>
-          </div>
+          )}
 
           {/* Main Header */}
           <div className="px-4 py-3">
@@ -1208,12 +1267,14 @@ const SignupFlow = ({ refer_code } = {}) => {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={handleReset}
-                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <RefreshCw className="w-4 h-4 text-gray-600" />
-              </button>
+              {!isKycScreen && (
+                <button
+                  onClick={handleReset}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4 text-gray-600" />
+                </button>
+              )}
             </div>
 
             {/* Mobile Stepper */}
@@ -1230,12 +1291,13 @@ const SignupFlow = ({ refer_code } = {}) => {
                       className="flex flex-col items-center flex-1 relative"
                     >
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 transition-all duration-200 relative z-10 ${isCompleted
+                        className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 transition-all duration-200 relative z-10 ${
+                          isCompleted
                             ? "bg-[#10B981] text-white"
                             : isActive
-                              ? "bg-[#10B981] text-white"
-                              : "bg-gray-200 text-gray-500"
-                          }`}
+                            ? "bg-[#10B981] text-white"
+                            : "bg-gray-200 text-gray-500"
+                        }`}
                       >
                         {isCompleted ? (
                           <CheckCircle className="w-4 h-4" />
@@ -1244,17 +1306,19 @@ const SignupFlow = ({ refer_code } = {}) => {
                         )}
                       </div>
                       <span
-                        className={`text-xs font-medium text-center ${isCompleted || isActive
+                        className={`text-xs font-medium text-center ${
+                          isCompleted || isActive
                             ? "text-gray-800"
                             : "text-gray-500"
-                          }`}
+                        }`}
                       >
                         {step.title}
                       </span>
                       {index < stepperSteps.length - 1 && (
                         <div
-                          className={`absolute top-4 left-full w-full h-0.5 -z-10 ${isCompleted ? "bg-[#10B981]" : "bg-gray-200"
-                            }`}
+                          className={`absolute top-4 left-full w-full h-0.5 -z-10 ${
+                            isCompleted ? "bg-[#10B981]" : "bg-gray-200"
+                          }`}
                           style={{
                             width: `calc(100% - 16px)`,
                             marginLeft: "8px",
@@ -1275,128 +1339,137 @@ const SignupFlow = ({ refer_code } = {}) => {
         </div>
 
         {/* Bottom Navigation - Sticky Footer */}
-        <div className="p-4 lg:p-6 border-t bg-white sticky bottom-0 z-40 shadow-lg lg:shadow-none">
-          <div className="flex justify-between max-w-2xl mx-auto">
-            <button
-              onClick={handleBack}
-              disabled={
-                (currentStep === 1 && formStep === 1) ||
-                currentStep === 3 ||
-                currentStep === 4
-              }
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${(currentStep === 1 && formStep === 1) ||
+        {!isKycScreen && (
+          <div className="p-4 lg:p-6 border-t bg-white sticky bottom-0 z-40 shadow-lg lg:shadow-none">
+            <div className="flex justify-between max-w-2xl mx-auto">
+              <button
+                onClick={handleBack}
+                disabled={
+                  (currentStep === 1 && formStep === 1) ||
                   currentStep === 3 ||
                   currentStep === 4
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "text-gray-700 hover:bg-gray-100"
+                }
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  (currentStep === 1 && formStep === 1) ||
+                  currentStep === 3 ||
+                  currentStep === 4
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`}
-            >
-              <ChevronLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Back</span>
-            </button>
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Back</span>
+              </button>
 
-            <button
-              onClick={handleReset}
-              className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors"
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span className="hidden sm:inline">Reset</span>
-            </button>
-
-            {currentStep === 1 && (
               <button
-                onClick={handleNext}
-                disabled={!userType}
-                className={`flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center ${!userType
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg cursor-pointer"
+                onClick={handleReset}
+                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span className="hidden sm:inline">Reset</span>
+              </button>
+
+              {currentStep === 1 && (
+                <button
+                  onClick={handleNext}
+                  disabled={!userType}
+                  className={`flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center ${
+                    !userType
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg cursor-pointer"
                   }`}
-              >
-                <span>Next</span>
-                <ChevronLeft className="w-4 h-4 rotate-180" />
-              </button>
-            )}
+                >
+                  <span>Next</span>
+                  <ChevronLeft className="w-4 h-4 rotate-180" />
+                </button>
+              )}
 
-            {currentStep === 2 && (
-              <>
-                {formStep < totalFormSteps ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (validateStepperForm()) {
-                        setFormStep((s) => Math.min(totalFormSteps, s + 1));
-                      }
-                    }}
-                    disabled={!userType}
-                    className={`flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center ${!userType
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg cursor-pointer"
+              {currentStep === 2 && (
+                <>
+                  {formStep < totalFormSteps ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (validateStepperForm()) {
+                          setFormStep((s) => Math.min(totalFormSteps, s + 1));
+                        }
+                      }}
+                      disabled={!userType}
+                      className={`flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center ${
+                        !userType
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg cursor-pointer"
                       }`}
-                  >
-                    <span>Next</span>
-                    <ChevronLeft className="w-4 h-4 rotate-180" />
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    form="signup-form"
-                    disabled={isLoading}
-                    className={`flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center ${isLoading
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg"
+                    >
+                      <span>Next</span>
+                      <ChevronLeft className="w-4 h-4 rotate-180" />
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      form="signup-form"
+                      disabled={isLoading}
+                      className={`flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center ${
+                        isLoading
+                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                          : "bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg"
                       }`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      // Find the form and submit it
-                      const form = document.querySelector("form");
-                      if (form) {
-                        form.dispatchEvent(
-                          new Event("submit", { cancelable: true, bubbles: true })
-                        );
-                      }
-                    }}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span className="hidden sm:inline">Creating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Create Account</span>
-                        <ChevronLeft className="w-4 h-4 rotate-180" />
-                      </>
-                    )}
-                  </button>
-                )}
-              </>
-            )}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        // Find the form and submit it
+                        const form = document.querySelector("form");
+                        if (form) {
+                          form.dispatchEvent(
+                            new Event("submit", {
+                              cancelable: true,
+                              bubbles: true,
+                            })
+                          );
+                        }
+                      }}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="hidden sm:inline">Creating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Create Account</span>
+                          <ChevronLeft className="w-4 h-4 rotate-180" />
+                        </>
+                      )}
+                    </button>
+                  )}
+                </>
+              )}
 
-            {currentStep === 3 && (
-              <button
-                onClick={() => {
-                  toast.info(
-                    "After Email Verification you can login to your account and continue with the KYC process."
-                  );
-                }} //setCurrentStep(4)
-                className="flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg"
-              >
-                <span>Continue to KYC</span>
-                <ChevronLeft className="w-4 h-4 rotate-180" />
-              </button>
-            )}
+              {currentStep === 3 && (
+                <button
+                  onClick={() => {
+                    toast.info(
+                      "After Email Verification you can login to your account and continue with the KYC process."
+                    );
+                  }} //setCurrentStep(4)
+                  className="flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg"
+                >
+                  <span>Continue to KYC</span>
+                  <ChevronLeft className="w-4 h-4 rotate-180" />
+                </button>
+              )}
 
-            {currentStep === 4 && (
-              <button
-                onClick={handleLogin}
-                className="flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg"
-              >
-                <span>Go to Login</span>
-                <LogIn className="w-4 h-4" />
-              </button>
-            )}
+              {currentStep === 4 && (
+                <button
+                  onClick={handleLogin}
+                  className="flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg"
+                >
+                  <span>Go to Login</span>
+                  <LogIn className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
       <Image
         src={Design}

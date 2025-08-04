@@ -1,13 +1,14 @@
 import {
   getAuthAddress,
   getAuthPhotoId,
+  getSellerBusinessDocuments,
   getSellerContract,
 } from "@/utils/apiHandler/request";
 import KycComponent from "./KycComponent";
 import { useState } from "react";
 
 const KYC = (props) => {
-  const { photoId, address, contract } = props ?? {};
+  const { photoId, address, contract, business_document } = props ?? {};
 
   const [uploading, setUploading] = useState({});
 
@@ -15,6 +16,7 @@ const KYC = (props) => {
     photoId: photoId || {},
     address: address || {},
     contract: contract || {},
+    business_document: business_document || {},
   });
 
   const handleUploadSuccess = async (documentType, file) => {
@@ -31,6 +33,10 @@ const KYC = (props) => {
       contract: {
         apiCall: getSellerContract,
         key: "contract",
+      },
+      business_document: {
+        apiCall: getSellerBusinessDocuments,
+        key: "business_document",
       },
     };
 
@@ -70,6 +76,7 @@ const KYC = (props) => {
         photoId={docsData.photoId}
         address={docsData.address}
         contract={docsData.contract}
+        business_document={docsData.business_document}
         onUploadSuccess={handleUploadSuccess}
         uploading={uploading}
         setUploading={setUploading}

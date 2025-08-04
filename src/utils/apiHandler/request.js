@@ -2121,14 +2121,26 @@ export const zohoEmbed = async (token, data) => {
       method: "POST",
       ...(token && { token: token }),
       data: data,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
-    return response?.data?.success ? response?.data?.data : {};
+    return response ?? {};
   } catch (error) {
     console.log("ERROR in updateNotification", error);
     return error?.response?.data;
+  }
+};
+
+export const getZohoDocStatus = async (token, data) => {
+  try {
+    const { id } = data ?? {};
+    const response = await makeRequest({
+      url: `${API_ROUTES.ZOHO_EMBED}${id ? `/${id}` : ""}`,
+      method: "GET",
+      ...(token && { token: token }),
+    });
+    return response ?? {};
+  } catch (error) {
+    console.log("ERROR in fetchSalesPageData", error);
+    throw error;
   }
 };
 
@@ -2216,6 +2228,36 @@ export const savePhotoId = async (data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in savePhotoId", error);
+    throw error;
+  }
+};
+
+export const getSellerBusinessDocuments = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.SELLER_BUSINESS_DOCUMENT,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    console.log(response?.data, "response");
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in getBusinessDocuments", error);
+    throw error;
+  }
+};
+
+export const saveSellerBusinessDocuments = async (data) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.SELLER_BUSINESS_DOCUMENT,
+      method: "POST",
+      formData: data,
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in saveSellerBusinessDocuments", error);
     throw error;
   }
 };

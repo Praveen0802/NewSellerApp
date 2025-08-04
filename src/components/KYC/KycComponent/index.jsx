@@ -12,6 +12,7 @@ import DocumentUpload from "../DocumentUpload";
 import {
   saveAddressDocument,
   savePhotoId,
+  saveSellerBusinessDocuments,
   saveSellerContract,
 } from "@/utils/apiHandler/request";
 import { toast } from "react-toastify";
@@ -22,10 +23,13 @@ const KycComponent = ({
   photoId,
   address,
   contract,
+  business_document,
   onUploadSuccess,
   uploading,
   setUploading,
 } = {}) => {
+  console.log("business_document", business_document);
+
   const [previewModal, setPreviewModal] = useState({
     open: false,
     url: "",
@@ -59,6 +63,14 @@ const KycComponent = ({
       dataKey: "address_document",
       statusKey: "address_status",
     },
+    business_document: {
+      title: "Business Documents",
+      description: "Business documents",
+      acceptedFormats: ".pdf,.jpg,.jpeg,.png",
+      icon: FileText,
+      dataKey: "business_document",
+      statusKey: "business_status",
+    },
   };
 
   // Get props data mapping
@@ -66,17 +78,21 @@ const KycComponent = ({
     contract,
     photoId,
     address,
+    business_document,
   };
 
   const saveDocsPropsMapping = {
     photoId: "photo",
     address: "address",
     contract: "contract",
+    business_document: "business_document",
   };
 
   // Extract document data from props
   const getDocumentData = (docType) => {
     const propData = propsMapping[docType];
+    console.log("ssssssssssss", docType, propData, propsMapping);
+
     if (!propData) return null;
 
     return {
@@ -129,6 +145,8 @@ const KycComponent = ({
         response = await saveAddressDocument(formData);
       } else if (docType === "contract") {
         response = await saveSellerContract(formData);
+      } else if (docType === "business_document") {
+        response = await saveSellerBusinessDocuments(formData);
       } else {
         throw new Error(`Unknown document type: ${docType}`);
       }
@@ -193,7 +211,7 @@ const KycComponent = ({
     const config = documentConfig[docType];
     const docData = getDocumentData(docType);
     const status = getDocumentStatus(docType);
-    console.log(status,'statusstatus')
+    console.log("docData ---- status ----", config, docData, status, docType);
     const Icon = config.icon;
     const isUploading = uploading[docType];
 
@@ -403,9 +421,7 @@ const KycComponent = ({
             <div className="space-y-3">
               <div className="flex items-center space-x-2 py-2">
                 {/* <AlertCircle className="w-4 h-4" /> */}
-                <span className="text-sm">
-                  {docData?.message}
-                </span>
+                <span className="text-sm">{docData?.message}</span>
               </div>
               <DocumentUpload
                 documentType={docType}
