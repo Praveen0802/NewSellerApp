@@ -54,23 +54,22 @@ const SecureLayout = ({ children }) => {
 
   const getUserCanAccessRoles = async () => {
     const response = await getUserRoleAccess();
+    const kycResponse = await getKYCStatus();
     dispatch(updateRoleAccess(response));
-  };
-  const getUserKYCStatus = async () => {
-    const response = await getKYCStatus();
     if (
-      response?.kyc_status == 0 &&
+      kycResponse?.kyc_status == 0 &&
       window.location.pathname != "/settings/kyc" &&
-      userRoles?.user_type == "sellers"
+      response?.user_type == "sellers"
     ) {
       router.push("/settings/kyc?handle=true");
     }
   };
+  const getUserKYCStatus = async () => {};
 
   useEffect(() => {
     fetchUserName();
     getUserCanAccessRoles();
-    getUserKYCStatus();
+    // getUserKYCStatus();
   }, [router]);
 
   const closeAddWalletPopup = () => {
