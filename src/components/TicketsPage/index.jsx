@@ -732,7 +732,7 @@ const TicketsPage = (props) => {
         key: "quantity",
         label: "Quantity",
         editable: true,
-        type: "select",
+        type: "number",
         options: [
           { value: "1", label: "1" },
           { value: "2", label: "2" },

@@ -82,7 +82,7 @@ const UploadTickets = ({
 
   const fileInputRef = useRef(null);
   const paperTicketCourierRef = useRef();
-
+  console.log("rowData", existingProofTickets);
   // Enhanced useEffect to properly handle proof upload state initialization
   useEffect(() => {
     if (!show) return;
@@ -96,7 +96,7 @@ const UploadTickets = ({
             id: `existing_proof_${ticket.id || index}`,
             name: `Proof Document`,
             file: null,
-            url: ticket.upload_tickets || ticket.url,
+            url: ticket.pop_upload || ticket.url,
             isExisting: true,
             existingId: ticket.id,
           })
@@ -795,7 +795,7 @@ const UploadTickets = ({
     const currentTransferredFiles = proofUploadView
       ? proofTransferredFiles
       : transferredFiles;
-
+console.log(proofTransferredFiles,'proofTransferredFilesproofTransferredFiles')
     return (
       <div className="p-3">
         <div className="flex justify-between items-center mb-2">
@@ -815,7 +815,7 @@ const UploadTickets = ({
             Array.from({ length: maxQuantity }, (_, index) => {
               const itemNumber = index + 1;
               const assignedFile = currentTransferredFiles[index];
-
+console.log(assignedFile,'assignedFileassignedFile')
               return (
                 <div
                   key={itemNumber}
@@ -1179,7 +1179,7 @@ const UploadTickets = ({
           toast.success("Proof document uploaded successfully");
         } catch (error) {
           console.error("API call failed:", error);
-          toast.error("Upload failed. Please try again.");
+          // toast.error("Upload failed. Please try again.");
           setIsLoading(false);
         }
       } else {

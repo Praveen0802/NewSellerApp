@@ -573,7 +573,7 @@ const BulkInventory = (props) => {
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, add_qty_addlist: value })),
+        setFiltersApplied((prev) => ({ ...prev, add_qty_addlist: value?.target?.value })),
     },
     {
       type: "select",
@@ -594,7 +594,7 @@ const BulkInventory = (props) => {
       onChange: (e) =>
         setFiltersApplied((prev) => ({
           ...prev,
-          split_type: e?.target?.value,
+          split_type: e,
         })),
     },
     {
@@ -1245,7 +1245,7 @@ const BulkInventory = (props) => {
       errors: errors,
     };
   };
-
+console.log(validateMandatoryFields(),'validateMandatoryFieldsvalidateMandatoryFieldsvalidateMandatoryFields')
   // Add listings to all matches at once
   const handleAddListings = () => {
     const validation = validateMandatoryFields();
