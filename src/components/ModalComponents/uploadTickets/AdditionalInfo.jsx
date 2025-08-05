@@ -256,6 +256,7 @@ const AdditionalInfoSection = React.forwardRef(
               placeholder="Enter dynamic content here..."
             />
           </div>
+          <div id='html-content-dynamic' className="hidden">{JSON.stringify(selectedTemplateContent)}</div>
         </div>
       </div>
     );

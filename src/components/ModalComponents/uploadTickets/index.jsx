@@ -239,7 +239,7 @@ const UploadTickets = ({
   const handleTemplateSelection = useCallback((templateData) => {
     console.log("Template data received:", templateData);
     // setSelectedTemplateData(templateData);
-    setShowPopup(!showPopup);
+    setShowPopup(true);
   }, []);
 
   // Enhanced handleTransferSingleFile for proof upload
@@ -684,9 +684,14 @@ const UploadTickets = ({
   const LeftPanelContent = () => (
     <div className="w-1/2 border-r border-[#E0E1EA] flex flex-col">
       <div className="p-3 m-4 flex flex-col gap-4 overflow-y-auto flex-1 max-h-[calc(100vh-150px)]">
-        {showPopup ? (
-          <TemplateContentRenderer additionalInfoRef={additionalInfoRef}/>
-        ) : proofUploadView ? (
+        {
+        // showPopup ? (
+        //   <TemplateContentRenderer
+        //     additionalInfoRef={additionalInfoRef}
+        //     showPopup={showPopup}
+        //   />
+        // ) :
+         proofUploadView ? (
           <>
             <FileUploadSection />
             {(proofUploadView || showInstruction) && (
@@ -726,7 +731,7 @@ const UploadTickets = ({
       </div>
     </div>
   );
-
+  console.log(document.getElementById("html-content-dynamic"),'pooooooo');
   // Enhanced Ticket Assignment Section with proper proof upload handling
   const TicketAssignmentSection = () => {
     // Use the appropriate state variables based on proof upload view
