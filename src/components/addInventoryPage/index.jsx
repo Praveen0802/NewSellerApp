@@ -49,6 +49,7 @@ import {
   FetchPerformerOrVenueListing,
   saveAddListing,
   saveBulkListing,
+  saveListing,
 } from "@/utils/apiHandler/request";
 import { useRouter } from "next/router";
 import SearchedList from "../tradePage/components/searchedList";
@@ -1125,7 +1126,7 @@ const AddInventoryPage = (props) => {
       if (selectedRows?.length > 1) {
         await saveBulkListing("", formData);
       } else {
-        await saveAddListing("", formData);
+        await saveListing("", formData);
       }
 
       router.push("/my-listings?success=true");

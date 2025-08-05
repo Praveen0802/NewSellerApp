@@ -604,19 +604,19 @@ const UploadTickets = ({
       const formData = constructTicketFormData(updatedObject);
       const response = await myListingUploadTickets("", formData);
 
-      if (response.success) {
+      // if (response.success) {
         onClose();
         toast.success(
           proofUploadView
             ? "Proof document uploaded successfully"
             : "Tickets uploaded successfully"
         );
-      } else {
-        console.error("Upload failed:", response.message);
-        toast.error(response.message || "Upload failed");
-      }
+      // } else {
+        // console.error("Upload failed:", response.message);
+        // toast.error(response.message || "Upload failed");
+      // }
     } catch (error) {
-      console.error("API call failed:", error);
+      // console.error("API call failed:", error);
       toast.error("Upload failed. Please try again.");
     } finally {
       setIsLoading(false);
@@ -654,7 +654,8 @@ const UploadTickets = ({
 
     if (proofUploadView && myListingPage) {
       setIsLoading(true);
-      if (existingProofTickets?.length < 0) {
+      console.log(existingProofTickets?.length,'existingProofTickets?.lengthexistingProofTickets?.length')
+      if (existingProofTickets?.length <= 0) {
         const formData = new FormData();
         formData.append(`ticket_id`, rowData?.rawTicketData?.s_no);
         formData.append(`match_id`, rowData?.rawTicketData?.match_id);

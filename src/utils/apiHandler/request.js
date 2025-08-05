@@ -113,15 +113,20 @@ export const LogoutCall = async (token, data) => {
 
 export const myListingUploadTickets = async (token, data) => {
   try {
-    const response = await makeRequest({
-      url: `${API_ROUTES.MY_LISTING_UPLOAD_TICKETS}`,
+    const response = await axios({
+      url: `/api/my-listing-upload`,
       method: "POST",
-      ...(token && { token: token }),
-      ...(data && { formData: data }),
+      data: data, // Send formData directly as data
+      ...(token && {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
     });
-    return response?.data ? response?.data : {};
+    return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
-    console.log("ERROR in myListingUploadTickets", error);
+    console.log("ERROR in saveListing", error);
+    throw error;
   }
 };
 
@@ -1015,32 +1020,59 @@ export const saveAddListing = async (token, data) => {
   }
 };
 
-export const saveBulkListing = async (token, data) => {
+export const saveListing = async (token, data) => {
   try {
-    const response = await makeRequest({
-      url: `${API_ROUTES.SAVE_BULK_LISTING}`,
+    const response = await axios({
+      url: `/api/save-listing`,
       method: "POST",
-      ...(token && { token: token }),
-      ...(data && { formData: data }),
+      data: data, // Send formData directly as data
+      ...(token && {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
-    console.log("ERROR in fetchUserDetails", error);
+    console.log("ERROR in saveListing", error);
+    throw error;
+  }
+};
+
+export const saveBulkListing = async (token, data) => {
+  try {
+    const response = await axios({
+      url: `/api/bulk-listing`,
+      method: "POST",
+      data: data, // Send formData directly as data
+      ...(token && {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in saveListing", error);
     throw error;
   }
 };
 
 export const uploadPopInstruction = async (token, data) => {
   try {
-    const response = await makeRequest({
-      url: `${API_ROUTES.UPLOAD_POP}`,
+    const response = await axios({
+      url: `/api/upload-pop`,
       method: "POST",
-      ...(token && { token: token }),
-      ...(data && { formData: data }),
+      data: data, // Send formData directly as data
+      ...(token && {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
-    console.log("ERROR in fetchUserDetails", error);
+    console.log("ERROR in saveListing", error);
     throw error;
   }
 };
@@ -1229,7 +1261,7 @@ export const addSavedCards = async (token, data, id) => {
   } catch (error) {
     console.log("ERROR in getLinkedCards", error);
   }
-}
+};
 
 export const paymentConfig = async (token, data, id) => {
   try {
@@ -1245,8 +1277,6 @@ export const paymentConfig = async (token, data, id) => {
     throw error;
   }
 };
-
-
 
 export const getCurrencyDetails = async (token, params) => {
   try {
