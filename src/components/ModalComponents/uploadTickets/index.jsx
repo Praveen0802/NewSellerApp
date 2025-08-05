@@ -731,7 +731,7 @@ const UploadTickets = ({
       </div>
     </div>
   );
-  console.log(document.getElementById("html-content-dynamic"),'pooooooo');
+  // console.log(document.getElementById("html-content-dynamic"),'pooooooo');
   // Enhanced Ticket Assignment Section with proper proof upload handling
   const TicketAssignmentSection = () => {
     // Use the appropriate state variables based on proof upload view
