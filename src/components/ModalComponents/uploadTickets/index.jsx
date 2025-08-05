@@ -231,46 +231,16 @@ const UploadTickets = ({
     selectedTemplate: null,
   });
 
-  // ... existing useEffect and other functions
+  const [showPopup, setShowPopup] = useState(false);
 
+  // ... existing useEffect and other functions
+  console.log(showPopup, "showPopup");
   // New function to handle template selection from AdditionalInfoSection
   const handleTemplateSelection = useCallback((templateData) => {
-    setSelectedTemplateData(templateData);
+    console.log("Template data received:", templateData);
+    // setSelectedTemplateData(templateData);
+    setShowPopup(!showPopup);
   }, []);
-
-  // Enhanced handleRemoveFromSlot for proof upload
-  const handleRemoveFromSlot = useCallback(
-    (slotIndex) => {
-      if (proofUploadView) {
-        const fileToRemove = proofTransferredFiles[slotIndex];
-
-        if (fileToRemove?.isExisting) {
-          alert("Cannot remove existing proof document.");
-          return;
-        }
-
-        setProofTransferredFiles((prev) => {
-          const newTransferredFiles = [...prev];
-          newTransferredFiles.splice(slotIndex, 1);
-          return newTransferredFiles;
-        });
-      } else {
-        // Handle normal flow
-        const fileToRemove = transferredFiles[slotIndex];
-
-        if (fileToRemove?.isExisting) {
-          return;
-        }
-
-        setTransferredFiles((prev) => {
-          const newTransferredFiles = [...prev];
-          newTransferredFiles.splice(slotIndex, 1);
-          return newTransferredFiles;
-        });
-      }
-    },
-    [proofUploadView, proofTransferredFiles, transferredFiles]
-  );
 
   // Enhanced handleTransferSingleFile for proof upload
   const handleTransferSingleFile = useCallback(
@@ -714,7 +684,9 @@ const UploadTickets = ({
   const LeftPanelContent = () => (
     <div className="w-1/2 border-r border-[#E0E1EA] flex flex-col">
       <div className="p-3 m-4 flex flex-col gap-4 overflow-y-auto flex-1 max-h-[calc(100vh-150px)]">
-        {proofUploadView ? (
+        {showPopup ? (
+          <TemplateContentRenderer additionalInfoRef={additionalInfoRef}/>
+        ) : proofUploadView ? (
           <>
             <FileUploadSection />
             {(proofUploadView || showInstruction) && (
@@ -731,32 +703,10 @@ const UploadTickets = ({
         ) : ETicketsFlow ? (
           <>
             <ETicketInfoSection />
-            {/* Template Content Preview for E-Tickets */}
-            {selectedTemplateData.templateContent && (
-              <TemplateContentRenderer
-                templateContent={selectedTemplateData.templateContent}
-                dynamicContent={
-                  additionalInfoRef.current?.getCurrentData()?.dynamicContent ||
-                  ""
-                }
-                className="mt-4"
-              />
-            )}
           </>
         ) : paperTicketFlow ? (
           <>
             <PaperTicketInfoSection />
-            {/* Template Content Preview for Paper Tickets */}
-            {selectedTemplateData.templateContent && (
-              <TemplateContentRenderer
-                templateContent={selectedTemplateData.templateContent}
-                dynamicContent={
-                  additionalInfoRef.current?.getCurrentData()?.dynamicContent ||
-                  ""
-                }
-                className="mt-4"
-              />
-            )}
           </>
         ) : (
           <>
@@ -769,17 +719,6 @@ const UploadTickets = ({
                     : "Upload Instructions"
                 }
                 instructions={instructions}
-              />
-            )}
-            {/* Template Content Preview for Normal Flow */}
-            {selectedTemplateData.templateContent && (
-              <TemplateContentRenderer
-                templateContent={selectedTemplateData.templateContent}
-                dynamicContent={
-                  additionalInfoRef.current?.getCurrentData()?.dynamicContent ||
-                  ""
-                }
-                className="mt-4"
               />
             )}
           </>
@@ -1137,7 +1076,7 @@ const UploadTickets = ({
     };
 
     const currentAdditionalInfo = {
-      template: selectedTemplateData?.templateName,
+      template: additionalData?.templateName,
       dynamicContent: additionalData?.dynamicContent,
     };
     const currentQRLinks = qrLinksRef.current?.getCurrentData() || [];

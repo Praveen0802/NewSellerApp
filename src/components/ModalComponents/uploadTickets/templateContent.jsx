@@ -1,19 +1,22 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 
 const TemplateContentRenderer = ({
   templateContent = "",
   dynamicContent = "",
   className = "",
+  additionalInfoRef,
 }) => {
+  useEffect(() => {
+    const additionalData = additionalInfoRef.current?.getCurrentData();
+    console.log(additionalData, "oooooooooo");
+  });
+  console.log(additionalInfoRef,'additionalInfoRefadditionalInfoRefadditionalInfoRef')
   // Process the template content and replace [DYNAMIC_CONTENT] placeholder
   const processedContent = useMemo(() => {
     if (!templateContent) return "";
 
     // Replace the [DYNAMIC_CONTENT] placeholder with actual dynamic content
-    let processed = templateContent.replace(
-      /\[DYNAMIC_CONTENT\]/g,
-      ""
-    );
+    let processed = templateContent.replace(/\[DYNAMIC_CONTENT\]/g, "");
 
     return processed;
   }, [templateContent, dynamicContent]);

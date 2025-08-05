@@ -22,7 +22,7 @@ export async function middleware(request) {
     authToken,
     authTokenValidity
   );
-  if (validateAuthToken?.error) {
+  if (!validateAuthToken) {
     const response = NextResponse.redirect(new URL(`/login`, request.url));
     response.cookies.set("auth_token", "");
     response.cookies.set("auth_token_validity", "");
@@ -45,26 +45,26 @@ export async function middleware(request) {
           return NextResponse.redirect(new URL(`/login`, request.url));
         }
       }
-      if (validateAuthToken) {
-        if (validateAuthToken?.token) {
-          const response = NextResponse.next();
-          response.cookies.set(
-            "auth_token",
-            decodeURIComponent(validateAuthToken?.token),
-            {
-              httpOnly: true,
-              sameSite: "strict",
-            }
-          );
-          response.cookies.set(
-            "auth_token_validity",
-            currentTimeEpochTimeInMilliseconds().toString()
-          );
-          return response;
-        } else {
-          return;
-        }
-      }
+      // if (validateAuthToken) {
+      //   if (validateAuthToken) {
+      //     const response = NextResponse.next();
+      //     response.cookies.set(
+      //       "auth_token",
+      //       decodeURIComponent(validateAuthToken?.token),
+      //       {
+      //         httpOnly: true,
+      //         sameSite: "strict",
+      //       }
+      //     );
+      //     response.cookies.set(
+      //       "auth_token_validity",
+      //       currentTimeEpochTimeInMilliseconds().toString()
+      //     );
+      //     return response;
+      //   } else {
+      //     return;
+      //   }
+      // }
     } catch (error) {
       console.error("Token validation error:", error);
       return NextResponse.redirect(new URL(`/login`, request.url));
@@ -83,29 +83,30 @@ export async function middleware(request) {
     response.cookies.set("auth_token_validity", "");
     response.cookies.set("user_token", "");
     return response;
-  } else if (validateAuthToken) {
-    if (validateAuthToken?.token) {
+  } 
+  // else if (validateAuthToken) {
+  //   if (validateAuthToken?.token) {
    
-      const response = NextResponse.next();
-      response.cookies.set(
-        "auth_token",
-        decodeURIComponent(validateAuthToken?.token),
-        {
-          httpOnly: true,
-          // secure: process.env.NODE_ENV === 'production',
-          sameSite: "strict",
-          // maxAge: 3600 // Optional: set expiration
-        }
-      );
-      response.cookies.set(
-        "auth_token_validity",
-        currentTimeEpochTimeInMilliseconds().toString()
-      );
-      return response;
-    } else {
-      return;
-    }
-  }
+  //     const response = NextResponse.next();
+  //     response.cookies.set(
+  //       "auth_token",
+  //       decodeURIComponent(validateAuthToken?.token),
+  //       {
+  //         httpOnly: true,
+  //         // secure: process.env.NODE_ENV === 'production',
+  //         sameSite: "strict",
+  //         // maxAge: 3600 // Optional: set expiration
+  //       }
+  //     );
+  //     response.cookies.set(
+  //       "auth_token_validity",
+  //       currentTimeEpochTimeInMilliseconds().toString()
+  //     );
+  //     return response;
+  //   } else {
+  //     return;
+  //   }
+  // }
 }
 
 export const config = {

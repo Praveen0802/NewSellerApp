@@ -2,11 +2,15 @@ import { getAdditionalTemplate } from "@/utils/apiHandler/request";
 import React, { useState, useCallback, useEffect, useRef } from "react";
 
 const AdditionalInfoSection = React.forwardRef(
-  ({ paperTicketFlow = false, initialData = null, onChange, onTemplateSelect }, ref) => {
+  (
+    { paperTicketFlow = false, initialData = null, onChange, onTemplateSelect },
+    ref
+  ) => {
     // Internal state for additional information
     const [additionalInfo, setAdditionalInfo] = useState({
       template: initialData?.template || "",
       dynamicContent: initialData?.dynamicContent || "",
+      templateContent: initialData?.templateContent || "",
     });
     const [templateData, setTemplateData] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -16,7 +20,7 @@ const AdditionalInfoSection = React.forwardRef(
       try {
         setLoading(true);
         const response = await getAdditionalTemplate();
-        
+
         // Assuming the response contains the array of templates
         if (response && Array.isArray(response)) {
           setTemplateData(response);
@@ -24,7 +28,7 @@ const AdditionalInfoSection = React.forwardRef(
           setTemplateData(response.data);
         }
       } catch (error) {
-        console.error('Error fetching templates:', error);
+        console.error("Error fetching templates:", error);
         setTemplateData([]);
       } finally {
         setLoading(false);
@@ -47,22 +51,27 @@ const AdditionalInfoSection = React.forwardRef(
     const handleTemplateChange = useCallback(
       (templateName) => {
         const selectedTemplate = templateData.find(
-          template => template.template_name === templateName
+          (template) => template.template_name === templateName
         );
-        
-        const templateContent = selectedTemplate ? selectedTemplate.template_content : "";
+
+        const templateContent = selectedTemplate
+          ? selectedTemplate.template_content
+          : "";
         setSelectedTemplateContent(templateContent);
-        
+
         // Call the onTemplateSelect callback to pass data to parent
         if (onTemplateSelect && typeof onTemplateSelect === "function") {
           onTemplateSelect({
             templateName,
             templateContent,
-            selectedTemplate
+            selectedTemplate,
           });
         }
-        
-        handleAdditionalInfoChange("template", templateName);
+        setAdditionalInfo((prev) => ({
+          ...prev,
+          template: templateName,
+          templateContent,
+        }));
       },
       [templateData, onTemplateSelect]
     );
@@ -99,7 +108,7 @@ const AdditionalInfoSection = React.forwardRef(
         };
         setAdditionalInfo(newData);
         additionalInfoRef.current = newData;
-        
+
         // If there's an initial template, find and set its content
         if (initialData.template) {
           handleTemplateChange(initialData.template);
@@ -111,7 +120,7 @@ const AdditionalInfoSection = React.forwardRef(
     const getCurrentData = useCallback(() => {
       return {
         ...additionalInfoRef.current,
-        selectedTemplateContent
+        selectedTemplateContent,
       };
     }, [selectedTemplateContent]);
 
@@ -159,7 +168,7 @@ const AdditionalInfoSection = React.forwardRef(
           };
           setAdditionalInfo(updatedData);
           additionalInfoRef.current = updatedData;
-          
+
           if (newData?.template) {
             handleTemplateChange(newData.template);
           }
@@ -187,7 +196,14 @@ const AdditionalInfoSection = React.forwardRef(
           setSelectedTemplateContent("");
         },
       }),
-      [getCurrentData, hasData, isValid, getSelectedTemplateContent, initialData, handleTemplateChange]
+      [
+        getCurrentData,
+        hasData,
+        isValid,
+        getSelectedTemplateContent,
+        initialData,
+        handleTemplateChange,
+      ]
     );
 
     return (
@@ -212,8 +228,8 @@ const AdditionalInfoSection = React.forwardRef(
             >
               <option value="">Select a template...</option>
               {templateData.map((template) => (
-                <option 
-                  key={template.template_name} 
+                <option
+                  key={template.template_name}
                   value={template.template_name}
                 >
                   {template.template_name}
@@ -239,7 +255,6 @@ const AdditionalInfoSection = React.forwardRef(
               rows="4"
               placeholder="Enter dynamic content here..."
             />
-           
           </div>
         </div>
       </div>

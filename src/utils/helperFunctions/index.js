@@ -67,17 +67,21 @@ export const checkAuthTokenValidationMiddleWare = async (
   authToken,
   timeValidity
 ) => {
-  if (!authToken || !timeValidity) return false;
-  const currentTimeEpoch = currentTimeEpochTimeInMilliseconds();
-  const tokenTimeEpoch = Number(timeValidity);
-  // Changed from 3600000 (1 hour) to 60000 (1 minute)
-  const timeDiffBolean = tokenTimeEpoch > currentTimeEpoch - 3600000;
-  if (timeDiffBolean) {
-    return true;
-  } else {
-    const fetchNewAuthToken = await refreshAuthToken(authToken);
-    return fetchNewAuthToken;
-  }
+  if (!authToken) return false;
+
+  return true;
+
+  // if (!authToken || !timeValidity) return false;
+  // const currentTimeEpoch = currentTimeEpochTimeInMilliseconds();
+  // const tokenTimeEpoch = Number(timeValidity);
+  // // Changed from 3600000 (1 hour) to 60000 (1 minute)
+  // const timeDiffBolean = tokenTimeEpoch > currentTimeEpoch - 3600000;
+  // if (timeDiffBolean) {
+  //   return true;
+  // } else {
+  //   const fetchNewAuthToken = await refreshAuthToken(authToken);
+  //   return fetchNewAuthToken;
+  // }
 };
 
 export const checkValidAuthToken = (context = null, authToken) => {
@@ -88,15 +92,16 @@ export const checkValidAuthToken = (context = null, authToken) => {
     ? readCookie("auth_token")
     : context?.req?.cookies?.auth_token;
   const token = decodeURIComponent(tokenDecoded);
-  const fetchAuthTokenTime = isClient
-    ? readCookie("auth_token_validity")
-    : context?.req?.cookies?.auth_token_validity;
-  if (!token || !fetchAuthTokenTime) return false;
-
-  const currentTimeEpoch = currentTimeEpochTimeInMilliseconds();
-  const tokenTimeEpoch = Number(fetchAuthTokenTime);
-  const timeDiffBolean = tokenTimeEpoch > currentTimeEpoch - 3600000;
-  return timeDiffBolean;
+  // const fetchAuthTokenTime = isClient
+  //   ? readCookie("auth_token_validity")
+  //   : context?.req?.cookies?.auth_token_validity;
+  // if (!token || !fetchAuthTokenTime) return false;
+  if (!token) return false;
+  // const currentTimeEpoch = currentTimeEpochTimeInMilliseconds();
+  // const tokenTimeEpoch = Number(fetchAuthTokenTime);
+  // const timeDiffBolean = tokenTimeEpoch > currentTimeEpoch - 3600000;
+  // return timeDiffBolean;
+  return true;
 };
 
 export const clearUserCookie = async () => {
