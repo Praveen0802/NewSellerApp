@@ -64,7 +64,7 @@ const UploadTickets = ({
 
   const [isLoading, setIsLoading] = useState(false);
   const [showAssigned, setShowAssigned] = useState(false);
-
+  console.log("rowData", rowData);
   // Normal flow states
   const [uploadedFiles, setUploadedFiles] = useState([]); // Files in left panel
   const [transferredFiles, setTransferredFiles] = useState([]);
@@ -82,7 +82,6 @@ const UploadTickets = ({
 
   const fileInputRef = useRef(null);
   const paperTicketCourierRef = useRef();
-  console.log("rowData", existingProofTickets);
   // Enhanced useEffect to properly handle proof upload state initialization
   useEffect(() => {
     if (!show) return;
@@ -795,7 +794,6 @@ const UploadTickets = ({
     const currentTransferredFiles = proofUploadView
       ? proofTransferredFiles
       : transferredFiles;
-console.log(proofTransferredFiles,'proofTransferredFilesproofTransferredFiles')
     return (
       <div className="p-3">
         <div className="flex justify-between items-center mb-2">
@@ -815,7 +813,6 @@ console.log(proofTransferredFiles,'proofTransferredFilesproofTransferredFiles')
             Array.from({ length: maxQuantity }, (_, index) => {
               const itemNumber = index + 1;
               const assignedFile = currentTransferredFiles[index];
-console.log(assignedFile,'assignedFileassignedFile')
               return (
                 <div
                   key={itemNumber}
@@ -879,6 +876,7 @@ console.log(assignedFile,'assignedFileassignedFile')
       ref={qrLinksRef}
       maxQuantity={maxQuantity}
       initialData={rowData?.qr_links || null}
+      existingUploadTickets={existingUploadedTickets} // Pass the existing upload tickets
       onChange={(newLinks) => {
         console.log("QR Links updated:", newLinks);
       }}
@@ -1112,7 +1110,6 @@ console.log(assignedFile,'assignedFileassignedFile')
     try {
       const formData = constructTicketFormData(updatedObject);
       const response = await myListingUploadTickets("", formData);
-      console.log(response.success, "response.successresponse.success");
 
       if (response.success) {
         onClose();
@@ -1173,7 +1170,6 @@ console.log(assignedFile,'assignedFileassignedFile')
         }
         try {
           const response = await uploadPopInstruction("", formData);
-          console.log(response, "response.response.response");
           setIsLoading(false);
           onClose();
           toast.success("Proof document uploaded successfully");
