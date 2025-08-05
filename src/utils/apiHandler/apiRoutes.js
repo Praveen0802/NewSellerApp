@@ -145,4 +145,5 @@ export const API_ROUTES = {
   GET_PAYOUT_ORDER_REPORT: `/payouts/myorder-export`,
   GET_PAYOUT_ORDERS: "/payouts/payout-orders",
   SELLER_BUSINESS_DOCUMENT: "/auth/seller-business-document",
+  GET_ZOHO_SIGN_DOCUMENT: "/zoho-sign/document",
 };

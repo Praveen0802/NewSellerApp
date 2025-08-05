@@ -1,6 +1,12 @@
-import { getZohoDocStatus, zohoEmbed } from "@/utils/apiHandler/request";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "react-toastify";
+
+import {
+  getZohoDocStatus,
+  zohoEmbed,
+  getZohoDocsDownload,
+} from "@/utils/apiHandler/request";
+import useS3Download from "@/Hooks/useS3Download";
 
 const useKycHook = ({ currentUser } = {}) => {
   const [kycUrl, setKycUrl] = useState("");
@@ -9,7 +15,8 @@ const useKycHook = ({ currentUser } = {}) => {
   const [ownerLoader, setOwnerLoader] = useState(false);
   const [kycStatus, setKycStatus] = useState(null);
   const [isPolling, setIsPolling] = useState(false);
-  const [hasInitialized, setHasInitialized] = useState(false); // Add this state
+  const [hasInitialized, setHasInitialized] = useState(false);
+  const [downloadLoader, setDownloadLoader] = useState(false); // New state for download loader
 
   // Use ref to track if component is mounted
   const isMountedRef = useRef(true);
@@ -18,6 +25,7 @@ const useKycHook = ({ currentUser } = {}) => {
   const [error, setError] = useState({
     zohoEmbed: null,
     zohoDocStatus: null,
+    download: null, // New error state for download
   });
 
   // Cleanup on unmount
@@ -53,9 +61,9 @@ const useKycHook = ({ currentUser } = {}) => {
         console.log("Polling document status...");
         const payload = { id: requestId };
         const resp = await getZohoDocStatus(null, payload);
-        const { request_status } = resp?.data;
+        const { request_status = null } = resp?.data ?? {};
 
-        if (isMountedRef.current) {
+        if (isMountedRef.current && request_status) {
           setKycStatus(request_status);
           console.log("Polled status:", request_status);
 
@@ -82,7 +90,7 @@ const useKycHook = ({ currentUser } = {}) => {
         // Don't show toast for polling errors to avoid spam
         // Only log the error
       }
-    }, 3000); // Poll every 3 seconds
+    }, 6000); // Poll every 6 seconds
   }, []);
 
   // Function to stop polling manually
@@ -146,6 +154,27 @@ const useKycHook = ({ currentUser } = {}) => {
     },
     [startPolling]
   );
+
+  const { isDownloading, downloadFile } = useS3Download();
+
+  // New function to download completed KYC document
+  const downloadKycDocument = useCallback(async () => {
+    if (!requestId || !isMountedRef.current) return;
+
+    // setDownloadLoader(true);
+    setError((prev) => ({ ...prev, download: null }));
+
+    try {
+      const payload = { id: requestId };
+      const resp = await getZohoDocsDownload(null, payload);
+      const { file_url } = resp?.data ?? {};
+      downloadFile(file_url);
+      return true;
+    } catch (e) {
+      toast.error("Error downloading document. Please try again.");
+    } finally {
+    }
+  }, [requestId]);
 
   const checkIsDocsSubmitted = useCallback(async (payload) => {
     if (!isMountedRef.current) return;
@@ -223,12 +252,15 @@ const useKycHook = ({ currentUser } = {}) => {
     kycStatus,
     error,
     isPolling,
-    hasInitialized, // Export this new state
+    hasInitialized,
+    downloadLoader: isDownloading, // Export download loader state
+    requestId, // Export requestId for component use
     // Expose methods for manual calls if needed
     getZohoDocs,
     checkIsDocsSubmitted,
     startPolling,
     stopPolling,
+    downloadKycDocument, // Export new download function
   };
 };
 
