@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 
 const TemplateContentRenderer = ({
@@ -6,6 +7,7 @@ const TemplateContentRenderer = ({
   className = "",
   additionalInfoRef,
   showPopup,
+  onclose
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -16,7 +18,6 @@ const TemplateContentRenderer = ({
       // Show loader for 2 seconds, then call getCurrentData
       const timer = setTimeout(() => {
         const additionalData = additionalInfoRef.current?.getCurrentData();
-        console.log(additionalData, "oooooooooo");
         setIsLoading(false);
       }, 2000);
 
@@ -25,10 +26,6 @@ const TemplateContentRenderer = ({
     }
   }, [showPopup, additionalInfoRef]);
 
-  console.log(
-    additionalInfoRef,
-    "additionalInfoRefadditionalInfoRefadditionalInfoRef"
-  );
 
   // Process the template content and replace [DYNAMIC_CONTENT] placeholder
   const processedContent = useMemo(() => {
@@ -70,13 +67,13 @@ const TemplateContentRenderer = ({
 
   return (
     <>
-      {isLoading && <Loader />}
-      <div className={`border border-gray-200 rounded-md ${className}`}>
-        <div className="bg-gray-50 px-3 py-2 border-b border-gray-200">
+      <div className={`flex flex-col gap-4 ${className}`}>
+        <div className= "py-2 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
           <h4 className="text-sm font-medium text-gray-700">Template Preview</h4>
+          <X className="cursor-pointer" onClick={() => onclose()} />
         </div>
         <div
-          className="p-3 max-h-96 overflow-y-auto text-sm leading-relaxed"
+          className=" overflow-y-auto text-sm leading-relaxed"
           dangerouslySetInnerHTML={createMarkup()}
           style={{
             // Override some default styles for better readability

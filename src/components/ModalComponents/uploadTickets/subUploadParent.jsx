@@ -1,0 +1,542 @@
+import { getAdditionalTemplate } from "@/utils/apiHandler/request";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  useCallback,
+} from "react";
+import TemplateContentRenderer from "./templateContent";
+
+const SubUploadParent = React.forwardRef(
+  (
+    {
+      proofUploadView,
+      showInstruction,
+      ETicketsFlow,
+      paperTicketFlow,
+      MatchHeader,
+      TicketDetails,
+      QRLinksConfigSection,
+      PaperTicketCourierDetailsSection, // Add this prop
+      FileUploadSection, // Add this prop
+      TicketAssignmentSection, // Add this prop
+      initialAdditionalData = null,
+      onAdditionalInfoChange,
+      onTemplateSelect,
+      existingUploadedTickets
+    },
+    ref
+  ) => {
+    const [templateData, setTemplateData] = useState();
+    const [showPopupView, setShowPopupView] = useState(false);
+
+    // Additional Info State
+    const [additionalInfo, setAdditionalInfo] = useState({
+      template: initialAdditionalData?.template || "",
+      dynamicContent: initialAdditionalData?.dynamicContent || existingUploadedTickets[0]?.additional_dynamic_content ||"",
+      templateContent: initialAdditionalData?.templateContent || "",
+    });
+
+    const [additionalTemplateData, setAdditionalTemplateData] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [selectedTemplateContent, setSelectedTemplateContent] = useState("");
+
+    // Ref to store the latest additional info data for instant access
+    const additionalInfoRef = useRef(additionalInfo);
+
+    // Update ref whenever additional info state changes
+    useEffect(() => {
+      additionalInfoRef.current = additionalInfo;
+    }, [additionalInfo]);
+
+    const handleTemplateSelection = (data) => {
+      console.log(data, "sssssss");
+      setTemplateData(data);
+    };
+
+    // Handle template selection and find corresponding content
+    const handleTemplateChange = useCallback(
+      (templateName) => {
+        const selectedTemplate = additionalTemplateData.find(
+          (template) => template.template_name === templateName
+        );
+
+        const templateContent = selectedTemplate
+          ? selectedTemplate.template_content
+          : "";
+        setSelectedTemplateContent(templateContent);
+
+        // Call the onTemplateSelect callback to pass data to parent
+        setShowPopupView(true);
+        setAdditionalInfo((prev) => {
+          const newInfo = {
+            ...prev,
+            template: templateName,
+            templateContent,
+          };
+          additionalInfoRef.current = newInfo;
+          return newInfo;
+        });
+      },
+      [additionalTemplateData, onTemplateSelect]
+    );
+
+    // Handle additional info changes
+    const handleAdditionalInfoChange = useCallback(
+      (field, value) => {
+        setAdditionalInfo((prev) => {
+          const newInfo = {
+            ...prev,
+            [field]: value,
+          };
+
+          // Update ref immediately for instant access
+          additionalInfoRef.current = newInfo;
+
+          // Only call onChange if it's provided
+          if (
+            onAdditionalInfoChange &&
+            typeof onAdditionalInfoChange === "function"
+          ) {
+            onAdditionalInfoChange(newInfo);
+          }
+
+          return newInfo;
+        });
+      },
+      [onAdditionalInfoChange]
+    );
+
+    // Method to get current additional info data
+    const getCurrentAdditionalInfoData = useCallback(() => {
+      return {
+        ...additionalInfoRef.current,
+        selectedTemplateContent,
+      };
+    }, [selectedTemplateContent]);
+
+    // Method to check if additional info has any values
+    const hasAdditionalInfoData = useCallback(() => {
+      const data = additionalInfoRef.current;
+      return !!(data.template || data.dynamicContent);
+    }, []);
+
+    // Method to validate additional info
+    const isAdditionalInfoValid = useCallback(() => {
+      const data = additionalInfoRef.current;
+      // Add your validation logic here if needed
+      return true; // Currently no required fields
+    }, []);
+
+    // Method to get selected template content
+    const getSelectedTemplateContent = useCallback(() => {
+      return selectedTemplateContent;
+    }, [selectedTemplateContent]);
+
+    // Expose methods via ref for parent component access
+    React.useImperativeHandle(
+      ref,
+      () => ({
+        // Primary method to get current additional info data
+        getCurrentAdditionalInfoData,
+
+        // Alternative method names for flexibility
+        getAdditionalInfo: () => additionalInfoRef.current,
+        getAdditionalInfoData: () => additionalInfoRef.current,
+        getData: () => additionalInfoRef.current,
+
+        // New method to get template content
+        getSelectedTemplateContent,
+
+        // Utility methods
+        hasAdditionalInfoData,
+        isAdditionalInfoValid,
+
+        // Method to programmatically update additional info from parent if needed
+        updateAdditionalInfo: (newData) => {
+          const updatedData = {
+            template: newData?.template || "",
+            dynamicContent: newData?.dynamicContent || "",
+            templateContent: newData?.templateContent || "",
+          };
+          setAdditionalInfo(updatedData);
+          additionalInfoRef.current = updatedData;
+
+          if (newData?.template) {
+            handleTemplateChange(newData.template);
+          }
+        },
+
+        // Method to reset additional info to initial state
+        resetAdditionalInfo: () => {
+          const resetData = {
+            template: initialAdditionalData?.template || "",
+            dynamicContent: initialAdditionalData?.dynamicContent || "",
+            templateContent: initialAdditionalData?.templateContent || "",
+          };
+          setAdditionalInfo(resetData);
+          additionalInfoRef.current = resetData;
+          setSelectedTemplateContent("");
+        },
+
+        // Method to clear all additional info data
+        clearAdditionalInfo: () => {
+          const emptyData = {
+            template: "",
+            dynamicContent: "",
+            templateContent: "",
+          };
+          setAdditionalInfo(emptyData);
+          additionalInfoRef.current = emptyData;
+          setSelectedTemplateContent("");
+        },
+      }),
+      [
+        getCurrentAdditionalInfoData,
+        hasAdditionalInfoData,
+        isAdditionalInfoValid,
+        getSelectedTemplateContent,
+        initialAdditionalData,
+        handleTemplateChange,
+      ]
+    );
+
+    const getTemplateDetails = async () => {
+      try {
+        setLoading(true);
+        const response = await getAdditionalTemplate();
+
+        // Assuming the response contains the array of templates
+        if (response && Array.isArray(response)) {
+          setAdditionalTemplateData(response);
+        } else if (response && response.data && Array.isArray(response.data)) {
+          setAdditionalTemplateData(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching templates:", error);
+        setAdditionalTemplateData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    useEffect(() => {
+      getTemplateDetails();
+    }, []);
+
+    // Update internal state when initialAdditionalData changes
+    useEffect(() => {
+      if (initialAdditionalData) {
+        const newData = {
+          template: initialAdditionalData.template || "",
+          dynamicContent: initialAdditionalData.dynamicContent || "",
+          templateContent: initialAdditionalData.templateContent || "",
+        };
+        setAdditionalInfo(newData);
+        additionalInfoRef.current = newData;
+
+        // If there's an initial template, find and set its content
+        if (initialAdditionalData.template) {
+          handleTemplateChange(initialAdditionalData.template);
+        }
+      }
+    }, [initialAdditionalData, handleTemplateChange]);
+
+    // Instructions Panel Component
+    const InstructionsPanel = ({ title, instructions }) => (
+      <div className="border-[1px] border-[#E0E1EA] rounded-md">
+        <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA]">
+          <h4 className="text-sm font-medium text-[#323A70]">{title}</h4>
+        </div>
+        <div className="p-3">
+          <div className="space-y-3">
+            {instructions.map((instruction, index) => (
+              <div key={index} className="flex items-start gap-2">
+                <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
+                <p className="text-[13px] text-[#323A70] leading-relaxed">
+                  {instruction}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+
+    const PaperTicketInfoSection = () => (
+      <div className="">
+        <div className="">
+          <div className="space-y-3">
+            {instructions.map((instruction, index) => (
+              <div key={index} className="flex items-start gap-2">
+                <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
+                <p className="text-[13px] text-[#323A70] leading-relaxed">
+                  {instruction}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-[#E0E1EA]">
+            <h4 className="text-[13px] font-medium text-[#323A70] mb-2">
+              Important Delivery Information
+            </h4>
+            <div className="space-y-2">
+              <div className="flex items-start gap-2">
+                <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
+                <p className="text-[13px] text-[#323A70] leading-relaxed">
+                  Delivery typically takes 3-5 business days. For urgent
+                  deliveries, express options may be available at additional
+                  cost.
+                </p>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
+                <p className="text-[13px] text-[#323A70] leading-relaxed">
+                  If choosing collection, tickets will be available 24 hours
+                  before the event. Bring your booking reference and valid ID.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-[#E0E1EA]">
+            <h4 className="text-[13px] font-medium text-[#323A70] mb-2">
+              What if I have issues with my paper tickets?
+            </h4>
+            <div className="flex items-start gap-2">
+              <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-[13px] text-[#323A70] leading-relaxed">
+                For any issues with paper ticket delivery or collection, contact
+                our customer service team immediately. Have your booking
+                reference ready when calling.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    const instructions = useMemo(() => {
+      if (proofUploadView) {
+        return [
+          "Upload proof of purchase or ticket confirmation document",
+          "Accepted formats: PDF, JPG, JPEG, PNG",
+          "Only one file can be uploaded for proof verification",
+          "Ensure the document clearly shows ticket details and purchase information",
+          "Click 'Attach' button to move the file to the assignment area",
+          "Confirm the proof document is uploaded by clicking the green 'Submit Proof' button",
+        ];
+      } else if (ETicketsFlow) {
+        return [
+          "Have the ticket ready and open on your phone (With the brightness turned up high and auto-rotate turned off) when approaching the turnstile.",
+          "Make sure to enter the venue using the gate entrance that is stated on your tickets. Any other turnstile used result in the ticket not working.",
+          "It is recommended to arrive at the stadium 30-40 mins prior to the event starting.",
+          "The names on the tickets do not matter These are just the names of the people who own the season cards / memberships. Simply scan the ticket at the correct entrance to gain entry.",
+          "Please be aware that you have purchased tickets in the away section of the ground and in the UK there are strict segregation laws forbidding home fans sitting amongst the away fans. If any persons seen to be supporting the opposing team (celebrating a goal / cheering for the visiting team / wearing home team club colours such as kits or scarfs etc then they are likely to be ejected from the stadium or refused.",
+        ];
+      } else if (paperTicketFlow) {
+        return [
+          "Physical tickets will be delivered to your specified address or made available for collection.",
+          "Please ensure your delivery address is correct and someone will be available to receive the tickets.",
+          "Collection points are typically available at the venue or designated partner locations.",
+          "Bring a valid ID when collecting tickets as verification may be required.",
+          "Paper tickets must be kept safe - lost or damaged tickets cannot be replaced on match day.",
+          "Arrive at the venue early to allow time for entry with physical tickets.",
+          "Check the ticket for the correct entrance gate and seat information.",
+        ];
+      }
+      return [
+        "Use this window to upload individual tickets for each order (PDF format)",
+        "Click 'Transfer' button next to each file to move it to the assignment area",
+        "Confirm all tickets are uploaded and transferred by clicking the green 'confirm' button",
+      ];
+    }, [ETicketsFlow, paperTicketFlow, proofUploadView]);
+
+    const ETicketInfoSection = () => (
+      <div className="">
+        <div className="">
+          <div className="space-y-3">
+            {instructions.map((instruction, index) => (
+              <div key={index} className="flex items-start gap-2">
+                <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
+                <p className="text-[13px] text-[#323A70] leading-relaxed">
+                  {instruction}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-[#E0E1EA]">
+            <h4 className="text-[13px] font-medium text-[#323A70] mb-2">
+              What if I have any issues at the venue?
+            </h4>
+            <div className="flex items-start gap-2">
+              <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
+              <p className="text-[13px] text-[#323A70] leading-relaxed">
+                If you have experienced issues at the turnstile, please call the
+                emergency contact number. They will be able to fix the issue for
+                you. DO NOT go to the ticket office or seek assistance from the
+                stewards as they will only cancel the tickets and won't replace
+                them for you.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    // Left Panel Content
+    const LeftPanelContent = () => (
+      <div className="w-1/2 border-r border-[#E0E1EA] flex flex-col">
+        <div className="p-3 m-4 flex flex-col gap-4 overflow-y-auto flex-1 max-h-[calc(100vh-150px)]">
+          {showPopupView && selectedTemplateContent ? (
+            <TemplateContentRenderer
+              templateContent={selectedTemplateContent}
+              dynamicContent={additionalInfo?.dynamicContent}
+              onclose={() => setShowPopupView(false)}
+            />
+          ) : proofUploadView ? (
+            <>
+              {FileUploadSection && <FileUploadSection />}
+              {(proofUploadView || showInstruction) && (
+                <InstructionsPanel
+                  title={
+                    proofUploadView
+                      ? "Proof Upload Instructions"
+                      : "Upload Instructions"
+                  }
+                  instructions={instructions}
+                />
+              )}
+            </>
+          ) : ETicketsFlow ? (
+            <>
+              <ETicketInfoSection />
+            </>
+          ) : paperTicketFlow ? (
+            <>
+              <PaperTicketInfoSection />
+            </>
+          ) : (
+            <>
+              {FileUploadSection && <FileUploadSection />}
+              {(proofUploadView || showInstruction) && (
+                <InstructionsPanel
+                  title={
+                    proofUploadView
+                      ? "Proof Upload Instructions"
+                      : "Upload Instructions"
+                  }
+                  instructions={instructions}
+                />
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+
+    return (
+      <div className="flex flex-1 overflow-hidden">
+        <LeftPanelContent />
+        <div className="w-1/2 flex flex-col">
+          <div className="m-4 flex flex-col overflow-y-auto flex-1 max-h-[calc(100vh-150px)]">
+            {MatchHeader && <MatchHeader />}
+            {TicketDetails && <TicketDetails />}
+
+            {proofUploadView ? (
+              <>
+                <div className="border-[1px] border-[#E0E1EA] rounded-b-md flex-shrink-0">
+                  {TicketAssignmentSection && <TicketAssignmentSection />}
+                </div>
+              </>
+            ) : ETicketsFlow ? (
+              <>{QRLinksConfigSection && <QRLinksConfigSection />}</>
+            ) : paperTicketFlow ? (
+              <>
+                {PaperTicketCourierDetailsSection && (
+                  <PaperTicketCourierDetailsSection />
+                )}
+              </>
+            ) : (
+              <>
+                <div className="border-[1px] border-[#E0E1EA] rounded-b-md flex-shrink-0">
+                  {TicketAssignmentSection && <TicketAssignmentSection />}
+                </div>
+              </>
+            )}
+
+            {/* Show additional info section when not in proof upload view */}
+            {!proofUploadView && (
+              <div className="border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1">
+                <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA]">
+                  <h4 className="text-sm font-medium text-[#323A70]">
+                    Additional Information
+                  </h4>
+                </div>
+
+                <div className="p-3">
+                  {/* Template Dropdown */}
+                  <div className="mb-4">
+                    <label className="block text-xs font-medium text-[#323A70] mb-2">
+                      Template
+                    </label>
+                    <select
+                      value={additionalInfo.template}
+                      onChange={(e) => handleTemplateChange(e.target.value)}
+                      className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
+                      disabled={loading}
+                    >
+                      <option value="">Select a template...</option>
+                      {additionalTemplateData.map((template) => (
+                        <option
+                          key={template.template_name}
+                          value={template.template_name}
+                        >
+                          {template.template_name}
+                        </option>
+                      ))}
+                    </select>
+                    {loading && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Loading templates...
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Dynamic Content Area */}
+                  <div className="mb-4">
+                    <label className="block text-xs font-medium text-[#323A70] mb-2">
+                      Dynamic Content
+                    </label>
+                    <textarea
+                      value={additionalInfo.dynamicContent}
+                      onChange={(e) =>
+                        handleAdditionalInfoChange(
+                          "dynamicContent",
+                          e.target.value
+                        )
+                      }
+                      className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] resize-none focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
+                      rows="4"
+                      placeholder="Enter dynamic content here..."
+                    />
+                  </div>
+                  <div id="html-content-dynamic" className="hidden">
+                    {JSON.stringify(selectedTemplateContent)}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+);
+
+SubUploadParent.displayName = "SubUploadParent";
+
+export default SubUploadParent;

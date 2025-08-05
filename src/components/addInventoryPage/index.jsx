@@ -246,7 +246,10 @@ const AddInventoryPage = (props) => {
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (e) =>
-        setFiltersApplied((prev) => ({ ...prev, add_qty_addlist: e.target.value })),
+        setFiltersApplied((prev) => ({
+          ...prev,
+          add_qty_addlist: e.target.value,
+        })),
     },
     {
       type: "select",
@@ -1647,17 +1650,19 @@ const AddInventoryPage = (props) => {
           </div>
         </div>
       )}
+      {showUploadPopup?.show && (
+        <UploadTickets
+          show={showUploadPopup?.show}
+          rowData={showUploadPopup?.rowData}
+          matchDetails={matchDetails}
+          handleConfirmClick={handleConfirmClick}
+          rowIndex={showUploadPopup?.rowIndex}
+          onClose={() => {
+            setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
+          }}
+        />
+      )}
 
-      <UploadTickets
-        show={showUploadPopup?.show}
-        rowData={showUploadPopup?.rowData}
-        matchDetails={matchDetails}
-        handleConfirmClick={handleConfirmClick}
-        rowIndex={showUploadPopup?.rowIndex}
-        onClose={() => {
-          setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
-        }}
-      />
       {showMarketPlaceModal && (
         <ListingsMarketplace
           show={showMarketPlaceModal}

@@ -31,6 +31,7 @@ import AdditionalInfoSection from "./AdditionalInfo";
 import QRLinksSection from "./QRLinkSection";
 import PaperTicketCourierSection from "./paperTicketCourierSection";
 import TemplateContentRenderer from "./templateContent";
+import SubUploadParent from "./subUploadParent";
 
 const UploadTickets = ({
   show,
@@ -52,6 +53,7 @@ const UploadTickets = ({
   const normalFlow = !ETicketsFlow && !paperTicketFlow;
 
   const existingUploadedTickets = rowData?.rawTicketData?.uploadTickets || [];
+  console.log(existingUploadedTickets,'existingUploadedTicketsexistingUploadedTickets')
   const hasExistingTickets = existingUploadedTickets.length > 0;
   const existingProofTickets = rowData?.rawTicketData?.popUpload || [];
   // Updated maxQuantity calculation for proof upload
@@ -65,13 +67,14 @@ const UploadTickets = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showAssigned, setShowAssigned] = useState(false);
   console.log("rowData", rowData);
+
   // Normal flow states
-  const [uploadedFiles, setUploadedFiles] = useState([]); // Files in left panel
+  const [uploadedFiles, setUploadedFiles] = useState([]);
   const [transferredFiles, setTransferredFiles] = useState([]);
 
   // Proof upload flow states
-  const [proofUploadedFiles, setProofUploadedFiles] = useState([]); // Files in left panel for proof
-  const [proofTransferredFiles, setProofTransferredFiles] = useState([]); // Files in right panel for proof
+  const [proofUploadedFiles, setProofUploadedFiles] = useState([]);
+  const [proofTransferredFiles, setProofTransferredFiles] = useState([]);
 
   // State for Paper Ticket Flow - storing courier info
   const [paperTicketDetails, setPaperTicketDetails] = useState({
@@ -82,13 +85,22 @@ const UploadTickets = ({
 
   const fileInputRef = useRef(null);
   const paperTicketCourierRef = useRef();
+
+  // Create ref for SubUploadParent to access additional info
+  const subUploadParentRef = useRef();
+  const qrLinksRef = useRef();
+
+  const templateDataRef = useRef({
+    templateName: "",
+    templateContent: "",
+    selectedTemplate: null,
+  });
+
   // Enhanced useEffect to properly handle proof upload state initialization
   useEffect(() => {
     if (!show) return;
 
     if (proofUploadView) {
-      // For proof upload, initialize with existing proof if available
-      // const existingProofTickets = rowData?.pop_upload_tickets || [];
       if (existingProofTickets && existingProofTickets.length > 0) {
         const existingProofFiles = existingProofTickets.map(
           (ticket, index) => ({
@@ -104,11 +116,8 @@ const UploadTickets = ({
       } else {
         setProofTransferredFiles([]);
       }
-      // Reset uploaded files for proof
       setProofUploadedFiles([]);
-      // Don't touch normal flow states when in proof mode
     } else {
-      // Handle normal flow initialization
       if (hasExistingTickets) {
         const existingFiles = existingUploadedTickets.map((ticket, index) => ({
           id: `existing_${ticket.id}`,
@@ -124,7 +133,6 @@ const UploadTickets = ({
         setTransferredFiles(initialUploadTickets);
       }
       setUploadedFiles([]);
-      // Don't touch proof states when in normal mode
     }
   }, [
     show,
@@ -132,7 +140,7 @@ const UploadTickets = ({
     hasExistingTickets,
     rowData?.rawTicketData?.s_no,
     rowData?.id,
-    rowData?.pop_upload_tickets, // Add this for proof upload tracking
+    rowData?.pop_upload_tickets,
     existingUploadedTickets.length,
     hasPartialUploads,
   ]);
@@ -140,7 +148,6 @@ const UploadTickets = ({
   // Enhanced handleBrowseFiles to handle proof upload restrictions
   const handleBrowseFiles = useCallback(() => {
     if (proofUploadView) {
-      // For proof upload, allow browsing if no file is transferred yet
       if (proofTransferredFiles.length >= 1) {
         alert(
           "Only one proof document can be uploaded. Please remove the existing document first."
@@ -148,7 +155,6 @@ const UploadTickets = ({
         return;
       }
     } else {
-      // Handle normal flow restrictions
       if (hasExistingTickets && !hasPartialUploads) {
         return;
       }
@@ -167,22 +173,19 @@ const UploadTickets = ({
       const files = Array.from(e.target.files);
       if (files.length > 0) {
         if (proofUploadView) {
-          // For proof upload, only allow one file and replace any existing
           const newFile = {
             id: Date.now(),
             name: files[0].name,
             file: files[0],
           };
-          setProofUploadedFiles([newFile]); // Replace with single file
+          setProofUploadedFiles([newFile]);
 
-          // Show warning if multiple files were selected
           if (files.length > 1) {
             alert(
               "Only one proof document can be uploaded. The first file has been selected."
             );
           }
         } else {
-          // Handle normal flow (existing logic)
           if (hasExistingTickets && !hasPartialUploads) {
             return;
           }
@@ -231,22 +234,30 @@ const UploadTickets = ({
     selectedTemplate: null,
   });
 
+  let templateContent = "";
+
   const [showPopup, setShowPopup] = useState(false);
 
-  // ... existing useEffect and other functions
-  console.log(showPopup, "showPopup");
   // New function to handle template selection from AdditionalInfoSection
   const handleTemplateSelection = useCallback((templateData) => {
     console.log("Template data received:", templateData);
-    // setSelectedTemplateData(templateData);
-    setShowPopup(true);
+    templateDataRef.current = {
+      templateName: templateData.templateName || "",
+      templateContent: templateData.templateContent || "",
+      selectedTemplate: templateData.selectedTemplate || null,
+    };
+    console.log("Template content:", templateContent);
+    setShowPopup(!showPopup);
   }, []);
+
+  useEffect(() => {
+    console.log(templateDataRef?.current, "templateContent updated");
+  }, [templateDataRef.current]);
 
   // Enhanced handleTransferSingleFile for proof upload
   const handleTransferSingleFile = useCallback(
     (fileId) => {
       if (proofUploadView) {
-        // Check if already at max capacity for proof
         if (proofTransferredFiles.length >= maxQuantity) {
           alert("Maximum limit reached. Only one proof document allowed.");
           return;
@@ -256,11 +267,10 @@ const UploadTickets = ({
           (file) => file.id === fileId
         );
         if (fileToTransfer) {
-          setProofTransferredFiles([fileToTransfer]); // Replace with single file
-          setProofUploadedFiles([]); // Clear uploaded files
+          setProofTransferredFiles([fileToTransfer]);
+          setProofUploadedFiles([]);
         }
       } else {
-        // Handle normal flow
         if (hasExistingTickets && !hasPartialUploads) {
           return;
         }
@@ -314,9 +324,6 @@ const UploadTickets = ({
       hasPartialUploads,
     ]
   );
-
-  const additionalInfoRef = useRef();
-  const qrLinksRef = useRef();
 
   // Common instructions based on flow type - Memoized
   const instructions = useMemo(() => {
@@ -422,26 +429,364 @@ const UploadTickets = ({
     </div>
   );
 
-  // Common Instructions Component
-  const InstructionsPanel = ({ title, instructions, children }) => (
-    <div className="border-[1px] border-[#E0E1EA] rounded-[6px]">
-      <p className="p-[10px] text-[#323A70] text-[16px] font-semibold border-b-[1px] border-[#E0E1EA]">
-        {title}
-      </p>
-      {instructions && (
-        <ul className="p-[10px] list-decimal pl-[30px] flex flex-col gap-1">
-          {instructions.map((item, index) => (
-            <li className="text-[12px] text-[#323A70]" key={index}>
-              {item}
-            </li>
-          ))}
-        </ul>
-      )}
-      {children}
-    </div>
+  // QR Links Configuration Section for E-Ticket Flow
+  const QRLinksConfigSection = () => (
+    <QRLinksSection
+      ref={qrLinksRef}
+      maxQuantity={maxQuantity}
+      initialData={rowData?.qr_links || null}
+      existingUploadTickets={existingUploadedTickets}
+      onChange={(newLinks) => {
+        console.log("QR Links updated:", newLinks);
+      }}
+    />
   );
 
-  // Enhanced File Upload Section with proper proof upload handling
+  // Paper Ticket Courier Details Section
+  const PaperTicketCourierDetailsSection = () => (
+    <PaperTicketCourierSection
+      ref={paperTicketCourierRef}
+      maxQuantity={maxQuantity}
+      initialData={rowData?.paper_ticket_details || null}
+      rowData={rowData}
+      onChange={(newData) => {
+        console.log("Paper ticket courier data updated:", newData);
+      }}
+    />
+  );
+
+  // Enhanced completion status calculation
+  const getCompletionStatus = useMemo(() => {
+    if (ETicketsFlow) {
+      const currentQRLinks = qrLinksRef.current?.getCurrentData() || [];
+      const completedTickets = currentQRLinks.filter(
+        (link) => link.qr_link_android && link.qr_link_ios
+      ).length;
+      return { completed: 1, total: maxQuantity };
+    } else if (paperTicketFlow) {
+      const paperTicketStatus = { completed: 1, total: maxQuantity };
+      return paperTicketStatus;
+    } else if (normalFlow || proofUploadView) {
+      const currentTransferredFiles = proofUploadView
+        ? proofTransferredFiles
+        : transferredFiles;
+      return { completed: currentTransferredFiles.length, total: maxQuantity };
+    }
+    return { completed: 0, total: 0 };
+  }, [
+    ETicketsFlow,
+    paperTicketFlow,
+    normalFlow,
+    proofUploadView,
+    transferredFiles,
+    proofTransferredFiles,
+    maxQuantity,
+  ]);
+
+  const isConfirmDisabled = getCompletionStatus.completed === 0;
+
+  // Enhanced modal title and subtitle
+  const getModalTitle = () => {
+    if (proofUploadView) return "Upload Proof Document";
+    if (ETicketsFlow) return "Configure E-Tickets";
+    if (paperTicketFlow) return "Configure Paper Tickets";
+    return "Upload Tickets";
+  };
+
+  const getModalSubtitle = () => {
+    if (proofUploadView) return " (1 document required)";
+    if (ETicketsFlow) return ` (${maxQuantity} tickets)`;
+    if (paperTicketFlow) return ` (${maxQuantity} tickets)`;
+    return ` (Max: ${maxQuantity})`;
+  };
+
+  const handleTicketsPageApiCall = async (updatedObject) => {
+    setIsLoading(true);
+    const constructTicketFormData = (updatedObject) => {
+      const formData = new FormData();
+      const index = 0;
+      formData.append(`data[0][ticket_id]`, rowData?.rawTicketData?.s_no);
+      formData.append(
+        `data[0][ticket_type]`,
+        rowData?.rawTicketData?.ticket_type_id
+      );
+      formData.append(`data[0][match_id]`, rowData?.rawMatchData?.m_id);
+
+      // Common additional info fields for all flows (except proof upload)
+      if (updatedObject.additional_info && !proofUploadView) {
+        formData.append(
+          `data[${index}][additional_file_type]`,
+          updatedObject.additional_info.template || ""
+        );
+        formData.append(
+          `data[${index}][additional_dynamic_content]`,
+          updatedObject.additional_info.dynamicContent || ""
+        );
+      }
+
+      // Handle Normal Flow and Proof Upload - upload_tickets
+      if (
+        updatedObject.upload_tickets &&
+        updatedObject.upload_tickets.length > 0
+      ) {
+        const newFiles = updatedObject.upload_tickets.filter(
+          (ticket) => !ticket.isExisting
+        );
+        newFiles.forEach((ticket, ticketIndex) => {
+          if (ticket.file && ticket.file instanceof File) {
+            const fieldName = proofUploadView
+              ? `data[${index}][proof_document][${ticketIndex}]`
+              : `data[${index}][upload_tickets][${ticketIndex}]`;
+            formData.append(fieldName, ticket.file, ticket.name);
+          }
+        });
+      }
+
+      // Handle E-Ticket Flow - qr_links
+      if (updatedObject.qr_links && updatedObject.qr_links.length > 0) {
+        const androidLinks = [];
+        const iosLinks = [];
+
+        updatedObject.qr_links.forEach((link) => {
+          if (link.qr_link_android) {
+            androidLinks.push(link.qr_link_android);
+          }
+          if (link.qr_link_ios) {
+            iosLinks.push(link.qr_link_ios);
+          }
+        });
+
+        if (androidLinks.length > 0) {
+          formData.append(
+            `data[${index}][qr_link_android]`,
+            androidLinks.join(",")
+          );
+        }
+        if (iosLinks.length > 0) {
+          formData.append(`data[${index}][qr_link_ios]`, iosLinks.join(","));
+        }
+      }
+
+      // Handle Paper Ticket Flow - courier details and upload_tickets
+      if (updatedObject.courier_type) {
+        formData.append(
+          `data[${index}][courier_type]`,
+          updatedObject.courier_type
+        );
+      }
+      if (updatedObject.courier_name) {
+        formData.append(
+          `data[${index}][courier_name]`,
+          updatedObject.courier_name
+        );
+      }
+      if (updatedObject.courier_tracking_details) {
+        formData.append(
+          `data[${index}][courier_tracking_details]`,
+          updatedObject.courier_tracking_details
+        );
+      }
+
+      // Add row ID if available
+      if (rowData?.id) {
+        formData.append(`data[${index}][id]`, rowData.id);
+      }
+
+      // Add proof upload flag if applicable
+      if (proofUploadView) {
+        formData.append(`data[${index}][is_proof_upload]`, "1");
+      }
+
+      return formData;
+    };
+
+    try {
+      const formData = constructTicketFormData(updatedObject);
+      const response = await myListingUploadTickets("", formData);
+
+      if (response.success) {
+        onClose();
+        toast.success(
+          proofUploadView
+            ? "Proof document uploaded successfully"
+            : "Tickets uploaded successfully"
+        );
+      } else {
+        console.error("Upload failed:", response.message);
+        toast.error(response.message || "Upload failed");
+      }
+    } catch (error) {
+      console.error("API call failed:", error);
+      toast.error("Upload failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleConfirmCtaClick = useCallback(async () => {
+    // Get additional info data from SubUploadParent ref instead of additionalInfoRef
+    const additionalData =
+      subUploadParentRef.current?.getCurrentAdditionalInfoData() || {
+        template: "",
+        dynamicContent: "",
+        templateContent: "",
+        selectedTemplateContent: "",
+      };
+
+    const currentAdditionalInfo = {
+      template: additionalData?.template || "",
+      dynamicContent: additionalData?.dynamicContent || "",
+      templateContent: additionalData?.templateContent || "",
+      selectedTemplateContent: additionalData?.selectedTemplateContent || "",
+    };
+
+    const currentQRLinks = qrLinksRef.current?.getCurrentData() || [];
+
+    const currentPaperTicketData =
+      paperTicketCourierRef.current?.getCurrentData() || {
+        courierDetails: {
+          courier_type: "company",
+          courier_company: "",
+          tracking_details: "",
+        },
+        uploadedFiles: [],
+      };
+
+    if (proofUploadView && myListingPage) {
+      setIsLoading(true);
+      if (existingProofTickets?.length < 0) {
+        const formData = new FormData();
+        formData.append(`ticket_id`, rowData?.rawTicketData?.s_no);
+        formData.append(`match_id`, rowData?.rawTicketData?.match_id);
+
+        if (
+          proofTransferredFiles[0]?.file &&
+          proofTransferredFiles[0]?.file instanceof File
+        ) {
+          formData.append(
+            `pop_upload_tickets`,
+            proofTransferredFiles[0]?.file,
+            proofTransferredFiles[0]?.name
+          );
+        }
+        try {
+          const response = await uploadPopInstruction("", formData);
+          setIsLoading(false);
+          onClose();
+          toast.success("Proof document uploaded successfully");
+        } catch (error) {
+          console.error("API call failed:", error);
+          setIsLoading(false);
+        }
+      } else {
+        onClose();
+        setIsLoading(false);
+      }
+    } else if (normalFlow) {
+      if (transferredFiles?.length == maxQuantity) {
+        const filesToUpload = proofUploadView
+          ? proofTransferredFiles
+          : transferredFiles;
+        const updatedObject = {
+          upload_tickets: filesToUpload,
+          additional_info: currentAdditionalInfo,
+        };
+        if (myListingPage) {
+          handleTicketsPageApiCall(updatedObject);
+        } else {
+          handleConfirmClick(updatedObject, rowIndex, rowData);
+        }
+      } else {
+        if (!proofUploadView) {
+          toast.error("Please upload all tickets");
+        }
+      }
+    } else if (ETicketsFlow) {
+      const completedTickets = currentQRLinks.filter(
+        (link) => link.qr_link_android && link.qr_link_ios
+      ).length;
+      if (completedTickets == maxQuantity) {
+        const updatedObject = {
+          qr_links: currentQRLinks,
+          additional_info: currentAdditionalInfo,
+        };
+        if (myListingPage) {
+          handleTicketsPageApiCall(updatedObject);
+        } else {
+          handleConfirmClick(updatedObject, rowIndex, rowData);
+        }
+      } else {
+        if (!proofUploadView) {
+          toast.error("Please upload QR codes for all tickets");
+        }
+      }
+    } else if (paperTicketFlow) {
+      if (
+        currentPaperTicketData.courierDetails.courier_type &&
+        currentPaperTicketData.courierDetails.courier_company &&
+        currentPaperTicketData.courierDetails.tracking_details &&
+        currentPaperTicketData.uploadedFiles?.length > 0
+      ) {
+        const updatedObject = {
+          paper_ticket_details: currentPaperTicketData.courierDetails,
+          courier_type: currentPaperTicketData.courierDetails.courier_type,
+          courier_name: currentPaperTicketData.courierDetails.courier_company,
+          courier_tracking_details:
+            currentPaperTicketData.courierDetails.tracking_details,
+          upload_tickets: currentPaperTicketData.uploadedFiles,
+          additional_info: currentAdditionalInfo,
+        };
+        if (myListingPage) {
+          handleTicketsPageApiCall(updatedObject);
+        } else {
+          handleConfirmClick(updatedObject, rowIndex, rowData);
+        }
+      } else {
+        if (!proofUploadView) {
+          toast.error("Please fill all the fields");
+        }
+      }
+    }
+    if (
+      proofUploadView &&
+      !myListingPage &&
+      proofTransferredFiles?.length > 0
+    ) {
+      const updatedObject = {
+        pop_upload_tickets: proofTransferredFiles?.[0],
+      };
+      handleConfirmClick(updatedObject, rowIndex, rowData);
+    }
+  }, [
+    proofUploadView,
+    normalFlow,
+    ETicketsFlow,
+    paperTicketFlow,
+    transferredFiles,
+    proofTransferredFiles,
+    uploadedFiles,
+    handleConfirmClick,
+    rowIndex,
+    rowData,
+    myListingPage,
+    subUploadParentRef, // Add this dependency
+  ]);
+
+  // Handle additional info changes callback (optional)
+  const handleAdditionalInfoChange = useCallback((data) => {
+    console.log("Additional info changed in real-time:", data);
+    // You can perform real-time validation or updates here
+  }, []);
+
+  // Handle template selection callback (optional)
+  const handleTemplateSelect = useCallback((templateData) => {
+    console.log("Template selected:", templateData);
+    // Handle template selection logic here
+  }, []);
+
+  // Add these component definitions inside your UploadTickets component:
+
+  // File Upload Section Component
   const FileUploadSection = () => {
     // Use the appropriate state variables based on proof upload view
     const currentUploadedFiles = proofUploadView
@@ -592,147 +937,7 @@ const UploadTickets = ({
     );
   };
 
-  // E-Ticket Info Section
-  const ETicketInfoSection = () => (
-    <div className="">
-      <div className="">
-        <div className="space-y-3">
-          {instructions.map((instruction, index) => (
-            <div key={index} className="flex items-start gap-2">
-              <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-[13px] text-[#323A70] leading-relaxed">
-                {instruction}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-4 pt-3 border-t border-[#E0E1EA]">
-          <h4 className="text-[13px] font-medium text-[#323A70] mb-2">
-            What if I have any issues at the venue?
-          </h4>
-          <div className="flex items-start gap-2">
-            <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
-            <p className="text-[13px] text-[#323A70] leading-relaxed">
-              If you have experienced issues at the turnstile, please call the
-              emergency contact number. They will be able to fix the issue for
-              you. DO NOT go to the ticket office or seek assistance from the
-              stewards as they will only cancel the tickets and won't replace
-              them for you.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Paper Ticket Info Section
-  const PaperTicketInfoSection = () => (
-    <div className="">
-      <div className="">
-        <div className="space-y-3">
-          {instructions.map((instruction, index) => (
-            <div key={index} className="flex items-start gap-2">
-              <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-[13px] text-[#323A70] leading-relaxed">
-                {instruction}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-4 pt-3 border-t border-[#E0E1EA]">
-          <h4 className="text-[13px] font-medium text-[#323A70] mb-2">
-            Important Delivery Information
-          </h4>
-          <div className="space-y-2">
-            <div className="flex items-start gap-2">
-              <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-[13px] text-[#323A70] leading-relaxed">
-                Delivery typically takes 3-5 business days. For urgent
-                deliveries, express options may be available at additional cost.
-              </p>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-[13px] text-[#323A70] leading-relaxed">
-                If choosing collection, tickets will be available 24 hours
-                before the event. Bring your booking reference and valid ID.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 pt-3 border-t border-[#E0E1EA]">
-          <h4 className="text-[13px] font-medium text-[#323A70] mb-2">
-            What if I have issues with my paper tickets?
-          </h4>
-          <div className="flex items-start gap-2">
-            <div className="w-1 h-1 bg-[#323A70] rounded-full mt-2 flex-shrink-0"></div>
-            <p className="text-[13px] text-[#323A70] leading-relaxed">
-              For any issues with paper ticket delivery or collection, contact
-              our customer service team immediately. Have your booking reference
-              ready when calling.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Left Panel Content
-  const LeftPanelContent = () => (
-    <div className="w-1/2 border-r border-[#E0E1EA] flex flex-col">
-      <div className="p-3 m-4 flex flex-col gap-4 overflow-y-auto flex-1 max-h-[calc(100vh-150px)]">
-        {
-        // showPopup ? (
-        //   <TemplateContentRenderer
-        //     additionalInfoRef={additionalInfoRef}
-        //     showPopup={showPopup}
-        //   />
-        // ) :
-         proofUploadView ? (
-          <>
-            <FileUploadSection />
-            {(proofUploadView || showInstruction) && (
-              <InstructionsPanel
-                title={
-                  proofUploadView
-                    ? "Proof Upload Instructions"
-                    : "Upload Instructions"
-                }
-                instructions={instructions}
-              />
-            )}
-          </>
-        ) : ETicketsFlow ? (
-          <>
-            <ETicketInfoSection />
-          </>
-        ) : paperTicketFlow ? (
-          <>
-            <PaperTicketInfoSection />
-          </>
-        ) : (
-          <>
-            <FileUploadSection />
-            {(proofUploadView || showInstruction) && (
-              <InstructionsPanel
-                title={
-                  proofUploadView
-                    ? "Proof Upload Instructions"
-                    : "Upload Instructions"
-                }
-                instructions={instructions}
-              />
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-  // console.log(document.getElementById("html-content-dynamic"),'pooooooo');
-  // Enhanced Ticket Assignment Section with proper proof upload handling
+  // Ticket Assignment Section Component
   const TicketAssignmentSection = () => {
     // Use the appropriate state variables based on proof upload view
     const currentTransferredFiles = proofUploadView
@@ -814,401 +1019,6 @@ const UploadTickets = ({
     );
   };
 
-  // QR Links Configuration Section for E-Ticket Flow
-  const QRLinksConfigSection = () => (
-    <QRLinksSection
-      ref={qrLinksRef}
-      maxQuantity={maxQuantity}
-      initialData={rowData?.qr_links || null}
-      existingUploadTickets={existingUploadedTickets} // Pass the existing upload tickets
-      onChange={(newLinks) => {
-        console.log("QR Links updated:", newLinks);
-      }}
-    />
-  );
-
-  // Paper Ticket Courier Details Section
-  const PaperTicketCourierDetailsSection = () => (
-    <PaperTicketCourierSection
-      ref={paperTicketCourierRef}
-      maxQuantity={maxQuantity}
-      initialData={rowData?.paper_ticket_details || null}
-      rowData={rowData}
-      onChange={(newData) => {
-        console.log("Paper ticket courier data updated:", newData);
-      }}
-    />
-  );
-
-  // Right Panel Content
-  const RightPanelContent = () => (
-    <div className="w-1/2 flex flex-col">
-      <div className="m-4 flex flex-col overflow-y-auto flex-1 max-h-[calc(100vh-150px)]">
-        <MatchHeader />
-        <TicketDetails />
-
-        {proofUploadView ? (
-          <>
-            <div className="border-[1px] border-[#E0E1EA] rounded-b-md flex-shrink-0">
-              <TicketAssignmentSection />
-            </div>
-            {!proofUploadView && (
-              <AdditionalInfoSection
-                ref={additionalInfoRef}
-                paperTicketFlow={paperTicketFlow}
-                initialData={null}
-                onTemplateSelect={handleTemplateSelection} // Pass the handler
-              />
-            )}
-          </>
-        ) : ETicketsFlow ? (
-          <>
-            <QRLinksConfigSection />
-            {!proofUploadView && (
-              <AdditionalInfoSection
-                ref={additionalInfoRef}
-                paperTicketFlow={paperTicketFlow}
-                initialData={null}
-                onTemplateSelect={handleTemplateSelection} // Pass the handler
-              />
-            )}
-          </>
-        ) : paperTicketFlow ? (
-          <>
-            <PaperTicketCourierDetailsSection />
-            {!proofUploadView && (
-              <AdditionalInfoSection
-                ref={additionalInfoRef}
-                paperTicketFlow={paperTicketFlow}
-                initialData={null}
-                onTemplateSelect={handleTemplateSelection} // Pass the handler
-              />
-            )}
-          </>
-        ) : (
-          <>
-            <div className="border-[1px] border-[#E0E1EA] rounded-b-md flex-shrink-0">
-              <TicketAssignmentSection />
-            </div>
-            {!proofUploadView && (
-              <AdditionalInfoSection
-                ref={additionalInfoRef}
-                paperTicketFlow={paperTicketFlow}
-                initialData={null}
-                onTemplateSelect={handleTemplateSelection} // Pass the handler
-              />
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-
-  // Enhanced completion status calculation
-  const getCompletionStatus = useMemo(() => {
-    if (ETicketsFlow) {
-      const currentQRLinks = qrLinksRef.current?.getCurrentData() || [];
-      const completedTickets = currentQRLinks.filter(
-        (link) => link.qr_link_android && link.qr_link_ios
-      ).length;
-      return { completed: 1, total: maxQuantity };
-    } else if (paperTicketFlow) {
-      // Use the ref to get completion status
-      const paperTicketStatus = { completed: 1, total: maxQuantity };
-      return paperTicketStatus;
-    } else if (normalFlow || proofUploadView) {
-      const currentTransferredFiles = proofUploadView
-        ? proofTransferredFiles
-        : transferredFiles;
-      return { completed: currentTransferredFiles.length, total: maxQuantity };
-    }
-    return { completed: 0, total: 0 };
-  }, [
-    ETicketsFlow,
-    paperTicketFlow,
-    normalFlow,
-    proofUploadView,
-    transferredFiles,
-    proofTransferredFiles,
-    maxQuantity,
-    // Note: Remove paperTicketDetails dependency since it's now handled by the component
-  ]);
-
-  const isConfirmDisabled = getCompletionStatus.completed === 0;
-
-  // Enhanced modal title and subtitle
-  const getModalTitle = () => {
-    if (proofUploadView) return "Upload Proof Document";
-    if (ETicketsFlow) return "Configure E-Tickets";
-    if (paperTicketFlow) return "Configure Paper Tickets";
-    return "Upload Tickets";
-  };
-
-  const getModalSubtitle = () => {
-    if (proofUploadView) return " (1 document required)";
-    if (ETicketsFlow) return ` (${maxQuantity} tickets)`;
-    if (paperTicketFlow) return ` (${maxQuantity} tickets)`;
-    return ` (Max: ${maxQuantity})`;
-  };
-
-  const handleTicketsPageApiCall = async (updatedObject) => {
-    setIsLoading(true);
-    const constructTicketFormData = (updatedObject) => {
-      const formData = new FormData();
-      const index = 0;
-      formData.append(`data[0][ticket_id]`, rowData?.rawTicketData?.s_no);
-      formData.append(
-        `data[0][ticket_type]`,
-        rowData?.rawTicketData?.ticket_type_id
-      );
-      formData.append(`data[0][match_id]`, rowData?.rawMatchData?.m_id);
-
-      // Common additional info fields for all flows (except proof upload)
-      if (updatedObject.additional_info && !proofUploadView) {
-        formData.append(
-          `data[${index}][additional_file_type]`,
-          updatedObject.additional_info.template || ""
-        );
-        formData.append(
-          `data[${index}][additional_dynamic_content]`,
-          updatedObject.additional_info.dynamicContent || ""
-        );
-      }
-
-      // Handle Normal Flow and Proof Upload - upload_tickets
-      if (
-        updatedObject.upload_tickets &&
-        updatedObject.upload_tickets.length > 0
-      ) {
-        const newFiles = updatedObject.upload_tickets.filter(
-          (ticket) => !ticket.isExisting
-        );
-        newFiles.forEach((ticket, ticketIndex) => {
-          if (ticket.file && ticket.file instanceof File) {
-            const fieldName = proofUploadView
-              ? `data[${index}][proof_document][${ticketIndex}]`
-              : `data[${index}][upload_tickets][${ticketIndex}]`;
-            formData.append(fieldName, ticket.file, ticket.name);
-          }
-        });
-      }
-
-      // Handle E-Ticket Flow - qr_links
-      if (updatedObject.qr_links && updatedObject.qr_links.length > 0) {
-        const androidLinks = [];
-        const iosLinks = [];
-
-        updatedObject.qr_links.forEach((link) => {
-          if (link.qr_link_android) {
-            androidLinks.push(link.qr_link_android);
-          }
-          if (link.qr_link_ios) {
-            iosLinks.push(link.qr_link_ios);
-          }
-        });
-
-        if (androidLinks.length > 0) {
-          formData.append(
-            `data[${index}][qr_link_android]`,
-            androidLinks.join(",")
-          );
-        }
-        if (iosLinks.length > 0) {
-          formData.append(`data[${index}][qr_link_ios]`, iosLinks.join(","));
-        }
-      }
-
-      // Handle Paper Ticket Flow - courier details and upload_tickets
-      if (updatedObject.courier_type) {
-        formData.append(
-          `data[${index}][courier_type]`,
-          updatedObject.courier_type
-        );
-      }
-      if (updatedObject.courier_name) {
-        formData.append(
-          `data[${index}][courier_name]`,
-          updatedObject.courier_name
-        );
-      }
-      if (updatedObject.courier_tracking_details) {
-        formData.append(
-          `data[${index}][courier_tracking_details]`,
-          updatedObject.courier_tracking_details
-        );
-      }
-
-      // Add row ID if available
-      if (rowData?.id) {
-        formData.append(`data[${index}][id]`, rowData.id);
-      }
-
-      // Add proof upload flag if applicable
-      if (proofUploadView) {
-        formData.append(`data[${index}][is_proof_upload]`, "1");
-      }
-
-      return formData;
-    };
-
-    try {
-      const formData = constructTicketFormData(updatedObject);
-      const response = await myListingUploadTickets("", formData);
-
-      if (response.success) {
-        onClose();
-        toast.success(
-          proofUploadView
-            ? "Proof document uploaded successfully"
-            : "Tickets uploaded successfully"
-        );
-      } else {
-        console.error("Upload failed:", response.message);
-        toast.error(response.message || "Upload failed");
-      }
-    } catch (error) {
-      console.error("API call failed:", error);
-      toast.error("Upload failed. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleConfirmCtaClick = useCallback(async () => {
-    const additionalData = additionalInfoRef.current?.getCurrentData() || {
-      template: "",
-      dynamicContent: "",
-    };
-
-    const currentAdditionalInfo = {
-      template: additionalData?.templateName,
-      dynamicContent: additionalData?.dynamicContent,
-    };
-    const currentQRLinks = qrLinksRef.current?.getCurrentData() || [];
-
-    const currentPaperTicketData =
-      paperTicketCourierRef.current?.getCurrentData() || {
-        courierDetails: {
-          courier_type: "company",
-          courier_company: "",
-          tracking_details: "",
-        },
-        uploadedFiles: [],
-      };
-    if (proofUploadView && myListingPage) {
-      setIsLoading(true);
-      if (existingProofTickets?.length < 0) {
-        const formData = new FormData();
-        formData.append(`ticket_id`, rowData?.rawTicketData?.s_no);
-        formData.append(`match_id`, rowData?.rawTicketData?.match_id);
-
-        if (
-          proofTransferredFiles[0]?.file &&
-          proofTransferredFiles[0]?.file instanceof File
-        ) {
-          formData.append(
-            `pop_upload_tickets`,
-            proofTransferredFiles[0]?.file,
-            proofTransferredFiles[0]?.name
-          );
-        }
-        try {
-          const response = await uploadPopInstruction("", formData);
-          setIsLoading(false);
-          onClose();
-          toast.success("Proof document uploaded successfully");
-        } catch (error) {
-          console.error("API call failed:", error);
-          // toast.error("Upload failed. Please try again.");
-          setIsLoading(false);
-        }
-      } else {
-        onClose();
-        setIsLoading(false);
-      }
-    } else if (normalFlow) {
-      if (transferredFiles?.length == maxQuantity) {
-        const filesToUpload = proofUploadView
-          ? proofTransferredFiles
-          : transferredFiles;
-        const updatedObject = {
-          upload_tickets: filesToUpload,
-          additional_info: currentAdditionalInfo,
-        };
-        if (myListingPage) {
-          handleTicketsPageApiCall(updatedObject);
-        } else {
-          handleConfirmClick(updatedObject, rowIndex, rowData);
-        }
-      } else {
-        toast.error("Please upload all tickets");
-      }
-    } else if (ETicketsFlow) {
-      const completedTickets = currentQRLinks.filter(
-        (link) => link.qr_link_android && link.qr_link_ios
-      ).length;
-      if (completedTickets == maxQuantity) {
-        const updatedObject = {
-          qr_links: currentQRLinks,
-          additional_info: currentAdditionalInfo,
-        };
-        if (myListingPage) {
-          handleTicketsPageApiCall(updatedObject);
-        } else {
-          handleConfirmClick(updatedObject, rowIndex, rowData);
-        }
-      } else {
-        toast.error("Please upload QR codes for all tickets");
-      }
-    } else if (paperTicketFlow) {
-      if (
-        currentPaperTicketData.courierDetails.courier_type &&
-        currentPaperTicketData.courierDetails.courier_company &&
-        currentPaperTicketData.courierDetails.tracking_details &&
-        currentPaperTicketData.uploadedFiles?.length > 0
-      ) {
-        const updatedObject = {
-          paper_ticket_details: currentPaperTicketData.courierDetails,
-          courier_type: currentPaperTicketData.courierDetails.courier_type,
-          courier_name: currentPaperTicketData.courierDetails.courier_company,
-          courier_tracking_details:
-            currentPaperTicketData.courierDetails.tracking_details,
-          upload_tickets: currentPaperTicketData.uploadedFiles,
-          additional_info: currentAdditionalInfo,
-        };
-        if (myListingPage) {
-          handleTicketsPageApiCall(updatedObject);
-        } else {
-          handleConfirmClick(updatedObject, rowIndex, rowData);
-        }
-      } else {
-        toast.error("Please fill all the fields");
-      }
-    }
-    if (
-      proofUploadView &&
-      !myListingPage &&
-      proofTransferredFiles?.length > 0
-    ) {
-      const updatedObject = {
-        pop_upload_tickets: proofTransferredFiles?.[0],
-      };
-      handleConfirmClick(updatedObject, rowIndex, rowData);
-    }
-  }, [
-    proofUploadView,
-    normalFlow,
-    ETicketsFlow,
-    paperTicketFlow,
-    transferredFiles,
-    proofTransferredFiles,
-    uploadedFiles,
-    handleConfirmClick,
-    rowIndex,
-    rowData,
-    myListingPage,
-  ]);
-
   return (
     <div>
       <RightViewModal
@@ -1228,11 +1038,24 @@ const UploadTickets = ({
             </button>
           </div>
 
-          {/* Main Content */}
-          <div className="flex flex-1 overflow-hidden">
-            <LeftPanelContent />
-            <RightPanelContent />
-          </div>
+          {/* Main Content - Use SubUploadParent with ref */}
+          <SubUploadParent
+            ref={subUploadParentRef}
+            proofUploadView={proofUploadView}
+            showInstruction={showInstruction}
+            ETicketsFlow={ETicketsFlow}
+            paperTicketFlow={paperTicketFlow}
+            initialAdditionalData={null}
+            onAdditionalInfoChange={handleAdditionalInfoChange}
+            onTemplateSelect={handleTemplateSelect}
+            MatchHeader={MatchHeader}
+            TicketDetails={TicketDetails}
+            QRLinksConfigSection={QRLinksConfigSection}
+            PaperTicketCourierDetailsSection={PaperTicketCourierDetailsSection}
+            FileUploadSection={FileUploadSection} // Add this
+            TicketAssignmentSection={TicketAssignmentSection} // Add this
+            existingUploadedTickets={existingUploadedTickets}
+          />
 
           {/* Footer */}
           <div className="flex justify-between items-center p-3 bg-gray-50 border-t border-gray-200 flex-shrink-0">
