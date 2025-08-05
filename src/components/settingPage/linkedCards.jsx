@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "react-toastify";
 import {
+  addSavedCards,
   getLinkedCards,
   paymentConfig,
   removeSavedCards,
 } from "@/utils/apiHandler/request";
 import { Trash2 } from "lucide-react";
 import DeleteConfirmation from "../commonComponents/deleteConfirmation";
+import axios from "axios";
 
 const LinkedCards = (props) => {
   const [savedCards, setSavedCards] = useState(
@@ -15,9 +17,10 @@ const LinkedCards = (props) => {
   const [isLoading, setIsLoading] = useState(false);
   const [stripeLoaded, setStripeLoaded] = useState(false);
   const [showAddCard, setShowAddCard] = useState(false);
-  const [deleteConfirmPopup, setDeleteConfirmPopup] = useState(false); // Add delete confirmation state
-  const [deleteCardId, setDeleteCardId] = useState(null); // Add state to store card ID to be deleted
-  const [deleteLoader, setDeleteLoader] = useState(false); // Add delete loader state
+  const [deleteConfirmPopup, setDeleteConfirmPopup] = useState(false);
+  const [deleteCardId, setDeleteCardId] = useState(null);
+  const [deleteLoader, setDeleteLoader] = useState(false);
+  const [clientSecret, setClientSecret] = useState(null); // Store client secret
   const stripeRef = useRef(null);
   const elementsRef = useRef(null);
   const cardElementRef = useRef(null);
@@ -136,6 +139,9 @@ const LinkedCards = (props) => {
         throw new Error("Invalid config response");
       }
 
+      // Store client secret for later use
+      setClientSecret(config.data.client_secret);
+
       // Create Stripe Elements
       elementsRef.current = stripeRef.current.elements();
       cardElementRef.current = elementsRef.current.create("card", {
@@ -175,18 +181,15 @@ const LinkedCards = (props) => {
 
   // Handle card saving
   const handleSaveCard = async () => {
-    if (!stripeRef.current || !cardElementRef.current) return;
+    if (!stripeRef.current || !cardElementRef.current || !clientSecret) {
+      toast.error("Payment form not properly initialized");
+      return;
+    }
 
     setIsLoading(true);
     try {
-      // Get setup intent client secret
-      const response = await paymentConfig({ gateway: "stripe" });
-
-      const config = await response;
-      const { client_secret } = config.data;
-
-      // Confirm card setup
-      const result = await stripeRef.current.confirmCardSetup(client_secret, {
+      // Use the stored client secret and existing Stripe instances
+      const result = await stripeRef.current.confirmCardSetup(clientSecret, {
         payment_method: {
           card: cardElementRef.current,
           billing_details: {
@@ -195,13 +198,27 @@ const LinkedCards = (props) => {
         },
       });
 
+      console.log("result", result);
       if (result.error) {
         toast.error("Error saving card: " + result.error.message);
       } else {
+        try {
+          const formData = new FormData();
+          formData.append("card_id", result.setupIntent.payment_method);
+          // await addSavedCards("", formData);
+          await axios({
+            method: "post",
+            url: `/api/add-linked-card`,
+            data: { card_id: result.setupIntent.payment_method },
+          });
+        } catch (err) {
+          console.log("err", err);
+        }
         toast.success("Card saved successfully!");
         fetchSavedCards();
         setShowAddCard(false);
         stripeInitializedRef.current = false;
+        setClientSecret(null); // Clear client secret
       }
     } catch (err) {
       console.error("Save card error", err);
@@ -221,6 +238,7 @@ const LinkedCards = (props) => {
   const handleCancelClick = () => {
     setShowAddCard(false);
     stripeInitializedRef.current = false;
+    setClientSecret(null); // Clear client secret
     if (cardElementRef.current) {
       cardElementRef.current.unmount();
       cardElementRef.current = null;
@@ -263,7 +281,7 @@ const LinkedCards = (props) => {
                         {cardType.toUpperCase()}
                       </div>
                       <button
-                        onClick={() => handleDeleteClick(card.id)} // Updated to use handleDeleteClick
+                        onClick={() => handleDeleteClick(card.id)}
                         className="mt-2 text-sm text-red-600 hover:text-red-800 cursor-pointer flex items-center gap-1 transition-colors duration-200"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -289,9 +307,10 @@ const LinkedCards = (props) => {
           <button
             onClick={() => {
               stripeInitializedRef.current = false;
+              setClientSecret(null);
               setShowAddCard(true);
             }}
-            className="flex items-center cursor-pointer justify-center gap-2 bg-purple-700 text-white py-2 px-4 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center cursor-pointer justify-center gap-2 bg-[#1d1d1d] text-white py-2 px-4 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isLoading || !stripeLoaded}
           >
             <svg
@@ -358,7 +377,7 @@ const LinkedCards = (props) => {
                 <button
                   onClick={handleSaveCard}
                   disabled={isLoading}
-                  className="flex-1 bg-purple-700 text-white py-2 px-4 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-[#1d1d1d] text-white py-2 px-4 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? "Saving..." : "Save Card"}
                 </button>

@@ -584,10 +584,10 @@ const RportHistory = (props) => {
       const response = await reportHistory("", updatedFilter);
       setStaticReportsData({
         reports_history: [
-          ...staticReportsData.reports_history,
-          ...response.reports_history,
+          ...staticReportsData?.reports_history,
+          ...response?.reports_history,
         ],
-        meta: response.meta,
+        meta: response?.meta,
       });
       setFiltersApplied(updatedFilter);
     } catch (error) {

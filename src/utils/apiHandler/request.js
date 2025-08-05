@@ -1217,6 +1217,20 @@ export const removeSavedCards = async (token, data, id) => {
   }
 };
 
+export const addSavedCards = async (token, data, id) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.ADD_SAVED_CARDS}`,
+      method: "POST",
+      ...(token && { token: token }),
+      ...(data && { formData: data }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in getLinkedCards", error);
+  }
+}
+
 export const paymentConfig = async (token, data, id) => {
   try {
     const response = await makeRequest({
@@ -2302,7 +2316,6 @@ export const getReferralHistory = async (token, params) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in getReferralHistory", error);
-    throw error;
   }
 };
 

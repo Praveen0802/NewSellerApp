@@ -35,11 +35,11 @@ const CollapsablePaymentTable = ({
   }, [sections, isLoading]);
 
   // Reset expanded sections when data changes
-  useEffect(() => {
-    if (!isLoading && sections?.length > 0) {
-      setExpandedSections(sections.map((_, index) => index === 0));
-    }
-  }, [sections]);
+  // useEffect(() => {
+  //   if (!isLoading && sections?.length > 0) {
+  //     setExpandedSections(sections.map((_, index) => index === 0));
+  //   }
+  // }, [sections]);
 
   const toggleSection = (index) => {
     const newExpandedSections = [...expandedSections];

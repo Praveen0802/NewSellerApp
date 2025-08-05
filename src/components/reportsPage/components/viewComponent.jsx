@@ -6,7 +6,7 @@ import { IconStore } from "@/utils/helperFunctions/iconStore";
 const ViewComponent = ({ item, onClick, hidePlus = false }) => {
   const [tooltipVisible, setTooltipVisible] = useState(null);
   const keyValues = [
-    { key: "Pending Delivery", value: item?.keys?.pendingDelivery },
+    { key: "Pending Fund", value: item?.keys?.pendingDelivery },
     ...(item?.keys?.pendingPayment ? [{ key: "Pending Payment", value: item?.keys?.pendingPayment }] : []),
     ...(item?.keys?.totalRevenue ? [{ key: "Total Revenue", value: item?.keys?.totalRevenue }] : []),
   ];

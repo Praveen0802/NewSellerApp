@@ -48,20 +48,19 @@ const ReportsPage = (props) => {
   const [transactionHistory, setTransactionHistory] =
     useState(transaction_history);
   const [depositHistory, setDepositHistory] = useState(deposit_history);
-
+console.log(overview,'overviewoverview')
   const values = overview?.map((item) => {
     return {
       icon: flagMap?.[item.currency],
       amount: item?.available_fund,
-      balance: "Available Balance",
+      balance: "Available Fund",
       currency: item?.currency,
       bank_account: item?.bank_account,
-      // Changed from "Total Earnings" to match your UI
-      // Updated keys mapping to match the Wallet Overview structure
+     
       keys: {
         pendingDelivery: item?.pending_fund,
-        pendingPayment: item?.pending_fund,
-        totalRevenue: item?.total_revenue, // Using total_amount as Total Revenue
+        // pendingPayment: item?.pending_fund,
+        // totalRevenue: item?.total_revenue, // Using total_amount as Total Revenue
         // currency: item.currency,
         // holding: item.holding,
       },
@@ -161,6 +160,7 @@ const ReportsPage = (props) => {
     return statusCode;
   };
 
+
   const depositData = depositHistory?.map((list) => {
     return {
       title: list?.month,
@@ -185,6 +185,7 @@ const ReportsPage = (props) => {
       }),
     };
   });
+  console.log(depositData,'depositDatadepositDatadepositData')
 
   const transactionData = transactionHistory?.map((list) => {
     return {
@@ -202,6 +203,8 @@ const ReportsPage = (props) => {
       }),
     };
   });
+
+  console.log(transactionData,'transactionDatatransactionData')
 
   const [selectedTab, setSelectedTab] = useState("transaction");
   const transactionTab = selectedTab == "transaction";
