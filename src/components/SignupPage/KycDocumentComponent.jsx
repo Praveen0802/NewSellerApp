@@ -1,17 +1,28 @@
 import React, { useState, useEffect } from "react";
 import useKycHook from "./useKycHook"; // Adjust the import path as needed
+import { toast } from "react-toastify";
 
-const KycDocumentComponent = ({ currentUser, onStatusChange }) => {
+const KycDocumentComponent = ({
+  currentUser,
+  onStatusChange,
+  onKycSuccess = () => {},
+} = {}) => {
   const {
     kycUrl,
     kycLoader,
     ownerLoader,
     kycStatus,
+    isPolling,
     error,
-    hasInitialized, // Get this from the hook now
+    hasInitialized,
+    downloadLoader,
+    requestId,
     getZohoDocs,
     checkIsDocsSubmitted,
+    downloadKycDocument,
   } = useKycHook({ currentUser });
+
+  // let kycStatus = "completed";
 
   const [showIframe, setShowIframe] = useState(false);
   const [iframeError, setIframeError] = useState(false);
@@ -20,6 +31,7 @@ const KycDocumentComponent = ({ currentUser, onStatusChange }) => {
   console.log("kycLoader", kycLoader);
   console.log("kycUrl", kycUrl);
   console.log("hasInitialized", hasInitialized);
+  console.log("kycStatus", kycStatus);
 
   // Notify parent component about status changes
   useEffect(() => {
@@ -28,13 +40,17 @@ const KycDocumentComponent = ({ currentUser, onStatusChange }) => {
     }
   }, [kycStatus, onStatusChange]);
 
-  // Show iframe when URL is available
+  // Show iframe when URL is available and status is not completed
   useEffect(() => {
-    if (kycUrl && !error.zohoEmbed) {
+    if (
+      kycUrl &&
+      !error.zohoEmbed &&
+      kycStatus?.toLowerCase() !== "completed"
+    ) {
       setShowIframe(true);
       setIframeError(false);
     }
-  }, [kycUrl, error.zohoEmbed]);
+  }, [kycUrl, error.zohoEmbed, kycStatus]);
 
   const handleIframeError = () => {
     setIframeError(true);
@@ -53,6 +69,18 @@ const KycDocumentComponent = ({ currentUser, onStatusChange }) => {
       await getZohoDocs(payload);
     } catch (error) {
       console.error("Retry failed:", error);
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
+      const response = await downloadKycDocument();
+      toast.info(
+        "You will be redirected to the KYC document in a few seconds."
+      );
+      onKycSuccess?.();
+    } catch (error) {
+      console.error("Download failed:", error);
     }
   };
 
@@ -94,6 +122,8 @@ const KycDocumentComponent = ({ currentUser, onStatusChange }) => {
           ? "Failed to load the document. Please check your internet connection."
           : error.zohoEmbed
           ? "Failed to fetch KYC document. Please try again."
+          : error.download
+          ? "Failed to download document. Please try again."
           : "Unable to check document status. Please try again."}
       </p>
       <button
@@ -103,6 +133,64 @@ const KycDocumentComponent = ({ currentUser, onStatusChange }) => {
       >
         Try Again
       </button>
+    </div>
+  );
+
+  const renderCompletedState = () => (
+    <div className="flex flex-col items-center justify-center p-8 bg-green-50 rounded-lg border border-green-200">
+      <div className="text-green-600 mb-4">
+        <svg
+          className="w-16 h-16"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      </div>
+      <h3 className="text-xl font-semibold text-green-800 mb-2">
+        KYC Document Completed
+      </h3>
+      <p className="text-green-700 text-center mb-6">
+        Your KYC document has been successfully completed and verified.
+      </p>
+      <button
+        onClick={handleDownload}
+        disabled={downloadLoader}
+        className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:bg-green-400 disabled:cursor-not-allowed"
+      >
+        {downloadLoader ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <span>Downloading...</span>
+          </>
+        ) : (
+          <>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            <span>Download KYC Document</span>
+          </>
+        )}
+      </button>
+      {requestId && (
+        <p className="text-xs text-gray-500 mt-3">Document ID: {requestId}</p>
+      )}
     </div>
   );
 
@@ -117,7 +205,7 @@ const KycDocumentComponent = ({ currentUser, onStatusChange }) => {
       submitted: { color: "bg-blue-100 text-blue-800", text: "Submitted" },
     };
 
-    const config = statusConfig[kycStatus] || {
+    const config = statusConfig[kycStatus.toLowerCase()] || {
       color: "bg-gray-100 text-gray-800",
       text: kycStatus,
     };
@@ -134,10 +222,24 @@ const KycDocumentComponent = ({ currentUser, onStatusChange }) => {
     );
   };
 
-  // FIXED: Check for errors FIRST, but only after initialization
+  // Check if KYC is completed and should show download state
+  const isCompleted = kycStatus?.toLowerCase() === "completed";
+
+  // Show completed state with download button
+  if (hasInitialized && isCompleted && !showIframe) {
+    return (
+      <div className="w-full max-w-6xl mx-auto p-6">
+        {renderStatusBadge()}
+        {renderCompletedState()}
+      </div>
+    );
+  }
+
+  // Check for errors FIRST, but only after initialization
   if (
     hasInitialized &&
-    (error.zohoEmbed || error.zohoDocStatus || iframeError)
+    (error.zohoEmbed || error.zohoDocStatus || iframeError) &&
+    !isCompleted
   ) {
     return (
       <div className="w-full max-w-6xl mx-auto p-6">
@@ -147,8 +249,14 @@ const KycDocumentComponent = ({ currentUser, onStatusChange }) => {
     );
   }
 
-  // Show iframe when URL is available and no errors
-  if (showIframe && kycUrl && !error.zohoEmbed && hasInitialized) {
+  // Show iframe when URL is available and no errors (and not completed)
+  if (
+    showIframe &&
+    kycUrl &&
+    !error.zohoEmbed &&
+    hasInitialized &&
+    !isCompleted
+  ) {
     return (
       <div className="w-full max-w-6xl mx-auto p-6 h-screen flex flex-col">
         {renderStatusBadge()}

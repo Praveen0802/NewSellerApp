@@ -2184,7 +2184,24 @@ export const getZohoDocStatus = async (token, data) => {
     return response ?? {};
   } catch (error) {
     console.log("ERROR in fetchSalesPageData", error);
-    throw error;
+    return error;
+    // throw error;
+  }
+};
+
+export const getZohoDocsDownload = async (token, data) => {
+  try {
+    const { id } = data ?? {};
+    const response = await makeRequest({
+      url: `${API_ROUTES.GET_ZOHO_SIGN_DOCUMENT}${id ? `/${id}` : ""}`,
+      method: "GET",
+      ...(token && { token: token }),
+    });
+    return response ?? {};
+  } catch (error) {
+    console.log("ERROR in fetchSalesPageData", error);
+    return error;
+    // throw error;
   }
 };
 

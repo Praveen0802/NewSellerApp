@@ -597,20 +597,19 @@ const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
     router.push("/settings/kyc");
   };
   const { currentUser } = useSelector((state) => state.currentUser);
-  // const [kycStatus, setKycStaus] = useState(null);
 
-  const handleKycStatusChange = (status) => {
-    // setKycStaus(status);
-    if (status?.toLowerCase() === "completed") {
-      goToKycScreen();
-    }
-  };
+  // const handleKycStatusChange = (status) => {
+  //   if (status?.toLowerCase() === "completed") {
+  //     goToKycScreen();
+  //   }
+  // };
 
   const renderStep4 = () => {
     return (
       <KycDocumentComponent
         currentUser={currentUser}
-        onStatusChange={handleKycStatusChange}
+        onKycSuccess={goToKycScreen}
+        // onStatusChange={handleKycStatusChange}
       />
     );
   };
@@ -1255,8 +1254,8 @@ const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
           <div className="px-4 py-3">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-[#10B981] to-emerald-600 rounded-lg flex items-center justify-center shadow-sm">
-                  <span className="text-white font-bold text-sm">SB</span>
+                <div className="w-8 h-8 flex items-center justify-center">
+                  <Image src={logo} alt="logo" width={36} height={36} />
                 </div>
                 <div>
                   <span className="font-bold text-gray-800 text-sm">

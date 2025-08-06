@@ -7,6 +7,7 @@ const useS3Download = () => {
 
   const downloadFile = useCallback(async (url, filename = "download") => {
     if (!url) {
+      toast.error("Failed to download file. No URL provided.");
       setError("No URL provided");
       return;
     }
