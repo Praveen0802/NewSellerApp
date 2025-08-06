@@ -48,7 +48,7 @@ const ReportsPage = (props) => {
   const [transactionHistory, setTransactionHistory] =
     useState(transaction_history);
   const [depositHistory, setDepositHistory] = useState(deposit_history);
-console.log(overview,'overviewoverview')
+  console.log(overview, "overviewoverview");
   const values = overview?.map((item) => {
     return {
       icon: flagMap?.[item.currency],
@@ -56,7 +56,7 @@ console.log(overview,'overviewoverview')
       balance: "Available Fund",
       currency: item?.currency,
       bank_account: item?.bank_account,
-     
+
       keys: {
         pendingDelivery: item?.pending_fund,
         // pendingPayment: item?.pending_fund,
@@ -160,7 +160,6 @@ console.log(overview,'overviewoverview')
     return statusCode;
   };
 
-
   const depositData = depositHistory?.map((list) => {
     return {
       title: list?.month,
@@ -185,7 +184,7 @@ console.log(overview,'overviewoverview')
       }),
     };
   });
-  console.log(depositData,'depositDatadepositDatadepositData')
+  console.log(depositData, "depositDatadepositDatadepositData");
 
   const transactionData = transactionHistory?.map((list) => {
     return {
@@ -204,7 +203,7 @@ console.log(overview,'overviewoverview')
     };
   });
 
-  console.log(transactionData,'transactionDatatransactionData')
+  console.log(transactionData, "transactionDatatransactionData");
 
   const [selectedTab, setSelectedTab] = useState("transaction");
   const transactionTab = selectedTab == "transaction";

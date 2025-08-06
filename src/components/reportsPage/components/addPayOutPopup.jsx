@@ -47,7 +47,7 @@ const AddPayOutPopup = ({
       swift_code: item.swift_code || "",
       sort_code: item.sort_code || "",
       currency: item.currency || "",
-      country: item.country_id || "",
+      country: item.country || item.country_id || "",
     });
     // Clear errors when item changes
     setErrors({});

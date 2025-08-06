@@ -57,7 +57,17 @@ const NoDataFound = () => {
   return (
     <div className="flex flex-col items-center justify-center py-10 px-4">
       <div className="text-gray-400 mb-2">
-        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="64"
+          height="64"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
           <path d="M14 2v6h6"></path>
           <path d="M12 18v-6"></path>
@@ -142,7 +152,10 @@ const LatestBookingTable = ({ listValues, meta }) => {
         page: nextPage,
         ...(selectedFilter && { days: selectedFilter }),
       });
-      setBookings((prevBookings) => [...prevBookings, ...(data.order_history || [])]);
+      setBookings((prevBookings) => [
+        ...prevBookings,
+        ...(data.order_history || []),
+      ]);
       setCurrentPage(nextPage);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -203,7 +216,8 @@ const LatestBookingTable = ({ listValues, meta }) => {
     }
   }, [listValues]);
 
-  const showNoData = !loading && !initialLoad && (!bookings || bookings.length === 0);
+  const showNoData =
+    !loading && !initialLoad && (!bookings || bookings.length === 0);
 
   return (
     <div className="flex flex-col h-full">
@@ -240,12 +254,16 @@ const LatestBookingTable = ({ listValues, meta }) => {
                       <th className="p-3 text-left text-sm font-medium">
                         Order No
                       </th>
-                      <th className="p-3 text-left text-sm font-medium">Match</th>
+                      <th className="p-3 text-left text-sm font-medium">
+                        Match
+                      </th>
                       <th className="p-3 text-left text-sm font-medium">
                         Date & Time
                       </th>
                       <th className="p-3 text-left text-sm font-medium">Qty</th>
-                      <th className="p-3 text-left text-sm font-medium">Price</th>
+                      <th className="p-3 text-left text-sm font-medium">
+                        Price
+                      </th>
                     </tr>
                   </thead>
                   <tbody>

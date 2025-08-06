@@ -230,10 +230,23 @@ const OrderInfo = ({
     // },
   ];
 
+  function formatTimestamp(isoString) {
+    const date = new Date(isoString);
+    const options = {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    };
+    return date.toLocaleDateString("en-US", options);
+  }
+
   // Format order object for OrderValues component
   const orderObject = {
     order_id: order_details?.order_id,
-    order_date: order_details?.order_date,
+    order_date: order_details?.order_date
+      ? formatTimestamp(order_details?.order_date)
+      : "-",
     order_status:
       order_details?.order_status === 1
         ? "Active"
