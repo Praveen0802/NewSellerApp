@@ -1,6 +1,13 @@
 import React, { useState, useMemo, memo, useCallback } from "react";
 import { X, ChevronDown, ChevronUp, CreditCard, FileText } from "lucide-react";
 import RightViewModal from "@/components/commonComponents/rightViewModal";
+import {
+  getDepositDetails,
+  getPayoutDetails,
+  getTransactionDetails,
+} from "@/utils/apiHandler/request";
+import { getAuthToken } from "@/utils/helperFunctions";
+import OrderInfo from "@/components/orderInfoPopup";
 
 // Enhanced shimmer loading component with better visual hierarchy
 const ShimmerLoader = memo(() => (
@@ -47,14 +54,14 @@ const ShimmerLoader = memo(() => (
         ))}
       </div>
 
-      {/* Table Shimmer */}
+      {/* Table Shimmer - Updated for 5 columns */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
           <div className="h-6 bg-slate-200 rounded w-40 animate-pulse"></div>
         </div>
         <div className="p-6">
-          <div className="grid grid-cols-7 gap-4 mb-6">
-            {Array.from({ length: 7 }, (_, i) => (
+          <div className="grid grid-cols-5 gap-6 mb-6">
+            {Array.from({ length: 5 }, (_, i) => (
               <div
                 key={i}
                 className="h-4 bg-slate-200 rounded animate-pulse"
@@ -64,9 +71,9 @@ const ShimmerLoader = memo(() => (
           {Array.from({ length: 4 }, (_, row) => (
             <div
               key={row}
-              className="grid grid-cols-7 gap-4 mb-4 p-4 bg-slate-50 rounded-lg"
+              className="grid grid-cols-5 gap-6 mb-4 p-4 bg-slate-50 rounded-lg"
             >
-              {Array.from({ length: 7 }, (_, col) => (
+              {Array.from({ length: 5 }, (_, col) => (
                 <div
                   key={col}
                   className="h-4 bg-slate-200 rounded animate-pulse"
@@ -88,11 +95,13 @@ const TransactionDetailRow = memo(({ label, value }) => (
   </div>
 ));
 
-// Enhanced booking table row component
-const BookingRow = memo(({ booking, index }) => (
+// Enhanced booking table row component - Updated for 5 columns
+const BookingRow = memo(({ booking, index, onClick = () => {} } = {}) => (
   <div
     key={booking.booking_id || index}
-    className="grid grid-cols-7 gap-4 p-4 hover:bg-slate-50 transition-all duration-200 rounded-lg border border-slate-100 bg-white mb-3"
+    className="grid grid-cols-5 gap-6 p-4 hover:bg-slate-50 transition-all duration-200 rounded-lg border border-slate-100 bg-white mb-3 cursor-pointer"
+    onClick={() => onClick(booking)}
+    title={"Click to view details"}
   >
     <div className="flex items-center">
       <span className="text-sm font-semibold text-slate-900 font-mono">
@@ -101,23 +110,10 @@ const BookingRow = memo(({ booking, index }) => (
     </div>
     <div className="flex items-center">
       <span
-        className="text-sm text-slate-700 truncate max-w-[160px] font-medium"
+        className="text-sm text-slate-700 truncate max-w-[180px] font-medium"
         title={booking.match_name}
       >
         {booking.match_name || "—"}
-      </span>
-    </div>
-    <div className="flex items-center">
-      <span
-        className="text-sm text-slate-600 truncate max-w-[130px]"
-        title={booking.customer_name}
-      >
-        {booking.customer_name || "—"}
-      </span>
-    </div>
-    <div className="flex items-center justify-center">
-      <span className="text-sm text-slate-600 text-center">
-        {booking.ticket_type || "—"}
       </span>
     </div>
     <div className="flex items-center justify-center">
@@ -221,6 +217,45 @@ const TransactionDetailsPopup = ({
     return { transactionData, bookings, formattedDates };
   }, [data]);
 
+  const [eyeViewPopup, setEyeViewPopup] = useState({
+    flag: false,
+    data: {},
+    isLoading: false,
+  });
+
+  const handleEyeClick = async (item, transactionType) => {
+    const { booking_id = null } = item ?? {};
+
+    setEyeViewPopup((prev) => ({
+      ...prev,
+      flag: true,
+      isLoading: true,
+    }));
+
+    try {
+      const params = {
+        booking_id,
+      };
+      const salesData = await getPayoutDetails("", params);
+      setEyeViewPopup({
+        flag: true,
+        data: salesData?.map((list) => ({
+          ...list,
+          order_id_label: item?.bookingNo ?? null,
+        })),
+        bookingNo: booking_id,
+      });
+      return;
+    } catch (error) {
+      console.log("ERROR in handleEyeClick", error);
+      setEyeViewPopup({
+        flag: true,
+        data: { ...item, transactionType: transactionType },
+        isLoading: false,
+      });
+    }
+  };
+
   // Simple transaction details configuration (back to original)
   const transactionDetails = useMemo(
     () => [
@@ -240,17 +275,9 @@ const TransactionDetailsPopup = ({
     [transactionData, formattedDates]
   );
 
-  // Enhanced table headers
+  // Updated table headers for 5 columns
   const tableHeaders = useMemo(
-    () => [
-      "Booking ID",
-      "Match Name",
-      "Customer",
-      "Ticket Type",
-      "Qty",
-      "Amount",
-      "Status",
-    ],
+    () => ["Booking ID", "Match Name", "Qty", "Amount", "Status"],
     []
   );
 
@@ -279,6 +306,12 @@ const TransactionDetailsPopup = ({
       </RightViewModal>
     );
   }
+
+  const refreshPopupData = async () => {
+    if (eyeViewPopup?.flag) {
+      await handleEyeClick({ booking_id: eyeViewPopup?.bookingNo });
+    }
+  };
 
   return (
     <RightViewModal show={show} onClose={handleClose} className="!w-[50%]">
@@ -363,15 +396,15 @@ const TransactionDetailsPopup = ({
               </div>
 
               <div className="p-6">
-                {/* Enhanced Table Header */}
-                <div className="grid grid-cols-7 gap-4 mb-6 pb-4 border-b-2 border-slate-200">
+                {/* Updated Table Header for 5 columns */}
+                <div className="grid grid-cols-5 gap-6 mb-6 pb-4 border-b-2 border-slate-200">
                   {tableHeaders.map((header, index) => (
                     <div
                       key={index}
                       className={`text-xs font-bold text-slate-700 uppercase tracking-wider ${
-                        index === 3 || index === 4 || index === 6
+                        index === 2 || index === 4
                           ? "text-center"
-                          : index === 5
+                          : index === 3
                           ? "text-right"
                           : ""
                       }`}
@@ -389,6 +422,7 @@ const TransactionDetailsPopup = ({
                         key={booking.booking_id || index}
                         booking={booking}
                         index={index}
+                        onClick={() => handleEyeClick(booking)}
                       />
                     ))
                   ) : (
@@ -408,6 +442,14 @@ const TransactionDetailsPopup = ({
           </AccordionSection>
         </div>
       </div>
+      <OrderInfo
+        show={eyeViewPopup?.flag}
+        data={eyeViewPopup?.data}
+        onClose={() => setEyeViewPopup({ flag: false, data: "" })}
+        refreshPopupData={refreshPopupData}
+        type="sales"
+        showShimmer={eyeViewPopup?.isLoading}
+      />
     </RightViewModal>
   );
 };

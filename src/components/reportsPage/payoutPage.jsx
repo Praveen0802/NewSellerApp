@@ -135,7 +135,7 @@ const PayoutPage = (props) => {
           flag: true,
           data: salesData?.map((list) => ({
             ...list,
-            order_id_label: item?.bookingNo ?? null,
+            order_id_label: booking_id ?? null,
           })),
           bookingNo,
         });
@@ -607,7 +607,6 @@ const PayoutPage = (props) => {
                     paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
                   />
                 )}
-
               </div>
             </div>
 
