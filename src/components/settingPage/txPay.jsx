@@ -3,7 +3,7 @@ import WalletOverview from "./subjectDescriptionPopup/Txpay/WalletOverview";
 
 const TXPayButton = () => {
   return (
-    <button className="group inline-flex items-center text-white hover:text-white bg-green-500 min-h-6 hover:bg-[#64EAA5] transition font-medium rounded text-sm px-2.5 py-0.5">
+    <button className="group inline-flex items-center text-white hover:text-white bg-[#343432] min-h-6  transition font-medium rounded text-sm px-2.5 py-0.5">
       <span
         className="mr-1.5 flex items-center justify-center fill-white"
         tabIndex="-1"

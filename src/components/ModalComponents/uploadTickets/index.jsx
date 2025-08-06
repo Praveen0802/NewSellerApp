@@ -14,6 +14,7 @@ import {
   Trash2,
   ChevronUp,
   ArrowRight,
+  Trash,
 } from "lucide-react";
 import CustomModal from "@/components/commonComponents/customModal";
 import uploadImage from "../../../../public/uploadView.svg";
@@ -22,7 +23,9 @@ import Button from "@/components/commonComponents/button";
 import RightViewContainer from "@/components/dashboardPage/reportViewContainer/rightViewContainer";
 import RightViewModal from "@/components/commonComponents/rightViewModal";
 import {
+  deleteTicketUpload,
   myListingUploadTickets,
+  updateAdditionalFile,
   uploadPopInstruction,
 } from "@/utils/apiHandler/request";
 import { toast } from "react-toastify";
@@ -32,6 +35,7 @@ import QRLinksSection from "./QRLinkSection";
 import PaperTicketCourierSection from "./paperTicketCourierSection";
 import TemplateContentRenderer from "./templateContent";
 import SubUploadParent from "./subUploadParent";
+import { readCookie } from "@/utils/helperFunctions/cookie";
 
 const UploadTickets = ({
   show,
@@ -53,7 +57,10 @@ const UploadTickets = ({
   const normalFlow = !ETicketsFlow && !paperTicketFlow;
 
   const existingUploadedTickets = rowData?.rawTicketData?.uploadTickets || [];
-  console.log(existingUploadedTickets,'existingUploadedTicketsexistingUploadedTickets')
+  console.log(
+    existingUploadedTickets,
+    "existingUploadedTicketsexistingUploadedTickets"
+  );
   const hasExistingTickets = existingUploadedTickets.length > 0;
   const existingProofTickets = rowData?.rawTicketData?.popUpload || [];
   // Updated maxQuantity calculation for proof upload
@@ -104,7 +111,7 @@ const UploadTickets = ({
       if (existingProofTickets && existingProofTickets.length > 0) {
         const existingProofFiles = existingProofTickets.map(
           (ticket, index) => ({
-            id: `existing_proof_${ticket.id || index}`,
+            id: `${ticket.id || index}`,
             name: `Proof Document`,
             file: null,
             url: ticket.pop_upload || ticket.url,
@@ -119,14 +126,16 @@ const UploadTickets = ({
       setProofUploadedFiles([]);
     } else {
       if (hasExistingTickets) {
-        const existingFiles = existingUploadedTickets.map((ticket, index) => ({
-          id: `existing_${ticket.id}`,
-          name: `Ticket ${index + 1}`,
-          file: null,
-          url: ticket.upload_tickets,
-          isExisting: true,
-          existingId: ticket.id,
-        }));
+        const existingFiles = existingUploadedTickets
+          .filter((ticket) => ticket.upload_tickets) // Only include tickets with URLs
+          .map((ticket, index) => ({
+            id: `${ticket.id}`,
+            name: `Ticket ${index + 1}`,
+            file: null,
+            url: ticket.upload_tickets,
+            isExisting: true,
+            existingId: ticket.id,
+          }));
         setTransferredFiles(existingFiles);
       } else {
         const initialUploadTickets = rowData?.upload_tickets || [];
@@ -600,20 +609,68 @@ const UploadTickets = ({
       return formData;
     };
 
+    const constructNewFormData = () => {
+      const newFormData = new FormData();
+
+      if (updatedObject.additional_info) {
+        if (updatedObject.additional_info?.templateFile) {
+          newFormData.append(
+            "additional_file",
+            updatedObject.additional_info.templateFile,
+            "additional_file"
+          );
+        }
+
+        newFormData.append(
+          "additional_file_type",
+          updatedObject.additional_info.template || ""
+        );
+        newFormData.append(
+          "template_name",
+          updatedObject.additional_info.templateName || ""
+        );
+        newFormData.append(
+          "additional_dynamic_content",
+          updatedObject.additional_info.dynamicContent || ""
+        );
+        newFormData.append(`match_id`, rowData?.rawMatchData?.m_id);
+        newFormData.append(`user_id`, readCookie("user_token"));
+        // Fix: Provide a value for template_id
+        newFormData.append(
+          "template_id",
+          updatedObject.additional_info.template || ""
+        );
+      }
+
+      return newFormData;
+    };
+
     try {
       const formData = constructTicketFormData(updatedObject);
       const response = await myListingUploadTickets("", formData);
+      console.log(
+        updatedObject.additional_info,
+        "updatedObject.additional_infoupdatedObject.additional_info"
+      );
+      if (updatedObject.additional_info) {
+        try {
+          const newFormData = constructNewFormData(updatedObject);
+          const data = await updateAdditionalFile("", newFormData);
+        } catch (err) {
+          console.log("error", err);
+        }
+      }
 
       // if (response.success) {
-        onClose();
-        toast.success(
-          proofUploadView
-            ? "Proof document uploaded successfully"
-            : "Tickets uploaded successfully"
-        );
+      onClose();
+      toast.success(
+        proofUploadView
+          ? "Proof document uploaded successfully"
+          : "Tickets updated successfully"
+      );
       // } else {
-        // console.error("Upload failed:", response.message);
-        // toast.error(response.message || "Upload failed");
+      // console.error("Upload failed:", response.message);
+      // toast.error(response.message || "Upload failed");
       // }
     } catch (error) {
       // console.error("API call failed:", error);
@@ -632,12 +689,15 @@ const UploadTickets = ({
         templateContent: "",
         selectedTemplateContent: "",
       };
+    console.log(additionalData, "additionalDataadditionalData");
 
     const currentAdditionalInfo = {
-      template: additionalData?.template || "",
+      template: additionalData?.templateId || "",
+      templateName: additionalData?.templateName || "",
       dynamicContent: additionalData?.dynamicContent || "",
       templateContent: additionalData?.templateContent || "",
       selectedTemplateContent: additionalData?.selectedTemplateContent || "",
+      templateFile: additionalData?.templateFile || null,
     };
 
     const currentQRLinks = qrLinksRef.current?.getCurrentData() || [];
@@ -654,7 +714,6 @@ const UploadTickets = ({
 
     if (proofUploadView && myListingPage) {
       setIsLoading(true);
-      console.log(existingProofTickets?.length,'existingProofTickets?.lengthexistingProofTickets?.length')
       if (existingProofTickets?.length <= 0) {
         const formData = new FormData();
         formData.append(`ticket_id`, rowData?.rawTicketData?.s_no);
@@ -684,7 +743,7 @@ const UploadTickets = ({
         setIsLoading(false);
       }
     } else if (normalFlow) {
-      if (transferredFiles?.length == maxQuantity) {
+      if (transferredFiles?.length > 0) {
         const filesToUpload = proofUploadView
           ? proofTransferredFiles
           : transferredFiles;
@@ -698,15 +757,13 @@ const UploadTickets = ({
           handleConfirmClick(updatedObject, rowIndex, rowData);
         }
       } else {
-        if (!proofUploadView) {
-          toast.error("Please upload all tickets");
-        }
+        onClose();
       }
     } else if (ETicketsFlow) {
       const completedTickets = currentQRLinks.filter(
         (link) => link.qr_link_android && link.qr_link_ios
       ).length;
-      if (completedTickets == maxQuantity) {
+      if (completedTickets > 0) {
         const updatedObject = {
           qr_links: currentQRLinks,
           additional_info: currentAdditionalInfo,
@@ -717,9 +774,7 @@ const UploadTickets = ({
           handleConfirmClick(updatedObject, rowIndex, rowData);
         }
       } else {
-        if (!proofUploadView) {
-          toast.error("Please upload QR codes for all tickets");
-        }
+        onClose();
       }
     } else if (paperTicketFlow) {
       if (
@@ -743,9 +798,7 @@ const UploadTickets = ({
           handleConfirmClick(updatedObject, rowIndex, rowData);
         }
       } else {
-        if (!proofUploadView) {
-          toast.error("Please fill all the fields");
-        }
+        onClose();
       }
     }
     if (
@@ -818,7 +871,7 @@ const UploadTickets = ({
     // Enhanced drag area disabled logic
     const isDragAreaDisabled = proofUploadView
       ? currentTransferredFiles.length >= 1
-      : hasExistingTickets && !hasPartialUploads;
+      : false;
 
     // Enhanced no files message
     const getNoFilesMessage = () => {
@@ -937,13 +990,74 @@ const UploadTickets = ({
       </>
     );
   };
-
+  console.log(transferredFiles, "transferredFiles");
   // Ticket Assignment Section Component
   const TicketAssignmentSection = () => {
     // Use the appropriate state variables based on proof upload view
     const currentTransferredFiles = proofUploadView
       ? proofTransferredFiles
       : transferredFiles;
+
+    const handleDeleteUpload = async (assignedFile) => {
+      console.log(assignedFile, "assignedFileassignedFile");
+      try {
+        // If the file has an existing ID, call the API first
+        if (
+          assignedFile?.url &&
+          (assignedFile?.existingId || assignedFile?.id)
+        ) {
+          const idToDelete = assignedFile.existingId || assignedFile.id;
+          console.log(idToDelete, "idToDelete");
+          try {
+            await deleteTicketUpload("", idToDelete);
+            toast.success("File deleted successfully");
+          } catch (error) {
+            console.error("Failed to delete from server:", error);
+            toast.error("Failed to delete file from server");
+            return; // Don't update state if API call failed
+          }
+        }
+
+        // Remove from the appropriate state array
+        if (proofUploadView) {
+          // For proof upload view
+          setProofTransferredFiles((prev) =>
+            prev.filter((file) => {
+              // If assignedFile has existingId, match by existingId
+              if (assignedFile.existingId) {
+                return file.existingId !== assignedFile.existingId;
+              }
+              // If assignedFile has id, match by id
+              if (assignedFile.id) {
+                return file.id !== assignedFile.id;
+              }
+              // Fallback: this shouldn't happen, but keep all files if no identifier
+              return true;
+            })
+          );
+        } else {
+          // For normal flow
+          setTransferredFiles((prev) =>
+            prev.filter((file) => {
+              // If assignedFile has existingId, match by existingId
+              if (assignedFile.existingId) {
+                return file.existingId !== assignedFile.existingId;
+              }
+              // If assignedFile has id, match by id
+              if (assignedFile.id) {
+                return file.id !== assignedFile.id;
+              }
+              // Fallback: this shouldn't happen, but keep all files if no identifier
+              return true;
+            })
+          );
+        }
+      } catch (error) {
+        console.error("Error in handleDeleteUpload:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
     return (
       <div className="p-3">
         <div className="flex justify-between items-center mb-2">
@@ -963,6 +1077,7 @@ const UploadTickets = ({
             Array.from({ length: maxQuantity }, (_, index) => {
               const itemNumber = index + 1;
               const assignedFile = currentTransferredFiles[index];
+              console.log(assignedFile, "assignedFileassignedFile");
               return (
                 <div
                   key={itemNumber}
@@ -1001,6 +1116,14 @@ const UploadTickets = ({
                               <Eye className="w-3 h-3" />
                             </button>
                           )}
+                          <button
+                            className="p-1 text-red-500 cursor-pointer hover:text-red-700"
+                            onClick={() => {
+                              handleDeleteUpload(assignedFile);
+                            }}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
                         </div>
                       </div>
                     ) : (

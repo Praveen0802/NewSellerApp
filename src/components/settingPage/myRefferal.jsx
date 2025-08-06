@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Copy, Users, Check } from "lucide-react";
+import { Copy, Users, Check, X } from "lucide-react";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import CustomSelect from "../commonComponents/customSelect";
 import Button from "../commonComponents/button";
 import useCopyToClipboard from "@/Hooks/useCopyClipboard";
+import reloadIcon from "../../../public/reload.svg";
 import FloatingSelect from "../floatinginputFields/floatingSelect";
 import { getReferralHistory } from "@/utils/apiHandler/request";
+import FloatingDateRange from "../commonComponents/dateRangeInput";
+import Image from "next/image";
 
 const MyReferrals = (props) => {
   console.log(props, "propsprops");
@@ -29,6 +32,8 @@ const MyReferrals = (props) => {
   const [referralUsers, setReferralUsers] = useState(referUserData);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(
     metaDetails?.current_page || 1
   );
@@ -56,9 +61,9 @@ const MyReferrals = (props) => {
   const handleApiCall = async (params) => {
     setIsLoading(true);
     try {
-      console.log(params,'paramsparams')
+      console.log(params, "paramsparams");
       const response = await getReferralHistory("", params);
-      console.log(response,'responseresponseresponseresponse')
+      console.log(response, "responseresponseresponseresponse");
       setReferralUsers(response?.data?.referral_users || []);
       // Update meta details if returned by API
       if (response?.meta) {
@@ -71,6 +76,17 @@ const MyReferrals = (props) => {
     setIsLoading(false);
   };
 
+  // Debounce search to avoid too many API calls
+  const debounceTimer = useCallback(() => {
+    let timeoutId;
+    return (callback, delay) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(callback, delay);
+    };
+  }, []);
+
+  const debouncedSearch = useMemo(() => debounceTimer(), [debounceTimer]);
+
   // Trigger API call when pagination or filters change
   useEffect(() => {
     if (currentPage && getReferralHistory) {
@@ -82,6 +98,25 @@ const MyReferrals = (props) => {
       });
     }
   }, [currentPage, itemsPerPage]);
+
+  // Handle search text change with debounce
+  const handleSearchChange = useCallback((e) => {
+    const newSearchText = e.target.value;
+    setSearchText(newSearchText);
+    
+    // Debounce the API call by 300ms to avoid excessive requests
+    debouncedSearch(() => {
+      handleApiCall({
+        page: 1,
+        per_page: itemsPerPage,
+        keyword: newSearchText,
+        ...(statusFilter && { status: statusFilter }),
+        ...(startDate?.startDate && { start_date: startDate?.startDate }),
+        ...(endDate?.startDate && { end_date: endDate?.startDate }),
+      });
+      setCurrentPage(1);
+    }, 300);
+  }, [itemsPerPage, statusFilter, startDate, endDate, debouncedSearch, handleApiCall]);
 
   // Memoize options objects
   const viewOptions = useMemo(
@@ -127,18 +162,6 @@ const MyReferrals = (props) => {
     [totalPages]
   );
 
-  const handleInputBlurOrEnter = (e, isBlur = false) => {
-    if (isBlur || e.key === "Enter") {
-      handleApiCall({
-        page: 1,
-        per_page: itemsPerPage,
-        keyword: searchText,
-        ...(statusFilter && { status: statusFilter }),
-      });
-      setCurrentPage(1);
-    }
-  };
-
   const handleStatusChange = async (value) => {
     setStatusFilter(value);
     await handleApiCall({
@@ -146,6 +169,30 @@ const MyReferrals = (props) => {
       per_page: itemsPerPage,
       keyword: searchText,
       ...(value && { status: value }),
+    });
+    setCurrentPage(1);
+  };
+
+  const handleDateChange = async (range, key) => {
+    setStartDate(range);
+
+    await handleApiCall({
+      page: 1,
+      per_page: itemsPerPage,
+      keyword: searchText,
+      ...(range?.startDate && { start_date: range?.startDate }),
+    });
+    setCurrentPage(1);
+  };
+
+  const handleEndDateChange = async (range, key) => {
+    setEndDate(range);
+
+    await handleApiCall({
+      page: 1,
+      per_page: itemsPerPage,
+      keyword: searchText,
+      ...(range?.startDate && { end_date: range?.startDate }),
     });
     setCurrentPage(1);
   };
@@ -369,10 +416,8 @@ const MyReferrals = (props) => {
               <input
                 type="text"
                 placeholder="Search by name or refer code"
-                onChange={(e) => setSearchText(e.target.value)}
+                onChange={handleSearchChange}
                 value={searchText}
-                onBlur={(e) => handleInputBlurOrEnter(e, true)}
-                onKeyPress={(e) => handleInputBlurOrEnter(e)}
                 className="outline-none placeholder:font-[300] placeholder:opacity-50 text-xs sm:text-sm w-full"
               />
             </div>
@@ -392,14 +437,164 @@ const MyReferrals = (props) => {
               parentClassName=""
               labelClassName="!text-[11px]"
             />
+            <FloatingDateRange
+              label={"Start Date"}
+              value={startDate}
+              keyValue="start_date"
+              className="!w-full"
+              singleDateMode={true}
+              onChange={handleDateChange}
+              paddingClassName="!py-[6px] !px-[12px] w-[20%] text-xs"
+              parentClassName="!w-[20%]"
+              labelClassName="!text-[11px]"
+            />
+            <FloatingDateRange
+              label={"End Date"}
+              value={endDate}
+              keyValue="end_date"
+              className="!w-full"
+              singleDateMode={true}
+              onChange={handleEndDateChange}
+              paddingClassName="!py-[6px] !px-[12px] w-[20%] text-xs"
+              parentClassName="!w-[20%]"
+              labelClassName="!text-[11px]"
+            />
           </div>
 
           {/* User count and pagination controls */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-            <p className="p-3 sm:p-4 text-xs sm:text-sm text-[#343432] border-b-[1px] sm:border-b-0 sm:border-r-[1px] border-[#eaeaf1] font-medium w-full sm:w-auto">
-              {metaDetails?.total || referralUsers.length} referrals
-            </p>
+            <div className="flex items-center gap-4">
+              <p className="p-3 sm:p-4 text-xs sm:text-sm text-[#343432] border-b-[1px] sm:border-b-0 sm:border-r-[1px] border-[#eaeaf1] font-medium w-full sm:w-auto">
+                {metaDetails?.total || referralUsers.length} referrals
+              </p>
+              {(searchText ||
+                statusFilter ||
+                startDate?.startDate ||
+                endDate?.startDate) && (
+                <div className="flex gap-3 items-center flex-wrap">
+                  <button
+                    className="text-sm text-gray-600 hover:text-gray-800 font-medium underline cursor-pointer"
+                    title="Clear all filters"
+                    onClick={() => {
+                      setSearchText("");
+                      setStatusFilter("");
+                      setStartDate("");
+                      setEndDate("");
+                      handleApiCall({
+                        page: 1,
+                        per_page: itemsPerPage,
+                        keyword: "",
+                      });
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <Image
+                      src={reloadIcon}
+                      width={30}
+                      height={30}
+                      alt="image-logo"
+                    />
+                  </button>
 
+                  {/* Search Filter Chip */}
+                  {searchText && (
+                    <div className="py-2 px-3 flex gap-1 items-center text-sm border-[1px] border-[#eaeaf1] rounded-md">
+                      Search: {searchText}
+                      <X
+                        className="w-4 h-4 cursor-pointer"
+                        onClick={() => {
+                          setSearchText("");
+                          handleApiCall({
+                            page: 1,
+                            per_page: itemsPerPage,
+                            keyword: "",
+                            ...(statusFilter && { status: statusFilter }),
+                            ...(startDate?.startDate && {
+                              start_date: startDate.startDate,
+                            }),
+                            ...(endDate?.startDate && {
+                              end_date: endDate.startDate,
+                            }),
+                          });
+                          setCurrentPage(1);
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Status Filter Chip */}
+                  {statusFilter && (
+                    <div className="py-2 px-3 flex gap-1 items-center text-sm border-[1px] border-[#eaeaf1] rounded-md">
+                      Status: {statusFilter === "1" ? "Active" : "Inactive"}
+                      <X
+                        className="w-4 h-4 cursor-pointer"
+                        onClick={() => {
+                          setStatusFilter("");
+                          handleApiCall({
+                            page: 1,
+                            per_page: itemsPerPage,
+                            keyword: searchText,
+                            ...(startDate?.startDate && {
+                              start_date: startDate.startDate,
+                            }),
+                            ...(endDate?.startDate && {
+                              end_date: endDate.startDate,
+                            }),
+                          });
+                          setCurrentPage(1);
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Start Date Filter Chip */}
+                  {startDate?.startDate && (
+                    <div className="py-2 px-3 flex gap-1 items-center text-sm border-[1px] border-[#eaeaf1] rounded-md">
+                      Start Date: {formatDate(startDate.startDate)}
+                      <X
+                        className="w-4 h-4 cursor-pointer"
+                        onClick={() => {
+                          setStartDate("");
+                          handleApiCall({
+                            page: 1,
+                            per_page: itemsPerPage,
+                            keyword: searchText,
+                            ...(statusFilter && { status: statusFilter }),
+                            ...(endDate?.startDate && {
+                              end_date: endDate.startDate,
+                            }),
+                          });
+                          setCurrentPage(1);
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* End Date Filter Chip */}
+                  {endDate?.startDate && (
+                    <div className="py-2 px-3 flex gap-1 items-center text-sm border-[1px] border-[#eaeaf1] rounded-md">
+                      End Date: {formatDate(endDate.startDate)}
+                      <X
+                        className="w-4 h-4 cursor-pointer"
+                        onClick={() => {
+                          setEndDate("");
+                          handleApiCall({
+                            page: 1,
+                            per_page: itemsPerPage,
+                            keyword: searchText,
+                            ...(statusFilter && { status: statusFilter }),
+                            ...(startDate?.startDate && {
+                              start_date: startDate.startDate,
+                            }),
+                          });
+                          setCurrentPage(1);
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             <div className="flex flex-wrap sm:flex-nowrap justify-between w-full sm:w-auto border-t-[1px] sm:border-t-0 sm:border-l-[1px] p-3 sm:pl-4 border-[#eaeaf1] items-center text-[#343432] text-xs sm:text-sm">
               <div className="flex items-center mb-2 sm:mb-0 mr-0 sm:mr-4">
                 <span className="mr-2">View</span>

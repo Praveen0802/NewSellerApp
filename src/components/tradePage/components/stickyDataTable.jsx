@@ -47,7 +47,6 @@ export const formatDate = (dateString, format = "default") => {
 };
 
 // Function to detect if a string is a date format
-
 const isDateString = (value) => {
   if (typeof value !== "string") return false;
 
@@ -90,6 +89,51 @@ const NoRecordsFound = () => (
   </tr>
 );
 
+// Sort icon component
+const SortIcon = ({ sortState, onClick }) => {
+  const getSortIcon = () => {
+    switch (sortState) {
+      case "ASC":
+        return (
+          <div className="flex flex-col items-center justify-center w-3 h-4">
+            <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[5px] border-l-transparent border-r-transparent border-b-blue-600"></div>
+          </div>
+        );
+      case "DESC":
+        return (
+          <div className="flex flex-col items-center justify-center w-3 h-4">
+            <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-t-[5px] border-l-transparent border-r-transparent border-t-blue-600"></div>
+          </div>
+        );
+      default:
+        return (
+          <div className="flex flex-col items-center justify-center w-4 h-5 gap-0.5">
+            {/* Up arrow */}
+            <div className="w-0 h-0 border-l-[3px] border-r-[3px] border-b-[4px] border-l-transparent border-r-transparent border-b-gray-400"></div>
+            {/* Down arrow */}
+            <div className="w-0 h-0 border-l-[3px] border-r-[3px] border-t-[4px] border-l-transparent border-r-transparent border-t-gray-400"></div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className="ml-2 hover:bg-gray-100 rounded p-1 transition-colors flex items-center justify-center"
+      aria-label={`Sort ${
+        sortState === "ASC"
+          ? "descending"
+          : sortState === "DESC"
+          ? "none"
+          : "ascending"
+      }`}
+    >
+      {getSortIcon()}
+    </button>
+  );
+};
+
 const StickyDataTable = ({
   headers,
   data,
@@ -101,9 +145,17 @@ const StickyDataTable = ({
   handleTicketMouseEnter = () => {},
   handleTicketMouseLeave = () => {},
   dateFormatConfig = {}, // New prop for date formatting configuration
+  onSort = null, // New prop for handling sort operations
+  currentSort = null, // Current sort state { sortableKey: string, sort_order: 'ASC'|'DESC' }
 }) => {
   // Use whichever callback is provided
   const scrollEndCallback = onScrollEnd || fetchScrollEnd;
+
+  // Internal sort state management (fallback if no external state provided)
+  const [internalSortState, setInternalSortState] = useState(null);
+
+  // Use external sort state if provided, otherwise use internal
+  const sortState = currentSort || internalSortState;
 
   // Calculate the width of sticky columns based on consistent sizing
   const maxStickyColumnsLength =
@@ -151,6 +203,56 @@ const StickyDataTable = ({
       return formatDate(value, getDateFormat(columnKey));
     }
     return value;
+  };
+
+  // Handle sort click
+  const handleSortClick = (header) => {
+    if (!header.sortable || !header.sortableKey) return;
+
+    // Get current sort order - handle cases where sortState is null or undefined
+    const currentSortOrder =
+      sortState?.sortableKey === header.sortableKey
+        ? sortState?.sort_order
+        : null;
+
+    let newSortOrder;
+    // Handle the sorting cycle: null/undefined -> ASC -> DESC -> null
+    if (!currentSortOrder) {
+      // No sort or different column - start with ASC
+      newSortOrder = "ASC";
+    } else if (currentSortOrder === "ASC") {
+      // Currently ascending - switch to descending
+      newSortOrder = "DESC";
+    } else if (currentSortOrder === "DESC") {
+      // Currently descending - remove sort
+      newSortOrder = null;
+    } else {
+      // Fallback - start with ASC
+      newSortOrder = "ASC";
+    }
+
+    const newSortState = newSortOrder
+      ? {
+          sortableKey: header.sortableKey,
+          sort_order: newSortOrder,
+        }
+      : null;
+
+    // Update internal state
+    setInternalSortState(newSortState);
+
+    // Call external sort handler if provided
+    if (onSort && typeof onSort === "function") {
+      onSort(newSortState);
+    }
+  };
+
+  // Get sort state for a specific header
+  const getSortStateForHeader = (header) => {
+    if (!sortState || sortState.sortableKey !== header.sortableKey) {
+      return null;
+    }
+    return sortState.sort_order;
   };
 
   // Generate shimmer loading rows
@@ -215,70 +317,92 @@ const StickyDataTable = ({
     const syncRowHeights = () => {
       if (!mainTableRef.current || !stickyTableRef.current) return;
 
-      // Reset heights first to avoid compounding issues
+      // Get header elements first
+      const mainHeaderRow = mainTableRef.current.querySelector("thead tr");
+      const stickyHeaderRow = stickyTableRef.current.querySelector("thead tr");
+
+      // Skip if headers aren't available yet
+      if (!mainHeaderRow || !stickyHeaderRow) return;
+
       const mainRows = mainTableRef.current.querySelectorAll("tbody tr");
       const stickyRows = stickyTableRef.current.querySelectorAll("tbody tr");
 
       // Ensure we have the same number of rows to sync
       if (mainRows.length !== stickyRows.length) {
-        console.warn("Row count mismatch between main and sticky tables");
         return;
       }
 
-      // Reset all heights to auto first
-      mainRows.forEach((row) => (row.style.height = "auto"));
-      stickyRows.forEach((row) => (row.style.height = "auto"));
-
-      // Sync header heights
-      const mainHeaderRow = mainTableRef.current.querySelector("thead tr");
-      const stickyHeaderRow = stickyTableRef.current.querySelector("thead tr");
-
-      if (mainHeaderRow && stickyHeaderRow) {
-        const headerHeight = mainHeaderRow.offsetHeight;
-        stickyHeaderRow.style.height = `${headerHeight}px`;
-      }
-
-      // Allow the browser to recalculate natural heights
+      // Use a single RAF to batch all DOM operations and prevent flickering
       requestAnimationFrame(() => {
-        // Sync body row heights using row index as key
+        // First, sync header heights without resetting
+        const mainHeaderHeight = mainHeaderRow.offsetHeight;
+        const stickyHeaderHeight = stickyHeaderRow.offsetHeight;
+        const maxHeaderHeight = Math.max(mainHeaderHeight, stickyHeaderHeight);
+
+        // Only update if there's a significant difference to avoid constant updates
+        if (Math.abs(mainHeaderHeight - stickyHeaderHeight) > 1) {
+          mainHeaderRow.style.height = `${maxHeaderHeight}px`;
+          stickyHeaderRow.style.height = `${maxHeaderHeight}px`;
+        }
+
+        // Then sync body row heights
         mainRows.forEach((row, index) => {
-          if (index < stickyRows.length) {
+          if (index < stickyRows.length && !loading) {
             const stickyRow = stickyRows[index];
-            // Get the natural heights of both rows
             const mainRowHeight = row.offsetHeight;
             const stickyRowHeight = stickyRow.offsetHeight;
 
-            // Use the larger of the two heights
-            const maxHeight = Math.max(mainRowHeight, stickyRowHeight);
-            row.style.height = `${maxHeight}px`;
-            stickyRow.style.height = `${maxHeight}px`;
+            // Only sync if there's a meaningful difference
+            if (Math.abs(mainRowHeight - stickyRowHeight) > 1) {
+              const maxHeight = Math.max(mainRowHeight, stickyRowHeight);
+              row.style.height = `${maxHeight}px`;
+              stickyRow.style.height = `${maxHeight}px`;
+            }
           }
         });
       });
     };
 
-    // Wait for rendering to complete before measuring
-    const timer = setTimeout(() => {
-      syncRowHeights();
-    }, 0);
+    // Don't sync during loading to prevent flickering
+    if (loading) return;
 
-    // Set up resize observer for continuous monitoring
-    const resizeObserver = new ResizeObserver(() => {
-      syncRowHeights();
+    // Use multiple RAF to ensure proper rendering order
+    const timer = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        syncRowHeights();
+      });
     });
+
+    // Debounced resize observer to prevent excessive calls
+    let resizeTimeout;
+    const debouncedSync = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(syncRowHeights, 16); // ~60fps
+    };
+
+    const resizeObserver = new ResizeObserver(debouncedSync);
 
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
 
-    window.addEventListener("resize", syncRowHeights);
+    // Debounced window resize handler
+    let windowResizeTimeout;
+    const debouncedWindowResize = () => {
+      clearTimeout(windowResizeTimeout);
+      windowResizeTimeout = setTimeout(syncRowHeights, 100);
+    };
+
+    window.addEventListener("resize", debouncedWindowResize);
 
     return () => {
-      clearTimeout(timer);
+      cancelAnimationFrame(timer);
+      clearTimeout(resizeTimeout);
+      clearTimeout(windowResizeTimeout);
       if (containerRef.current) {
         resizeObserver.unobserve(containerRef.current);
       }
-      window.removeEventListener("resize", syncRowHeights);
+      window.removeEventListener("resize", debouncedWindowResize);
     };
   }, [displayData, rightStickyColumns, loading]);
 
@@ -479,16 +603,27 @@ const StickyDataTable = ({
                 <th
                   key={header.key}
                   className="px-4 py-3 text-left text-[#7D82A4] font-medium whitespace-nowrap"
+                  style={{
+                    width: header.width || "auto",
+                    minWidth: header.minWidth || "120px",
+                  }}
                 >
                   <div className="flex text-[13px] justify-between items-center">
                     {header.label}
-                    {header.sortable && (
-                      <Image
-                        src={chevronDown}
-                        width={10}
-                        height={10}
-                        alt="logo"
+                    {header.sortable && header.sortableKey ? (
+                      <SortIcon
+                        sortState={getSortStateForHeader(header)}
+                        onClick={() => handleSortClick(header)}
                       />
+                    ) : (
+                      header.sortable && (
+                        <Image
+                          src={chevronDown}
+                          width={10}
+                          height={10}
+                          alt="logo"
+                        />
+                      )
                     )}
                   </div>
                 </th>
@@ -501,12 +636,15 @@ const StickyDataTable = ({
               if (row.isEmpty) {
                 return <NoRecordsFound key="no-records" />;
               }
+              const uniqueKey = row.isShimmer
+                ? `shimmer-${rowIndex}-${Date.now()}`
+                : row.id
+                ? `row-${row.id}-${rowIndex}`
+                : `row-${rowIndex}-${JSON.stringify(row).slice(0, 50)}`;
 
               return (
                 <tr
-                  key={
-                    row.isShimmer ? `shimmer-${rowIndex}` : row.id || rowIndex
-                  }
+                  key={uniqueKey}
                   className="border-b border-[#E0E1EA] bg-white hover:bg-gray-50"
                   onMouseEnter={() =>
                     handleTicketMouseEnter(row?.seat_category_id)
@@ -585,7 +723,10 @@ const StickyDataTable = ({
         style={{ width: `${stickyColumnsWidth}px` }}
       >
         <div className="h-full">
-          <table ref={stickyTableRef} className="w-full h-full border-collapse">
+          <table
+            ref={stickyTableRef}
+            className="w-full h-full border-collapse table-fixed"
+          >
             {rightStickyHeaders?.length > 0 ? (
               <thead>
                 <tr className="bg-white border-b border-[#E0E1EA]">
@@ -699,6 +840,12 @@ const StickyDataTable = ({
                 }
 
                 // Get the row-specific sticky columns, or empty array if not defined
+                const uniqueKey = row.isShimmer
+                  ? `shimmer-sticky-${rowIndex}-${Date.now()}`
+                  : row.id
+                  ? `sticky-${row.id}-${rowIndex}`
+                  : `sticky-${rowIndex}-${JSON.stringify(row).slice(0, 50)}`;
+
                 const rowStickyColumns =
                   !loading && Array.isArray(normalizedStickyColumns[rowIndex])
                     ? normalizedStickyColumns[rowIndex]
@@ -706,13 +853,7 @@ const StickyDataTable = ({
 
                 return (
                   <tr
-                    key={
-                      row.isShimmer
-                        ? `shimmer-sticky-${rowIndex}`
-                        : row.id
-                        ? `sticky-${row.id}`
-                        : `sticky-${rowIndex}`
-                    }
+                    key={uniqueKey}
                     className="border-b border-[#E0E1EA] bg-white hover:bg-gray-50"
                   >
                     {/* Render shimmer for loading state or actual content */}

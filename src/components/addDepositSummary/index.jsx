@@ -14,6 +14,7 @@ import { useRouter } from "next/router";
 
 const AddDepositSummary = ({ onClose } = {}) => {
   const [loader, setLoader] = useState(false);
+  const [isLoadingAccountDetails, setIsLoadingAccountDetails] = useState(true); // New loading state
   const [currencyDetails, setCurrencyDetails] = useState([]);
   const [bankAccountDetails, setBankAccountDetails] = useState();
   const [formFieldValues, setFormFieldValues] = useState({
@@ -46,8 +47,16 @@ const AddDepositSummary = ({ onClose } = {}) => {
   };
 
   const fetchAccountDetails = async () => {
-    const response = await accountReference();
-    setBankAccountDetails(response?.data);
+    try {
+      setIsLoadingAccountDetails(true); // Set loading to true
+      const response = await accountReference();
+      setBankAccountDetails(response?.data);
+    } catch (error) {
+      console.error("Error fetching account details:", error);
+      toast.error("Error loading account details");
+    } finally {
+      setIsLoadingAccountDetails(false); // Set loading to false when done
+    }
   };
 
   useEffect(() => {
@@ -188,7 +197,11 @@ const AddDepositSummary = ({ onClose } = {}) => {
 
       {/* Scrollable content area */}
       <div className="flex flex-col gap-1 overflow-y-auto flex-grow">
-        <TopPopupModal bankAccountDetails={bankAccountDetails} />
+        {/* Pass the loading state to TopPopupModal */}
+        <TopPopupModal 
+          bankAccountDetails={bankAccountDetails} 
+          isLoading={isLoadingAccountDetails}
+        />
 
         {/* Form Content - Adjusted padding for mobile */}
         <div className="flex flex-col gap-3 sm:gap-4 p-3 sm:px-6 sm:pb-6">

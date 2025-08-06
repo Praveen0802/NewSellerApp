@@ -1013,6 +1013,19 @@ const AddInventoryPage = (props) => {
           publishingData.additional_info.dynamicContent || ""
         );
       }
+      console.log(
+        publishingData?.additional_info?.templateFile,
+        "publishingData?.additional_info?.templateFile"
+      );
+      if (publishingData?.additional_info?.templateFile) {
+        // Debug: Check what you're actually trying to append
+        
+        formData.append(
+          `data[${index}][additional_file]`,
+          publishingData?.additional_info?.templateFile,
+          'additional_file'
+        );
+      }
 
       if (publishingData.courier_type) {
         formData.append(
@@ -1129,7 +1142,7 @@ const AddInventoryPage = (props) => {
         await saveListing("", formData);
       }
 
-      router.push("/my-listings?success=true");
+      // router.push("/my-listings?success=true");
       toast.success(`${selectedRows.length} listing(s) published successfully`);
       setLoader(false);
     } catch (error) {

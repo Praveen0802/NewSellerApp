@@ -250,8 +250,8 @@ const LinkedCards = (props) => {
       <p className="pb-2 sm:pb-4 text-base sm:text-lg md:text-xl p-3 sm:p-4 font-semibold">
         Linked Cards
       </p>
-      <div className="bg-white p-3 sm:p-4 border-[1px] flex flex-col gap-3 sm:gap-4 border-[#eaeaf1] w-full h-full">
-        <div className="">
+      <div className="bg-white border-[1px] flex flex-col gap-3 sm:gap-4 border-[#eaeaf1] w-full h-full">
+        <div className="bg-white p-3 sm:p-4 ">
           {savedCards?.length > 0 ? (
             <div className="mb-6 grid grid-cols-2 gap-4">
               {savedCards?.map((card, index) => {

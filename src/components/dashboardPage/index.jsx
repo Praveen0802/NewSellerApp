@@ -45,7 +45,7 @@ console.log(props,'propsprops')
 
   const [filters, setFilters] = useState({
     salesOverView: "last_180days",
-    awaitingDelivery: "today",
+    awaitingDelivery: "next_24hours",
     topSelling: "last_180days",
     topSellingCategory: "", //allCategories
   });
@@ -299,7 +299,7 @@ console.log(props,'propsprops')
         { value: "next_7days", label: "Events in next 7 days" },
         { value: "next_14days", label: "Events in next 14 days" },
         { value: "next_30days", label: "Events in next 30 days" },
-        
+
         { value: "next_180days", label: "Events in next 6 months" },
       ],
       selectedOption: filters?.awaitingDelivery,

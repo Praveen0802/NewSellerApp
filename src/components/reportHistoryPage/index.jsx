@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import TabbedLayout from "../tabbedLayout";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import StickyDataTable from "../tradePage/components/stickyDataTable";
@@ -150,7 +150,7 @@ const RportHistory = (props) => {
   const [filtersApplied, setFiltersApplied] = useState({
     page: 1,
   });
-  console.log(props, "propspropsprops");
+
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [showLogDetailsModal, setShowLogDetailsModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -165,6 +165,9 @@ const RportHistory = (props) => {
 
   // Add transition direction state for currency slider
   const [transitionDirection, setTransitionDirection] = useState(null);
+
+  // Add sort state for table
+  const [sortState, setSortState] = useState(null);
 
   const [staticReportsData, setStaticReportsData] = useState(
     props?.response?.reportHistoryData?.value
@@ -206,76 +209,54 @@ const RportHistory = (props) => {
     }, 1000); // 300ms debounce delay
   }, []);
 
-  const searchMatchDropDown = () => {
-    if (!showSearchDropdown || searchMatches.length === 0) return null;
-
-    return (
-      <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
-        {searchMatches.map((item, index) => (
-          <div
-            key={item.match_id || index}
-            className="px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-            onClick={() => {
-              setShowSearchDropdown(false);
-              handleSearchMatchChange(item.match_id);
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-gray-900 truncate">
-                  {item.match_name}
-                </p>
-                <div className="flex items-center gap-3 mt-1">
-                  <span className="text-xs text-gray-500 truncate">
-                    {item.tournament_name}
-                  </span>
-                  <div className="flex items-center gap-1 text-xs text-gray-500 shrink-0">
-                    <IconStore.calendar className="size-3" />
-                    <span>
-                      {new Date(item.match_date).toLocaleDateString("en-US", {
-                        day: "2-digit",
-                        month: "short",
-                      })}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-gray-500 shrink-0">
-                    <IconStore.clock className="size-3" />
-                    <span>{item.match_time}</span>
-                  </div>
-                </div>
-                {item.stadium && (
-                  <div className="flex items-center gap-1 mt-1 text-xs text-gray-400">
-                    <IconStore.location className="size-3" />
-                    <span className="truncate">{item.stadium}</span>
-                  </div>
-                )}
-              </div>
-              <div className="ml-2 shrink-0">
-                <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
-                  <IconStore.search className="size-3 text-gray-400" />
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   // Define table headers based on your UI screenshot
   const headers = [
     { key: "order_id", label: "Order ID" },
-    { key: "order_date", label: "Order Date" },
-    { key: "order_value", label: "Order Value" },
-    { key: "event", label: "Event" },
-    { key: "venue", label: "Venue" },
-    { key: "event_date", label: "Event Date" },
-    { key: "ticket_details", label: "Ticket Details" },
-    { key: "quantity", label: "Qty" },
-    { key: "ticket_type", label: "Ticket Type" },
-    { key: "order_status_label", label: "Order Status" },
-    // { key: "order_status", label: "Order Status" },
-    { key: "payment_status_label", label: "Payment Status" },
+    {
+      key: "order_date",
+      label: "Order Date",
+      sortable: true,
+      sortableKey: "order_date",
+    },
+    {
+      key: "order_value",
+      label: "Order Value",
+      sortable: true,
+      sortableKey: "order_value",
+    },
+    { key: "event", label: "Event", sortable: true, sortableKey: "event_name" },
+    { key: "venue", label: "Venue", sortable: true, sortableKey: "venue_name" },
+    {
+      key: "event_date",
+      label: "Event Date",
+      sortable: true,
+      sortableKey: "event_date",
+    },
+    {
+      key: "ticket_details",
+      label: "Ticket Details",
+      sortable: true,
+      sortableKey: "ticket_details",
+    },
+    { key: "quantity", label: "Qty", sortable: true, sortableKey: "quantity" },
+    {
+      key: "ticket_type",
+      label: "Ticket Type",
+      sortable: true,
+      sortableKey: "ticket_type",
+    },
+    {
+      key: "order_status_label",
+      label: "Order Status",
+      sortable: true,
+      sortableKey: "order_status",
+    },
+    {
+      key: "payment_status_label",
+      label: "Payment Status",
+      sortable: true,
+      sortableKey: "payment_status",
+    },
   ];
 
   const createInitialVisibleColumns = () => {
@@ -302,9 +283,15 @@ const RportHistory = (props) => {
   };
 
   // Transform data for the table
-  const transformedData = staticReportsData?.reports_history?.map((item) => ({
-    ...item,
-  }));
+  const transformedData = useMemo(() => {
+    if (!staticReportsData?.reports_history) {
+      return [];
+    }
+
+    return staticReportsData.reports_history.map((item) => ({
+      ...item,
+    }));
+  }, [staticReportsData?.reports_history]);
 
   const getOrderDetails = async (item) => {
     // setIsLoading(true);
@@ -377,26 +364,35 @@ const RportHistory = (props) => {
   };
 
   // Create right sticky columns with action buttons
-  const rightStickyColumns = staticReportsData?.reports_history?.map((item) => [
-    {
-      icon: (
-        <IconStore.clock
-          onClick={() => getLogDetailsDetails(item)}
-          className="size-5"
-        />
-      ),
-      className: " cursor-pointer",
-    },
-    {
-      icon: (
-        <IconStore.eye
-          onClick={() => getOrderDetails(item)}
-          className="size-5"
-        />
-      ),
-      className: " cursor-pointer",
-    },
-  ]);
+  const rightStickyColumns = useMemo(() => {
+    if (
+      !staticReportsData?.reports_history ||
+      staticReportsData.reports_history.length === 0
+    ) {
+      return [];
+    }
+
+    return staticReportsData.reports_history.map((item) => [
+      {
+        icon: (
+          <IconStore.clock
+            onClick={() => getLogDetailsDetails(item)}
+            className="size-5"
+          />
+        ),
+        className: "cursor-pointer",
+      },
+      {
+        icon: (
+          <IconStore.eye
+            onClick={() => getOrderDetails(item)}
+            className="size-5"
+          />
+        ),
+        className: "cursor-pointer",
+      },
+    ]);
+  }, [staticReportsData?.reports_history]);
 
   // Modified configuration for list items (stats cards) - now uses currency slider data
   const listItemsConfig = {
@@ -469,15 +465,34 @@ const RportHistory = (props) => {
   const apiCall = async (params) => {
     setIsLoading(true);
 
-    const updatedFilters = { ...filtersApplied, ...params, page: 1 };
+    // Clean up undefined values before making API call
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(
+        ([_, value]) => value !== undefined && value !== null && value !== ""
+      )
+    );
+
+    const updatedFilters = { ...filtersApplied, ...cleanParams, page: 1 };
     setFiltersApplied(updatedFilters);
-    const [reportOverview, reportData] = await Promise.all([
-      reportsOverview("", updatedFilters),
-      reportHistory("", updatedFilters),
-    ]);
-    setStaticReportsData(reportData);
-    setOverViewData(reportOverview);
-    setIsLoading(false);
+
+    try {
+      const [reportOverview, reportData] = await Promise.all([
+        reportsOverview("", updatedFilters),
+        reportHistory("", updatedFilters),
+      ]);
+
+      // Clear old data before setting new data to prevent stale state
+      setStaticReportsData(null);
+      setOverViewData(null);
+
+      // Set new data
+      setStaticReportsData(reportData);
+      setOverViewData(reportOverview);
+    } catch (error) {
+      console.error("API call error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSearchMatchChange = async (value) => {
@@ -490,128 +505,48 @@ const RportHistory = (props) => {
     await apiCall(updatedFilters);
   };
 
+  // Add this state variable at the top of your component
+  const [hasReachedEnd, setHasReachedEnd] = useState(false);
 
-  console.log(props?.response?.reportFilter?.values?.stadiums?.map(
-    (item) => ({
-      value: item?.id,
-      label: item?.name,
-    })
-  ),'hiiiiiiiiiii',props?.response?.reportFilter)
-  // Configuration for filters
-  const filterConfig = {
-    reports: [
-      {
-        type: "text",
-        name: "query",
-        value: filtersApplied?.query,
-        // showDropdown: true,
-        // dropDownComponent: searchMatchDropDown(),
-        label: "Search Match event or Booking number",
-        className: "!py-[7px] !px-[12px] !text-[#343432] !text-[14px]",
-        parentClassName: "!w-[300px]",
-      },
+  // Handle sort functionality
+  const handleSort = async (sortData) => {
+    // Reset the reached end state when sorting
+    setHasReachedEnd(false);
 
-      {
-        type: "select",
-        name: "venue",
-        label: "Venue",
-        value: filtersApplied?.venue,
-        options: props?.response?.reportFilter?.value?.stadiums?.map(
-          (item) => ({
-            value: item?.id,
-            label: item?.name,
-          })
-        ),
-        parentClassName: "!w-[15%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-        labelClassName: "!text-[11px]",
-      },
-      {
-        type: "date",
-        name: "transactionDate",
-        singleDateMode: false,
-        label: "Transaction Date",
-        parentClassName: "!w-[200px]",
-        className: "!py-[8px] !px-[16px] mobile:text-xs",
-      },
-      {
-        type: "date",
-        name: "eventDate",
-        singleDateMode: false,
-        label: "Event Date",
-        parentClassName: "!w-[200px]",
-        className: "!py-[8px] !px-[16px] mobile:text-xs",
-      },
+    // Update sort state
+    setSortState(sortData);
 
-      {
-        type: "select",
-        name: "team_members",
-        label: "Team Members",
-        value: filtersApplied?.team_members,
-        multiselect: true,
-        options: teamMembers,
-        parentClassName: "!w-[15%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-        labelClassName: "!text-[11px]",
-      },
-      {
-        type: "select",
-        name: "category",
-        label: "Category",
-        value: filtersApplied?.category,
-        options: props?.response?.reportFilter?.value?.categories?.map(
-          (item) => ({
-            value: item?.id,
-            label: item?.name,
-          })
-        ),
-        parentClassName: "!w-[15%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-        labelClassName: "!text-[11px]",
-      },
-    ],
-  };
+    // Prepare sort parameters for API call
+    const sortParams = sortData
+      ? {
+          order_by: sortData.sortableKey,
+          sort_order: sortData.sort_order,
+        }
+      : {
+          // Remove sorting parameters when sortData is null
+          order_by: null,
+          sort_order: null,
+        };
 
-  const handleScrollEnd = async () => {
-    if (filtersApplied.page >= staticReportsData.meta.total_pages) return;
-    setIsLoading(true);
-    const updatedFilter = {
+    // Call API with sort parameters - remove undefined values
+    const updatedFilters = {
       ...filtersApplied,
-      page: filtersApplied.page + 1,
+      ...sortParams,
+      page: 1, // Reset to first page when sorting
     };
 
+    // Remove undefined/null values from the filters before API call
+    const cleanedFilters = Object.fromEntries(
+      Object.entries(updatedFilters).filter(([_, value]) => value != null)
+    );
+
     try {
-      const response = await reportHistory("", updatedFilter);
-      setStaticReportsData({
-        reports_history: [
-          ...staticReportsData?.reports_history,
-          ...response?.reports_history,
-        ],
-        meta: response?.meta,
-      });
-      setFiltersApplied(updatedFilter);
+      await apiCall(cleanedFilters);
     } catch (error) {
-      console.error("Scroll end error:", error);
-    } finally {
-      setIsLoading(false);
+      console.error("Sort error:", error);
+      toast.error("Error sorting data");
     }
   };
-
-  const apiCallDebounceTimer = useRef(null);
-
-  const debouncedApiCall = useCallback(async (params) => {
-    if (apiCallDebounceTimer.current) {
-      clearTimeout(apiCallDebounceTimer.current);
-    }
-    
-    apiCallDebounceTimer.current = setTimeout(async () => {
-      try {
-        await apiCall(params);
-      } catch (error) {
-        console.error("Debounced API call error:", error);
-      }
-    }, 500); // 500ms debounce delay for API calls
-  }, []);
 
   const handleFilterChange = async (
     filterKey,
@@ -619,8 +554,11 @@ const RportHistory = (props) => {
     allFilters,
     currentTab
   ) => {
+    // Reset the reached end state when filtering
+    setHasReachedEnd(false);
+
     let params = {};
-    
+
     // Handle different filter types
     if (filterKey === "orderDate") {
       params = {
@@ -646,24 +584,26 @@ const RportHistory = (props) => {
         [filterKey]: value,
       };
     }
-  
+
     const updatedFilters = {
       ...filtersApplied,
       ...params,
       page: 1, // Reset to first page on filter change
     };
-  
+
     // Handle query field with both dropdown search and API call debouncing
     if (filterKey === "query" && value?.target?.value) {
       // Update the search dropdown (existing functionality)
       debouncedSearch(value?.target?.value);
-      
+
       // Also debounce the API call for filtering
       debouncedApiCall(updatedFilters);
-    } 
+    }
     // For text inputs, use debounced API call
-    else if (filterKey === "query" || 
-             (typeof value === 'object' && value?.target)) {
+    else if (
+      filterKey === "query" ||
+      (typeof value === "object" && value?.target)
+    ) {
       // This handles text inputs
       debouncedApiCall(updatedFilters);
     }
@@ -676,7 +616,185 @@ const RportHistory = (props) => {
       }
     }
   };
-  
+
+  // Configuration for filters
+  const filterConfig = {
+    reports: [
+      {
+        type: "text",
+        name: "query",
+        value: filtersApplied?.query,
+        showDelete: true,
+        deleteFunction: () => handleFilterChange("query", ""),
+        // showDropdown: true,
+        // dropDownComponent: searchMatchDropDown(),
+        label: "Search Match event or Booking number",
+        className: "!py-[7px] !px-[12px] !text-[#343432] !text-[14px]",
+        parentClassName: "!w-[270px]",
+      },
+
+      {
+        type: "select",
+        name: "venue",
+        label: "Venue",
+        value: filtersApplied?.venue,
+        options: props?.response?.reportFilter?.value?.stadiums?.map(
+          (item) => ({
+            value: item?.id,
+            label: item?.name,
+          })
+        ),
+        parentClassName: "!w-[12%]",
+        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+        labelClassName: "!text-[11px]",
+      },
+      {
+        type: "date",
+        name: "transactionDate",
+        singleDateMode: false,
+        label: "Transaction Date",
+        parentClassName: "!w-[150px]",
+        className: "!py-[8px] !px-[16px] mobile:text-xs",
+      },
+      {
+        type: "date",
+        name: "eventDate",
+        singleDateMode: false,
+        label: "Event Date",
+        parentClassName: "!w-[150px]",
+        className: "!py-[8px] !px-[16px] mobile:text-xs",
+      },
+
+      {
+        type: "select",
+        name: "team_members",
+        label: "Team Members",
+        value: filtersApplied?.team_members,
+        multiselect: true,
+        options: teamMembers,
+        parentClassName: "!w-[12%]",
+        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+        labelClassName: "!text-[11px]",
+      },
+      {
+        type: "select",
+        name: "order_status",
+        label: "Order Status",
+        value: filtersApplied?.order_status,
+        options: [
+          { value: "paid", label: "Paid" },
+          { value: "completed", label: "Completed" },
+        ],
+        parentClassName: "!w-[12%]",
+        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+        labelClassName: "!text-[11px]",
+      },
+      {
+        type: "select",
+        name: "payment_status",
+        label: "Payment Status",
+        value: filtersApplied?.payment_status,
+        options: [
+          { value: "paid", label: "Paid" },
+          { value: "unpaid", label: "Unpaid" },
+        ],
+        parentClassName: "!w-[12%]",
+        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+        labelClassName: "!text-[11px]",
+      },
+
+      {
+        type: "select",
+        name: "category",
+        label: "Category",
+        value: filtersApplied?.category,
+        options: props?.response?.reportFilter?.value?.categories?.map(
+          (item) => ({
+            value: item?.id,
+            label: item?.name,
+          })
+        ),
+        parentClassName: "!w-[12%]",
+        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+        labelClassName: "!text-[11px]",
+      },
+    ],
+  };
+
+  const handleScrollEnd = async () => {
+    // Prevent multiple simultaneous calls
+    if (isLoading || hasReachedEnd) return; // Add hasReachedEnd check
+
+    // Check if we've reached the end based on meta data
+    if (filtersApplied.page >= staticReportsData?.meta?.total_pages) {
+      setHasReachedEnd(true);
+      return;
+    }
+
+    // Additional safety check - if no meta data, don't proceed
+    if (!staticReportsData?.meta) return;
+
+    setIsLoading(true);
+    const updatedFilter = {
+      ...filtersApplied,
+      page: filtersApplied.page + 1,
+    };
+
+    try {
+      const response = await reportHistory("", updatedFilter);
+      console.log(response, "responseresponse");
+
+      // Check if response has valid data before updating state
+      if (
+        response?.reports_history &&
+        Array.isArray(response.reports_history)
+      ) {
+        // If the response is empty, we've reached the end
+        if (response.reports_history.length === 0) {
+          console.log("No more data to load - reached end");
+          setHasReachedEnd(true); // Set flag instead of updating page
+          return; // Don't update filtersApplied
+        }
+
+        // Only update state and page if we have data
+        setStaticReportsData({
+          reports_history: [
+            ...staticReportsData?.reports_history,
+            ...response.reports_history,
+          ],
+          meta: response?.meta,
+        });
+        setFiltersApplied(updatedFilter);
+      } else {
+        // Handle case where response structure is unexpected
+        console.log("Invalid response structure");
+        setHasReachedEnd(true);
+      }
+    } catch (error) {
+      console.error("Scroll end error:", error);
+      // Optionally set hasReachedEnd to true on error to prevent infinite retries
+      // setHasReachedEnd(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const apiCallDebounceTimer = useRef(null);
+
+  const debouncedApiCall = useCallback(async (params) => {
+    if (apiCallDebounceTimer.current) {
+      clearTimeout(apiCallDebounceTimer.current);
+    }
+
+    apiCallDebounceTimer.current = setTimeout(async () => {
+      try {
+        await apiCall(params);
+      } catch (error) {
+        console.error("Debounced API call error:", error);
+      }
+    }, 500); // 500ms debounce delay for API calls
+  }, []);
+
   // Update the cleanup function to clear both timers
   const cleanup = () => {
     if (debounceTimer.current) {
@@ -686,11 +804,25 @@ const RportHistory = (props) => {
       clearTimeout(apiCallDebounceTimer.current);
     }
   };
-  
+
   // Make sure to call cleanup on unmount
   useEffect(() => {
     return cleanup;
   }, []);
+
+  useEffect(() => {
+    // Reset any state that might cause stale data
+    setHasReachedEnd(false);
+
+    // If you have any row selection state, reset it here
+    // setSelectedRows([]);
+
+    // Reset sort state if needed when data changes completely
+    if (filtersApplied.page === 1) {
+      // Only reset sort on new filter (not pagination)
+      // setSortState(null); // Uncomment if you want to reset sort on filter
+    }
+  }, [staticReportsData?.reports_history]);
 
   const { downloadCSV } = useCSVDownload();
 
@@ -713,12 +845,19 @@ const RportHistory = (props) => {
     }
   };
 
-
   const refreshPopupData = () => {
     if (showInfoPopup.flag) {
       getOrderDetails({ id: showInfoPopup?.id });
     }
   };
+
+  const EXCLUDED_ACTIVE_FILTER_KEYS = [
+    "order_by", // Sorting parameter
+    "sort_order", // Sorting parameter
+    "page", // Pagination parameter
+    "limit", // Pagination parameter (if you use it)
+    "offset", // Pagination parameter (if you use it)
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -738,6 +877,7 @@ const RportHistory = (props) => {
           showSelectedFilterPills={true}
           onCheckboxToggle={() => {}}
           transitionDirection={transitionDirection} // Pass transition direction to TabbedLayout
+          excludedKeys={EXCLUDED_ACTIVE_FILTER_KEYS}
         />
       </div>
 
@@ -794,6 +934,8 @@ const RportHistory = (props) => {
                 order_date: "dateOnly",
                 event_date: "dateOnly",
               }}
+              onSort={handleSort} // Pass sort handler
+              currentSort={sortState} // Pass current sort state
             />
           </div>
         </div>

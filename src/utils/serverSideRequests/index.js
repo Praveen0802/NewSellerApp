@@ -250,7 +250,7 @@ export const fetchDashboardPageDetails = async (token) => {
   try {
     const results = await Promise.allSettled([
       fetchSalesOverview(token, { date_format: "last_180days" }),
-      dashboardAwaitingDelivery(token, { date_format: "today" }),
+      dashboardAwaitingDelivery(token, { date_format: "next_24hours" }),
       dashboardActivity(token),
       dashboardNotifications(token),
       topSellingEvents(token, { date_format: "last_180days" }),

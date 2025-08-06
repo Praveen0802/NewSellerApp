@@ -74,6 +74,7 @@ const TabbedLayout = ({
   showFilterSearch = false,
   onColumnsReorder,
   onFiltersReorder,
+  excludedKeys = [],
 }) => {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState(initialTab || tabs[0]?.key);
@@ -681,6 +682,7 @@ const TabbedLayout = ({
                 onClearAllFilters={handleClearAllFilters}
                 currentTab={selectedTab}
                 filterConfig={filterConfig}
+                excludedKeys={excludedKeys}
               />
             </div>
           )}

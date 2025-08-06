@@ -19,6 +19,7 @@ const FormFields = ({ formFields }) => {
           name,
           value,
           onChange,
+          showDelete,
           className,
           labelClassName,
           currencyFormat,
@@ -48,6 +49,7 @@ const FormFields = ({ formFields }) => {
           dropDownComponent,
           icon,
           count,
+          deleteFunction,
           multiselect = false,
           onKeyDown = () => {},
         } = field;
@@ -110,6 +112,8 @@ const FormFields = ({ formFields }) => {
                 labelClassName={labelClassName}
                 hideLabel={hideLabel}
                 mandatory={mandatory}
+                showDelete={showDelete}
+                deleteFunction={deleteFunction}
                 dropDownComponent={dropDownComponent}
                 currencyFormat={currencyFormat}
                 readOnly={readOnly || disabled}

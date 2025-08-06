@@ -24,18 +24,25 @@ const SubUploadParent = React.forwardRef(
       initialAdditionalData = null,
       onAdditionalInfoChange,
       onTemplateSelect,
-      existingUploadedTickets
+      existingUploadedTickets,
     },
     ref
   ) => {
     const [templateData, setTemplateData] = useState();
     const [showPopupView, setShowPopupView] = useState(false);
 
-    // Additional Info State
+    // Additional Info State - now using template ID instead of template name
     const [additionalInfo, setAdditionalInfo] = useState({
-      template: initialAdditionalData?.template || "",
-      dynamicContent: initialAdditionalData?.dynamicContent || existingUploadedTickets[0]?.additional_dynamic_content ||"",
+      templateId:
+        initialAdditionalData?.templateId ||
+        existingUploadedTickets[0]?.additional_file_type ||
+        "",
+      dynamicContent:
+        initialAdditionalData?.dynamicContent ||
+        existingUploadedTickets[0]?.additional_dynamic_content ||
+        "",
       templateContent: initialAdditionalData?.templateContent || "",
+      templateFile: initialAdditionalData?.templateFile || null, // Add file state
     });
 
     const [additionalTemplateData, setAdditionalTemplateData] = useState([]);
@@ -44,6 +51,7 @@ const SubUploadParent = React.forwardRef(
 
     // Ref to store the latest additional info data for instant access
     const additionalInfoRef = useRef(additionalInfo);
+    console.log(additionalInfo, "additionalInfoadditionalInfo");
 
     // Update ref whenever additional info state changes
     useEffect(() => {
@@ -55,12 +63,58 @@ const SubUploadParent = React.forwardRef(
       setTemplateData(data);
     };
 
-    // Handle template selection and find corresponding content
-    const handleTemplateChange = useCallback(
-      (templateName) => {
-        const selectedTemplate = additionalTemplateData.find(
-          (template) => template.template_name === templateName
+    // Helper function to get template name by ID
+    const getTemplateNameById = useCallback(
+      (templateId) => {
+        const template = additionalTemplateData.find(
+          (template) => template.id === parseInt(templateId)
         );
+        return template ? template.template_name : "";
+      },
+      [additionalTemplateData]
+    );
+
+    // Helper function to get template by ID
+    const getTemplateById = useCallback(
+      (templateId) => {
+        return additionalTemplateData.find(
+          (template) => template.id === parseInt(templateId)
+        );
+      },
+      [additionalTemplateData]
+    );
+
+    // Handle file upload for "Upload your own" template
+    const handleFileUpload = useCallback(
+      (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          setAdditionalInfo((prev) => {
+            const newInfo = {
+              ...prev,
+              templateFile: file,
+            };
+            additionalInfoRef.current = newInfo;
+
+            // Call onChange if provided
+            if (
+              onAdditionalInfoChange &&
+              typeof onAdditionalInfoChange === "function"
+            ) {
+              onAdditionalInfoChange(newInfo);
+            }
+
+            return newInfo;
+          });
+        }
+      },
+      [onAdditionalInfoChange]
+    );
+
+    // Handle template selection and find corresponding content by ID
+    const handleTemplateChange = useCallback(
+      (templateId) => {
+        const selectedTemplate = getTemplateById(templateId);
 
         const templateContent = selectedTemplate
           ? selectedTemplate.template_content
@@ -72,14 +126,16 @@ const SubUploadParent = React.forwardRef(
         setAdditionalInfo((prev) => {
           const newInfo = {
             ...prev,
-            template: templateName,
+            templateId: templateId,
             templateContent,
+            // Reset file when changing templates
+            templateFile: null,
           };
           additionalInfoRef.current = newInfo;
           return newInfo;
         });
       },
-      [additionalTemplateData, onTemplateSelect]
+      [getTemplateById, onTemplateSelect]
     );
 
     // Handle additional info changes
@@ -108,18 +164,19 @@ const SubUploadParent = React.forwardRef(
       [onAdditionalInfoChange]
     );
 
-    // Method to get current additional info data
+    // Method to get current additional info data with template name included
     const getCurrentAdditionalInfoData = useCallback(() => {
       return {
         ...additionalInfoRef.current,
+        templateName: getTemplateNameById(additionalInfoRef.current.templateId),
         selectedTemplateContent,
       };
-    }, [selectedTemplateContent]);
+    }, [selectedTemplateContent, getTemplateNameById]);
 
     // Method to check if additional info has any values
     const hasAdditionalInfoData = useCallback(() => {
       const data = additionalInfoRef.current;
-      return !!(data.template || data.dynamicContent);
+      return !!(data.templateId || data.dynamicContent || data.templateFile);
     }, []);
 
     // Method to validate additional info
@@ -134,6 +191,14 @@ const SubUploadParent = React.forwardRef(
       return selectedTemplateContent;
     }, [selectedTemplateContent]);
 
+    // Check if current template is "Upload your own"
+    const isUploadYourOwnTemplate = useMemo(() => {
+      const selectedTemplate = getTemplateById(additionalInfo.templateId);
+      return (
+        selectedTemplate && selectedTemplate.template_name === "Upload your own"
+      );
+    }, [additionalInfo.templateId, getTemplateById]);
+
     // Expose methods via ref for parent component access
     React.useImperativeHandle(
       ref,
@@ -142,9 +207,24 @@ const SubUploadParent = React.forwardRef(
         getCurrentAdditionalInfoData,
 
         // Alternative method names for flexibility
-        getAdditionalInfo: () => additionalInfoRef.current,
-        getAdditionalInfoData: () => additionalInfoRef.current,
-        getData: () => additionalInfoRef.current,
+        getAdditionalInfo: () => ({
+          ...additionalInfoRef.current,
+          templateName: getTemplateNameById(
+            additionalInfoRef.current.templateId
+          ),
+        }),
+        getAdditionalInfoData: () => ({
+          ...additionalInfoRef.current,
+          templateName: getTemplateNameById(
+            additionalInfoRef.current.templateId
+          ),
+        }),
+        getData: () => ({
+          ...additionalInfoRef.current,
+          templateName: getTemplateNameById(
+            additionalInfoRef.current.templateId
+          ),
+        }),
 
         // New method to get template content
         getSelectedTemplateContent,
@@ -153,27 +233,32 @@ const SubUploadParent = React.forwardRef(
         hasAdditionalInfoData,
         isAdditionalInfoValid,
 
+        // Method to get uploaded file
+        getTemplateFile: () => additionalInfoRef.current.templateFile,
+
         // Method to programmatically update additional info from parent if needed
         updateAdditionalInfo: (newData) => {
           const updatedData = {
-            template: newData?.template || "",
+            templateId: newData?.templateId || "",
             dynamicContent: newData?.dynamicContent || "",
             templateContent: newData?.templateContent || "",
+            templateFile: newData?.templateFile || null,
           };
           setAdditionalInfo(updatedData);
           additionalInfoRef.current = updatedData;
 
-          if (newData?.template) {
-            handleTemplateChange(newData.template);
+          if (newData?.templateId) {
+            handleTemplateChange(newData.templateId);
           }
         },
 
         // Method to reset additional info to initial state
         resetAdditionalInfo: () => {
           const resetData = {
-            template: initialAdditionalData?.template || "",
+            templateId: initialAdditionalData?.templateId || "",
             dynamicContent: initialAdditionalData?.dynamicContent || "",
             templateContent: initialAdditionalData?.templateContent || "",
+            templateFile: initialAdditionalData?.templateFile || null,
           };
           setAdditionalInfo(resetData);
           additionalInfoRef.current = resetData;
@@ -183,9 +268,10 @@ const SubUploadParent = React.forwardRef(
         // Method to clear all additional info data
         clearAdditionalInfo: () => {
           const emptyData = {
-            template: "",
+            templateId: "",
             dynamicContent: "",
             templateContent: "",
+            templateFile: null,
           };
           setAdditionalInfo(emptyData);
           additionalInfoRef.current = emptyData;
@@ -197,6 +283,7 @@ const SubUploadParent = React.forwardRef(
         hasAdditionalInfoData,
         isAdditionalInfoValid,
         getSelectedTemplateContent,
+        getTemplateNameById,
         initialAdditionalData,
         handleTemplateChange,
       ]
@@ -229,16 +316,17 @@ const SubUploadParent = React.forwardRef(
     useEffect(() => {
       if (initialAdditionalData) {
         const newData = {
-          template: initialAdditionalData.template || "",
+          templateId: initialAdditionalData.templateId || "",
           dynamicContent: initialAdditionalData.dynamicContent || "",
           templateContent: initialAdditionalData.templateContent || "",
+          templateFile: initialAdditionalData.templateFile || null,
         };
         setAdditionalInfo(newData);
         additionalInfoRef.current = newData;
 
-        // If there's an initial template, find and set its content
-        if (initialAdditionalData.template) {
-          handleTemplateChange(initialAdditionalData.template);
+        // If there's an initial template ID, find and set its content
+        if (initialAdditionalData.templateId) {
+          handleTemplateChange(initialAdditionalData.templateId);
         }
       }
     }, [initialAdditionalData, handleTemplateChange]);
@@ -478,23 +566,20 @@ const SubUploadParent = React.forwardRef(
                 </div>
 
                 <div className="p-3">
-                  {/* Template Dropdown */}
+                  {/* Template Dropdown - now using template ID as value */}
                   <div className="mb-4">
                     <label className="block text-xs font-medium text-[#323A70] mb-2">
                       Template
                     </label>
                     <select
-                      value={additionalInfo.template}
+                      value={additionalInfo.templateId}
                       onChange={(e) => handleTemplateChange(e.target.value)}
                       className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
                       disabled={loading}
                     >
                       <option value="">Select a template...</option>
                       {additionalTemplateData.map((template) => (
-                        <option
-                          key={template.template_name}
-                          value={template.template_name}
-                        >
+                        <option key={template.id} value={template.id}>
                           {template.template_name}
                         </option>
                       ))}
@@ -524,9 +609,53 @@ const SubUploadParent = React.forwardRef(
                       placeholder="Enter dynamic content here..."
                     />
                   </div>
-                  <div id="html-content-dynamic" className="hidden">
-                    {JSON.stringify(selectedTemplateContent)}
-                  </div>
+
+                  {/* File Upload Section - Show only for "Upload your own" template */}
+                  {isUploadYourOwnTemplate && (
+                    <div className="mb-4">
+                      <label className="block text-xs font-medium text-[#323A70] mb-2">
+                        Upload Template File
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx,.txt,.html"
+                          onChange={handleFileUpload}
+                          className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent file:mr-3 file:py-1 file:px-3 file:border-0 file:text-xs file:bg-[#F9F9FB] file:text-[#323A70] file:rounded-md hover:file:bg-[#E0E1EA]"
+                        />
+                        {additionalInfo.templateFile && (
+                          <div className="mt-2 p-2 bg-[#F9F9FB] border border-[#E0E1EA] rounded-md">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-[#323A70] truncate">
+                                {additionalInfo.templateFile.name}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  handleAdditionalInfoChange(
+                                    "templateFile",
+                                    null
+                                  )
+                                }
+                                className="text-xs text-red-500 hover:text-red-700 ml-2"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Size:{" "}
+                              {Math.round(
+                                additionalInfo.templateFile.size / 1024
+                              )}{" "}
+                              KB
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Accepted formats: PDF, DOC, DOCX, TXT, HTML
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

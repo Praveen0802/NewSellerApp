@@ -1,3 +1,4 @@
+// Updated ActiveFiltersBox component with excludedKeys prop
 import React from "react";
 import reloadIcon from "../../../public/reload.svg";
 import Image from "next/image";
@@ -7,8 +8,9 @@ const ActiveFiltersBox = ({
   onFilterChange,
   onClearAllFilters,
   currentTab = "home",
-  // NEW: Add filterConfig to get labels for select options
   filterConfig = {},
+  // NEW: Add excludedKeys prop to exclude specific keys from being displayed
+  excludedKeys = [], // Array of keys to exclude from active filters display
 }) => {
   console.log("activeFilters", activeFilters);
 
@@ -33,13 +35,13 @@ const ActiveFiltersBox = ({
     }
   };
 
+  // ... (keep all your existing helper functions unchanged) ...
   // Helper function to get label from options array
   const getLabelFromOptions = (options, value) => {
     try {
       if (!Array.isArray(options) || !value) return value;
 
       const option = options.find((opt) => {
-        // Handle different option structures
         if (typeof opt === "object" && opt !== null) {
           return opt.value === value || opt.id === value || opt.key === value;
         }
@@ -62,42 +64,34 @@ const ActiveFiltersBox = ({
     try {
       if (!dateValue) return null;
 
-      // Get filter configuration to check for singleDateMode
       const filterConfigItem = findFilterConfig(key);
       const isSingleDateMode = filterConfigItem?.singleDateMode === true;
       const filterLabel = getFilterDisplayName(key);
 
-      // Handle object with startDate/endDate or start_date/end_date
       if (typeof dateValue === "object" && !Array.isArray(dateValue)) {
         const startDate = dateValue.startDate || dateValue.start_date;
         const endDate = dateValue.endDate || dateValue.end_date;
 
         if (startDate && endDate) {
-          // Format dates for better display
           const formattedStart = formatDateString(startDate);
           const formattedEnd = formatDateString(endDate);
 
-          // For single date mode or when both dates are the same
           if (isSingleDateMode || startDate === endDate) {
             return `${filterLabel}: ${formattedStart}`;
           }
 
-          // For date range mode - show both dates with single label prefix
           return `${filterLabel}: ${formattedStart} - ${formattedEnd}`;
         }
 
-        // If only start date is available
         if (startDate) {
           return `${filterLabel}: ${formatDateString(startDate)}`;
         }
 
-        // If only end date is available
         if (endDate) {
           return `${filterLabel}: ${formatDateString(endDate)}`;
         }
       }
 
-      // Handle string dates
       if (typeof dateValue === "string") {
         return `${filterLabel}: ${formatDateString(dateValue)}`;
       }
@@ -114,18 +108,15 @@ const ActiveFiltersBox = ({
     try {
       if (!dateString || typeof dateString !== "string") return dateString;
 
-      // Check if it's already in a good format (DD/MM/YYYY)
       if (dateString.includes("/")) {
         return dateString;
       }
 
-      // If it's in YYYY-MM-DD format, convert to DD/MM/YYYY
       if (dateString.includes("-") && dateString.length === 10) {
         const [year, month, day] = dateString.split("-");
         return `${day}/${month}/${year}`;
       }
 
-      // Try to parse and format the date
       const date = new Date(dateString);
       if (!isNaN(date.getTime())) {
         const day = String(date.getDate()).padStart(2, "0");
@@ -144,37 +135,27 @@ const ActiveFiltersBox = ({
   // Helper function to get fallback labels for common filter types
   const getFallbackLabel = (key, value) => {
     try {
-      // Common mappings for typical filter values
       const commonMappings = {
-        // Ticket Types
         vip: "VIP",
         standard: "Standard",
         premium: "Premium",
         general: "General",
         early_bird: "Early Bird",
-
-        // Order Status
         completed: "Completed",
         fulfilled: "Fulfilled",
         pending: "Pending",
         cancelled: "Cancelled",
         processing: "Processing",
         confirmed: "Confirmed",
-
-        // Payment Status
         paid: "Paid",
         unpaid: "Unpaid",
         partial: "Partial",
         refunded: "Refunded",
         failed: "Failed",
-
-        // Activity Types
         match: "Match",
         event: "Event",
         tournament: "Tournament",
         training: "Training",
-
-        // General
         active: "Active",
         inactive: "Inactive",
         enabled: "Enabled",
@@ -186,15 +167,12 @@ const ActiveFiltersBox = ({
         none: "None",
       };
 
-      // Check if we have a direct mapping
       const lowerValue = String(value).toLowerCase();
       if (commonMappings[lowerValue]) {
         return commonMappings[lowerValue];
       }
 
-      // For IDs or codes, try to make them more readable
       if (typeof value === "string") {
-        // If it looks like an ID (contains numbers and underscores/hyphens)
         if (/^[a-zA-Z0-9_-]+$/.test(value) && value.length > 3) {
           return value
             .replace(/[_-]/g, " ")
@@ -223,7 +201,7 @@ const ActiveFiltersBox = ({
             return value;
           }
         })
-        .filter(Boolean); // Remove any null/undefined values
+        .filter(Boolean);
     } catch (error) {
       console.warn("Error getting labels for array:", error);
       return values;
@@ -233,15 +211,12 @@ const ActiveFiltersBox = ({
   // Enhanced helper function to format filter values for display with label mapping
   const formatFilterValue = (key, value) => {
     try {
-      // Handle null/undefined values
       if (value === null || value === undefined) return null;
 
-      // Get filter configuration for this specific filter
       const filterConfigItem = findFilterConfig(key);
       const options = filterConfigItem?.options || [];
       const filterLabel = getFilterDisplayName(key);
 
-      // Handle date filters first (they have special formatting)
       if (
         key.toLowerCase().includes("date") ||
         key === "eventDate" ||
@@ -256,11 +231,9 @@ const ActiveFiltersBox = ({
         case "team_members":
         case "team_member":
           try {
-            // Handle array values - show count and first few items with labels
             if (Array.isArray(value)) {
               if (value.length === 0) return null;
 
-              // Get labels for the values
               const labels = getLabelsForArray(options, value);
 
               if (labels.length === 1) return `${filterLabel}: ${labels[0]}`;
@@ -271,9 +244,7 @@ const ActiveFiltersBox = ({
               } more`;
             }
 
-            // Handle single value
             let label = getLabelFromOptions(options, value);
-            // If no label found from options, try fallback
             if (label === value && options.length === 0) {
               label = getFallbackLabel(key, value);
             }
@@ -290,8 +261,8 @@ const ActiveFiltersBox = ({
         case "activity_type":
         case "category":
         case "location":
+        case "venue":
           try {
-            // Handle select filters - get label from options
             if (Array.isArray(value)) {
               if (value.length === 0) return null;
 
@@ -305,9 +276,7 @@ const ActiveFiltersBox = ({
               } more`;
             }
 
-            // Handle single select value
             let label = getLabelFromOptions(options, value);
-            // If no label found from options, try fallback
             if (label === value && options.length === 0) {
               label = getFallbackLabel(key, value);
             }
@@ -320,8 +289,8 @@ const ActiveFiltersBox = ({
         case "searchMatch":
         case "keyword":
         case "search":
+        case "query":
           try {
-            // Handle search filters - just return the search term with label
             if (typeof value === "string" && value.trim()) {
               return `${filterLabel}: "${value.trim()}"`;
             }
@@ -333,7 +302,6 @@ const ActiveFiltersBox = ({
 
         default:
           try {
-            // Handle any other filters that might have options
             if (options && options.length > 0) {
               if (Array.isArray(value)) {
                 if (value.length === 0) return null;
@@ -348,16 +316,13 @@ const ActiveFiltersBox = ({
                 } more`;
               }
 
-              // Single value with options available
               let label = getLabelFromOptions(options, value);
               return `${filterLabel}: ${label}`;
             }
 
-            // Fallback for filters without options - try to get a better label
             if (Array.isArray(value)) {
               if (value.length === 0) return null;
 
-              // Try to get fallback labels for array items
               const labels = value
                 .map((v) => getFallbackLabel(key, v))
                 .filter(Boolean);
@@ -370,7 +335,6 @@ const ActiveFiltersBox = ({
               } more`;
             }
 
-            // Single value without options - try fallback
             const fallbackLabel = getFallbackLabel(key, value);
             return `${filterLabel}: ${fallbackLabel}`;
           } catch (error) {
@@ -387,13 +351,11 @@ const ActiveFiltersBox = ({
   // Helper function to get display name for filter keys
   const getFilterDisplayName = (key) => {
     try {
-      // First try to get the label from filter config
       const filterConfigItem = findFilterConfig(key);
       if (filterConfigItem && filterConfigItem.label) {
         return filterConfigItem.label;
       }
 
-      // Fallback to predefined display names
       const displayNames = {
         keyword: "Keyword",
         ticket_status: "Ticket Status",
@@ -409,11 +371,12 @@ const ActiveFiltersBox = ({
         end_date: "End Date",
         category: "Category",
         location: "Location",
+        venue: "Venue",
         ticket_type: "Ticket Type",
         order_status: "Order Status",
         payment_status: "Payment Status",
         searchMatch: "Search Match",
-        // Date filter variations
+        query: "Search",
         order_date_from: "Order Date From",
         order_date_to: "Order Date To",
         transaction_start_date: "Transaction Start Date",
@@ -432,17 +395,20 @@ const ActiveFiltersBox = ({
     }
   };
 
-  // Get active filter entries (exclude empty/null values)
+  // UPDATED: Get active filter entries with excludedKeys support
   const activeFilterEntries = (() => {
     try {
       if (!activeFilters || typeof activeFilters !== "object") return [];
 
       return Object.entries(activeFilters).filter(([key, value]) => {
         try {
+          // NEW: Check if this key should be excluded
+          if (excludedKeys.includes(key)) return false;
+          
           if (value === null || value === undefined || value === "")
             return false;
-          if (value === "none") return false; // Exclude "none" values from selects
-          if (Array.isArray(value) && value.length === 0) return false; // Exclude empty arrays
+          if (value === "none") return false;
+          if (Array.isArray(value) && value.length === 0) return false;
           if (
             typeof value === "object" &&
             !Array.isArray(value) &&
@@ -450,12 +416,10 @@ const ActiveFiltersBox = ({
           )
             return false;
 
-          // Enhanced date object filtering
           if (typeof value === "object" && !Array.isArray(value)) {
             const startDate = value.startDate || value.start_date;
             const endDate = value.endDate || value.end_date;
 
-            // If it's a date object, check if both dates are empty
             if (
               (startDate === "" || !startDate) &&
               (endDate === "" || !endDate)
@@ -480,10 +444,8 @@ const ActiveFiltersBox = ({
   const handleClearFilter = (filterKey) => {
     try {
       if (onFilterChange && filterKey) {
-        // Create updated filters object with the specific filter removed/cleared
         const updatedFilters = { ...activeFilters };
 
-        // Set the filter to empty/null based on its type
         if (Array.isArray(updatedFilters[filterKey])) {
           updatedFilters[filterKey] = [];
         } else if (typeof updatedFilters[filterKey] === "object") {
@@ -492,7 +454,6 @@ const ActiveFiltersBox = ({
           updatedFilters[filterKey] = "";
         }
 
-        // Call the onFilterChange callback
         onFilterChange(
           filterKey,
           updatedFilters[filterKey],
@@ -511,7 +472,6 @@ const ActiveFiltersBox = ({
       if (onClearAllFilters) {
         onClearAllFilters();
       } else if (onFilterChange) {
-        // Fallback: clear each filter individually
         const clearedFilters = {};
         Object.keys(activeFilters || {}).forEach((key) => {
           try {
@@ -528,7 +488,6 @@ const ActiveFiltersBox = ({
           }
         });
 
-        // Call onFilterChange with all cleared filters
         onFilterChange("clearAll", {}, clearedFilters, currentTab);
       }
     } catch (error) {
@@ -550,53 +509,53 @@ const ActiveFiltersBox = ({
           </span>
           <span className="text-gray-400">|</span>
           <div className="flex gap-3 items-center pl-3">
-          <button
-            onClick={handleClearAllFilters}
-            className="text-sm text-gray-600 hover:text-gray-800 font-medium underline cursor-pointer"
-            title="Clear all filters"
-          >
-            <Image src={reloadIcon} width={30} height={30} alt="image-logo" />
-          </button>
-          {activeFilterEntries.map(([key, value]) => {
-            try {
-              const formattedValue = formatFilterValue(key, value);
-              if (formattedValue === null || formattedValue === undefined)
-                return null;
+            <button
+              onClick={handleClearAllFilters}
+              className="text-sm text-gray-600 hover:text-gray-800 font-medium underline cursor-pointer"
+              title="Clear all filters"
+            >
+              <Image src={reloadIcon} width={30} height={30} alt="image-logo" />
+            </button>
+            {activeFilterEntries.map(([key, value]) => {
+              try {
+                const formattedValue = formatFilterValue(key, value);
+                if (formattedValue === null || formattedValue === undefined)
+                  return null;
 
-              return (
-                <div
-                  key={key}
-                  className="inline-flex items-center gap-1.5 bg-white border border-[#DADBE5] px-[8px] py-[6px] rounded-sm text-sm"
-                >
-                  <span className="text-gray-700 text-xs">
-                    {formattedValue}
-                  </span>
-                  <button
-                    onClick={() => handleClearFilter(key)}
-                    className="text-gray-400 hover:text-gray-600 cursor-pointer flex items-center justify-center"
-                    title={`Remove ${getFilterDisplayName(key)} filter`}
+                return (
+                  <div
+                    key={key}
+                    className="inline-flex items-center gap-1.5 bg-white border border-[#DADBE5] px-[8px] py-[6px] rounded-sm text-sm"
                   >
-                    <svg
-                      className="w-3 h-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                    <span className="text-gray-700 text-xs">
+                      {formattedValue}
+                    </span>
+                    <button
+                      onClick={() => handleClearFilter(key)}
+                      className="text-gray-400 hover:text-gray-600 cursor-pointer flex items-center justify-center"
+                      title={`Remove ${getFilterDisplayName(key)} filter`}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              );
-            } catch (error) {
-              console.warn("Error rendering filter pill:", key, error);
-              return null;
-            }
-          })}
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              } catch (error) {
+                console.warn("Error rendering filter pill:", key, error);
+                return null;
+              }
+            })}
           </div>
         </div>
       </div>
@@ -605,62 +564,3 @@ const ActiveFiltersBox = ({
 };
 
 export default ActiveFiltersBox;
-
-// UPDATE FOR TABBEDLAYOUT COMPONENT:
-// In your TabbedLayout component, update the ActiveFiltersBox usage:
-
-/*
-{showSelectedFilterPills && (
-  <div className="px-[20px] border-t-1 border-gray-200">
-    <ActiveFiltersBox
-      activeFilters={currentFilterValues}
-      onFilterChange={onFilterChange}
-      onClearAllFilters={handleClearAllFilters}
-      currentTab={selectedTab}
-      filterConfig={filterConfig} // ADD THIS LINE
-    />
-  </div>
-)}
-*/
-
-// FOR FLOATINGDATERANGE COMPONENT INTEGRATION:
-// When using FloatingDateRange, make sure it calls onChange with the correct format:
-
-/*
-// Example usage in your filter handling:
-<FloatingDateRange
-  label="Order Date"
-  value={{
-    startDate: filtersApplied?.order_date_from || "",
-    endDate: filtersApplied?.order_date_to || ""
-  }}
-  onChange={(dateValue, keyValue) => {
-    // dateValue will be { startDate: "2024-01-01", endDate: "2024-01-31" }
-    handleFilterChange("orderDate", dateValue, allFilters, currentTab);
-  }}
-  keyValue="orderDate"
-  singleDateMode={false}
-/>
-
-// In your handleFilterChange function:
-const handleFilterChange = (filterKey, value, allFilters, currentTab) => {
-  let params = {};
-  
-  if (filterKey === "orderDate") {
-    params = {
-      ...params,
-      order_date_from: value?.startDate,
-      order_date_to: value?.endDate,
-    };
-  }
-  // ... other filter handling
-  
-  const updatedFilters = {
-    ...filtersApplied,
-    ...params,
-    page: 1,
-  };
-  
-  await apiCall(updatedFilters);
-};
-*/

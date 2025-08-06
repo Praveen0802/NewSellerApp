@@ -1,5 +1,5 @@
 import { IconStore } from "@/utils/helperFunctions/iconStore";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import CustomSelect from "../commonComponents/customSelect";
 import Button from "../commonComponents/button";
 import TableView from "./components/tableView";
@@ -13,6 +13,9 @@ import {
 import DeleteConfirmation from "../commonComponents/deleteConfirmation";
 import { toast } from "react-toastify";
 import FloatingSelect from "../floatinginputFields/floatingSelect";
+import { X } from "lucide-react";
+import reloadIcon from "../../../public/reload.svg";
+import Image from "next/image";
 
 const MyTeamView = (props) => {
   const { userDetails, fetchCountries } = props;
@@ -35,7 +38,18 @@ const MyTeamView = (props) => {
   const [totalPages, setTotalPages] = useState(metaDetails?.last_page);
   const [deleteConfirmPopup, setDeleteConfirmPopup] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-  const [primaryFilter,setPrimaryFilter]=useState('')
+  const [primaryFilter, setPrimaryFilter] = useState('');
+
+  // Debounce search to avoid too many API calls
+  const debounceTimer = useCallback(() => {
+    let timeoutId;
+    return (callback, delay) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(callback, delay);
+    };
+  }, []);
+
+  const debouncedSearch = useMemo(() => debounceTimer(), [debounceTimer]);
 
   const viewOptions = {
     options: [
@@ -73,6 +87,23 @@ const MyTeamView = (props) => {
       });
     }
   }, [currentPage, itemsPerPage]);
+
+  // Handle search text change with debounce
+  const handleSearchChange = useCallback((e) => {
+    const newSearchText = e.target.value;
+    setSearchText(newSearchText);
+    
+    // Debounce the API call by 300ms to avoid excessive requests
+    debouncedSearch(() => {
+      handleApiCAll({
+        page: 1,
+        per_page: itemsPerPage,
+        keyword: newSearchText,
+        ...(primaryFilter && { is_primary: primaryFilter }),
+      });
+      setCurrentPage(1);
+    }, 300);
+  }, [itemsPerPage, primaryFilter, debouncedSearch, handleApiCAll]);
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
@@ -128,13 +159,6 @@ const MyTeamView = (props) => {
     setIsLoading(false);
   };
 
-  const handleInputBlurOrEnter = (e, isBlur = false) => {
-    if (isBlur || e.key === "Enter") {
-      handleApiCAll({ page: 1, per_page: itemsPerPage, keyword: searchText, ...(primaryFilter && { is_primary: primaryFilter }), });
-      setCurrentPage(1);
-    }
-  };
-
   const handleDeleteClick = async (item) => {
     setDeleteId(item?.id);
     setDeleteConfirmPopup(true);
@@ -155,7 +179,7 @@ const MyTeamView = (props) => {
   };
 
   const handleSelectChange = async (value) => {
-    setPrimaryFilter(value)
+    setPrimaryFilter(value);
     await handleApiCAll({
       page: 1,
       per_page: itemsPerPage,
@@ -185,11 +209,9 @@ const MyTeamView = (props) => {
               <input
                 type="text"
                 placeholder="search by customer name or phone number"
-                onChange={(e) => setSearchText(e.target.value)}
+                onChange={handleSearchChange}
                 value={searchText}
-                onBlur={(e) => handleInputBlurOrEnter(e, true)}
-                onKeyPress={(e) => handleInputBlurOrEnter(e)}
-                className="outline-none  placeholder:font-[300] placeholder:opacity-50 text-xs sm:text-sm w-full"
+                className="outline-none placeholder:font-[300] placeholder:opacity-50 text-xs sm:text-sm w-full"
               />
             </div>
             <FloatingSelect
@@ -212,9 +234,75 @@ const MyTeamView = (props) => {
 
           {/* User count and pagination controls */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-            <p className="p-3 sm:p-4 text-xs sm:text-sm text-[#343432] border-b-[1px] sm:border-b-0 sm:border-r-[1px] border-[#eaeaf1] font-medium w-full sm:w-auto">
-              {metaDetails?.total} users
-            </p>
+            <div className="flex items-center gap-4">
+              <p className="p-3 sm:p-4 text-xs sm:text-sm text-[#343432] border-b-[1px] sm:border-b-0 sm:border-r-[1px] border-[#eaeaf1] font-medium w-full sm:w-auto">
+                {metaDetails?.total} users
+              </p>
+              {(searchText || primaryFilter) && (
+                <div className="flex gap-3 items-center flex-wrap">
+                  <button
+                    className="text-sm text-gray-600 hover:text-gray-800 font-medium underline cursor-pointer"
+                    title="Clear all filters"
+                    onClick={() => {
+                      setSearchText("");
+                      setPrimaryFilter("");
+                      handleApiCAll({
+                        page: 1,
+                        per_page: itemsPerPage,
+                        keyword: "",
+                      });
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <Image
+                      src={reloadIcon}
+                      width={30}
+                      height={30}
+                      alt="image-logo"
+                    />
+                  </button>
+
+                  {/* Search Filter Chip */}
+                  {searchText && (
+                    <div className="py-2 px-3 flex gap-1 items-center text-sm border-[1px] border-[#eaeaf1] rounded-md">
+                      Search: {searchText}
+                      <X
+                        className="w-4 h-4 cursor-pointer"
+                        onClick={() => {
+                          setSearchText("");
+                          handleApiCAll({
+                            page: 1,
+                            per_page: itemsPerPage,
+                            keyword: "",
+                            ...(primaryFilter && { is_primary: primaryFilter }),
+                          });
+                          setCurrentPage(1);
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Primary Filter Chip */}
+                  {primaryFilter && (
+                    <div className="py-2 px-3 flex gap-1 items-center text-sm border-[1px] border-[#eaeaf1] rounded-md">
+                      User Type: {primaryFilter === "1" ? "Primary" : "Secondary"}
+                      <X
+                        className="w-4 h-4 cursor-pointer"
+                        onClick={() => {
+                          setPrimaryFilter("");
+                          handleApiCAll({
+                            page: 1,
+                            per_page: itemsPerPage,
+                            keyword: searchText,
+                          });
+                          setCurrentPage(1);
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             <div className="flex flex-wrap sm:flex-nowrap justify-between w-full sm:w-auto border-t-[1px] sm:border-t-0 sm:border-l-[1px] p-3 sm:pl-4 border-[#eaeaf1] items-center text-[#343432] text-xs sm:text-sm">
               <div className="flex items-center mb-2 sm:mb-0 mr-0 sm:mr-4">
@@ -229,42 +317,48 @@ const MyTeamView = (props) => {
                 />
               </div>
 
-              <div className="flex items-center mb-2 sm:mb-0 mr-0 sm:mr-4">
-                <span className="mr-2">Page</span>
-                <input
-                  type="number"
-                  min="1"
-                  max={totalPages}
-                  value={currentPage}
-                  onChange={handlePageInputChange}
-                  className="w-8 h-8 text-center border border-[#eaeaf1] rounded mx-1"
-                />
-                <span>of {totalPages}</span>
-              </div>
+              {totalPages > 1 && (
+                <>
+                  <div className="flex items-center mb-2 sm:mb-0 mr-0 sm:mr-4">
+                    <span className="mr-2">Page</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max={totalPages}
+                      value={currentPage}
+                      onChange={handlePageInputChange}
+                      className="w-8 h-8 text-center border border-[#eaeaf1] rounded mx-1"
+                    />
+                    <span>of {totalPages}</span>
+                  </div>
 
-              <div className="flex items-center sm:border-l border-[#eaeaf1] sm:pl-4">
-                <button
-                  onClick={handlePrevPage}
-                  disabled={currentPage === 1}
-                  className={`p-1 ${
-                    currentPage === 1 ? "text-gray-300" : "hover:bg-gray-100"
-                  }`}
-                >
-                  <IconStore.chevronLeft />
-                </button>
+                  <div className="flex items-center sm:border-l border-[#eaeaf1] sm:pl-4">
+                    <button
+                      onClick={handlePrevPage}
+                      disabled={currentPage === 1 || isLoading}
+                      className={`p-1 ${
+                        currentPage === 1 || isLoading
+                          ? "text-gray-300"
+                          : "hover:bg-gray-100"
+                      }`}
+                    >
+                      <IconStore.chevronLeft />
+                    </button>
 
-                <button
-                  onClick={handleNextPage}
-                  disabled={currentPage === totalPages}
-                  className={`p-1 ${
-                    currentPage === totalPages
-                      ? "text-gray-300"
-                      : "hover:bg-gray-100"
-                  }`}
-                >
-                  <IconStore.chevronRight />
-                </button>
-              </div>
+                    <button
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages || isLoading}
+                      className={`p-1 ${
+                        currentPage === totalPages || isLoading
+                          ? "text-gray-300"
+                          : "hover:bg-gray-100"
+                      }`}
+                    >
+                      <IconStore.chevronRight />
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

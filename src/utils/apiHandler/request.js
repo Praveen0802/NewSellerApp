@@ -130,6 +130,38 @@ export const myListingUploadTickets = async (token, data) => {
   }
 };
 
+export const updateAdditionalFile = async (token, data) => {
+  try {
+    const response = await axios({
+      url: `/api/additional-template`,
+      method: "POST",
+      data: data, // Send formData directly as data
+      ...(token && {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in saveListing", error);
+    throw error;
+  }
+};
+
+export const deleteTicketUpload = async (token, id) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.DELETE_UPLOAD_TICKET}/${id}`,
+      method: "DELETE",
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in saveListing", error);
+  }
+};
+
 export const fetchVenueList = async (token, params = {}) => {
   try {
     const response = await makeRequest({

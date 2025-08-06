@@ -388,9 +388,9 @@ const PayoutPage = (props) => {
   // Helper function to get status label from value
   const getStatusLabel = (value) => {
     const statusMap = {
-      0: "Paid",
-      1: "Pending",
-      2: "Processing",
+      0: "Pending",
+      1: "Paid",
+      2: "Dispute",
       3: "Failed",
     };
     return statusMap[value] || value;
@@ -597,6 +597,7 @@ const PayoutPage = (props) => {
                     options={[
                       { value: "1", label: "Paid" },
                       { value: "0", label: "Pending" },
+                      { value: "2", label: "Dispute" },
                     ]}
                     selectedValue={statusFilter}
                     keyValue={
