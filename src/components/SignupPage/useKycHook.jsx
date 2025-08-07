@@ -222,6 +222,7 @@ const useKycHook = ({ currentUser } = {}) => {
     const payload = {
       recipient_name: first_name,
       recipient_email: email,
+      testing: true, // Optional: Set to true for testing purposes
     };
 
     getZohoDocs(payload);
