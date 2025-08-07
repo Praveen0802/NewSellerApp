@@ -462,17 +462,22 @@ const RportHistory = (props) => {
     );
   };
 
-  const apiCall = async (params) => {
+  const apiCall = async (params, clearAllFilter) => {
     setIsLoading(true);
 
     // Clean up undefined values before making API call
-    const cleanParams = Object.fromEntries(
-      Object.entries(params).filter(
-        ([_, value]) => value !== undefined && value !== null && value !== ""
-      )
-    );
+    // const cleanParams = Object.fromEntries(
+    //   Object.entries(params).filter(
+    //     ([_, value]) => value !== undefined && value !== null && value !== ""
+    //   )
+    // );
+    let updatedFilters = {};
+    if (clearAllFilter) {
+      updatedFilters = { ...params, page: 1 };
+    } else {
+      updatedFilters = { ...filtersApplied, ...params, page: 1 };
+    }
 
-    const updatedFilters = { ...filtersApplied, ...cleanParams, page: 1 };
     setFiltersApplied(updatedFilters);
 
     try {
@@ -558,7 +563,16 @@ const RportHistory = (props) => {
     setHasReachedEnd(false);
 
     let params = {};
-
+    console.log(
+      filterKey,
+      "filterKey",
+      value,
+      "value",
+      allFilters,
+      "allFilters",
+      currentTab,
+      "currentTab"
+    );
     // Handle different filter types
     if (filterKey === "orderDate") {
       params = {
@@ -590,7 +604,7 @@ const RportHistory = (props) => {
       ...params,
       page: 1, // Reset to first page on filter change
     };
-
+    console.log(updatedFilters, "updatedFiltersupdatedFilters");
     // Handle query field with both dropdown search and API call debouncing
     if (filterKey === "query" && value?.target?.value) {
       // Update the search dropdown (existing functionality)
@@ -615,6 +629,9 @@ const RportHistory = (props) => {
         console.error("Filter change error:", error);
       }
     }
+  };
+  const handleClearAllFilters = () => {
+    apiCall({}, true); // Call the API with no filters
   };
 
   // Configuration for filters
@@ -872,6 +889,7 @@ const RportHistory = (props) => {
           onTabChange={() => {}}
           onColumnToggle={handleColumnToggle}
           visibleColumns={visibleColumns}
+          onClearAllFilters={handleClearAllFilters}
           onFilterChange={handleFilterChange}
           currentFilterValues={{ ...filtersApplied, page: "" }}
           showSelectedFilterPills={true}
