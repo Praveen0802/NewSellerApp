@@ -11,7 +11,6 @@ import FloatingDateRange from "../commonComponents/dateRangeInput";
 import Image from "next/image";
 
 const MyReferrals = (props) => {
-  console.log(props, "propsprops");
   const { copyToClipboard, isCopied } = useCopyToClipboard();
 
   // Memoize destructured values to prevent unnecessary re-renders

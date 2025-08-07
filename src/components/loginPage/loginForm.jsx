@@ -105,7 +105,7 @@ const LoginForm = () => {
             let redirectPath =
               kyc_status == 0 ? "/kyc-verification" : "/dashboard";
             //TODO : add check for kyc status
-            router.push("/dashboard");
+            router.push(`${redirectPath}`);
           } else {
             const errorMessage =
               typeof response?.message === "string"

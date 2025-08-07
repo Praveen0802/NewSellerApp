@@ -99,7 +99,7 @@ const TransactionDetailRow = memo(({ label, value }) => (
 const BookingRow = memo(({ booking, index, onClick = () => {} } = {}) => (
   <div
     key={booking.booking_id || index}
-    className="grid grid-cols-5 gap-6 p-4 hover:bg-slate-50 transition-all duration-200 rounded-lg border border-slate-100 bg-white mb-3 cursor-pointer"
+    className="grid grid-cols-4 gap-6 p-4 hover:bg-slate-50 transition-all duration-200 rounded-lg border border-slate-100 bg-white mb-3 cursor-pointer"
     onClick={() => onClick(booking)}
     title={"Click to view details"}
   >
@@ -126,11 +126,7 @@ const BookingRow = memo(({ booking, index, onClick = () => {} } = {}) => (
         {booking.amount || "—"}
       </span>
     </div>
-    <div className="flex items-center justify-center">
-      <span className="text-xs font-medium px-3 py-1.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">
-        {booking.booking_status || "—"}
-      </span>
-    </div>
+   
   </div>
 ));
 
@@ -277,10 +273,10 @@ const TransactionDetailsPopup = ({
 
   // Updated table headers for 5 columns
   const tableHeaders = useMemo(
-    () => ["Booking ID", "Match Name", "Qty", "Amount", "Status"],
+    () => ["Booking ID", "Match Name", "Qty", "Amount"],
     []
   );
-
+console.log(transactionDetails,'transactionDetailstransactionDetails')
   // Callback handlers to prevent unnecessary re-renders
   const handleTransactionToggle = useCallback(() => {
     setIsTransactionOpen((prev) => !prev);
@@ -397,7 +393,7 @@ const TransactionDetailsPopup = ({
 
               <div className="p-6">
                 {/* Updated Table Header for 5 columns */}
-                <div className="grid grid-cols-5 gap-6 mb-6 pb-4 border-b-2 border-slate-200">
+                <div className="grid grid-cols-4 gap-6 mb-6 pb-4 border-b-2 border-slate-200">
                   {tableHeaders.map((header, index) => (
                     <div
                       key={index}

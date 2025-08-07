@@ -18,6 +18,7 @@ import {
 import useTeamMembersDetails from "@/Hooks/useTeamMembersDetails";
 import { toast } from "react-toastify";
 import useCSVDownload from "@/Hooks/useCsvDownload";
+import { SearchIcon } from "lucide-react";
 
 // Currency Slider Component
 const CurrencySlider = ({
@@ -642,12 +643,13 @@ const RportHistory = (props) => {
         name: "query",
         value: filtersApplied?.query,
         showDelete: true,
+        iconBefore: <SearchIcon />,
         deleteFunction: () => handleFilterChange("query", ""),
         // showDropdown: true,
         // dropDownComponent: searchMatchDropDown(),
         label: "Search Match event or Booking number",
-        className: "!py-[7px] !px-[12px] !text-[#343432] !text-[14px]",
-        parentClassName: "!w-[270px]",
+        className: "!py-[7px]  !text-[#343432] !text-[14px]",
+        parentClassName: "!w-[300px]",
       },
 
       {

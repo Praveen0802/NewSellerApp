@@ -12,7 +12,7 @@ import AttendeeDetails from "./components/attendeeDetails";
 import PaymentOrderDetails from "./components/paymentOrderDetails";
 import DownLoadYourTickets from "./components/downLoadYourTickets";
 
-const OrderDetails = ({ show, onClose, data={} }) => {
+const OrderDetails = ({ show, onClose, data = {} }) => {
   const {
     order_details = {},
     customer_details = {},
@@ -26,7 +26,7 @@ const OrderDetails = ({ show, onClose, data={} }) => {
   const [expandedVersion, setExpandedVersion] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const orderId = order_details?.order_id || order_details?.booking_no;
+  const orderId = order_details?.booking_no || order_details?.order_id;
   const ctaText = [
     { title: "Order Notes", cta: "+ Add Note" },
     { title: "Additional File", cta: "Download File" },
