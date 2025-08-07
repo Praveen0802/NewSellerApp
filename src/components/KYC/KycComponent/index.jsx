@@ -31,7 +31,7 @@ const KycComponent = ({
   setUploading,
   isBusiness,
 } = {}) => {
-console.log(photoId,'hiiiii',address,contract,business_document)
+  console.log(photoId, "hiiiii", address, contract, business_document);
   const [previewModal, setPreviewModal] = useState({
     open: false,
     url: "",
@@ -108,7 +108,7 @@ console.log(photoId,'hiiiii',address,contract,business_document)
   // Fixed function to get document status correctly
   const getDocumentStatus = (docType) => {
     const docData = getDocumentData(docType);
-    
+
     if (!docData || !docData.data) {
       return "not uploaded";
     }
@@ -119,9 +119,9 @@ console.log(photoId,'hiiiii',address,contract,business_document)
 
     const statusMapping = {
       "not uploaded": "not uploaded",
-      "Approved": "Approved",
-      "Rejected": "Rejected",
-      "Pending": "Pending",
+      Approved: "Approved",
+      Rejected: "Rejected",
+      Pending: "Pending",
     };
 
     return statusMapping[status] || "not uploaded";
@@ -130,14 +130,16 @@ console.log(photoId,'hiiiii',address,contract,business_document)
   // Function to calculate overall KYC status
   const getOverallKycStatus = () => {
     const docTypes = Object.keys(documentConfig);
-    const statuses = docTypes.map(docType => getDocumentStatus(docType));
-    
+    const statuses = docTypes.map((docType) => getDocumentStatus(docType));
+
     // Count different status types
-    const approved = statuses.filter(status => status === "Approved").length;
-    const rejected = statuses.filter(status => status === "Rejected").length;
-    const pending = statuses.filter(status => status === "Pending").length;
-    const notUploaded = statuses.filter(status => status === "not uploaded").length;
-    
+    const approved = statuses.filter((status) => status === "Approved").length;
+    const rejected = statuses.filter((status) => status === "Rejected").length;
+    const pending = statuses.filter((status) => status === "Pending").length;
+    const notUploaded = statuses.filter(
+      (status) => status === "not uploaded"
+    ).length;
+
     // Determine overall status based on individual statuses
     if (approved === docTypes.length) {
       return "Approved";
@@ -155,45 +157,47 @@ console.log(photoId,'hiiiii',address,contract,business_document)
   // Function to render overall status badge
   const renderOverallStatusBadge = () => {
     const overallStatus = getOverallKycStatus();
-    
+
     const statusConfig = {
-      "Approved": {
+      Approved: {
         icon: CheckCircle,
         bgColor: "bg-green-100",
         textColor: "text-green-600",
-        label: "Approved"
+        label: "Approved",
       },
-      "Pending": {
+      Pending: {
         icon: Clock,
         bgColor: "bg-yellow-100",
         textColor: "text-yellow-600",
-        label: "Pending Review"
+        label: "Pending Review",
       },
       "In Progress": {
         icon: Clock,
         bgColor: "bg-blue-100",
         textColor: "text-blue-600",
-        label: "In Progress"
+        label: "In Progress",
       },
-      "Rejected": {
+      Rejected: {
         icon: X,
         bgColor: "bg-red-100",
         textColor: "text-red-600",
-        label: "Action Required"
+        label: "Action Required",
       },
       "Not Started": {
         icon: AlertCircle,
         bgColor: "bg-gray-100",
         textColor: "text-gray-600",
-        label: "Not Started"
-      }
+        label: "Not Started",
+      },
     };
 
     const config = statusConfig[overallStatus];
     const Icon = config.icon;
 
     return (
-      <div className={`flex items-center space-x-2 ${config.bgColor} ${config.textColor} px-3 py-2 rounded-full text-sm font-medium`}>
+      <div
+        className={`flex items-center space-x-2 ${config.bgColor} ${config.textColor} px-3 py-2 rounded-full text-sm font-medium`}
+      >
         <Icon className="w-4 h-4" />
         <span>{config.label}</span>
       </div>
@@ -317,7 +321,7 @@ console.log(photoId,'hiiiii',address,contract,business_document)
                     ? "bg-yellow-100 text-yellow-600"
                     : status === "error"
                     ? "bg-red-100 text-red-600"
-                    : "bg-blue-100 text-blue-600"
+                    : "bg-gray-100 text-gray-600"
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -529,88 +533,93 @@ console.log(photoId,'hiiiii',address,contract,business_document)
   const progressPercentage = (approvedDocuments / totalDocuments) * 100;
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6">
-      {/* Header with Overall Status */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-2xl font-bold text-gray-900">KYC Documents</h2>
-          {renderOverallStatusBadge()}
-        </div>
+    <div className="w-full h-full">
+      {/* Header */}
+
+      <h2 className="pb-2 sm:pb-4 text-base sm:text-lg md:text-xl p-3 sm:p-4 font-semibold">
+        KYC Documents
+      </h2>
+
+      <div className="p-6 sm:p-4 bg-white border-[1px] flex flex-col gap-3 sm:gap-4 border-[#eaeaf1] w-full h-full">
+        <div className="flex justify-between items-center">
         <p className="text-gray-600">Upload required verification documents</p>
-      </div>
-
-      {/* Progress Bar */}
-      <div className="mb-6 bg-white rounded-lg border border-gray-200 p-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-700">Progress</span>
-          <span className="text-sm font-medium text-gray-700">
-            {approvedDocuments}/{totalDocuments} approved
-          </span>
+        {renderOverallStatusBadge()}
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
-            style={{ width: `${progressPercentage}%` }}
-          ></div>
+        {/* Progress Bar */}
+        <div className="mb-6 bg-white rounded-lg border border-gray-200 p-4 ">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-gray-700">Progress</span>
+            <span className="text-sm font-medium text-gray-700">
+              {approvedDocuments}/{totalDocuments} approved
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+              style={{ width: `${progressPercentage}%` }}
+            ></div>
+          </div>
         </div>
-      </div>
 
-      {/* Document List */}
-      <div className="space-y-4">
-        {Object.keys(documentConfig).map(renderDocumentCard)}
+        {/* Document List */}
 
-        {/* Success Message */}
-        {approvedDocuments === totalDocuments && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-center space-x-3">
-              <Check className="w-5 h-5 text-green-600" />
-              <div>
-                <h3 className="font-semibold text-green-900">
-                  All Documents Approved!
-                </h3>
-                <p className="text-green-700 text-sm">
-                  Your KYC verification is complete and approved.
-                </p>
+        <div className="mb-6 grid grid-cols-1 gap-4">
+          <div className="space-y-4 ">
+            {Object.keys(documentConfig).map(renderDocumentCard)}
+
+            {/* Success Message */}
+            {approvedDocuments === totalDocuments && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center space-x-3">
+                  <Check className="w-5 h-5 text-green-600" />
+                  <div>
+                    <h3 className="font-semibold text-green-900">
+                      All Documents Approved!
+                    </h3>
+                    <p className="text-green-700 text-sm">
+                      Your KYC verification is complete and approved.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        {/* Enhanced Preview Modal */}
+        {previewModal.open && (
+          <div className="fixed inset-0 bg-black/80 bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-[70%] h-[85%] flex flex-col max-w-4xl">
+              {/* Header - Fixed height */}
+              <div className="flex-shrink-0 flex items-center justify-between p-4 border-b">
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-lg font-semibold text-gray-900 truncate">
+                    {previewModal.title}
+                  </h3>
+                  <span className="text-xs bg-gray-100 px-2 py-1 rounded uppercase">
+                    {previewModal.fileType}
+                  </span>
+                </div>
+                <button
+                  onClick={closePreview}
+                  className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                  title="Close"
+                >
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+
+              {/* Content - Takes remaining height */}
+              <div className="flex-1 overflow-hidden">
+                {RenderPreviewContent({
+                  previewModal,
+                  handleDownload,
+                  isDownloading,
+                })}
               </div>
             </div>
           </div>
         )}
       </div>
-
-      {/* Enhanced Preview Modal */}
-      {previewModal.open && (
-        <div className="fixed inset-0 bg-black/80 bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-[70%] h-[85%] flex flex-col max-w-4xl">
-            {/* Header - Fixed height */}
-            <div className="flex-shrink-0 flex items-center justify-between p-4 border-b">
-              <div className="flex items-center space-x-2">
-                <h3 className="text-lg font-semibold text-gray-900 truncate">
-                  {previewModal.title}
-                </h3>
-                <span className="text-xs bg-gray-100 px-2 py-1 rounded uppercase">
-                  {previewModal.fileType}
-                </span>
-              </div>
-              <button
-                onClick={closePreview}
-                className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer"
-                title="Close"
-              >
-                <X className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
-
-            {/* Content - Takes remaining height */}
-            <div className="flex-1 overflow-hidden">
-              {RenderPreviewContent({
-                previewModal,
-                handleDownload,
-                isDownloading,
-              })}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

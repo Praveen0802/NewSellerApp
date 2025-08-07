@@ -432,7 +432,7 @@ const LinkedCards = (props) => {
                       </div>
                       <button
                         onClick={() => handleDeleteClick(card.id)}
-                        className="mt-2 text-sm text-red-600 hover:text-red-800 cursor-pointer flex items-center gap-1 transition-colors duration-200 hover:bg-red-50 p-1 rounded"
+                        className="mt-2 text-sm text-gray-900 hover:text-gray-600 cursor-pointer flex items-center gap-1 transition-colors duration-200 hover:bg-red-50 p-1 rounded"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
