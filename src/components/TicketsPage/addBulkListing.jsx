@@ -5,9 +5,9 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
-import oneHand from "../../../public/onehand.svg";
-import greenHand from "../../../public/greenhand.svg";
-import uploadListing from "../../../public/uploadlisting.svg";
+import oneHand from "../../../public/oneHand.svg";
+import greenHand from "../../../public/greenHand.svg";
+import uploadListing from "../../../public/uploadListing.svg";
 import Button from "../commonComponents/button";
 import { useDispatch } from "react-redux";
 import { updateWalletPopupFlag } from "@/utils/redux/common/action";
