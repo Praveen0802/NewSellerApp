@@ -62,7 +62,7 @@ const DownloadYourTickets = ({ tickets, bookingId }) => {
           type="primary"
           label="Download All"
           classNames={{
-            root: "bg-[#0137D5] px-[8px] py-[5px] w-fit",
+            root: "bg-[#343432] px-[8px] py-[5px] w-fit",
             label_: "text-[12px] text-white font-medium",
           }}
           onClick={() => fetchDownloadLinks("etickets", "", "download-all")}
@@ -102,7 +102,7 @@ const DownloadYourTickets = ({ tickets, bookingId }) => {
                     type="primary"
                     label="Download"
                     classNames={{
-                      root: "bg-[#0137D5] px-[8px] py-[5px] w-fit",
+                      root: "bg-[#343432] px-[8px] py-[5px] w-fit",
                       label_: "text-[12px] text-white font-medium",
                     }}
                     onClick={() => {
@@ -160,7 +160,7 @@ const DownloadYourTickets = ({ tickets, bookingId }) => {
                 type="primary"
                 label="Download"
                 classNames={{
-                  root: "bg-[#0137D5] px-[8px] py-[5px]",
+                  root: "bg-[#343432] px-[8px] py-[5px]",
                   label_: "text-[12px] text-white font-medium",
                 }}
                 onClick={() => {
@@ -187,7 +187,7 @@ const DownloadYourTickets = ({ tickets, bookingId }) => {
                 type="primary"
                 label="Download Pods"
                 classNames={{
-                  root: "bg-[#0137D5] px-[8px] py-[5px]",
+                  root: "bg-[#343432] px-[8px] py-[5px]",
                   label_: "text-[12px] text-white font-medium",
                 }}
                 onClick={() => {

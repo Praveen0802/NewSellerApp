@@ -29,7 +29,7 @@ const Button = (props) => {
     primary: "bg-[#343432] text-white py-[12.5px] text-white",
     "primary-disable":
       "bg-[#E6EAEE] border-[1px] border-[#E6EAEE] text-[#CCD5DC]",
-    blueType: "bg-[#0137D5] text-white",
+    blueType: "bg-[#343432] text-white",
     secondary: "bg-none border-[1px] border-[#022B50] text-[#022B50]",
     "secondary-disable": "bg-none border-[1px] border-[#8095A7] text-[#8095A7]",
   };

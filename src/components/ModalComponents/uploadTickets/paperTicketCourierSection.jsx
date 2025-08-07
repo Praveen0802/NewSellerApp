@@ -417,7 +417,7 @@ const PaperTicketCourierSection = React.forwardRef(
           {!isDisabled && (
             <div className="border-2 border-dashed border-[#0137D5] rounded-lg p-6 bg-[#F9F9FB]">
               <div className="flex flex-col items-center justify-center text-center">
-                <div className="w-12 h-12 bg-[#0137D5] rounded-lg flex items-center justify-center mb-3">
+                <div className="w-12 h-12 bg-[#343432] rounded-lg flex items-center justify-center mb-3">
                   <svg
                     className="w-6 h-6 text-white"
                     fill="none"

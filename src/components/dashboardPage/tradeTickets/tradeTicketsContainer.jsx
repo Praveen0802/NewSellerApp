@@ -39,7 +39,7 @@ const TradeTicketsContainer = ({
       >
         <div className="text-[13px] flex gap-1 text-[#343432] font-semibold">
           {tracking?.title}
-          <span className="bg-[#0137D5] text-[10px] text-white px-[6px] py-[2px] rounded-full">
+          <span className="bg-[#343432] text-[10px] text-white px-[6px] py-[2px] rounded-full">
             {tracking?.count}
           </span>
         </div>

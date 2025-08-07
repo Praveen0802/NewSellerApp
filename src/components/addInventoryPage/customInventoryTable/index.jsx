@@ -9,9 +9,9 @@ import {
   ChartLine,
 } from "lucide-react";
 import ChevronRight from "@/components/commonComponents/filledChevron/chevronRight";
-import oneHand from "../../../../public/onehand.svg";
-import greenHand from "../../../../public/greenhand.svg";
-import uploadListing from "../../../../public/uploadlisting.svg";
+import oneHand from "../../../../public/oneHand.svg";
+import greenHand from "../../../../public/greenHand.svg";
+import uploadListing from "../../../../public/uploadListing.svg";
 import { MultiSelectEditableCell, SimpleEditableCell } from "../selectCell";
 import { fetchBlockDetails } from "@/utils/apiHandler/request";
 import ListingsMarketplace from "@/components/ModalComponents/listSalesModal";

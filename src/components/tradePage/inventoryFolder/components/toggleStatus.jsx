@@ -9,7 +9,7 @@ const ToggleStatus = ({ listItems, selectedItem, onClick }) => {
             onClick={() => onClick(item)}
             className={`w-[50%] text-[10px] sm:text-[12px] text-center py-[4px] sm:py-[5px] cursor-pointer ${
               selectedItem == item?.key
-                ? "text-white font-normal rounded-[5px] sm:rounded-md bg-[#0137D5] "
+                ? "text-white font-normal rounded-[5px] sm:rounded-md bg-[#343432] "
                 : ""
             }`}
             key={index}

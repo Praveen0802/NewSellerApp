@@ -20,11 +20,15 @@ const LinkedCards = (props) => {
   const [deleteConfirmPopup, setDeleteConfirmPopup] = useState(false);
   const [deleteCardId, setDeleteCardId] = useState(null);
   const [deleteLoader, setDeleteLoader] = useState(false);
-  const [clientSecret, setClientSecret] = useState(null); // Store client secret
+  const [clientSecret, setClientSecret] = useState(null);
   const stripeRef = useRef(null);
   const elementsRef = useRef(null);
   const cardElementRef = useRef(null);
   const stripeInitializedRef = useRef(false);
+  
+  // Refs for scrolling
+  const containerRef = useRef(null);
+  const addCardFormRef = useRef(null);
 
   // Load Stripe SDK
   useEffect(() => {
@@ -44,11 +48,31 @@ const LinkedCards = (props) => {
     };
   }, []);
 
+  // Smooth scroll to bottom function
+  const scrollToBottom = useCallback(() => {
+    // First try to scroll the container to bottom
+    if (containerRef.current) {
+      containerRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'end' 
+      });
+    }
+    
+    // Then scroll to the add card form specifically after a short delay
+    setTimeout(() => {
+      if (addCardFormRef.current) {
+        addCardFormRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+      }
+    }, 300);
+  }, []);
+
   // Fetch saved cards from API
   const fetchSavedCards = useCallback(async () => {
     try {
       const response = await getLinkedCards();
-
       const result = response;
       if (result.success) {
         setSavedCards(result.data.linked_cards);
@@ -171,13 +195,19 @@ const LinkedCards = (props) => {
           displayError.textContent = event.error ? event.error.message : "";
         }
       });
+
+      // Scroll to the form after Stripe is initialized
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+      
     } catch (err) {
       console.error("Stripe init error", err);
       toast.error("Failed to initialize payment form");
     } finally {
       setIsLoading(false);
     }
-  }, [stripeLoaded, props?.email]);
+  }, [stripeLoaded, props?.email, scrollToBottom]);
 
   // Handle card saving
   const handleSaveCard = async () => {
@@ -205,7 +235,6 @@ const LinkedCards = (props) => {
         try {
           const formData = new FormData();
           formData.append("card_id", result.setupIntent.payment_method);
-          // await addSavedCards("", formData);
           await axios({
             method: "post",
             url: `/api/add-linked-card`,
@@ -218,7 +247,17 @@ const LinkedCards = (props) => {
         fetchSavedCards();
         setShowAddCard(false);
         stripeInitializedRef.current = false;
-        setClientSecret(null); // Clear client secret
+        setClientSecret(null);
+        
+        // Scroll back up to show the updated cards list
+        setTimeout(() => {
+          if (containerRef.current) {
+            containerRef.current.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start' 
+            });
+          }
+        }, 500);
       }
     } catch (err) {
       console.error("Save card error", err);
@@ -235,82 +274,48 @@ const LinkedCards = (props) => {
     }
   }, [showAddCard, stripeLoaded, initializeStripe]);
 
+  // Handle Add Card button click
+  const handleAddCardClick = () => {
+    stripeInitializedRef.current = false;
+    setClientSecret(null);
+    setShowAddCard(true);
+    
+    // Scroll to bottom immediately
+    setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+  };
+
   const handleCancelClick = () => {
     setShowAddCard(false);
     stripeInitializedRef.current = false;
-    setClientSecret(null); // Clear client secret
+    setClientSecret(null);
     if (cardElementRef.current) {
       cardElementRef.current.unmount();
       cardElementRef.current = null;
     }
+    
+    // Scroll back to top when canceling
+    setTimeout(() => {
+      if (containerRef.current) {
+        containerRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    }, 100);
   };
 
   return (
-    <div className="w-full h-full">
+    <div ref={containerRef} className="w-full h-full">
       <p className="pb-2 sm:pb-4 text-base sm:text-lg md:text-xl p-3 sm:p-4 font-semibold">
         Linked Cards
       </p>
       <div className="bg-white border-[1px] flex flex-col gap-3 sm:gap-4 border-[#eaeaf1] w-full h-full">
-        <div className="bg-white p-3 sm:p-4 ">
-          {savedCards?.length > 0 ? (
-            <div className="mb-6 grid grid-cols-2 gap-4">
-              {savedCards?.map((card, index) => {
-                const cardInfo = card.card;
-                const cardType = cardInfo.brand || "visa";
-                const lastFour = cardInfo.last4 || "XXXX";
-                const logoUrl = getCardLogoUrl(cardType);
-
-                return (
-                  <div
-                    key={card.id}
-                    className="border border-gray-200 rounded-md p-4 mb-2"
-                  >
-                    <div className="flex justify-between items-center">
-                      <div className="font-medium mb-2 flex gap-2 items-center">
-                        <img
-                          src={logoUrl}
-                          alt={`${cardType} logo`}
-                          width={50}
-                          height={32}
-                          className="h-8 w-12 object-contain"
-                          onError={(e) => {
-                            e.target.src =
-                              "https://img.icons8.com/ios-filled/50/bank-card-back-side.png";
-                          }}
-                        />
-                        {cardType.toUpperCase()}
-                      </div>
-                      <button
-                        onClick={() => handleDeleteClick(card.id)}
-                        className="mt-2 text-sm text-red-600 hover:text-red-800 cursor-pointer flex items-center gap-1 transition-colors duration-200"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <div className="text-gray-600 text-sm">
-                      <div>Card details</div>
-                      <div>•••• •••• •••• {lastFour}</div>
-                      <div>
-                        Expires: {cardInfo.exp_month}/{cardInfo.exp_year}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="border md:w-[40%]  border-gray-200 rounded-md p-4 mb-6 text-gray-600">
-              <p>No saved cards</p>
-            </div>
-          )}
-
+        <div className="bg-white p-3 sm:p-4">
           <button
-            onClick={() => {
-              stripeInitializedRef.current = false;
-              setClientSecret(null);
-              setShowAddCard(true);
-            }}
-            className="flex items-center cursor-pointer justify-center gap-2 bg-[#1d1d1d] text-white py-2 px-4 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleAddCardClick}
+            className="flex items-center cursor-pointer justify-center gap-2 bg-[#1d1d1d] hover:bg-[#2d2d2d] text-white py-2 px-4 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 mb-4"
             disabled={isLoading || !stripeLoaded}
           >
             <svg
@@ -332,13 +337,16 @@ const LinkedCards = (props) => {
 
           {/* Add Card Form */}
           {showAddCard && (
-            <div className="bg-white border border-gray-200 rounded-lg p-6 mt-6">
+            <div 
+              ref={addCardFormRef}
+              className="bg-white border border-gray-200 rounded-lg p-6 mt-6 transition-all duration-300 animate-in fade-in slide-in-from-top-4 mb-4"
+            >
               <div className="flex justify-between items-center mb-5">
                 <h3 className="text-lg font-medium text-gray-800 m-0">
                   Add Payment Method
                 </h3>
                 <button
-                  className="p-2 text-gray-500 hover:bg-gray-100 cursor-pointer rounded-full"
+                  className="p-2 text-gray-500 hover:bg-gray-100 cursor-pointer rounded-full transition-colors duration-200"
                   onClick={handleCancelClick}
                 >
                   <svg
@@ -364,7 +372,7 @@ const LinkedCards = (props) => {
                 </label>
                 <div
                   id="stripe-card-element"
-                  className="p-3 border border-gray-300 rounded-md"
+                  className="p-3 border border-gray-300 rounded-md focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all duration-200"
                 ></div>
                 <div
                   id="card-errors"
@@ -377,13 +385,13 @@ const LinkedCards = (props) => {
                 <button
                   onClick={handleSaveCard}
                   disabled={isLoading}
-                  className="flex-1 bg-[#1d1d1d] text-white py-2 px-4 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-[#1d1d1d] hover:bg-[#2d2d2d] text-white py-2 px-4 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   {isLoading ? "Saving..." : "Save Card"}
                 </button>
                 <button
                   onClick={handleCancelClick}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md text-sm"
+                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-md text-sm transition-colors duration-200"
                 >
                   Cancel
                 </button>
@@ -394,6 +402,58 @@ const LinkedCards = (props) => {
               </div>
             </div>
           )}
+          {savedCards?.length > 0 ? (
+            <div className="mb-6 grid grid-cols-2 gap-4">
+              {savedCards?.map((card, index) => {
+                const cardInfo = card.card;
+                const cardType = cardInfo.brand || "visa";
+                const lastFour = cardInfo.last4 || "XXXX";
+                const logoUrl = getCardLogoUrl(cardType);
+
+                return (
+                  <div
+                    key={card.id}
+                    className="border border-gray-200 rounded-md p-4 mb-2 transition-all duration-200 hover:shadow-md"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="font-medium mb-2 flex gap-2 items-center">
+                        <img
+                          src={logoUrl}
+                          alt={`${cardType} logo`}
+                          width={50}
+                          height={32}
+                          className="h-8 w-12 object-contain"
+                          onError={(e) => {
+                            e.target.src =
+                              "https://img.icons8.com/ios-filled/50/bank-card-back-side.png";
+                          }}
+                        />
+                        {cardType.toUpperCase()}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteClick(card.id)}
+                        className="mt-2 text-sm text-red-600 hover:text-red-800 cursor-pointer flex items-center gap-1 transition-colors duration-200 hover:bg-red-50 p-1 rounded"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="text-gray-600 text-sm">
+                      <div>Card details</div>
+                      <div>•••• •••• •••• {lastFour}</div>
+                      <div>
+                        Expires: {cardInfo.exp_month}/{cardInfo.exp_year}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="border md:w-[40%] border-gray-200 rounded-md p-4 mb-6 text-gray-600">
+              <p>No saved cards</p>
+            </div>
+          )}
+
         </div>
       </div>
 

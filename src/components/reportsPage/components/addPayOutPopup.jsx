@@ -306,7 +306,7 @@ const AddPayOutPopup = ({
                   loading={submitLoader}
                   onClick={handleSubmit}
                   classNames={{
-                    root: "w-[80px] justify-center py-[8px] bg-[#0137D5]",
+                    root: "w-[80px] justify-center py-[8px] bg-[#343432]",
                   }}
                 />
               </div>

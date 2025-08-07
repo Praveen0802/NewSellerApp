@@ -5,9 +5,9 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
-import oneHand from "../../../public/onehand.svg";
-import greenHand from "../../../public/greenhand.svg";
-import uploadListing from "../../../public/uploadlisting.svg";
+import oneHand from "../../../public/oneHand.svg";
+import greenHand from "../../../public/greenHand.svg";
+import uploadListing from "../../../public/uploadListing.svg";
 import Button from "../commonComponents/button";
 import { useDispatch } from "react-redux";
 import { updateWalletPopupFlag } from "@/utils/redux/common/action";
@@ -44,6 +44,7 @@ import {
   FetchPerformerOrVenueListing,
   saveAddListing,
   saveBulkListing,
+  saveListing,
 } from "@/utils/apiHandler/request";
 import { useRouter } from "next/router";
 import SearchedList from "../tradePage/components/searchedList";
@@ -427,7 +428,7 @@ const BulkInventory = (props) => {
       if (selectedTicketsData.length > 1) {
         await saveBulkListing("", formData);
       } else {
-        await saveAddListing("", formData);
+        await saveListing("", formData);
       }
 
       router.push("/my-listings?success=true");
@@ -573,7 +574,10 @@ const BulkInventory = (props) => {
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, add_qty_addlist: value?.target?.value })),
+        setFiltersApplied((prev) => ({
+          ...prev,
+          add_qty_addlist: value?.target?.value,
+        })),
     },
     {
       type: "select",
@@ -1075,6 +1079,14 @@ const BulkInventory = (props) => {
         `data[${index}][additional_dynamic_content]`,
         publishingData.additional_dynamic_content || ""
       );
+      if (publishingData?.additional_info?.templateFile) {
+        // Debug: Check what you're actually trying to append
+        formData.append(
+          `data[${index}][additional_file]`,
+          publishingData?.additional_info?.templateFile,
+          "additional_file"
+        );
+      }
       formData.append(
         `data[${index}][match_id]`,
         publishingData.match_id || ""
@@ -1245,7 +1257,10 @@ const BulkInventory = (props) => {
       errors: errors,
     };
   };
-console.log(validateMandatoryFields(),'validateMandatoryFieldsvalidateMandatoryFieldsvalidateMandatoryFields')
+  console.log(
+    validateMandatoryFields(),
+    "validateMandatoryFieldsvalidateMandatoryFieldsvalidateMandatoryFields"
+  );
   // Add listings to all matches at once
   const handleAddListings = () => {
     const validation = validateMandatoryFields();
