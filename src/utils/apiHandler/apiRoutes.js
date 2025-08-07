@@ -46,6 +46,8 @@ export const API_ROUTES = {
   VERIFY_EMAIL: "/auth/verify-email",
   RESEND_VERIFICATION_REQUEST: "/auth/resend-verify-email",
   SALES_PAGE: `/sales/overview`,
+  SALES_FILTER: `/sales/filters`,
+  SALES_HISTORY: `/sales/history`,
   SALES_OVERVIEW: `/dashboard/sales-overview`,
   AWAITING_DELIVERY: `/dashboard/awaiting-delivery`,
   DASHBOARD_NOTIFICATIONS: `/dashboard/notifications`,

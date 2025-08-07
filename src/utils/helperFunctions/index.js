@@ -308,3 +308,28 @@ export function dayOfWeek(input) {
 
   return date.toLocaleDateString("en-US", options);
 }
+
+
+export function separateDateTime(dateTimeString) {
+  // Parse the input string into a Date object
+  const date = new Date(dateTimeString);
+  
+  // Format the date part as "Nov 06 2023"
+  const formattedDate = date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric'
+  });
+  
+  // Format the time part as "20:00"
+  const formattedTime = date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+  });
+  
+  return {
+      date: formattedDate,
+      time: formattedTime
+  };
+}

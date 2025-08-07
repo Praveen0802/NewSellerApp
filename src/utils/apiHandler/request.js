@@ -588,11 +588,12 @@ export const getUserRoleAccess = async (token) => {
   }
 };
 
-export const getSalesCount = async (token) => {
+export const getSalesCount = async (token, params) => {
   try {
     const response = await makeRequest({
       url: API_ROUTES.GET_SALES_COUNT,
       method: "GET",
+      ...(params && { params: params }),
       ...(token && { token: token }),
     });
     return response?.data?.success ? response?.data?.data : {};
@@ -1425,10 +1426,43 @@ export const fetchSalesPageData = async (token, params) => {
       ...(token && { token: token }),
       ...(params && { params: params }),
     });
-    return response?.data?.success ? response?.data?.data : {};
+    console.log(response?.data, "response");
+    return response?.data || {};
   } catch (error) {
     console.log("ERROR in fetchSalesPageData", error);
-    throw error;
+    // throw error;
+  }
+};
+
+export const fetchSalesFilter = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.SALES_FILTER,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    console.log(response?.data, "response");
+    return response?.data || {};
+  } catch (error) {
+    console.log("ERROR in fetchSalesFilter", error);
+    // throw error;
+  }
+};
+
+export const fetchSalesHistory = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.SALES_HISTORY,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    console.log(response?.data, "response");
+    return response?.data || {};
+  } catch (error) {
+    console.log("ERROR in fetchSalesHistory", error);
+    // throw error;
   }
 };
 
@@ -2245,7 +2279,8 @@ export const fetchCurrency = async (token, params) => {
       ...(token && { token: token }),
       ...(params && { params: params }),
     });
-    return response?.data?.success ? response?.data?.data : {};
+    console.log(response?.data, "responseresponse");
+    return response?.data ? response?.data : {};
   } catch (error) {
     console.log("ERROR in fetchSalesPageData", error);
     throw error;
@@ -2298,7 +2333,6 @@ export const getAuthAddress = async (token, params) => {
 };
 
 export const saveSellerContract = async (data) => {
-
   try {
     const response = await axios({
       url: "/api/save-seller-contract",
@@ -2343,7 +2377,6 @@ export const getSellerBusinessDocuments = async (token, params) => {
 };
 
 export const saveSellerBusinessDocuments = async (data) => {
- 
   try {
     const response = await axios({
       url: "/api/save-seller-business",

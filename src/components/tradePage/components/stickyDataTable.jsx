@@ -879,7 +879,7 @@ const StickyDataTable = ({
                         {rowStickyColumns.map((column, colIndex) => (
                           <td
                             key={`sticky-${rowIndex}-${colIndex}`}
-                            className={`text-sm align-middle text-center ${
+                            className={`text-sm align-middle text-center border-r-[1px] border-[#E0E1EA] ${
                               column?.className || ""
                             }`}
                           >

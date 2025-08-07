@@ -71,7 +71,6 @@ const HeaderV2 = ({
       />
     </svg>
   );
-
   return (
     <div className="flex items-center justify-between w-full px-6 py-2 bg-white border-b border-gray-200">
       {/* Left side controls - Filter, Columns, Bulk Actions */}

@@ -9,6 +9,7 @@ import {
   fetchBulkListing,
   fetchBulkListingFilters,
   fetchCountrieList,
+  fetchCurrency,
   fetchDepositHistoryMonthly,
   FetchHotEvents,
   fetchProfileDetails,
@@ -23,6 +24,7 @@ import {
   getAuthAddress,
   getAuthPhotoId,
   getKYCStatus,
+  getCurrencyDetails,
   getLinkedCards,
   getMyListingFilters,
   getMyListingHistory,
@@ -47,6 +49,8 @@ import {
   reportHistory,
   reportsOverview,
   topSellingEvents,
+  fetchSalesHistory,
+  fetchSalesFilter,
 } from "../apiHandler/request";
 
 export const fetchSettingsPageDetails = async (profile, token, ctx) => {
@@ -158,16 +162,33 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
 };
 
 export const fetchSalesPageDetails = async (profile, token, ctx) => {
-  const [salesPage, tournamentList, salesView] = await Promise.allSettled([
-    fetchSalesPageData(token, { order_status: profile }),
+  const currecncy = "GBP";
+  const [
+    salesPage,
+    salesHistory,
+    tournamentList,
+    salesView,
+    currencyValues,
+    salesFilter,
+  ] = await Promise.allSettled([
+    fetchSalesPageData(token, { order_status: profile, currency: currecncy }),
+    fetchSalesHistory(token, { order_status: profile, currency: currecncy }),
     fetchTournamentsList(token),
-    getSalesCount(token),
+    getSalesCount(token, { currency: currecncy }),
+    getCurrencyDetails(token),
+    fetchSalesFilter(token),
   ]);
   return {
     salesPage: salesPage?.status === "fulfilled" ? salesPage.value : null,
+    salesHistory:
+      salesHistory?.status === "fulfilled" ? salesHistory.value : null,
     tournamentList:
       tournamentList?.status === "fulfilled" ? tournamentList.value : null,
     salesCount: salesView?.status === "fulfilled" ? salesView?.value : null,
+    currencyValues:
+      currencyValues?.status === "fulfilled" ? currencyValues?.value : null,
+    salesFilter:
+      salesFilter?.status === "fulfilled" ? salesFilter?.value : null,
   };
 };
 

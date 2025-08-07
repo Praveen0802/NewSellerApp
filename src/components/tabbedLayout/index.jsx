@@ -1,6 +1,6 @@
-// Complete TabbedLayout component with the updated logic
+// Updated TabbedLayout component with scroll handling for pagination
 import { useRouter } from "next/router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import AvailableList from "../tradePage/components/availableList";
 import SelectListItem from "../tradePage/components/selectListItem";
 import ActiveFiltersBox from "./ActiveFilterBoxs";
@@ -51,23 +51,26 @@ const TabbedLayout = ({
   onCheckboxToggle,
   onColumnToggle,
   visibleColumns,
+  onCurrencyChange,
+  selectedCurrency = "GBP",
+  headerV2ClassName,
+  tabCurrencies = {},
   className = "bg-[#ECEDF2] w-full h-full relative",
   containerClassName = "flex flex-col gap-[24px]",
   showFilters = true,
   currentFilterValues = {},
   onClearAllFilters,
   showSelectedFilterPills = false,
+  loading = false,
   hideVisibleColumns = false,
+  showTabFullWidth = false,
+  customTableComponent = () => {},
   customComponent = () => {},
-  // New prop to receive transition direction from parent (only for specific components)
   transitionDirection: parentTransitionDirection = null,
-  // New prop to disable transitions entirely
   disableTransitions = false,
-  // NEW: Header V2 flag and related props
   useHeaderV2 = false,
   onAddInventory = () => {},
   addInventoryText = "Add Inventory",
-  // New props for enhanced functionality
   isDraggableColumns = false,
   isDraggableFilters = false,
   showColumnSearch = false,
@@ -75,39 +78,75 @@ const TabbedLayout = ({
   onColumnsReorder,
   onFiltersReorder,
   excludedKeys = [],
+  // NEW PROPS FOR SCROLL HANDLING
+  onScrollEnd,
+  loadingMore = false,
+  hasNextPage = true,
+  scrollThreshold = 100, // Distance from bottom to trigger load more
 }) => {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState(initialTab || tabs[0]?.key);
   const [checkboxValues, setCheckboxValues] = useState({});
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
-  // NEW: State for controlling list items visibility
   const [showListItems, setShowListItems] = useState(true);
-  // New states for transition handling
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionDirection, setTransitionDirection] = useState("next");
   const [previousListItems, setPreviousListItems] = useState([]);
   const [currentListItems, setCurrentListItems] = useState([]);
-  // State for managing ordered items
   const [orderedColumns, setOrderedColumns] = useState([]);
   const [orderedFilters, setOrderedFilters] = useState({});
+
+  // Ref for the scrollable container
+  const scrollContainerRef = useRef(null);
 
   // Initialize activeFilters with all filters checked by default
   const [activeFilters, setActiveFilters] = useState(() => {
     const initialActiveFilters = new Set();
-
-    // Get all filter names for the initial tab and add them to the set
     if (filterConfig && filterConfig[initialTab || tabs[0]?.key]) {
       filterConfig[initialTab || tabs[0]?.key].forEach((filter) => {
         initialActiveFilters.add(filter.name);
       });
     }
-
     return initialActiveFilters;
   });
 
   const filterDropdownRef = useRef(null);
   const columnDropdownRef = useRef(null);
+
+  // Throttled scroll handler to prevent excessive API calls
+  const handleScroll = useCallback(
+    (event) => {
+      if (!onScrollEnd || loadingMore || !hasNextPage) return;
+
+      const { scrollTop, scrollHeight, clientHeight } = event.target;
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+
+      if (distanceFromBottom < scrollThreshold) {
+        onScrollEnd();
+      }
+    },
+    [onScrollEnd, loadingMore, hasNextPage, scrollThreshold]
+  );
+
+  // Debounced scroll handler
+  const debouncedHandleScroll = useCallback(
+    debounce(handleScroll, 150),
+    [handleScroll]
+  );
+
+  // Helper function for debouncing
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
 
   // NEW: Handler for toggling list items visibility
   const handleToggleListItems = () => {
@@ -128,12 +167,10 @@ const TabbedLayout = ({
       })
     );
 
-    // If we have ordered columns, use that order, otherwise use original order
     if (orderedColumns.length > 0) {
       const orderedItems = [];
       const usedKeys = new Set();
 
-      // Add items in the ordered sequence
       orderedColumns.forEach((orderedKey) => {
         const item = baseColumns.find((col) => col.key === orderedKey);
         if (item) {
@@ -142,7 +179,6 @@ const TabbedLayout = ({
         }
       });
 
-      // Add any remaining items that weren't in the ordered list
       baseColumns.forEach((item) => {
         if (!usedKeys.has(item.key)) {
           orderedItems.push(item);
@@ -166,13 +202,11 @@ const TabbedLayout = ({
       isActive: activeFilters.has(filter.name),
     }));
 
-    // If we have ordered filters for this tab, use that order
     const tabOrderedFilters = orderedFilters[selectedTab];
     if (tabOrderedFilters && tabOrderedFilters.length > 0) {
       const orderedItems = [];
       const usedKeys = new Set();
 
-      // Add items in the ordered sequence
       tabOrderedFilters.forEach((orderedKey) => {
         const item = baseFilters.find((filter) => filter.key === orderedKey);
         if (item) {
@@ -181,7 +215,6 @@ const TabbedLayout = ({
         }
       });
 
-      // Add any remaining items that weren't in the ordered list
       baseFilters.forEach((item) => {
         if (!usedKeys.has(item.key)) {
           orderedItems.push(item);
@@ -194,22 +227,18 @@ const TabbedLayout = ({
     return baseFilters;
   };
 
-  // UPDATED: Enhanced getVisibleFilters function that respects custom order
   const getVisibleFilters = () => {
     if (!filterConfig || !filterConfig[selectedTab]) return [];
 
-    // Get all filters for the current tab that are active
     const allFilters = filterConfig[selectedTab]?.filter((filter) =>
       activeFilters.has(filter.name)
     );
 
-    // If we have a custom order for this tab, apply it
     const tabOrderedFilters = orderedFilters[selectedTab];
     if (tabOrderedFilters && tabOrderedFilters.length > 0) {
       const orderedItems = [];
       const usedKeys = new Set();
 
-      // Add filters in the custom order (only if they're active)
       tabOrderedFilters.forEach((orderedKey) => {
         const filter = allFilters.find((f) => f.name === orderedKey);
         if (filter) {
@@ -218,7 +247,6 @@ const TabbedLayout = ({
         }
       });
 
-      // Add any new active filters that weren't in the ordered list
       allFilters.forEach((filter) => {
         if (!usedKeys.has(filter.name)) {
           orderedItems.push(filter);
@@ -236,7 +264,6 @@ const TabbedLayout = ({
     const newOrder = reorderedItems.map((item) => item.key);
     setOrderedColumns(newOrder);
 
-    // Call parent callback if provided
     if (onColumnsReorder) {
       onColumnsReorder(newOrder, reorderedItems);
     }
@@ -245,13 +272,11 @@ const TabbedLayout = ({
   const handleFiltersReorder = (reorderedItems) => {
     const newOrder = reorderedItems.map((item) => item.key);
 
-    // Store the new order for the current tab
     setOrderedFilters((prev) => ({
       ...prev,
       [selectedTab]: newOrder,
     }));
 
-    // Call parent callback if provided
     if (onFiltersReorder) {
       onFiltersReorder(selectedTab, newOrder, reorderedItems);
     }
@@ -270,7 +295,7 @@ const TabbedLayout = ({
     setCheckboxValues(initialCheckboxes);
   }, [JSON.stringify(listItemsConfig)]);
 
-  // Update activeFilters when tab changes to include all filters for the new tab
+  // Update activeFilters when tab changes
   useEffect(() => {
     if (filterConfig && filterConfig[selectedTab]) {
       const newActiveFilters = new Set();
@@ -313,7 +338,7 @@ const TabbedLayout = ({
     }));
   };
 
-  // Handle transitions for list items when they change - only if transitions are enabled
+  // Handle transitions for list items when they change
   useEffect(() => {
     const newItems = getCurrentListItems();
     const currentItemsString = JSON.stringify(
@@ -323,31 +348,22 @@ const TabbedLayout = ({
       newItems.map((item) => ({ name: item.name, value: item.value }))
     );
 
-    // Only trigger transition if:
-    // 1. Transitions are not disabled
-    // 2. The actual content has changed
-    // 3. We have existing items
-    // 4. We have transition direction from parent
     if (
       !disableTransitions &&
       currentItemsString !== newItemsString &&
       currentListItems.length > 0 &&
       parentTransitionDirection
     ) {
-      setPreviousListItems([...currentListItems]); // Create a copy
+      setPreviousListItems([...currentListItems]);
       setIsTransitioning(true);
       setTransitionDirection(parentTransitionDirection);
-
-      // Update items immediately but keep transition state
       setCurrentListItems(newItems);
 
-      // End transition after animation completes
       setTimeout(() => {
         setIsTransitioning(false);
         setPreviousListItems([]);
-      }, 300); // Match CSS transition duration
+      }, 300);
     } else {
-      // If transitions are disabled or no transition direction provided, just update without animation
       setCurrentListItems(newItems);
     }
   }, [
@@ -395,7 +411,6 @@ const TabbedLayout = ({
     onFilterChange?.(filterKey, value, allFilters, currentTab);
   };
 
-  // Handle filter toggle from dropdown
   const handleFilterToggle = (filterKey) => {
     const newActiveFilters = new Set(activeFilters);
 
@@ -408,17 +423,14 @@ const TabbedLayout = ({
     setActiveFilters(newActiveFilters);
   };
 
-  // Handle column toggle
   const handleColumnToggle = (columnKey) => {
     onColumnToggle?.(columnKey);
   };
 
-  // Handle clearing all filters
   const handleClearAllFilters = () => {
     if (onClearAllFilters) {
       onClearAllFilters?.();
     } else if (onFilterChange) {
-      // Fallback: clear each filter individually
       const clearedFilters = {};
       Object.keys(currentFilterValues).forEach((key) => {
         if (typeof currentFilterValues[key] === "object") {
@@ -428,7 +440,6 @@ const TabbedLayout = ({
         }
       });
 
-      // Call onFilterChange with cleared filters
       Object.keys(currentFilterValues).forEach((key) => {
         onFilterChange(key, clearedFilters[key], clearedFilters, selectedTab);
       });
@@ -439,34 +450,34 @@ const TabbedLayout = ({
     <div className={className}>
       {/* Header V2 or Original Top Right Controls */}
       {useHeaderV2 ? (
-        <HeaderV2
-          showFilters={showFilters}
-          showFilterDropdown={showFilterDropdown}
-          setShowFilterDropdown={setShowFilterDropdown}
-          setShowColumnDropdown={setShowColumnDropdown}
-          showColumnDropdown={showColumnDropdown}
-          filterDropdownRef={filterDropdownRef}
-          columnDropdownRef={columnDropdownRef}
-          getAvailableFilters={getAvailableFilters}
-          handleFilterToggle={handleFilterToggle}
-          getAvailableColumns={getAvailableColumns}
-          handleColumnToggle={handleColumnToggle}
-          handleColumnsReorder={handleColumnsReorder}
-          handleFiltersReorder={handleFiltersReorder}
-          hideVisibleColumns={hideVisibleColumns}
-          onAddInventory={onAddInventory}
-          addInventoryText={addInventoryText}
-          showListItems={showListItems}
-          onToggleListItems={handleToggleListItems}
-          isDraggableColumns={isDraggableColumns}
-          isDraggableFilters={isDraggableFilters}
-          showColumnSearch={showColumnSearch}
-          showFilterSearch={showFilterSearch}
-        />
+        <div className={`${headerV2ClassName}`}>
+          <HeaderV2
+            showFilters={showFilters}
+            showFilterDropdown={showFilterDropdown}
+            setShowFilterDropdown={setShowFilterDropdown}
+            setShowColumnDropdown={setShowColumnDropdown}
+            showColumnDropdown={showColumnDropdown}
+            filterDropdownRef={filterDropdownRef}
+            columnDropdownRef={columnDropdownRef}
+            getAvailableFilters={getAvailableFilters}
+            handleFilterToggle={handleFilterToggle}
+            getAvailableColumns={getAvailableColumns}
+            handleColumnToggle={handleColumnToggle}
+            handleColumnsReorder={handleColumnsReorder}
+            handleFiltersReorder={handleFiltersReorder}
+            hideVisibleColumns={hideVisibleColumns}
+            onAddInventory={onAddInventory}
+            addInventoryText={addInventoryText}
+            showListItems={showListItems}
+            onToggleListItems={handleToggleListItems}
+            isDraggableColumns={isDraggableColumns}
+            isDraggableFilters={isDraggableFilters}
+            showColumnSearch={showColumnSearch}
+            showFilterSearch={showFilterSearch}
+          />
+        </div>
       ) : (
-        /* Original Top Right Controls - Also updated to use enhanced DropdownList */
         <div className="absolute top-6 right-6 flex gap-2 z-50">
-          {/* Filter Control */}
           {showFilters && (
             <div className="relative" ref={filterDropdownRef}>
               <button
@@ -494,7 +505,6 @@ const TabbedLayout = ({
             </div>
           )}
 
-          {/* Column Control */}
           {!hideVisibleColumns && (
             <div className="relative" ref={columnDropdownRef}>
               <button
@@ -527,9 +537,9 @@ const TabbedLayout = ({
       {/* Desktop tabs */}
       {tabs?.length > 0 && (
         <div
-          className={`hidden md:flex gap-[4px] w-[70%] px-[24px] ${
-            useHeaderV2 ? "pt-0" : "pt-[24px]"
-          }`}
+          className={`hidden md:flex gap-[4px] ${
+            showTabFullWidth ? "w-full" : "w-[70%]"
+          } px-[24px] ${useHeaderV2 ? "pt-0" : "pt-[24px]"}`}
         >
           {tabs?.map((tab, index) => {
             const selectedIndex = tab?.key === selectedTab;
@@ -539,30 +549,40 @@ const TabbedLayout = ({
                 item={tab}
                 selectedIndex={selectedIndex}
                 handleSelectItemClick={handleTabChange}
+                onCurrencyChange={onCurrencyChange}
+                selectedCurrency={tabCurrencies?.[tab.key] || selectedCurrency}
               />
             );
           })}
         </div>
       )}
 
-      <div className={containerClassName}>
-        <div className="bg-white">
-          <p className="px-6 pt-4 text-[#323A70] text-[18px] font-semibold"> Overview</p>
-          {/* List Items Section with Transitions - NOW WITH SHOW/HIDE ANIMATION */}
-          <div
-            className={`transition-all duration-300 ease-in-out overflow-hidden border-b-[1px] border-[#E0E1EA] ${
-              showListItems
-                ? "max-h-[500px] opacity-100 px-6 pb-3 pt-3"
-                : "max-h-0 opacity-0 px-6 py-0"
-            }`}
-          >
-            <div className="relative">
-              {/* Previous Items (sliding out) - only show if transitions are enabled and transitioning */}
-              {!disableTransitions &&
-                isTransitioning &&
-                previousListItems.length > 0 && (
-                  <div
-                    className={`
+      {/* UPDATED: Scrollable container with scroll handler */}
+      <div 
+        ref={scrollContainerRef}
+        className={`${customTableComponent && "overflow-auto max-h-[calc(100vh-250px)]"}`}
+        onScroll={debouncedHandleScroll}
+      >
+        <div className={containerClassName}>
+          <div className="bg-white">
+            <p className="px-6 pt-4 text-[#323A70] text-[18px] font-semibold">
+              Overview
+            </p>
+            
+            {/* List Items Section with Transitions */}
+            <div
+              className={`transition-all duration-300 ease-in-out overflow-hidden border-b-[1px] border-[#E0E1EA] ${
+                showListItems
+                  ? "max-h-[500px] opacity-100 px-6 pb-3 pt-3"
+                  : "max-h-0 opacity-0 px-6 py-0"
+              }`}
+            >
+              <div className="relative">
+                {!disableTransitions &&
+                  isTransitioning &&
+                  previousListItems.length > 0 && (
+                    <div
+                      className={`
                       ${
                         previousListItems?.length == 4
                           ? "grid grid-cols-4 gap-4"
@@ -574,122 +594,144 @@ const TabbedLayout = ({
                           : "transform translate-x-full"
                       }
                     `}
-                  >
-                    {previousListItems?.map((item, index) => (
-                      <div
-                        key={`previous-${item.key || index}-${Date.now()}`}
-                        className="min-w-[200px]"
-                      >
-                        <AvailableList
-                          list={{
-                            name: item?.name,
-                            value: item?.value,
-                            smallTooptip: item?.smallTooptip,
-                            showCheckbox: item?.showCheckbox,
-                            isChecked: item?.isChecked,
-                            onCheckChange: undefined, // Disable interactions during transition
-                            onClick: undefined,
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
+                    >
+                      {previousListItems?.map((item, index) => (
+                        <div
+                          key={`previous-${item.key || index}-${Date.now()}`}
+                          className="min-w-[200px]"
+                        >
+                          <AvailableList
+                            list={{
+                              name: item?.name,
+                              value: item?.value,
+                              smallTooptip: item?.smallTooptip,
+                              showCheckbox: item?.showCheckbox,
+                              isChecked: item?.isChecked,
+                              onCheckChange: undefined,
+                              onClick: undefined,
+                            }}
+                            loading={loading}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-              {/* Current Items */}
-              <div
-                className={`
+                <div
+                  className={`
                     ${
                       currentListItems?.length == 4
                         ? "grid grid-cols-4 gap-4"
                         : "flex gap-4 flex-nowrap overflow-x-scroll hideScrollbar"
                     } min-w-min md:min-w-0 ${
-                  !disableTransitions
-                    ? "transition-transform duration-300 ease-in-out"
-                    : ""
-                }
+                    !disableTransitions
+                      ? "transition-transform duration-300 ease-in-out"
+                      : ""
+                  }
                     ${
                       !disableTransitions && isTransitioning
                         ? "transform translate-x-0"
                         : "transform translate-x-0"
                     }
                   `}
-                style={{
-                  transform:
-                    !disableTransitions && isTransitioning
-                      ? "translateX(0)"
-                      : "translateX(0)",
-                  animation:
-                    !disableTransitions && isTransitioning
-                      ? transitionDirection === "next"
-                        ? "slideInFromRight 0.3s ease-in-out"
-                        : "slideInFromLeft 0.3s ease-in-out"
-                      : "none",
-                }}
-              >
-                {currentListItems?.map((item, index) => (
-                  <div
-                    key={`current-${item.key || index}-${Date.now()}`}
-                    className="flex-grow flex-shrink flex-basis-[25%] min-w-[12rem]"
-                  >
-                    <AvailableList
-                      list={{
-                        name: item?.name,
-                        value: item?.value,
-                        showCheckbox: item?.showCheckbox,
-                        smallTooptip: item?.smallTooptip,
-                        isChecked: item?.isChecked,
-                        onCheckChange:
-                          item?.showCheckbox &&
-                          item?.key &&
-                          (!isTransitioning || disableTransitions)
-                            ? () =>
-                                handleCheckboxToggle(item.key, item.isChecked)
-                            : undefined,
-                        onClick:
-                          item?.showCheckbox &&
-                          item?.key &&
-                          (!isTransitioning || disableTransitions)
-                            ? () =>
-                                handleCheckboxToggle(item.key, item.isChecked)
-                            : undefined,
-                      }}
-                    />
-                  </div>
-                ))}
+                  style={{
+                    transform:
+                      !disableTransitions && isTransitioning
+                        ? "translateX(0)"
+                        : "translateX(0)",
+                    animation:
+                      !disableTransitions && isTransitioning
+                        ? transitionDirection === "next"
+                          ? "slideInFromRight 0.3s ease-in-out"
+                          : "slideInFromLeft 0.3s ease-in-out"
+                        : "none",
+                  }}
+                >
+                  {currentListItems?.map((item, index) => (
+                    <div
+                      key={`current-${item.key || index}-${Date.now()}`}
+                      className="flex-grow flex-shrink flex-basis-[25%] min-w-[12rem]"
+                    >
+                      <AvailableList
+                        list={{
+                          name: item?.name,
+                          value: item?.value,
+                          showCheckbox: item?.showCheckbox,
+                          smallTooptip: item?.smallTooptip,
+                          isChecked: item?.isChecked,
+                          onCheckChange:
+                            item?.showCheckbox &&
+                            item?.key &&
+                            (!isTransitioning || disableTransitions)
+                              ? () =>
+                                  handleCheckboxToggle(item.key, item.isChecked)
+                              : undefined,
+                          onClick:
+                            item?.showCheckbox &&
+                            item?.key &&
+                            (!isTransitioning || disableTransitions)
+                              ? () =>
+                                  handleCheckboxToggle(item.key, item.isChecked)
+                              : undefined,
+                        }}
+                        loading={loading}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Filter Section - Only show filters that are active AND IN CUSTOM ORDER */}
-          {showFilters && getVisibleFilters().length > 0 && (
-            <div className="px-6 py-5">
-              {customComponent && customComponent()}
-              <FilterSection
-                filterConfig={getVisibleFilters()} // This now returns filters in custom order
-                currentTab={selectedTab}
-                onFilterChange={handleFilterChange}
-                containerClassName="md:flex flex-wrap gap-3 items-center"
-                initialValues={currentFilterValues}
-              />
-            </div>
-          )}
-          {showSelectedFilterPills && (
-            <div className="px-[20px]  border-t-1 border-gray-200 ">
-              <ActiveFiltersBox
-                activeFilters={currentFilterValues}
-                onFilterChange={onFilterChange}
-                onClearAllFilters={handleClearAllFilters}
-                currentTab={selectedTab}
-                filterConfig={filterConfig}
-                excludedKeys={excludedKeys}
-              />
-            </div>
-          )}
+            {/* Filter Section */}
+            {showFilters && getVisibleFilters().length > 0 && (
+              <div className="px-6 py-5">
+                {customComponent && customComponent()}
+                <FilterSection
+                  filterConfig={getVisibleFilters()}
+                  currentTab={selectedTab}
+                  onFilterChange={handleFilterChange}
+                  containerClassName="md:flex flex-wrap gap-3 items-center"
+                  initialValues={currentFilterValues}
+                />
+              </div>
+            )}
+            
+            {showSelectedFilterPills && (
+              <div className="px-[20px] border-t-1 border-gray-200">
+                <ActiveFiltersBox
+                  activeFilters={currentFilterValues}
+                  onFilterChange={onFilterChange}
+                  onClearAllFilters={handleClearAllFilters}
+                  currentTab={selectedTab}
+                  filterConfig={filterConfig}
+                  excludedKeys={excludedKeys}
+                />
+              </div>
+            )}
+          </div>
         </div>
+        
+        {customTableComponent && customTableComponent()}
+        
+        {/* Loading indicator for pagination */}
+        {loadingMore && (
+          <div className="flex justify-center py-4">
+            <div className="flex items-center gap-2 text-gray-600">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <span className="text-sm">Loading more...</span>
+            </div>
+          </div>
+        )}
+
+        {/* End of data indicator */}
+        {!hasNextPage && !loading && (
+          <div className="flex justify-center py-4 text-gray-500 text-sm">
+            No more data to load
+          </div>
+        )}
       </div>
 
-      {/* CSS Animations - only include if transitions are not disabled */}
+      {/* CSS Animations */}
       {!disableTransitions && (
         <style jsx>{`
           @keyframes slideInFromRight {

@@ -7,6 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import TemplateContentRenderer from "./templateContent";
+import { Eye, FileText, ReceiptIcon } from "lucide-react";
 
 const SubUploadParent = React.forwardRef(
   (
@@ -25,6 +26,7 @@ const SubUploadParent = React.forwardRef(
       onAdditionalInfoChange,
       onTemplateSelect,
       existingUploadedTickets,
+      additionalTemplateFile,
     },
     ref
   ) => {
@@ -616,44 +618,65 @@ const SubUploadParent = React.forwardRef(
                       <label className="block text-xs font-medium text-[#323A70] mb-2">
                         Upload Template File
                       </label>
-                      <div className="relative">
-                        <input
-                          type="file"
-                          accept=".pdf,.doc,.docx,.txt,.html"
-                          onChange={handleFileUpload}
-                          className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent file:mr-3 file:py-1 file:px-3 file:border-0 file:text-xs file:bg-[#F9F9FB] file:text-[#323A70] file:rounded-md hover:file:bg-[#E0E1EA]"
-                        />
-                        {additionalInfo.templateFile && (
-                          <div className="mt-2 p-2 bg-[#F9F9FB] border border-[#E0E1EA] rounded-md">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-[#323A70] truncate">
-                                {additionalInfo.templateFile.name}
-                              </span>
-                              <button
-                                onClick={() =>
-                                  handleAdditionalInfoChange(
-                                    "templateFile",
-                                    null
-                                  )
-                                }
-                                className="text-xs text-red-500 hover:text-red-700 ml-2"
-                              >
-                                Remove
-                              </button>
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              Size:{" "}
-                              {Math.round(
-                                additionalInfo.templateFile.size / 1024
-                              )}{" "}
-                              KB
-                            </div>
+                      {additionalTemplateFile ? (
+                        <div className="p-2 bg-[#F9F9FB] border flex gap-1 justify-between items-center border-[#E0E1EA] rounded-md">
+                          <div className="flex gap-2 items-center">
+                            <FileText className="w-4 h-4 text-[#323A70]" />
+                            <p className="text-[13px] font-normal">
+                              Additional Template
+                            </p>
                           </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Accepted formats: PDF, DOC, DOCX, TXT, HTML
-                      </p>
+
+                          <Eye
+                            className="w-4 h-4 cursor-pointer text-[#323A70] mt-2"
+                            onClick={() => {
+                              window.open(additionalTemplateFile, "_blank");
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          {" "}
+                          <div className="relative">
+                            <input
+                              type="file"
+                              accept=".pdf,.doc,.docx,.txt,.html"
+                              onChange={handleFileUpload}
+                              className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent file:mr-3 file:py-1 file:px-3 file:border-0 file:text-xs file:bg-[#F9F9FB] file:text-[#323A70] file:rounded-md hover:file:bg-[#E0E1EA]"
+                            />
+                            {additionalInfo.templateFile && (
+                              <div className="mt-2 p-2 bg-[#F9F9FB] border border-[#E0E1EA] rounded-md">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-[#323A70] truncate">
+                                    {additionalInfo.templateFile.name}
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      handleAdditionalInfoChange(
+                                        "templateFile",
+                                        null
+                                      )
+                                    }
+                                    className="text-xs text-red-500 hover:text-red-700 ml-2"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  Size:{" "}
+                                  {Math.round(
+                                    additionalInfo.templateFile.size / 1024
+                                  )}{" "}
+                                  KB
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Accepted formats: PDF, DOC, DOCX, TXT, HTML
+                          </p>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

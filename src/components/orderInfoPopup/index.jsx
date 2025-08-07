@@ -23,6 +23,8 @@ const OrderInfo = ({
   type = "",
   showShimmer = false,
 } = {}) => {
+
+
   const [expandedVersion, setExpandedVersion] = useState(false);
 
   // Handle new array format data
@@ -243,7 +245,7 @@ const OrderInfo = ({
 
   // Format order object for OrderValues component
   const orderObject = {
-    order_id: order_details?.booking_no,
+    order_id: order_details?.booking_no ||order_details?.order_id,
     order_date: order_details?.order_date
       ? formatTimestamp(order_details?.order_date)
       : "-",
@@ -338,7 +340,7 @@ const OrderInfo = ({
           <div className="flex items-center border-b-[1px] border-[#E0E1EA] justify-between py-[13px] px-[24px]">
             <p className="text-[18px] text-[#323A70] ">
               Order ID:
-              {order_id_label || order_details?.booking_no}
+              {order_id_label || order_details?.booking_no || order_details?.order_id}
             </p>
             <div className="flex items-center gap-2 cursor-pointer">
               <IconStore.close

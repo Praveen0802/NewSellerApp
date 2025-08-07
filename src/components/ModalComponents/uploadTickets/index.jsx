@@ -46,6 +46,7 @@ const UploadTickets = ({
   rowIndex,
   handleConfirmClick,
   myListingPage = false,
+  mySalesPage = true,
 }) => {
   const proofUploadView = rowData?.handleProofUpload || false;
 
@@ -90,6 +91,9 @@ const UploadTickets = ({
     courier_company: "",
     tracking_details: "",
   });
+
+  const additionalTemplateFile =
+    rowData?.rawTicketData?.additional_template_file;
 
   const fileInputRef = useRef(null);
   const paperTicketCourierRef = useRef();
@@ -378,15 +382,21 @@ const UploadTickets = ({
       <h3 className="font-medium">{matchDetails?.match_name}</h3>
       <div className="flex items-center gap-2 justify-center">
         <Calendar className="w-4 h-4" />
-        <span className="text-xs">{matchDetails?.match_date_format}</span>
+        <span className="text-xs">
+          {matchDetails?.match_date_format || rowData?.matchDate}
+        </span>
       </div>
       <div className="flex items-center gap-2 justify-center">
         <Clock className="w-4 h-4" />
-        <span className="text-xs">{matchDetails?.match_time}</span>
+        <span className="text-xs">
+          {matchDetails?.match_time || rowData?.matchTime}
+        </span>
       </div>
       <div className="flex items-center gap-2 justify-center">
         <MapPin className="w-4 h-4" />
-        <span className="text-xs">{matchDetails?.stadium_name}</span>
+        <span className="text-xs">
+          {matchDetails?.stadium_name || rowData?.venue}
+        </span>
       </div>
       <button className="ml-2">
         <ChevronUp className="w-4 h-4" />
@@ -647,7 +657,7 @@ const UploadTickets = ({
     try {
       const formData = constructTicketFormData(updatedObject);
       const response = await myListingUploadTickets("", formData);
-     
+
       if (updatedObject.additional_info) {
         try {
           const newFormData = constructNewFormData(updatedObject);
@@ -677,6 +687,10 @@ const UploadTickets = ({
   };
 
   const handleConfirmCtaClick = useCallback(async () => {
+    if (mySalesPage) {
+      onClose();
+      return;
+    }
     // Get additional info data from SubUploadParent ref instead of additionalInfoRef
     const additionalData =
       subUploadParentRef.current?.getCurrentAdditionalInfoData() || {
@@ -1174,6 +1188,7 @@ const UploadTickets = ({
             FileUploadSection={FileUploadSection} // Add this
             TicketAssignmentSection={TicketAssignmentSection} // Add this
             existingUploadedTickets={existingUploadedTickets}
+            additionalTemplateFile={additionalTemplateFile}
           />
 
           {/* Footer */}
