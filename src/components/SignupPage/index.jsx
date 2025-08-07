@@ -1473,7 +1473,7 @@ const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
                   }} //setCurrentStep(4)
                   className="flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg"
                 >
-                  <span>Continue to KYC</span>
+                  <span>Go to Login</span>
                   <ChevronLeft className="w-4 h-4 rotate-180" />
                 </button>
               )}

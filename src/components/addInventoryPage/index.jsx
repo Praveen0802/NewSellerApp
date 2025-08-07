@@ -1142,7 +1142,7 @@ const AddInventoryPage = (props) => {
         await saveListing("", formData);
       }
 
-      // router.push("/my-listings?success=true");
+      router.push("/my-listings?success=true");
       toast.success(`${selectedRows.length} listing(s) published successfully`);
       setLoader(false);
     } catch (error) {
