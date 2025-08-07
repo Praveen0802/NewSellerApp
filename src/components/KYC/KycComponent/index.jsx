@@ -232,7 +232,7 @@ const KycComponent = ({
                     ? "bg-yellow-100 text-yellow-600"
                     : status === "error"
                     ? "bg-red-100 text-red-600"
-                    : "bg-blue-100 text-blue-600"
+                    : "bg-gray-100 text-gray-600"
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -444,15 +444,16 @@ const KycComponent = ({
   const progressPercentage = (approvedDocuments / totalDocuments) * 100;
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6">
+    <div className="w-full h-full">
       {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">KYC Documents</h2>
-        <p className="text-gray-600">Upload required verification documents</p>
-      </div>
-
+    
+        <h2 className="pb-2 sm:pb-4 text-base sm:text-lg md:text-xl p-3 sm:p-4 font-semibold">KYC Documents</h2>
+        
+  
+<div className="p-6 sm:p-4 bg-white border-[1px] flex flex-col gap-3 sm:gap-4 border-[#eaeaf1] w-full h-full">
+  <p className="text-gray-600">Upload required verification documents</p>
       {/* Progress Bar */}
-      <div className="mb-6 bg-white rounded-lg border border-gray-200 p-4">
+      <div className="mb-6 bg-white rounded-lg border border-gray-200 p-4 ">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium text-gray-700">Progress</span>
           <span className="text-sm font-medium text-gray-700">
@@ -468,7 +469,9 @@ const KycComponent = ({
       </div>
 
       {/* Document List */}
-      <div className="space-y-4">
+
+      <div className="mb-6 grid grid-cols-1 gap-4">
+      <div className="space-y-4 ">
         {Object.keys(documentConfig).map(renderDocumentCard)}
 
         {/* Success Message */}
@@ -488,7 +491,7 @@ const KycComponent = ({
           </div>
         )}
       </div>
-
+</div>
       {/* Enhanced Preview Modal */}
       {previewModal.open && (
         <div className="fixed inset-0 bg-black/80 bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -523,6 +526,7 @@ const KycComponent = ({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
