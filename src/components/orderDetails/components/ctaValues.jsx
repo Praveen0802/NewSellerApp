@@ -182,7 +182,7 @@ const CtaValues = ({ ctaText, order_notes, onSaveNote = () => {} } = {}) => {
                 classNames={{
                   root: `${
                     noteValue.trim()
-                      ? "bg-[#0137D5] hover:bg-[#0129B8]"
+                      ? "bg-[#343432] hover:bg-[#0129B8]"
                       : "bg-gray-400 cursor-not-allowed"
                   } px-4 py-2 transition-colors duration-200`,
                   label_: "text-sm text-white font-medium",

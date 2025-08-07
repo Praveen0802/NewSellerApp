@@ -65,7 +65,7 @@ const BulkActionBar = ({
                 {/* Checkbox instead of Check icon */}
                 <div className={`w-4 h-4 border-2 rounded flex items-center justify-center ${
                   allSelected 
-                    ? 'bg-[#0137D5] border-[#0137D5]' 
+                    ? 'bg-[#343432] border-[#0137D5]' 
                     : selectAllDisabled 
                       ? 'border-gray-300 bg-gray-100'
                       : 'border-[#DADBE5] bg-white hover:bg-blue-50'

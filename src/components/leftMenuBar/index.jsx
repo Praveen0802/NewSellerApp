@@ -748,7 +748,7 @@ const NotificationsPopup = ({
           <div className="flex items-center gap-2">
             <button
               onClick={notificationRedict}
-              className="px-3 py-1 cursor-pointer bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700"
+              className="px-3 py-1 cursor-pointer bg-gray-900 text-white text-sm rounded hover:bg-gray-700"
             >
               View all
             </button>
@@ -761,12 +761,12 @@ const NotificationsPopup = ({
             onClick={() => handleTabChange("notifications")}
             className={`flex-1 px-4 py-3 text-sm font-medium border-1 cursor-pointer rounded-sm ${
               activeTab === "notifications"
-                ? "border-purple-600 text-purple-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                ? "border-[#64EAA5]-600 text-white  bg-[#64EAA5]"
+                : "border-green-300 text-gray-900 bg-green-50 hover:text-gray-700"
             }`}
           >
             Notifications
-            <span className="ml-2 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+            <span className="ml-2 px-2 py-1 bg-white text-gray-600  border-green-300 text-xs rounded-full">
               {notificationCountData?.notification}
             </span>
           </button>
@@ -774,12 +774,12 @@ const NotificationsPopup = ({
             onClick={() => handleTabChange("activity")}
             className={`flex-1 px-4 py-3 text-sm font-medium cursor-pointer border-1 ${
               activeTab === "activity"
-                ? "border-purple-600 text-purple-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                ? "border-[#64EAA5]-600 text-white  bg-[#64EAA5]"
+                : "border-green-300 text-gray-900 bg-green-50 hover:text-gray-700"
             }`}
           >
             Activity log
-            <span className="ml-2 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+            <span className="ml-2 px-2 py-1 bg-white text-gray-600 border-green-300 text-xs rounded-full">
               {notificationCountData?.activity}
             </span>
           </button>
@@ -1118,19 +1118,18 @@ const LeftMenuBar = () => {
       setActive(currentPath);
     }
   }, [router?.pathname]);
-  const handleSelectedClick = (index, item) => {
-    if (index === 0 && !isMobile) {
-      // setShowFullDisplay(!showFullDisplay);
-      dispatch(updateLeftMenuDisplay(!showFullDisplay));
-      return;
-    }
+const handleSelectedClick = (index, item) => {
+  if (index === 0 && !isMobile) {
+    dispatch(updateLeftMenuDisplay(!showFullDisplay));
+    return;
+  }
 
-    if (item?.isNotification) {
-      setNotificationsOpen(true);
-      return;
-    }
+  if (item?.isNotification) {
+    setNotificationsOpen(true);
+    return;
+  }
 
-    if (item?.hasSubItems) {
+  if (item?.hasSubItems) {
     if (showFullDisplay) {
       // ✅ When sidebar is expanded: only toggle submenu
       setSalesExpanded((prev) => !prev);
@@ -1138,19 +1137,19 @@ const LeftMenuBar = () => {
       // ✅ When sidebar is collapsed: navigate to default submenu route
       router.push(`/${item?.route}`); // e.g., /sales/pending
     }
-      return;
-    }
+    return;
+  }
 
-    setActive(item?.key);
+  setActive(item?.key);
 
-    if (isMobile) {
-      setMobileMenuOpen(false);
-    }
+  if (isMobile) {
+    setMobileMenuOpen(false);
+  }
 
-    if (item?.route) {
-      router.push(`/${item?.route}`);
-    }
-  };
+  if (item?.route) {
+    router.push(`/${item?.route}`);
+  }
+};
 
 
 

@@ -65,7 +65,7 @@ const EventRow = React.memo(({ row, index, handleClick }) => (
     </td>
     <td className="py-2 px-3 sm:px-4 text-right">
       <button
-        className="bg-[#0137D5] text-white py-1 px-2 rounded-md text-xs sm:text-sm hover:bg-[#0127B5] active:bg-[#011F95] transition-colors duration-150 whitespace-nowrap cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="bg-[#343432] text-white py-1 px-2 rounded-md text-xs sm:text-sm hover:bg-[#6b6f7a] active:bg-[#011F95] transition-colors duration-150 whitespace-nowrap cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed"
         onClick={() => handleClick(row)}
         type="button"
         aria-label={`Create listing for ${row.eventName || "event"}`}

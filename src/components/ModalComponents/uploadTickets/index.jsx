@@ -960,7 +960,7 @@ const UploadTickets = ({
                       classNames={{
                         root: `py-1 px-2 cursor-pointer rounded-sm text-xs ${
                           canTransferFile(file.id)
-                            ? "bg-[#0137D5] text-white hover:bg-[#0137D5]/90"
+                            ? "bg-[#343432] text-white hover:bg-[#343432]/90"
                             : "bg-gray-300 text-gray-500 cursor-not-allowed"
                         }`,
                         label_:

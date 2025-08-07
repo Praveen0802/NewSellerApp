@@ -159,7 +159,7 @@ const WalletPage = () => {
               <p className="text-[16px] font-medium text-[#343432] ">
                 {item?.name}
               </p>
-              <p className="text-white bg-[#0137D5] text-[12px] rounded-md px-[4px] py-[2px]">
+              <p className="text-white bg-[#343432] text-[12px] rounded-md px-[4px] py-[2px]">
                 {item?.count}
               </p>
             </div>

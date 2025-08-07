@@ -279,7 +279,7 @@ const TrackingPage = (props) => {
             label="Buy"
             classNames={{
               label_: "text-white text-xs sm:text-sm",
-              root: "bg-[#0137D5] py-1 px-2 rounded-md hover:bg-[#0137D5] transition-colors whitespace-nowrap",
+              root: "bg-[#343432] py-1 px-2 rounded-md hover:bg-[#343432] transition-colors whitespace-nowrap",
             }}
             onClick={() => {
               handleClickItem(item);
