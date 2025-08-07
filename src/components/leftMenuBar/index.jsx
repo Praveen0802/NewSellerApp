@@ -949,25 +949,25 @@ const LeftMenuBar = () => {
       name: "Pending",
       route: "sales/pending",
       key: "sales-pending",
-      count: salesCount?.find((item) => item.label === "Initiated")?.count || 0,
+      // count: salesCount?.find((item) => item.label === "Initiated")?.count || 0,
     },
     {
       name: "Delivered",
       route: "sales/delivered",
       key: "sales-delivered",
-      count: salesCount?.find((item) => item.label === "Delivered")?.count || 0,
+      // count: salesCount?.find((item) => item.label === "Delivered")?.count || 0,
     },
     {
       name: "Completed",
       route: "sales/completed",
       key: "sales-completed",
-      count: salesCount?.find((item) => item.label === "Confirmed")?.count || 0,
+      // count: salesCount?.find((item) => item.label === "Confirmed")?.count || 0,
     },
     {
       name: "Cancelled",
       route: "sales/cancelled",
       key: "sales-cancelled",
-      count: salesCount?.find((item) => item.label === "Cancelled")?.count || 0,
+      // count: salesCount?.find((item) => item.label === "Cancelled")?.count || 0,
     },
   ];
 
