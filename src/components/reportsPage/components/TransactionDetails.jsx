@@ -109,10 +109,7 @@ const BookingRow = memo(({ booking, index, onClick = () => {} } = {}) => (
       </span>
     </div>
     <div className="flex items-center">
-      <span
-        className="text-sm text-slate-700 truncate max-w-[180px] font-medium"
-        title={booking.match_name}
-      >
+      <span className="text-sm text-slate-700 font-medium break-words">
         {booking.match_name || "—"}
       </span>
     </div>
@@ -126,7 +123,6 @@ const BookingRow = memo(({ booking, index, onClick = () => {} } = {}) => (
         {booking.amount || "—"}
       </span>
     </div>
-   
   </div>
 ));
 
@@ -276,7 +272,7 @@ const TransactionDetailsPopup = ({
     () => ["Booking ID", "Match Name", "Qty", "Amount"],
     []
   );
-console.log(transactionDetails,'transactionDetailstransactionDetails')
+  console.log(transactionDetails, "transactionDetailstransactionDetails");
   // Callback handlers to prevent unnecessary re-renders
   const handleTransactionToggle = useCallback(() => {
     setIsTransactionOpen((prev) => !prev);

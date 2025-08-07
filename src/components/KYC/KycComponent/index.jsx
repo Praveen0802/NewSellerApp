@@ -91,7 +91,6 @@ const KycComponent = ({
   // Extract document data from props
   const getDocumentData = (docType) => {
     const propData = propsMapping[docType];
-    console.log("ssssssssssss", docType, propData, propsMapping);
 
     if (!propData) return null;
 
@@ -107,10 +106,10 @@ const KycComponent = ({
     const { status = 0 } = docData ?? {};
 
     const statusMapping = {
-      0: "not uploaded",
-      1: "Approved",
-      2: "Rejected",
-      3: "Pending",
+      "not uploaded": "not uploaded",
+      Approved: "Approved",
+      Rejected: "Rejected",
+      Pending: "Pending",
     };
 
     return statusMapping?.[status];

@@ -243,7 +243,7 @@ const OrderInfo = ({
 
   // Format order object for OrderValues component
   const orderObject = {
-    order_id: order_details?.order_id,
+    order_id: order_details?.booking_no,
     order_date: order_details?.order_date
       ? formatTimestamp(order_details?.order_date)
       : "-",
