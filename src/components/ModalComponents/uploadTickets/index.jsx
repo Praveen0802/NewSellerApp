@@ -61,7 +61,9 @@ const UploadTickets = ({
     existingUploadedTickets,
     "existingUploadedTicketsexistingUploadedTickets"
   );
-  const hasExistingTickets = existingUploadedTickets.length > 0;
+  const hasExistingTickets =
+    existingUploadedTickets.length > 0 &&
+    existingUploadedTickets?.[0]?.upload_tickets;
   const existingProofTickets = rowData?.rawTicketData?.popUpload || [];
   // Updated maxQuantity calculation for proof upload
   const maxQuantity = proofUploadView
@@ -73,7 +75,6 @@ const UploadTickets = ({
 
   const [isLoading, setIsLoading] = useState(false);
   const [showAssigned, setShowAssigned] = useState(false);
-  console.log("rowData", rowData);
 
   // Normal flow states
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -625,16 +626,14 @@ const UploadTickets = ({
           "additional_file_type",
           updatedObject.additional_info.template || ""
         );
-        newFormData.append(
-          "template_name",
-          updatedObject.additional_info.templateName || ""
-        );
+        newFormData.append("template_name", rowData?.rawTicketData?.s_no || "");
         newFormData.append(
           "additional_dynamic_content",
           updatedObject.additional_info.dynamicContent || ""
         );
         newFormData.append(`match_id`, rowData?.rawMatchData?.m_id);
         newFormData.append(`user_id`, readCookie("user_token"));
+        newFormData.append(`ticket_id`, rowData?.rawTicketData?.s_no);
         // Fix: Provide a value for template_id
         newFormData.append(
           "template_id",
@@ -648,10 +647,7 @@ const UploadTickets = ({
     try {
       const formData = constructTicketFormData(updatedObject);
       const response = await myListingUploadTickets("", formData);
-      console.log(
-        updatedObject.additional_info,
-        "updatedObject.additional_infoupdatedObject.additional_info"
-      );
+     
       if (updatedObject.additional_info) {
         try {
           const newFormData = constructNewFormData(updatedObject);
@@ -689,7 +685,6 @@ const UploadTickets = ({
         templateContent: "",
         selectedTemplateContent: "",
       };
-    console.log(additionalData, "additionalDataadditionalData");
 
     const currentAdditionalInfo = {
       template: additionalData?.templateId || "",
