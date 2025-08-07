@@ -1,8 +1,8 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import oneHand from "../../../public/onehand.svg";
-import greenHand from "../../../public/greenhand.svg";
+import oneHand from "../../../public/oneHand.svg";
+import greenHand from "../../../public/greenHand.svg";
 
-import uploadListing from "../../../public/uploadlisting.svg";
+import uploadListing from "../../../public/uploadListing.svg";
 import Button from "../commonComponents/button";
 import { useDispatch } from "react-redux";
 import { updateWalletPopupFlag } from "@/utils/redux/common/action";
