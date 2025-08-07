@@ -472,6 +472,21 @@ const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
     submitForm();
   };
 
+  const getStepForField = (field) => {
+    if (
+      field === "business_name" ||
+      field === "first_name" ||
+      field === "last_name" ||
+      field === "email"
+    ) {
+      return 1;
+    }
+    if (field === "password" || field === "confirm_password") {
+      return 2;
+    }
+    return 3;
+  };
+
   const submitForm = async () => {
     setIsLoading(true);
     try {
@@ -502,6 +517,12 @@ const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
           ...prev,
           ...errorFields,
         }));
+
+         // Switch to the correct form step for the first error
+        const firstErrorField = Object.keys(errorFields)[0];
+        if (firstErrorField) {
+          setFormStep(getStepForField(firstErrorField));
+        }
 
         // Scroll to first error field from API response
         setTimeout(() => {
