@@ -1466,15 +1466,17 @@ const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
 
               {currentStep === 3 && (
                 <button
-                  onClick={() => {
-                    toast.info(
-                      "After Email Verification you can login to your account and continue with the KYC process."
-                    );
-                  }} //setCurrentStep(4)
+                  // onClick={() => {
+                  //   toast.info(
+                  //     "After Email Verification you can login to your account and continue with the KYC process."
+                  //   );
+                  // }} //setCurrentStep(4)
+                  onClick={handleLogin}
                   className="flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center bg-gradient-to-r from-[#10B981] to-emerald-500 text-white hover:from-emerald-600 hover:to-emerald-600 shadow-md hover:shadow-lg"
                 >
                   <span>Go to Login</span>
-                  <ChevronLeft className="w-4 h-4 rotate-180" />
+                  {/* <ChevronLeft className="w-4 h-4 rotate-180" /> */}
+                  <LogIn className="w-4 h-4" />
                 </button>
               )}
 
