@@ -22,6 +22,7 @@ import {
   fetchVenueList,
   getAuthAddress,
   getAuthPhotoId,
+  getKYCStatus,
   getLinkedCards,
   getMyListingFilters,
   getMyListingHistory,
@@ -50,7 +51,6 @@ import {
 
 export const fetchSettingsPageDetails = async (profile, token, ctx) => {
   const validProfiles = ["myAccount", "changepassword"];
-  console.log(profile, "profileprofile");
   try {
     if (validProfiles?.includes(profile)) {
       const [profileDetails] = await Promise.all([
@@ -118,7 +118,9 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
       return { txPay };
     } else if (profile === "kyc") {
       // TODO: need to add business check
-      let isBusiness = true;
+      const response = await getKYCStatus(token);
+      console.log(response, "responseresponseresponse");
+      let isBusiness = response?.is_business == 1 ? true : false;
 
       let promises = [
         getAuthPhotoId(token),
@@ -143,6 +145,7 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
               ? business_document?.value
               : {},
         }),
+        isBusiness,
       };
     } else if (profile === "myRefferal") {
       const referralCode = (await getReferralCode(token)) ?? {};

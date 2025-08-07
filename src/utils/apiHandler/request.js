@@ -2298,23 +2298,24 @@ export const getAuthAddress = async (token, params) => {
 };
 
 export const saveSellerContract = async (data) => {
+
   try {
-    const response = await makeRequest({
-      url: API_ROUTES.SAVE_SELLER_CONTRACT,
+    const response = await axios({
+      url: "/api/save-seller-contract",
       method: "POST",
       formData: data,
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
-    console.log("ERROR in saveSellerContract", error);
-    throw error;
+    console.log("ERROR in savePhotoId", error);
+    // throw error;
   }
 };
 
 export const savePhotoId = async (data) => {
   try {
-    const response = await makeRequest({
-      url: API_ROUTES.SAVE_PHOTO_ID,
+    const response = await axios({
+      url: "/api/save-photo-id",
       method: "POST",
       formData: data,
     });
@@ -2342,30 +2343,31 @@ export const getSellerBusinessDocuments = async (token, params) => {
 };
 
 export const saveSellerBusinessDocuments = async (data) => {
+ 
   try {
-    const response = await makeRequest({
-      url: API_ROUTES.SELLER_BUSINESS_DOCUMENT,
+    const response = await axios({
+      url: "/api/save-seller-business",
       method: "POST",
       formData: data,
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
-    console.log("ERROR in saveSellerBusinessDocuments", error);
-    throw error;
+    console.log("ERROR in savePhotoId", error);
+    // throw error;
   }
 };
 
 export const saveAddressDocument = async (data) => {
   try {
-    const response = await makeRequest({
-      url: API_ROUTES.SAVE_ADDRESS_DOCUMENT,
+    const response = await axios({
+      url: "/api/save-address-id",
       method: "POST",
       formData: data,
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
-    console.log("ERROR in saveAddressDocument", error);
-    throw error;
+    console.log("ERROR in savePhotoId", error);
+    // throw error;
   }
 };
 

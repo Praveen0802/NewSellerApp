@@ -6,6 +6,8 @@ import {
   X,
   Download,
   RefreshCcw,
+  Clock,
+  CheckCircle,
 } from "lucide-react";
 import { useState } from "react";
 import DocumentUpload from "../DocumentUpload";
@@ -27,9 +29,9 @@ const KycComponent = ({
   onUploadSuccess,
   uploading,
   setUploading,
+  isBusiness,
 } = {}) => {
-  console.log("business_document", business_document);
-
+console.log(photoId,'hiiiii',address,contract,business_document)
   const [previewModal, setPreviewModal] = useState({
     open: false,
     url: "",
@@ -53,7 +55,7 @@ const KycComponent = ({
       acceptedFormats: ".pdf,.jpg,.jpeg,.png",
       icon: FileText,
       dataKey: "photo_document",
-      statusKey: "photo_id_status",
+      statusKey: "photo_status",
     },
     address: {
       title: "Address Proof",
@@ -63,14 +65,16 @@ const KycComponent = ({
       dataKey: "address_document",
       statusKey: "address_status",
     },
-    business_document: {
-      title: "Business Documents",
-      description: "Business documents",
-      acceptedFormats: ".pdf,.jpg,.jpeg,.png",
-      icon: FileText,
-      dataKey: "business_document",
-      statusKey: "business_status",
-    },
+    ...(isBusiness && {
+      business_document: {
+        title: "Business Documents",
+        description: "Business documents",
+        acceptedFormats: ".pdf,.jpg,.jpeg,.png",
+        icon: FileText,
+        dataKey: "business_document",
+        statusKey: "business_status",
+      },
+    }),
   };
 
   // Get props data mapping
@@ -101,18 +105,99 @@ const KycComponent = ({
     };
   };
 
+  // Fixed function to get document status correctly
   const getDocumentStatus = (docType) => {
     const docData = getDocumentData(docType);
-    const { status = 0 } = docData ?? {};
+    
+    if (!docData || !docData.data) {
+      return "not uploaded";
+    }
+
+    const config = documentConfig[docType];
+    const statusKey = config.statusKey;
+    const status = docData.data[statusKey];
 
     const statusMapping = {
       "not uploaded": "not uploaded",
-      Approved: "Approved",
-      Rejected: "Rejected",
-      Pending: "Pending",
+      "Approved": "Approved",
+      "Rejected": "Rejected",
+      "Pending": "Pending",
     };
 
-    return statusMapping?.[status];
+    return statusMapping[status] || "not uploaded";
+  };
+
+  // Function to calculate overall KYC status
+  const getOverallKycStatus = () => {
+    const docTypes = Object.keys(documentConfig);
+    const statuses = docTypes.map(docType => getDocumentStatus(docType));
+    
+    // Count different status types
+    const approved = statuses.filter(status => status === "Approved").length;
+    const rejected = statuses.filter(status => status === "Rejected").length;
+    const pending = statuses.filter(status => status === "Pending").length;
+    const notUploaded = statuses.filter(status => status === "not uploaded").length;
+    
+    // Determine overall status based on individual statuses
+    if (approved === docTypes.length) {
+      return "Approved";
+    } else if (rejected > 0) {
+      return "Rejected";
+    } else if (pending > 0 && notUploaded === 0) {
+      return "Pending";
+    } else if (pending > 0 || (approved > 0 && notUploaded > 0)) {
+      return "In Progress";
+    } else {
+      return "Not Started";
+    }
+  };
+
+  // Function to render overall status badge
+  const renderOverallStatusBadge = () => {
+    const overallStatus = getOverallKycStatus();
+    
+    const statusConfig = {
+      "Approved": {
+        icon: CheckCircle,
+        bgColor: "bg-green-100",
+        textColor: "text-green-600",
+        label: "Approved"
+      },
+      "Pending": {
+        icon: Clock,
+        bgColor: "bg-yellow-100",
+        textColor: "text-yellow-600",
+        label: "Pending Review"
+      },
+      "In Progress": {
+        icon: Clock,
+        bgColor: "bg-blue-100",
+        textColor: "text-blue-600",
+        label: "In Progress"
+      },
+      "Rejected": {
+        icon: X,
+        bgColor: "bg-red-100",
+        textColor: "text-red-600",
+        label: "Action Required"
+      },
+      "Not Started": {
+        icon: AlertCircle,
+        bgColor: "bg-gray-100",
+        textColor: "text-gray-600",
+        label: "Not Started"
+      }
+    };
+
+    const config = statusConfig[overallStatus];
+    const Icon = config.icon;
+
+    return (
+      <div className={`flex items-center space-x-2 ${config.bgColor} ${config.textColor} px-3 py-2 rounded-full text-sm font-medium`}>
+        <Icon className="w-4 h-4" />
+        <span>{config.label}</span>
+      </div>
+    );
   };
 
   const getFileType = (url) => {
@@ -445,9 +530,12 @@ const KycComponent = ({
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6">
-      {/* Header */}
+      {/* Header with Overall Status */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">KYC Documents</h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-2xl font-bold text-gray-900">KYC Documents</h2>
+          {renderOverallStatusBadge()}
+        </div>
         <p className="text-gray-600">Upload required verification documents</p>
       </div>
 

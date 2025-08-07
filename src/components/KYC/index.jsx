@@ -19,6 +19,7 @@ const KYC = (props) => {
     business_document: business_document || {},
   });
 
+
   const handleUploadSuccess = async (documentType, file) => {
     // Configuration mapping for document types
     const documentTypeConfig = {
@@ -80,6 +81,7 @@ const KYC = (props) => {
         onUploadSuccess={handleUploadSuccess}
         uploading={uploading}
         setUploading={setUploading}
+        isBusiness={props.isBusiness}
       />
     </div>
   );
