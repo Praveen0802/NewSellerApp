@@ -609,6 +609,35 @@ const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
   const router = useRouter();
 
   const handleLogin = () => {
+    setCookie("signup_step", "", -1);
+    setCookie("user_type", "", -1);
+    setCookie("signup_form_data", "", -1);
+
+    setUserType("");
+    setFormData({
+      first_name: "",
+      last_name: "",
+      email: "",
+      password: "",
+      confirm_password: "",
+      user_type: "1",
+      phone_country_code: "",
+      phone_number: "",
+      address: "",
+      city: "",
+      zip_code: "",
+      country: "",
+      currency: "",
+      business_name: "",
+      is_business: "0",
+      dob: "",
+    });
+    setErrors({});
+    setCurrentStep(1);
+    setSignUrl("");
+    setActionId("");
+    setIsPolling(false);
+    setCityOptions([]);
     router.push("/login");
   };
 
