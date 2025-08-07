@@ -1118,33 +1118,40 @@ const LeftMenuBar = () => {
       setActive(currentPath);
     }
   }, [router?.pathname]);
-  const handleSelectedClick = (index, item) => {
-    if (index === 0 && !isMobile) {
-      // setShowFullDisplay(!showFullDisplay);
-      dispatch(updateLeftMenuDisplay(!showFullDisplay));
-      return;
-    }
+const handleSelectedClick = (index, item) => {
+  if (index === 0 && !isMobile) {
+    dispatch(updateLeftMenuDisplay(!showFullDisplay));
+    return;
+  }
 
-    if (item?.isNotification) {
-      setNotificationsOpen(true);
-      return;
-    }
+  if (item?.isNotification) {
+    setNotificationsOpen(true);
+    return;
+  }
 
-    if (item?.hasSubItems) {
-      setSalesExpanded(!salesExpanded);
-      router.push(`/${item?.route}`);
-      return;
+  if (item?.hasSubItems) {
+    if (showFullDisplay) {
+      // ✅ When sidebar is expanded: only toggle submenu
+      setSalesExpanded((prev) => !prev);
+    } else {
+      // ✅ When sidebar is collapsed: navigate to default submenu route
+      router.push(`/${item?.route}`); // e.g., /sales/pending
     }
+    return;
+  }
 
-    setActive(item?.key);
+  setActive(item?.key);
 
-    if (isMobile) {
-      setMobileMenuOpen(false);
-    }
-    if (item?.route) {
-      router.push(`/${item?.route}`);
-    }
-  };
+  if (isMobile) {
+    setMobileMenuOpen(false);
+  }
+
+  if (item?.route) {
+    router.push(`/${item?.route}`);
+  }
+};
+
+
 
   const handleSubItemClick = (subItem) => {
     setActive(subItem?.key);
