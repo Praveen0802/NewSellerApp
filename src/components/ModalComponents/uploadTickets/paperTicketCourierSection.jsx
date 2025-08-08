@@ -424,7 +424,7 @@ const PaperTicketCourierSection = React.forwardRef(
                 <p className="text-sm text-[#323A70] mb-1">
                   Drag your file(s) or{" "}
                   <span
-                    className="text-[#0137D5] font-medium cursor-pointer"
+                    className="text-[#343432] font-medium cursor-pointer"
                     onClick={handleBrowseFiles}
                   >
                     Browse files

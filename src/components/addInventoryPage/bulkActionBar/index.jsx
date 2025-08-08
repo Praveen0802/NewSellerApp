@@ -97,7 +97,7 @@ const BulkActionBar = ({
                   className={
                     disabled || selectedCount === 0
                       ? "text-gray-400"
-                      : "text-[#0137D5]"
+                      : "text-[#343432]"
                   }
                   size={16}
                 />
@@ -126,7 +126,7 @@ const BulkActionBar = ({
                   className={
                     disabled || selectedCount === 0
                       ? "text-gray-400"
-                      : "text-[#0137D5]"
+                      : "text-[#343432]"
                   }
                   size={16}
                 />
@@ -155,7 +155,7 @@ const BulkActionBar = ({
                   className={
                     disabled || selectedCount === 0
                       ? "text-gray-400"
-                      : "text-[#0137D5]"
+                      : "text-[#343432]"
                   }
                   size={16}
                 />
@@ -184,7 +184,7 @@ const BulkActionBar = ({
                   className={
                     disabled || selectedCount === 0
                       ? "text-gray-400"
-                      : "text-[#0137D5]"
+                      : "text-[#343432]"
                   }
                   size={16}
                 />

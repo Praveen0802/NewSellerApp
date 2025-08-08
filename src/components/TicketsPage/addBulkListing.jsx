@@ -1376,7 +1376,7 @@ const BulkInventory = (props) => {
             {allMatchDetails.length > 0 && (
               <p
                 onClick={() => setShowViewPopup(true)}
-                className="text-[13px] whitespace-nowrap font-semibold text-[#0137D5] cursor-pointer hover:underline mr-6"
+                className="text-[13px] whitespace-nowrap font-semibold text-[#343432] cursor-pointer hover:underline mr-6"
               >
                 View Map
               </p>

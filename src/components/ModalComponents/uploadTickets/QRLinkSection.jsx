@@ -437,7 +437,7 @@ const QRLinksSection = React.forwardRef(
                 onClick={() =>
                   handleCopyToClipboard(value, ticketIndex, linkType)
                 }
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-[#0137D5] transition-colors"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-[#343432] transition-colors"
                 title={isCopied ? "Copied!" : "Copy to clipboard"}
               >
                 {isCopied ? (

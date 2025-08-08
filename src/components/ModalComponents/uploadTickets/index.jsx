@@ -919,7 +919,7 @@ console.log(currentPaperTicketData,'currentPaperTicketDatacurrentPaperTicketData
                 onClick={handleBrowseFiles}
                 classNames={{
                   root: "py-2 border-1 border-[#0137D5] rounded-sm ",
-                  label_: "text-[12px] font-medium !text-[#0137D5]",
+                  label_: "text-[12px] font-medium !text-[#343432]",
                 }}
               >
                 Browse Files

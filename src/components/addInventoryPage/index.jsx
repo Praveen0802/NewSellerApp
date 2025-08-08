@@ -1446,7 +1446,7 @@ const AddInventoryPage = (props) => {
                   >
                     <Calendar1Icon
                       size={isMobile ? 14 : 16}
-                      className="text-[#00A3ED]"
+                      className="text-[#343432]"
                     />
                     <p
                       className={`text-[#3a3c42] truncate ${
@@ -1463,7 +1463,7 @@ const AddInventoryPage = (props) => {
                   >
                     <Clock
                       size={isMobile ? 14 : 16}
-                      className="text-[#00A3ED]"
+                      className="text-[#343432]"
                     />
                     <p
                       className={`text-[#3a3c42] truncate ${
@@ -1476,7 +1476,7 @@ const AddInventoryPage = (props) => {
                   <div className="flex gap-2 items-center">
                     <MapPin
                       size={isMobile ? 14 : 16}
-                      className="text-[#00A3ED]"
+                      className="text-[#343432]"
                     />
                     {StadiumLocationDisplay({ matchDetails })}
                   </div>
@@ -1494,7 +1494,7 @@ const AddInventoryPage = (props) => {
                 onClick={() => setShowViewPopup(true)}
                 className={`${
                   isMobile ? "text-[12px]" : "text-[13px]"
-                } whitespace-nowrap font-semibold text-[#0137D5] cursor-pointer hover:underline ${
+                } whitespace-nowrap font-semibold text-[#343432] cursor-pointer hover:underline ${
                   isMobile ? "mr-3" : "mr-6"
                 }`}
               >
@@ -1518,7 +1518,7 @@ const AddInventoryPage = (props) => {
               <div className="border-b-[1px] border-[#DADBE5] p-3">
                 <button
                   onClick={() => setShowMobileFilters(!showMobileFilters)}
-                  className="flex items-center gap-2 text-[#0137D5] font-medium text-sm"
+                  className="flex items-center gap-2 text-[#343432] font-medium text-sm"
                 >
                   <Menu size={16} />
                   {showMobileFilters ? "Hide Filters" : "Show Filters"}
