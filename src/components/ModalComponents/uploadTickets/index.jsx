@@ -378,7 +378,7 @@ console.log(rowData,'rowDatarowData')
 
   // Common Match Header Component
   const MatchHeader = () => (
-    <div className="bg-[#1E0065] text-xs py-3 rounded-t-md text-white px-4 flex items-center justify-between">
+    <div className="bg-[#343432] text-xs py-3 rounded-t-md text-white px-4 flex items-center justify-between">
       <h3 className="font-medium">{matchDetails?.match_name}</h3>
       <div className="flex items-center gap-2 justify-center">
         <Calendar className="w-4 h-4" />

@@ -374,7 +374,7 @@ const MyReferrals = (props) => {
               className={`flex items-center gap-1 px-3 py-1 text-xs rounded transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                 isCopied
                   ? "bg-green-600 text-white"
-                  : "bg-[#343432] text-white hover:bg-[#130061]"
+                  : "bg-[#343432] text-white hover:bg-[#343432]"
               }`}
             >
               {isCopied ? <Check size={12} /> : <Copy size={12} />}

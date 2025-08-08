@@ -167,7 +167,7 @@ const LogDetailsModal = ({
             className="mb-4 border border-blue-200 rounded-lg overflow-hidden"
           >
             {/* Log Header Shimmer */}
-            <div className="bg-[#130061] flex justify-between items-center px-4 py-3">
+            <div className="bg-[#343432] flex justify-between items-center px-4 py-3">
               <div className="h-4 bg-gray-300 rounded w-48"></div>
               <div className="flex items-center">
                 <div className="h-4 bg-gray-300 rounded w-32"></div>
@@ -224,7 +224,7 @@ const LogDetailsModal = ({
             key={`collapsed-${index}`}
             className="mb-4 border border-blue-200 rounded-lg overflow-hidden"
           >
-            <div className="bg-[#130061] flex justify-between items-center px-4 py-3">
+            <div className="bg-[#343432] flex justify-between items-center px-4 py-3">
               <div className="h-4 bg-gray-300 rounded w-52"></div>
               <div className="flex items-center">
                 <div className="h-4 bg-gray-300 rounded w-28"></div>
@@ -300,7 +300,7 @@ const LogDetailsModal = ({
                 className="mb-4 border border-blue-200 rounded-lg overflow-hidden"
               >
                 <div
-                  className="bg-[#130061] flex justify-between items-center px-4 py-3 cursor-pointer"
+                  className="bg-[#343432] flex justify-between items-center px-4 py-3 cursor-pointer"
                   onClick={() => toggleSection(index)}
                 >
                   <p className="text-white text-sm font-medium">

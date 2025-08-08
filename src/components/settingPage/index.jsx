@@ -182,7 +182,7 @@ const SettingsPage = (props) => {
                     key={index}
                     className={`flex items-center gap-3 cursor-pointer rounded-lg px-3 py-2 transition-all duration-200 ${
                       activeTab == value?.key
-                        ? "text-[#130061] font-semibold bg-[#130061]/10"
+                        ? "text-[#130061] font-semibold bg-[#343432]/10"
                         : "text-gray-600 hover:text-[#130061] hover:bg-gray-50"
                     }`}
                     onClick={() => handleTabClick(value?.key)}
@@ -216,7 +216,7 @@ const SettingsPage = (props) => {
                 key={index}
                 className={`flex flex-col min-w-[80px] w-[110px] justify-center items-center p-2 rounded-lg transition-all duration-200 ${
                   activeTab === value?.key
-                    ? "text-[#130061] bg-[#130061]/10"
+                    ? "text-[#130061] bg-[#343432]/10"
                     : "text-gray-500 hover:text-[#130061] hover:bg-gray-50"
                 }`}
                 onClick={() => handleTabClick(value?.key)}
@@ -241,7 +241,7 @@ const SettingsPage = (props) => {
                   key={index}
                   className={`flex items-center gap-3 cursor-pointer rounded-lg px-3 py-3 transition-all duration-200 ${
                     activeTab == value?.key
-                      ? "text-[#130061] font-semibold bg-[#130061]/10"
+                      ? "text-[#130061] font-semibold bg-[#343432]/10"
                       : "text-gray-600 hover:text-[#130061] hover:bg-gray-50"
                   }`}
                   onClick={() => handleTabClick(value?.key)}

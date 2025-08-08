@@ -65,7 +65,7 @@ const InventoryLogsInfo = ({ show, onClose, data = [] }) => {
               >
                 <div
                   onClick={() => toggleLog(index)}
-                  className={`${isExpanded ? "bg-[#130061]" :"bg-[#FFFFFF]"} flex justify-between items-center px-3 cursor-pointer`}
+                  className={`${isExpanded ? "bg-[#343432]" :"bg-[#FFFFFF]"} flex justify-between items-center px-3 cursor-pointer`}
                 >
                   <div className="flex-1 py-3">
                     <div className="flex items-center gap-2">
@@ -86,7 +86,7 @@ const InventoryLogsInfo = ({ show, onClose, data = [] }) => {
                       </div>
                     )}
                     <div className={`pl-3 ml-2 h-full border-l-[1px] py-3 ${isExpanded ? "border-l-[#51428E]":" border-l-[#E0E1EA]"}`}>
-                      <div className={`h-6 w-6 flex items-center justify-center rounded-full  ${isExpanded ? "bg-[#362679]":"bg-[#DADBE54D]"}`}>
+                      <div className={`h-6 w-6 flex items-center justify-center rounded-full  ${isExpanded ? "bg-[#343432]":"bg-[#DADBE54D]"}`}>
                       {isExpanded ? (
                         <ChevronUp className="w-4 h-4 text-white" />
                       ) : (
