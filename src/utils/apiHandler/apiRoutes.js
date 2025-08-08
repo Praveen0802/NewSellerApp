@@ -85,7 +85,7 @@ export const API_ROUTES = {
   FETCH_COUNTRIES: `/countries`,
   FETCH_CITIES: `/cities`,
   GET_ALL_PERMISSIONS: `/roles-permissions/get-all-permisssion`,
-  RESET_PASSWORD: `/settings/reset-password`,
+  RESET_PASSWORD: `/auth/reset-password`,
   GET_PAYMENT_CONFIG: "/get-payment-config",
   STORE_PAYMENT_METHOD: "/store-payment-method",
   GET_LINKED_CARDS: "/settings/lmt-pay/linked-cards",
