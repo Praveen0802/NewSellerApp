@@ -16,6 +16,11 @@ export default async function handler(req, res) {
   const { headers } = req;
   const parsedCookie = parseCookie(headers?.cookie);
   const authToken = decodeURIComponent(parsedCookie?.auth_token);
+  console.log(
+    `${process.env.API_BASE_URL}${API_ROUTES?.SAVE_SELLER_CONTRACT}`,
+    "`${process.env.API_BASE_URL}${API_ROUTES?.SAVE_SELLER_CONTRACT}`",
+    req
+  );
 
   try {
     // Stream the request body directly to the external API

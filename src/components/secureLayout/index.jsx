@@ -56,15 +56,18 @@ const SecureLayout = ({ children }) => {
     const response = await getUserRoleAccess();
     const kycResponse = await getKYCStatus();
     dispatch(updateRoleAccess(response));
+
     if (
       kycResponse?.kyc_status == 0 &&
-      window.location.pathname != "/settings/kyc" &&
+      !["/kyc-verification", "/settings/kyc"]?.includes(
+        window.location.pathname
+      ) &&
       response?.user_type == "sellers"
     ) {
       router.push("/settings/kyc?handle=true");
+      return;
     }
   };
-  const getUserKYCStatus = async () => {};
 
   useEffect(() => {
     fetchUserName();

@@ -2337,7 +2337,7 @@ export const saveSellerContract = async (data) => {
     const response = await axios({
       url: "/api/save-seller-contract",
       method: "POST",
-      formData: data,
+      data: data,
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
@@ -2351,7 +2351,7 @@ export const savePhotoId = async (data) => {
     const response = await axios({
       url: "/api/save-photo-id",
       method: "POST",
-      formData: data,
+      data: data,
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
@@ -2381,7 +2381,7 @@ export const saveSellerBusinessDocuments = async (data) => {
     const response = await axios({
       url: "/api/save-seller-business",
       method: "POST",
-      formData: data,
+      data: data,
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
@@ -2395,7 +2395,7 @@ export const saveAddressDocument = async (data) => {
     const response = await axios({
       url: "/api/save-address-id",
       method: "POST",
-      formData: data,
+      data: data,
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
