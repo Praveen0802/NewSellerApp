@@ -1117,22 +1117,22 @@ console.log(currentPaperTicketData,'currentPaperTicketDatacurrentPaperTicketData
                         <div className="flex items-center gap-1">
                           {assignedFile.isExisting && (
                             <button
-                              className="p-1 text-blue-500 cursor-pointer hover:text-blue-700"
+                              className="p-1 text-gray-900 cursor-pointer hover:text-blue-700"
                               onClick={() =>
                                 window.open(assignedFile.url, "_blank")
                               }
                               title="View uploaded ticket"
                             >
-                              <Eye className="w-3 h-3" />
+                              <Eye className="w-4 h-4" />
                             </button>
                           )}
                           <button
-                            className="p-1 text-red-500 cursor-pointer hover:text-red-700"
+                            className="p-1 text-gray-900 cursor-pointer hover:text-red-700"
                             onClick={() => {
                               handleDeleteUpload(assignedFile);
                             }}
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
