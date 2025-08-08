@@ -197,8 +197,8 @@ const EventsTable = ({ events, headers, selectedRows, setSelectedRows, loader })
     <div className="w-full h-full">
       {/* Show selected team and stadium info */}
       {(selectedTeamId || selectedStadium) && selectedRows.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 p-2 mb-2 rounded text-sm">
-          <span className="text-blue-800">
+        <div className="bg-green-50 border border-green-200 p-2 mb-2 rounded text-sm">
+          <span className="text-green-800">
             Selected: <strong>Team {selectedTeamId}</strong> at{" "}
             <strong>{selectedStadium}</strong>
             <span className="ml-2">
@@ -212,7 +212,7 @@ const EventsTable = ({ events, headers, selectedRows, setSelectedRows, loader })
               setSelectedTeamId(null);
               setSelectedStadium(null);
             }}
-            className="ml-2 text-gray-600 hover:text-blue-800 underline"
+            className="ml-2 text-green-600 hover:text-green-800 underline"
           >
             Clear Selection
           </button>
@@ -295,7 +295,7 @@ const EventsTable = ({ events, headers, selectedRows, setSelectedRows, loader })
                         <span
                           className={`px-2 py-1 rounded text-xs ${
                             event.team_1 === selectedTeamId
-                              ? "bg-gray-100 text-blue-800"
+                              ? "bg-blue-100 text-blue-800"
                               : "bg-gray-100 text-gray-600"
                           }`}
                         >
