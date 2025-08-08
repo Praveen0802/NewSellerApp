@@ -648,18 +648,18 @@ const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
   };
   const { currentUser } = useSelector((state) => state.currentUser);
 
-  // const handleKycStatusChange = (status) => {
-  //   if (status?.toLowerCase() === "completed") {
-  //     goToKycScreen();
-  //   }
-  // };
+  const handleKycStatusChange = (status) => {
+    if (status?.toLowerCase() === "completed") {
+      goToKycScreen();
+    }
+  };
 
   const renderStep4 = () => {
     return (
       <KycDocumentComponent
         currentUser={currentUser}
         onKycSuccess={goToKycScreen}
-        // onStatusChange={handleKycStatusChange}
+        onStatusChange={handleKycStatusChange}
       />
     );
   };

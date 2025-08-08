@@ -899,16 +899,15 @@ const LeftMenuBar = () => {
 
   // Use the custom hook for hydration-safe user display name
   const { userDisplayName } = useUserDisplayName(currentUser);
-  const { notificationCountData, showFullDisplay, userRoles } = useSelector(
-    (state) => state.common
-  );
+  const { notificationCountData, showFullDisplay, userRoles, kycStatus } =
+    useSelector((state) => state.common);
   const [salesCount, setSalesCount] = useState([]);
 
   const name = currentUser?.first_name?.slice(0, 2).toUpperCase();
   const userName = currentUser?.first_name;
 
   const dispatch = useDispatch();
-
+  console.log(userRoles, "kycStatus");
   // Fetch notification count for badge
   const fetchNotificationCountForBadge = async () => {
     try {
@@ -1052,7 +1051,6 @@ const LeftMenuBar = () => {
     },
   ];
 
-
   function filterLeftPaneByAccess(leftPaneValues, userRoles = []) {
     // Handle null/undefined inputs
     if (!leftPaneValues || !Array.isArray(leftPaneValues)) {
@@ -1089,7 +1087,15 @@ const LeftMenuBar = () => {
     });
   }
 
-  const leftPaneValues = filterLeftPaneByAccess(leftFullPaneValues, userRoles?.permission);
+  const leftValues = filterLeftPaneByAccess(
+    leftFullPaneValues,
+    userRoles?.permission
+  );
+
+  const leftPaneValues =
+    kycStatus?.kyc_status == 0 && userRoles?.user_type == "sellers"
+      ? []
+      : leftValues;
 
   const router = useRouter();
   const isMobile = useIsMobile();
@@ -1118,40 +1124,38 @@ const LeftMenuBar = () => {
       setActive(currentPath);
     }
   }, [router?.pathname]);
-const handleSelectedClick = (index, item) => {
-  if (index === 0 && !isMobile) {
-    dispatch(updateLeftMenuDisplay(!showFullDisplay));
-    return;
-  }
-
-  if (item?.isNotification) {
-    setNotificationsOpen(true);
-    return;
-  }
-
-  if (item?.hasSubItems) {
-    if (showFullDisplay) {
-      // ✅ When sidebar is expanded: only toggle submenu
-      setSalesExpanded((prev) => !prev);
-    } else {
-      // ✅ When sidebar is collapsed: navigate to default submenu route
-      router.push(`/${item?.route}`); // e.g., /sales/pending
+  const handleSelectedClick = (index, item) => {
+    if (index === 0 && !isMobile) {
+      dispatch(updateLeftMenuDisplay(!showFullDisplay));
+      return;
     }
-    return;
-  }
 
-  setActive(item?.key);
+    if (item?.isNotification) {
+      setNotificationsOpen(true);
+      return;
+    }
 
-  if (isMobile) {
-    setMobileMenuOpen(false);
-  }
+    if (item?.hasSubItems) {
+      if (showFullDisplay) {
+        // ✅ When sidebar is expanded: only toggle submenu
+        setSalesExpanded((prev) => !prev);
+      } else {
+        // ✅ When sidebar is collapsed: navigate to default submenu route
+        router.push(`/${item?.route}`); // e.g., /sales/pending
+      }
+      return;
+    }
 
-  if (item?.route) {
-    router.push(`/${item?.route}`);
-  }
-};
+    setActive(item?.key);
 
+    if (isMobile) {
+      setMobileMenuOpen(false);
+    }
 
+    if (item?.route) {
+      router.push(`/${item?.route}`);
+    }
+  };
 
   const handleSubItemClick = (subItem) => {
     setActive(subItem?.key);

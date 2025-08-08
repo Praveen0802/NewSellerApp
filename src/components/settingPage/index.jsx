@@ -1,5 +1,5 @@
 import { IconStore } from "@/utils/helperFunctions/iconStore";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Overview from "./overview";
 import { useRouter } from "next/router";
 import MyAccountTeam from "./myAccountTeam";
@@ -15,6 +15,17 @@ import MyRefferal from "./myRefferal";
 import SubjectDescriptionPopup from "./subjectDescriptionPopup";
 import KYC from "../KYC";
 import { ShieldCheck, WalletMinimal } from "lucide-react";
+import { useSelector } from "react-redux";
+
+// Loading component
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center h-full bg-[#F5F7FA]">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-8 h-8 border-4 border-[#130061] border-t-transparent rounded-full animate-spin"></div>
+      <p className="text-gray-600">Loading settings...</p>
+    </div>
+  </div>
+);
 
 const SettingsPage = (props) => {
   const { profile, apiData } = props;
@@ -22,71 +33,92 @@ const SettingsPage = (props) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSubjectDescriptionPopup, setShowSubjectDescriptionPopup] =
     useState(false);
+  const { kycStatus, userRoles } = useSelector((state) => state.common);
 
   const router = useRouter();
-
   const isMobile = useIsMobile();
-
   const IconclassName = "size-6";
 
-  const profileValues = [
-    // {
-    //   icon: <IconStore.profile className={IconclassName} />,
-    //   title: "Overview",
-    //   key: "overview",
-    // },
-    {
-      icon: <IconStore.myaccount className={IconclassName} />,
-      title: "My Account",
-      key: "myAccount",
-    },
-    {
-      icon: <IconStore.password className={IconclassName} />,
-      title: "Change Password",
-      key: "changepassword",
-    },
-    {
-      icon: <IconStore.myContacts className={IconclassName} />,
-      title: "Address Book",
-      key: "addressBook",
-    },
+  // Check if required data is loaded
+  const isDataLoaded = useMemo(() => {
+    // Check if kycStatus has the required property and userRoles is populated
+    return (
+      kycStatus?.kyc_status !== undefined && userRoles?.user_type !== undefined
+    );
+  }, [kycStatus, userRoles]);
 
-    {
-      icon: <WalletMinimal   className={IconclassName} />,
-      title: "SB Pay",
-      key: "sbPay",
-    },
-    {
-      icon: <IconStore.myTeams className={IconclassName} />,
-      title: "My Team",
-      key: "myTeam",
-    },
-    // {
-    //   icon: <IconStore.tickets className={IconclassName} />,
-    //   title: "Ticket Delivery",
-    //   key: "ticketDelivery",
-    // },
-    {
-      icon: <IconStore.cards className={IconclassName} />,
-      title: "Linked Cards",
-      key: "linkedCards",
-    },
-    {
-      icon: <ShieldCheck className={IconclassName} />,
-      title: "KYC",
-      key: "kyc",
-    },
-    {
-      icon: <IconStore.referral className={IconclassName} />,
-      title: "My Referral",
-      key: "myRefferal",
-    },
-    {
-      icon: <IconStore.glitter className={IconclassName} />,
-      title: "Request a Feature",
-      key: "featureRequest",
-    },
-  ];
+  // Memoize profileValues to prevent recalculation on every render
+  const profileValues = useMemo(() => {
+    if (!isDataLoaded) return []; // Return empty array while loading
+
+    return [
+      // {
+      //   icon: <IconStore.profile className={IconclassName} />,
+      //   title: "Overview",
+      //   key: "overview",
+      // },
+      ...(kycStatus?.kyc_status == 0 && userRoles?.user_type == "sellers"
+        ? [
+            {
+              icon: <ShieldCheck className={IconclassName} />,
+              title: "KYC Verification",
+              key: "kyc",
+            },
+          ]
+        : [
+            {
+              icon: <IconStore.myaccount className={IconclassName} />,
+              title: "My Account",
+              key: "myAccount",
+            },
+            {
+              icon: <IconStore.password className={IconclassName} />,
+              title: "Change Password",
+              key: "changepassword",
+            },
+            {
+              icon: <IconStore.myContacts className={IconclassName} />,
+              title: "Address Book",
+              key: "addressBook",
+            },
+            {
+              icon: <WalletMinimal className={IconclassName} />,
+              title: "SB Pay",
+              key: "sbPay",
+            },
+            {
+              icon: <IconStore.myTeams className={IconclassName} />,
+              title: "My Team",
+              key: "myTeam",
+            },
+            // {
+            //   icon: <IconStore.tickets className={IconclassName} />,
+            //   title: "Ticket Delivery",
+            //   key: "ticketDelivery",
+            // },
+            {
+              icon: <IconStore.cards className={IconclassName} />,
+              title: "Linked Cards",
+              key: "linkedCards",
+            },
+            {
+              icon: <ShieldCheck className={IconclassName} />,
+              title: "KYC",
+              key: "kyc",
+            },
+            {
+              icon: <IconStore.referral className={IconclassName} />,
+              title: "My Referral",
+              key: "myRefferal",
+            },
+            {
+              icon: <IconStore.glitter className={IconclassName} />,
+              title: "Request a Feature",
+              key: "featureRequest",
+            },
+          ]),
+    ];
+  }, [kycStatus, userRoles, IconclassName, isDataLoaded]);
 
   const handleTabClick = (tab) => {
     if (tab === "featureRequest") {
@@ -127,6 +159,11 @@ const SettingsPage = (props) => {
     const activeItem = profileValues.find((item) => item.key === activeTab);
     return activeItem?.title || "Settings";
   };
+
+  // Show loading spinner while data is being fetched
+  if (!isDataLoaded) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="bg-[#F5F7FA] h-full">
@@ -197,7 +234,7 @@ const SettingsPage = (props) => {
         // Desktop Layout (Original)
         <div className="flex h-full">
           {/* Fixed left sidebar - no overflow */}
-          <div className="bg-white  shadow pl-4 pr-8 py-8 h-full">
+          <div className="bg-white shadow pl-4 pr-8 py-8 h-full">
             <ul className="flex flex-col gap-2 list-none">
               {profileValues.map((value, index) => (
                 <li

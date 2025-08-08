@@ -2,6 +2,7 @@ import {
   ADD_WALLET_POPUP,
   CONFIRM_PURCHASE_POPUP,
   FETCH_USER_ROLES,
+  GET_KYC_STATUS,
   SHOW_FULL_DISPLAY,
   UPDATE_NOTIFICATION_COUNT,
   USER_ACCESS_ROUTES,
@@ -21,6 +22,7 @@ const initalState = {
   showFullDisplay: false,
   userRoles: [],
   userAccessableRoutes: [],
+  kycStatus: {},
 };
 
 const CommonReducers = (state = initalState, action) => {
@@ -58,6 +60,11 @@ const CommonReducers = (state = initalState, action) => {
       return {
         ...state,
         userAccessableRoutes: action.payload,
+      };
+    case GET_KYC_STATUS:
+      return {
+        ...state,
+        kycStatus: action.payload,
       };
     default:
       return state;

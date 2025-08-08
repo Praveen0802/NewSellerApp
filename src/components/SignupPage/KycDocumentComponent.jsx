@@ -27,11 +27,6 @@ const KycDocumentComponent = ({
   const [showIframe, setShowIframe] = useState(false);
   const [iframeError, setIframeError] = useState(false);
 
-  console.log("error", error);
-  console.log("kycLoader", kycLoader);
-  console.log("kycUrl", kycUrl);
-  console.log("hasInitialized", hasInitialized);
-  console.log("kycStatus", kycStatus);
 
   // Notify parent component about status changes
   useEffect(() => {
@@ -39,6 +34,37 @@ const KycDocumentComponent = ({
       onStatusChange(kycStatus);
     }
   }, [kycStatus, onStatusChange]);
+
+  useEffect(() => {
+    const handleMessage = (event) => {
+      console.log("📩 Received message event:", event);
+
+      // Check event origin
+      if (event.origin !== "https://sign.zoho.in") {
+        console.warn(`⚠️ Ignored message from unauthorized origin: ${event.origin}`);
+        return;
+      }
+
+      console.log("✅ Message from authorized origin:", event.origin);
+      console.log("📦 Message data:", event.data);
+
+      if (event.data === "SIGN_FINISHED") {
+        console.log("🎉 KYC Finished! Triggering finish action...");
+        // Your finish action here
+      } else {
+        console.log("ℹ️ Message data does not match 'SIGN_FINISHED'.");
+      }
+    };
+
+    console.log("🔗 Adding message event listener...");
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      console.log("🗑️ Removing message event listener...");
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
+
 
   // Show iframe when URL is available and status is not completed
   useEffect(() => {
@@ -63,7 +89,7 @@ const KycDocumentComponent = ({
     const payload = {
       recipient_name: currentUser.first_name,
       recipient_email: currentUser.email,
-      testing: true, // Optional: Set to true for testing purposes
+      // testing: true, // Optional: Set to true for testing purposes
     };
 
     try {

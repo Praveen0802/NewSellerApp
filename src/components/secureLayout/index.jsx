@@ -9,6 +9,7 @@ import Header from "../header";
 import RightViewModal from "../commonComponents/rightViewModal";
 import {
   updateConfirmPurchasePopup,
+  updatedKYCStatus,
   updateRoleAccess,
   updateWalletPopupFlag,
 } from "@/utils/redux/common/action";
@@ -56,12 +57,10 @@ const SecureLayout = ({ children }) => {
     const response = await getUserRoleAccess();
     const kycResponse = await getKYCStatus();
     dispatch(updateRoleAccess(response));
-
+    dispatch(updatedKYCStatus(kycResponse));
     if (
       kycResponse?.kyc_status == 0 &&
-      !["/kyc-verification", "/settings/kyc"]?.includes(
-        window.location.pathname
-      ) &&
+      !["/settings/kyc"]?.includes(window.location.pathname) &&
       response?.user_type == "sellers"
     ) {
       router.push("/settings/kyc?handle=true");
