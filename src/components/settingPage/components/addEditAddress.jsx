@@ -598,7 +598,7 @@ const AddEditAddress = ({
               id="is_default"
               checked={formFieldValues.is_default}
               onChange={handleCheckboxChange}
-              className="h-4 w-4 text-green-500 focus:ring-green-500 border-gray-300 rounded"
+              className="h-3 w-3 text-green-500 focus:ring-green-500 border-gray-300 rounded"
             />
             <label
               htmlFor="is_default"

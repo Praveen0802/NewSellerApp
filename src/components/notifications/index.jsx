@@ -275,7 +275,7 @@ const NotificationPage = (props) => {
           key={item.id}
           className={`flex items-start hover:bg-gray-50 transition-all duration-200 ${
             isPinned
-              ? "border-l-4 border-l-blue-500 bg-blue-50/30"
+              ? "border-l-2 border-l-green-300 bg-blue-50/30"
               : "border-b border-gray-100"
           } ${state.activeTab === "activity" ? "gap-0" : "gap-3"}`}
         >
@@ -297,17 +297,17 @@ const NotificationPage = (props) => {
               <div
                 className={`flex-1 px-4 py-2 transition-all duration-200 ${
                   isPinned
-                    ? "border-l-4 border-l-blue-200 bg-gradient-to-r from-blue-50/50 to-transparent"
+                    ? "border-l-2 border-l-green-200 bg-gradient-to-r from-blue-50/50 to-transparent"
                     : state.activeTab === "activity"
-                    ? "border-l-4 border-l-transparent"
+                    ? "border-l-2 border-l-transparent"
                     : "border-x-[1px] border-gray-200"
                 } ${state.activeTab === "activity" ? "ml-0" : ""}`}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  {isPinned && <Pin className="w-3 h-3 text-blue-500" />}
+                  {isPinned && <Pin className="w-3 h-3 text-gray-900" />}
                   <span
                     className={`inline-block w-2 h-2 rounded-full ${
-                      item.status === "new" ? "bg-green-500" : "bg-blue-500"
+                      item.status === "new" ? "bg-green-200" : "bg-green-200"
                     }`}
                   ></span>
                   <span className="text-xs text-gray-500 font-medium">
@@ -319,7 +319,7 @@ const NotificationPage = (props) => {
                   </span>
                   <span className="text-xs text-gray-400">{item.date}</span>
                   {isPinned && (
-                    <span className="text-xs bg-gray-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                    <span className="text-xs bg-white text-green-700 px-2 py-0.5 p-1 rounded-full font-medium">
                       Pinned
                     </span>
                   )}
@@ -584,7 +584,7 @@ const NotificationPage = (props) => {
                   </span>
                   <button
                     onClick={handleClearSelection}
-                    className="text-blue-500 hover:text-blue-700 hover:bg-blue-200 rounded-full p-1 transition-colors cursor-pointer"
+                    className="text-green-500 hover:text-blue-700 hover:bg-blue-200 rounded-full p-1 transition-colors cursor-pointer"
                     aria-label="Clear all selections"
                   >
                     <svg

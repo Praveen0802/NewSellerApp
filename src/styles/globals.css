@@ -43,3 +43,14 @@ input[type="number"]::-webkit-inner-spin-button {
 button {
   cursor: pointer !important;
 }
+
+
+
+.border-1-green-600 {
+  border-left-color: #64EAA5;
+}
+
+
+.border-l-green-200 {
+    border-left-color: oklch(0.63 0.19 147.36 / 0.24);
+}

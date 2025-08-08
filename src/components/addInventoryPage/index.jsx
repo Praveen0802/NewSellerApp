@@ -1446,7 +1446,7 @@ const AddInventoryPage = (props) => {
                   >
                     <Calendar1Icon
                       size={isMobile ? 14 : 16}
-                      className="text-[#00A3ED]"
+                      className="text-[#343432]"
                     />
                     <p
                       className={`text-[#3a3c42] truncate ${
@@ -1463,7 +1463,7 @@ const AddInventoryPage = (props) => {
                   >
                     <Clock
                       size={isMobile ? 14 : 16}
-                      className="text-[#00A3ED]"
+                      className="text-[#343432]"
                     />
                     <p
                       className={`text-[#3a3c42] truncate ${
@@ -1476,7 +1476,7 @@ const AddInventoryPage = (props) => {
                   <div className="flex gap-2 items-center">
                     <MapPin
                       size={isMobile ? 14 : 16}
-                      className="text-[#00A3ED]"
+                      className="text-[#343432]"
                     />
                     {StadiumLocationDisplay({ matchDetails })}
                   </div>
@@ -1501,13 +1501,13 @@ const AddInventoryPage = (props) => {
                 View Map
               </p>
             )}
-            <CompactInfoCard
+            {/* <CompactInfoCard
               title="Listing Visibility"
               progress={20}
               segments={5}
               tooltipText="Click to learn more"
               handleClick={handleOpenTicketInfoPopup}
-            />
+            /> */}
             {/* Control Icons */}
           </div>
         </div>

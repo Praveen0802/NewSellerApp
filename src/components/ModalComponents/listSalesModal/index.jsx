@@ -263,7 +263,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
           <div className="px-4 py-2 border-b border-gray-200 flex items-center gap-4">
             <div className="flex items-center gap-2 pr-4 border-r border-gray-200">
               <span className="text-[#323A70]">
-                <Calendar className="w-4 h-4 text-[#00A3ED]" />
+                <Calendar className="w-4 h-4 text-[#343432]" />
               </span>
               <span className="text-sm text-[#323A70]">
                 {matchDetails.date}
@@ -271,7 +271,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[#323A70]">
-                <MapPin className="w-4 h-4 text-[#00A3ED]" />
+                <MapPin className="w-4 h-4 text-[#343432]" />
               </span>
               <span className="text-sm ">{matchDetails.venue}</span>
             </div>
