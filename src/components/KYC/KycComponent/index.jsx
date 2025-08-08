@@ -701,7 +701,10 @@ const KycComponent = ({
                     const token = getCookie("auth_token") || "";
                     if (token) {
                       const zohoRequestId = localStorage.getItem("request_id");
-                      const response = await getZohoDocStatus(token,zohoRequestId);
+                      const body = {
+                        id : zohoRequestId,
+                      }
+                      const response = await getZohoDocStatus(token,body);
                       const requestStatus = response?.requests?.request_status;
                       if (requestStatus === "Completed") {
                         getZohoDocsDownload(token, zohoRequestId);
