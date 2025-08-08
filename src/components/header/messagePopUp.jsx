@@ -121,7 +121,7 @@ const MessagePopUp = ({ popUpData, onClose, showShimmer = false }) => {
         <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="w-full bg-blue-600 hover:bg-blue-700 cursor-pointer text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            className="w-full bg-gray-900 hover:bg-gray-700 cursor-pointer text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
             Got it
           </button>
