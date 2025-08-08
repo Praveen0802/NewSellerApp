@@ -212,7 +212,7 @@ const EventsTable = ({ events, headers, selectedRows, setSelectedRows, loader })
               setSelectedTeamId(null);
               setSelectedStadium(null);
             }}
-            className="ml-2 text-blue-600 hover:text-blue-800 underline"
+            className="ml-2 text-gray-600 hover:text-blue-800 underline"
           >
             Clear Selection
           </button>
@@ -295,7 +295,7 @@ const EventsTable = ({ events, headers, selectedRows, setSelectedRows, loader })
                         <span
                           className={`px-2 py-1 rounded text-xs ${
                             event.team_1 === selectedTeamId
-                              ? "bg-blue-100 text-blue-800"
+                              ? "bg-gray-100 text-blue-800"
                               : "bg-gray-100 text-gray-600"
                           }`}
                         >

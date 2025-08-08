@@ -208,7 +208,7 @@ const AddressDetails = ({
                 <input
                   type="radio"
                   name="addressSelection"
-                  className="w-3 h-3 text-blue-600 cursor-pointer"
+                  className="w-3 h-3 text-gray-600 cursor-pointer"
                   checked={selectedAddress == index}
                   onChange={() => {
                     handleAddressChange(index, field);
@@ -234,7 +234,7 @@ const AddressDetails = ({
             <input
               type="radio"
               name="addressSelection"
-              className="w-3 h-3 text-blue-600 cursor-pointer"
+              className="w-3 h-3 text-gray-600 cursor-pointer"
               checked={selectedAddress === "other"}
               onChange={handleOtherAddressSelect}
             />

@@ -147,7 +147,7 @@ const DropdownList = ({
               type="checkbox"
               checked={item.isActive || item.isVisible}
               onChange={() => onItemChange(item.key)}
-              className={`w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 ${
+              className={`w-4 h-4 text-gray-600 border-gray-300 rounded focus:ring-blue-500 ${
                 isDraggable ? "order-2 ml-auto" : "mr-2"
               }`}
             />

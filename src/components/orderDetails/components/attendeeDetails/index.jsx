@@ -377,7 +377,7 @@ const AttendeeDetails = ({ attendee_details = [], bookingId }) => {
                       isEditable &&
                       handleRadioChange("male", "gender", attendeeId)
                     }
-                    className="form-radio h-4 w-4 text-blue-600"
+                    className="form-radio h-4 w-4 text-gray-600"
                     disabled={!isEditable}
                   />
                   <span className="ml-2 text-sm text-gray-700">Male</span>
@@ -392,7 +392,7 @@ const AttendeeDetails = ({ attendee_details = [], bookingId }) => {
                       isEditable &&
                       handleRadioChange("female", "gender", attendeeId)
                     }
-                    className="form-radio h-4 w-4 text-blue-600"
+                    className="form-radio h-4 w-4 text-gray-600"
                     disabled={!isEditable}
                   />
                   <span className="ml-2 text-sm text-gray-700">Female</span>
@@ -502,7 +502,7 @@ const AttendeeDetails = ({ attendee_details = [], bookingId }) => {
                   e.stopPropagation();
                   toggleEditMode();
                 }}
-                className="flex items-center gap-1 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 py-1 px-2 md:px-3 rounded-md text-xs md:text-sm"
+                className="flex items-center gap-1 text-gray-600 hover:text-blue-800 bg-blue-50 hover:bg-gray-100 py-1 px-2 md:px-3 rounded-md text-xs md:text-sm"
               >
                 <Edit size={isMobile ? 14 : 16} />
                 <span className={isMobile ? "hidden md:inline" : ""}>Edit</span>

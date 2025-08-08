@@ -319,7 +319,7 @@ const NotificationPage = (props) => {
                   </span>
                   <span className="text-xs text-gray-400">{item.date}</span>
                   {isPinned && (
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                    <span className="text-xs bg-gray-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
                       Pinned
                     </span>
                   )}
@@ -577,7 +577,7 @@ const NotificationPage = (props) => {
 
             {state.selectedItems.length > 0 && (
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 group hover:bg-blue-100 transition-colors">
+                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 group hover:bg-gray-100 transition-colors">
                   <span className="text-sm font-medium text-blue-700">
                     {state.selectedItems.length} notification
                     {state.selectedItems.length > 1 ? "s" : ""} selected

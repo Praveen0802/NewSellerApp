@@ -379,7 +379,7 @@ const FloatingDateRange = ({
             }}
             className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-100 whitespace-nowrap ${
               year === currentMonth.getFullYear()
-                ? "bg-blue-50 text-blue-600"
+                ? "bg-blue-50 text-gray-600"
                 : ""
             }`}
           >
@@ -404,7 +404,7 @@ const FloatingDateRange = ({
             }}
             className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-100 whitespace-nowrap ${
               month.value === currentMonth.getMonth()
-                ? "bg-blue-50 text-blue-600"
+                ? "bg-blue-50 text-gray-600"
                 : ""
             }`}
           >
@@ -605,7 +605,7 @@ const FloatingDateRange = ({
                 className={`h-6 rounded text-[10px]
                   ${dayObj.isCurrentMonth ? "text-gray-800" : "text-gray-400"}
                   ${isSelected && !isDisabled ? "bg-green-500 text-white" : ""}
-                  ${isInRange && !isDisabled ? "bg-blue-100" : ""}
+                  ${isInRange && !isDisabled ? "bg-gray-100" : ""}
                   ${isToday && !isDisabled ? "border border-green-400" : ""}
                   ${
                     isDisabled

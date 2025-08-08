@@ -88,7 +88,7 @@ const SearchedViewComponent = ({
             <span
               onClick={handleRequestClick}
               onMouseDown={(e) => e.preventDefault()} // Prevent input blur
-              className="text-blue-600 cursor-pointer hover:underline"
+              className="text-gray-600 cursor-pointer hover:underline"
             >
               click here
             </span>{" "}

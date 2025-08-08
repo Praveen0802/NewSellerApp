@@ -354,7 +354,7 @@ const BulkListings = (props) => {
                         type="checkbox"
                         checked={visibleFilters[filter.key]}
                         onChange={() => handleFilterToggle(filter.key)}
-                        className="h-4 w-4 text-blue-600"
+                        className="h-4 w-4 text-gray-600"
                       />
                       <span className="text-sm text-[#323A70]">
                         {filter.label}
@@ -365,7 +365,7 @@ const BulkListings = (props) => {
                   {/* <div className="border-t border-gray-200 mt-3 pt-3">
                     <button
                       onClick={clearAllFilters}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                      className="text-sm text-gray-600 hover:text-blue-800 font-medium"
                     >
                       Clear All Filters
                     </button>

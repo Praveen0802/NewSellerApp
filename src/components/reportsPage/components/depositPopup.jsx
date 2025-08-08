@@ -306,7 +306,7 @@ const DepositPopup = ({ onClose, data, showShimmer = false }) => {
             <div className="px-4 py-3">
               <button
                 onClick={handleDownloadProof}
-                className="flex items-center cursor-pointer justify-center w-full py-2 px-4 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors border border-blue-200"
+                className="flex items-center cursor-pointer justify-center w-full py-2 px-4 bg-blue-50 hover:bg-gray-100 text-blue-700 rounded-lg transition-colors border border-blue-200"
               >
                 <IconStore.download className="size-4 mr-2" />
                 <span className="text-sm font-medium">

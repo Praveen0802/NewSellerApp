@@ -266,7 +266,7 @@ const InventoryTable = ({ listArrayValues, dynamicKeys = [] }) => {
                               return (
                                 <td key={colIndex} className="px-2 py-2">
                                   <div className="w-24">
-                                    <button className="bg-blue-50 text-blue-600 px-3 py-1 rounded text-sm">
+                                    <button className="bg-blue-50 text-gray-600 px-3 py-1 rounded text-sm">
                                       Upload
                                     </button>
                                   </div>
@@ -298,10 +298,10 @@ const InventoryTable = ({ listArrayValues, dynamicKeys = [] }) => {
                           })}
                           <td className="px-2 py-2 sticky right-0 bg-white z-10">
                             <div className="flex space-x-2">
-                              <button className="text-gray-500 hover:text-blue-600">
+                              <button className="text-gray-500 hover:text-gray-600">
                                 <IconStore.copy className="size-5" />
                               </button>
-                              <button className="text-gray-500 hover:text-blue-600">
+                              <button className="text-gray-500 hover:text-gray-600">
                                 <IconStore.download className="size-5" />
                               </button>
                             </div>

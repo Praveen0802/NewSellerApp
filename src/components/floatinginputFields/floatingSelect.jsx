@@ -323,13 +323,13 @@ const FloatingSelect = ({
             <div className="flex justify-between items-center px-3 py-2 border-b border-gray-100">
               <button
                 onClick={handleSelectAll}
-                className="text-sm text-blue-600 cursor-pointer hover:text-blue-800"
+                className="text-sm text-gray-600 cursor-pointer hover:text-blue-800"
               >
                 Select All
               </button>
               <button
                 onClick={handleDeselectAll}
-                className="text-sm text-blue-600 cursor-pointer hover:text-blue-800"
+                className="text-sm text-gray-600 cursor-pointer hover:text-blue-800"
               >
                 Deselect All
               </button>
@@ -383,7 +383,7 @@ const FloatingSelect = ({
                             type="checkbox"
                             checked={isSelectedOption}
                             onChange={() => {}}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            className="w-4 h-4 text-gray-600 border-gray-300 rounded focus:ring-blue-500"
                           />
                         </div>
                       )}

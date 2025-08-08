@@ -59,7 +59,7 @@ const BulkActionBar = ({
                 className={`flex px-2 py-1 cursor-pointer items-center space-x-2 text-[13px] rounded-md transition-colors ${
                   selectAllDisabled
                     ? "text-gray-400 cursor-not-allowed bg-gray-200"
-                    : "text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                    : "text-gray-600 hover:text-blue-800 hover:bg-blue-50"
                 }`}
               >
                 {/* Checkbox instead of Check icon */}
@@ -205,16 +205,16 @@ const BulkActionBar = ({
               <div className="flex items-center space-x-2 text-sm font-medium bg-blue-50 px-3 py-1 rounded-md">
                 {selectedCount > 1 ? (
                   <>
-                    <Users size={16} className="text-blue-600" />
-                    <span className="text-blue-600">Bulk Edit Mode Active</span>
+                    <Users size={16} className="text-gray-600" />
+                    <span className="text-gray-600">Bulk Edit Mode Active</span>
                     <span className="text-blue-500 text-xs">
                       ({selectedCount} rows)
                     </span>
                   </>
                 ) : (
                   <>
-                    <Edit size={16} className="text-blue-600" />
-                    <span className="text-blue-600">Edit Mode Active</span>
+                    <Edit size={16} className="text-gray-600" />
+                    <span className="text-gray-600">Edit Mode Active</span>
                   </>
                 )}
               </div>

@@ -83,7 +83,7 @@ const TemplateContentRenderer = ({
         />
         {dynamicContent && (
           <div className="bg-blue-50 border-t border-blue-200 px-3 py-2">
-            <p className="text-xs text-blue-600">
+            <p className="text-xs text-gray-600">
               <strong>Dynamic Content:</strong> {dynamicContent}
             </p>
           </div>

@@ -381,7 +381,7 @@ const MyReferrals = (props) => {
               {isCopied ? "Copied!" : "Copy Link"}
             </button>
           </div>
-          <div className="text-xs text-blue-600 bg-gray-50 p-2 rounded border break-all">
+          <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded border break-all">
             {domain && referCodeData
               ? `${domain}/signup?refer_code=${referCodeData}`
               : "Loading..."}

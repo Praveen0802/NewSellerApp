@@ -1106,8 +1106,8 @@ const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
   const renderStep3 = () => (
     <div className="flex flex-col items-center justify-center h-full px-4 lg:px-0">
       <div className="w-full max-w-md mx-auto text-center">
-        <div className="w-16 h-16 lg:w-20 lg:h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Mail className="w-8 h-8 lg:w-10 lg:h-10 text-blue-600" />
+        <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Mail className="w-8 h-8 lg:w-10 lg:h-10 text-gray-600" />
         </div>
 
         <h2 className="text-xl lg:text-3xl font-semibold text-gray-800 mb-4">
