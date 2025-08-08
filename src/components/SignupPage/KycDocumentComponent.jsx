@@ -316,13 +316,13 @@ const KycDocumentComponent = ({
         {/* Footer with actions */}
         <div className="mt-4 flex justify-between items-center text-sm text-gray-600 flex-shrink-0">
           <p>Please complete the document signing process above.</p>
-          <button
+          {/* <button
             onClick={handleRetry}
             className="px-3 py-1 text-gray-600 hover:text-blue-800 underline"
             disabled={kycLoader || ownerLoader}
           >
             Refresh Document
-          </button>
+          </button> */}
         </div>
       </div>
     );

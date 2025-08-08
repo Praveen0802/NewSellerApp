@@ -9,9 +9,11 @@ const RenderPreviewContent = ({
 
   if (!url) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500">
-        <span>No document available</span>
-      </div>
+      <iframe
+        src="/seller_documents.pdf" // Path to your local PDF in public/assets
+        title="Default PDF Preview"
+        className="w-full h-full"
+      />
     );
   }
 

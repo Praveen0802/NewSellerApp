@@ -64,6 +64,8 @@ const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
   const [signUrl, setSignUrl] = useState("");
   const [actionId, setActionId] = useState("");
   const [isPolling, setIsPolling] = useState(false);
+  const maxDate = new Date(new Date().getFullYear() - 10, 11, 31); 
+  const defaultViewDate = maxDate.toISOString().split("T")[0];
 
   // City related states
   const [cityOptions, setCityOptions] = useState([]);
@@ -979,7 +981,7 @@ const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
                       type="date"
                       id="dob"
                       keyValue="dob"
-                      value={formData.dob}
+                      value={formData.dob || defaultViewDate}
                       onChange={handleChange}
                       singleDateMode={true}
                       error={errors.dob}
@@ -989,6 +991,7 @@ const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
                       className="!py-[8px] sm:!py-[10px] !text-[14px]"
                       defaultFocus={true}
                       minDate="1900-01-01"
+                      maxDate={maxDate.toISOString().split("T")[0]}
                       staticLabel={true}
                     />
                   </div>
