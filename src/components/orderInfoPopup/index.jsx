@@ -1,5 +1,5 @@
 import { IconStore } from "@/utils/helperFunctions/iconStore";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Button from "../commonComponents/button";
 import { convertSnakeCaseToCamelCase } from "@/utils/helperFunctions";
 import Benifits from "../orderDetails/components/benifits";
@@ -14,7 +14,7 @@ import {
   addSalesPendingNotes,
 } from "@/utils/apiHandler/request";
 import { toast } from "react-toastify";
-import { Expand, Shrink } from "lucide-react";
+import { Expand, Shrink, X } from "lucide-react";
 
 const OrderInfo = ({
   show,
@@ -25,9 +25,23 @@ const OrderInfo = ({
   showShimmer = false,
 } = {}) => {
   const [expandedVersion, setExpandedVersion] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Handle new array format data
   const data = orderData && orderData.length > 0 ? orderData[0] : null;
+
+  // Enhanced transition handler
+  const handleCollapseModal = () => {
+    if (isTransitioning) return; // Prevent multiple rapid clicks
+    
+    setIsTransitioning(true);
+    setExpandedVersion(!expandedVersion);
+    
+    // Reset transition state after animation completes
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 300);
+  };
 
   // Shimmer loading component
   const ShimmerLoader = () => (
@@ -284,10 +298,6 @@ const OrderInfo = ({
   const benefits =
     ticket_details?.[0]?.listing_note?.map((note) => note.name) || [];
 
-  const handleCollapseModal = () => {
-    setExpandedVersion(!expandedVersion);
-  };
-
   // Transform ticket_details to match expected format for OrderedTickets component
   // Since ticket_details is now an array, we'll use the first ticket or handle multiple tickets
   const transformedTicketDetails = ticket_details?.[0]
@@ -334,52 +344,73 @@ const OrderInfo = ({
 
   return (
     <RightViewModal
-      className={`${expandedVersion ? "!w-[100%]" : " !w-[600px]"}`}
+      className={`transition-all duration-300 ease-in-out ${
+        expandedVersion ? "!w-[100vw] !max-w-none" : "!w-[600px]"
+      }`}
       show={show}
       onClose={onClose}
     >
-      <div className={`${expandedVersion ? "!w-[100%]" : " !w-[600px]"}`}>
-        <div className={` overflow-auto rounded-md bg-white`}>
+      <div className={`transition-all duration-300 ease-in-out ${
+        expandedVersion ? "w-full" : "w-[600px]"
+      }`}>
+        <div className="overflow-auto rounded-md bg-white h-full">
           <div className="flex items-center border-b-[1px] border-[#E0E1EA] justify-between py-[13px] px-[24px]">
-            <p className="text-[18px] text-[#323A70] ">
+            <p className="text-[18px] text-[#323A70]">
               Order ID:
               {order_id_label ||
                 order_details?.booking_no ||
                 order_details?.order_id}
             </p>
-            <div className="flex items-center gap-2 ">
-              {expandedVersion ? (
-                <Shrink
-                  className="w-4 h-4 text-gray-600 cursor-pointer"
-                  onClick={handleCollapseModal}
-                />
-              ) : (
-                <Expand
-                  className="w-4 h-4 text-gray-600 cursor-pointer"
-                  onClick={handleCollapseModal}
-                />
-              )}
+            <div className="flex items-center gap-2">
+              <div 
+                className={`transition-all duration-300 ease-in-out ${
+                  isTransitioning ? 'opacity-50' : 'opacity-100'
+                }`}
+              >
+                {expandedVersion ? (
+                  <Shrink
+                    className="w-4 h-4 text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-200"
+                    onClick={handleCollapseModal}
+                  />
+                ) : (
+                  <Expand
+                    className="w-4 h-4 text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-200"
+                    onClick={handleCollapseModal}
+                  />
+                )}
+              </div>
 
-              <IconStore.close
+              <X
                 onClick={onClose}
-                className="size-4 cursor-pointer stroke-[#130061]"
+                className="size-4 cursor-pointer stroke-[#130061] hover:stroke-[#1a0080] transition-colors  duration-200"
               />
             </div>
           </div>
+          
           <div className="p-[24px] flex flex-col gap-4">
-            <CtaValues
-              ctaText={ctaText}
-              order_notes={order_notes}
-              onSaveNote={handleSaveNote}
-            />
-            <div className={`flex ${expandedVersion ? "" : "flex-col "} gap-4`}>
-              <div className={`${expandedVersion ? "w-1/2" : "w-full"}`}>
+            <div className="transition-all duration-300 ease-in-out">
+              <CtaValues
+                ctaText={ctaText}
+                order_notes={order_notes}
+                onSaveNote={handleSaveNote}
+              />
+            </div>
+            
+            <div className={`flex gap-4 transition-all duration-300 ease-in-out ${
+              expandedVersion ? "flex-row" : "flex-col"
+            }`}>
+              <div className={`transition-all duration-300 ease-in-out ${
+                expandedVersion ? "w-1/2 flex-shrink-0" : "w-full"
+              }`}>
                 <OrderValues
                   orderObject={orderObject}
                   order_id_label={order_id_label}
                 />
               </div>
-              <div className={`${expandedVersion ? "w-1/2 h-full" : "w-full"}`}>
+              
+              <div className={`transition-all duration-300 ease-in-out ${
+                expandedVersion ? "w-1/2 flex-shrink-0" : "w-full"
+              }`}>
                 <CustomerDetails
                   customerEmail={customerEmail}
                   customerName={customerName}
@@ -387,14 +418,18 @@ const OrderInfo = ({
                 />
               </div>
             </div>
+            
             {transformedTicketDetails && (
-              <OrderedTickets ticket_details={transformedTicketDetails} />
+              <div className="transition-all duration-300 ease-in-out">
+                <OrderedTickets ticket_details={transformedTicketDetails} />
+              </div>
             )}
+            
             {benefits.length > 0 && (
-              <Benifits benefits_restrictions={benefits} />
+              <div className="transition-all duration-300 ease-in-out">
+                <Benifits benefits_restrictions={benefits} />
+              </div>
             )}
-
-            {/* Add expand/collapse button if needed */}
           </div>
         </div>
       </div>
