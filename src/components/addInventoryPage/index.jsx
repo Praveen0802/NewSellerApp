@@ -1484,7 +1484,7 @@ const AddInventoryPage = (props) => {
               </div>
             )}
           </div>
-          <div
+          {/* <div
             className={`flex items-center ${
               isMobile ? "w-full justify-between" : ""
             }`}
@@ -1501,15 +1501,15 @@ const AddInventoryPage = (props) => {
                 View Map
               </p>
             )}
-            {/* <CompactInfoCard
+            <CompactInfoCard
               title="Listing Visibility"
               progress={20}
               segments={5}
               tooltipText="Click to learn more"
               handleClick={handleOpenTicketInfoPopup}
-            /> */}
-            {/* Control Icons */}
-          </div>
+            />
+          
+          </div> */}
         </div>
         {matchDetails && (
           <>

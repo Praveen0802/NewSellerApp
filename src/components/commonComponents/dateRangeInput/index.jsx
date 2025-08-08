@@ -672,7 +672,7 @@ const FloatingDateRange = ({
             className="absolute left-2 z-10 bg-white top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
             onClick={handleInputClick}
           >
-            <IconStore.calendar className="size-4" />
+            <IconStore.calendar className="size-3" />
           </div>
         )}
 

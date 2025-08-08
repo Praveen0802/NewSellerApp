@@ -123,6 +123,10 @@ const useKycHook = ({ currentUser } = {}) => {
         const { signing_url, request_id } = resp?.data ?? {};
 
         if (request_id) {
+          if (typeof window !== "undefined") {
+            localStorage.setItem("signing_url", signing_url || "");
+            localStorage.setItem("request_id", request_id || "");
+          }
           setRequestId(request_id);
           // Start polling after successful zohoEmbed
           console.log(
@@ -225,7 +229,7 @@ const useKycHook = ({ currentUser } = {}) => {
     const payload = {
       recipient_name: first_name,
       recipient_email: email,
-      testing: true, // Optional: Set to true for testing purposes
+      // testing: true, // Optional: Set to true for testing purposes
     };
 
     getZohoDocs(payload);

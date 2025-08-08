@@ -89,7 +89,7 @@ const KycDocumentComponent = ({
     const payload = {
       recipient_name: currentUser.first_name,
       recipient_email: currentUser.email,
-      testing: true, // Optional: Set to true for testing purposes
+      // testing: true, // Optional: Set to true for testing purposes
     };
 
     try {
