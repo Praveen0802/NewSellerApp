@@ -705,9 +705,9 @@ const KycComponent = ({
                         id : zohoRequestId,
                       }
                       const response = await getZohoDocStatus(token,body);
-                      const requestStatus = response?.requests?.request_status;
-                      if (requestStatus === "Completed") {
-                        getZohoDocsDownload(token, zohoRequestId);
+                      const requestStatus = response?.data?.requests?.request_status;
+                      if (requestStatus == "completed") {
+                        await getZohoDocsDownload(token, body);
                       }
                     }
                     window.location.reload()
