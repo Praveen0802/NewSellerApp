@@ -95,7 +95,7 @@ const SelectListItem = ({
                         onClick={(e) => handleCurrencySelect(option, e)}
                         className={`w-full text-left px-3 py-1 text-[11px] hover:bg-gray-100 transition-colors duration-150 ${
                           selectedCurrency === option.value
-                            ? "bg-blue-50 text-blue-600 font-medium"
+                            ? "bg-blue-50 text-gray-600 font-medium"
                             : "text-gray-700"
                         }`}
                       >

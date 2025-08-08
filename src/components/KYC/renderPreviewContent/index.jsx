@@ -89,7 +89,7 @@ const RenderPreviewContent = ({
           <div className="flex items-center justify-center space-x-4 text-sm">
             <button
               onClick={() => window.open(url, "_blank")}
-              className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 underline cursor-pointer"
+              className="flex items-center space-x-1 text-gray-600 hover:text-blue-700 underline cursor-pointer"
             >
               <ExternalLink className="w-4 h-4" />
               <span>Open in New Tab</span>
@@ -167,14 +167,14 @@ const RenderPreviewContent = ({
           <div className="flex items-center justify-center space-x-3 text-xs">
             <button
               onClick={() => window.open(url, "_blank")}
-              className="text-blue-600 hover:text-blue-700 underline cursor-pointer"
+              className="text-gray-600 hover:text-blue-700 underline cursor-pointer"
             >
               Open
             </button>
             <span className="text-gray-300">•</span>
             <button
               onClick={() => handleDownload(url, title || "image")}
-              className="text-blue-600 hover:text-blue-700 underline cursor-pointer"
+              className="text-gray-600 hover:text-blue-700 underline cursor-pointer"
             >
               {isDownloading ? "Downloading..." : "Download"}
             </button>

@@ -173,8 +173,8 @@ const KycComponent = ({
       },
       "In Progress": {
         icon: Clock,
-        bgColor: "bg-blue-100",
-        textColor: "text-blue-600",
+        bgColor: "bg-gray-100",
+        textColor: "text-gray-600",
         label: "In Progress",
       },
       Rejected: {
@@ -370,7 +370,7 @@ const KycComponent = ({
                     onClick={() =>
                       openPreview(docData.data[config.dataKey], config.title)
                     }
-                    className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm font-medium p-1 rounded hover:bg-blue-50 transition-colors cursor-pointer"
+                    className="flex items-center space-x-1 text-gray-600 hover:text-blue-700 text-sm font-medium p-1 rounded hover:bg-blue-50 transition-colors cursor-pointer"
                   >
                     <Eye className="w-4 h-4" />
                     <span>View</span>
@@ -407,7 +407,7 @@ const KycComponent = ({
                     onClick={() =>
                       openPreview(docData.data[config.dataKey], config.title)
                     }
-                    className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm font-medium p-1 rounded hover:bg-blue-50 transition-colors cursor-pointer"
+                    className="flex items-center space-x-1 text-gray-600 hover:text-blue-700 text-sm font-medium p-1 rounded hover:bg-blue-50 transition-colors cursor-pointer"
                   >
                     <Eye className="w-4 h-4" />
                     <span>View</span>
@@ -473,7 +473,7 @@ const KycComponent = ({
                       onClick={() =>
                         openPreview(docData.data[config.dataKey], config.title)
                       }
-                      className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm font-medium p-1 rounded hover:bg-blue-50 transition-colors cursor-pointer"
+                      className="flex items-center space-x-1 text-gray-600 hover:text-blue-700 text-sm font-medium p-1 rounded hover:bg-blue-50 transition-colors cursor-pointer"
                     >
                       <Eye className="w-4 h-4" />
                       <span>View</span>

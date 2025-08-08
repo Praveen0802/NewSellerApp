@@ -309,7 +309,7 @@ const MultiSelectEditableCell = ({
                     e.stopPropagation();
                     handleSelectAll();
                   }}
-                  className="text-xs px-2 py-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                  className="text-xs px-2 py-1 text-gray-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                 >
                   Select All
                 </button>
@@ -344,7 +344,7 @@ const MultiSelectEditableCell = ({
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => {}}
-                    className="w-3 h-3 text-blue-600 border-[#DADBE5] mt-0.5 flex-shrink-0"
+                    className="w-3 h-3 text-gray-600 border-[#DADBE5] mt-0.5 flex-shrink-0"
                   />
                   <span className="text-xs text-[#323A70] leading-tight break-words">
                     {option.label}
@@ -711,7 +711,7 @@ const SimpleEditableCell = ({
               onFocus={() => setIsFocused(true)}
               onMouseEnter={() => setIsFocused(true)}
               onMouseLeave={() => setIsFocused(false)}
-              className={`w-4 h-4 text-blue-600 bg-gray-100 rounded transition-colors ${
+              className={`w-4 h-4 text-gray-600 bg-gray-100 rounded transition-colors ${
                 isFocused
                   ? "border-green-500 ring-2 ring-green-500"
                   : "border-[#DADBE5] hover:border-green-400"
@@ -776,7 +776,7 @@ const SimpleEditableCell = ({
               <input
                 type="checkbox"
                 checked={editValue}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-[#DADBE5] rounded cursor-pointer hover:border-green-600 transition-colors"
+                className="w-4 h-4 text-gray-600 bg-gray-100 border-[#DADBE5] rounded cursor-pointer hover:border-green-600 transition-colors"
                 onClick={handleClick}
                 readOnly
               />

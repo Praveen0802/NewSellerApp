@@ -646,7 +646,7 @@ const CustomCalendarPicker = ({ value, onChange }) => {
                 className={`h-6 rounded cursor-pointer text-[10px]
                   ${dayObj.isCurrentMonth ? "text-gray-800" : "text-gray-400"}
                   ${isSelected ? "bg-blue-600 text-white" : ""}
-                  ${isInRange ? "bg-blue-100" : ""}
+                  ${isInRange ? "bg-gray-100" : ""}
                   ${isToday ? "border border-blue-400" : ""}
                   hover:bg-blue-200
                 `}

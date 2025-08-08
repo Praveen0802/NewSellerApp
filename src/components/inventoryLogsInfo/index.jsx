@@ -72,7 +72,7 @@ const InventoryLogsInfo = ({ show, onClose, data = [] }) => {
                       <span className={`text-sm font-medium ${isExpanded ? "text-white":"text-[#323A70]"}`}>
                         Log #{index + 1}
                       </span>
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                      <span className="text-xs bg-gray-100 text-blue-800 px-2 py-1 rounded-full">
                         Ticket ID: {logEntry.ticket_id}
                       </span>
                     </div>
@@ -122,7 +122,7 @@ const InventoryLogsInfo = ({ show, onClose, data = [] }) => {
                                         href={value}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-blue-600 cursor-pointer"
+                                        className="text-gray-600 cursor-pointer"
                                       >{'Click here'}
                                       </a>
                                     ):

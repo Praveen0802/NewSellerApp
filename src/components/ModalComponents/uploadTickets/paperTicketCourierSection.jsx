@@ -491,7 +491,7 @@ const PaperTicketCourierSection = React.forwardRef(
                           {file.name}
                         </span>
                         {file.isExisting && (
-                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          <span className="text-xs bg-gray-100 text-blue-800 px-2 py-1 rounded">
                             Existing
                           </span>
                         )}
@@ -500,7 +500,7 @@ const PaperTicketCourierSection = React.forwardRef(
                             href={file.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:text-blue-800 underline"
+                            className="text-xs text-gray-600 hover:text-blue-800 underline"
                           >
                             View
                           </a>

@@ -23,7 +23,7 @@ const AvailableFunds = ({ fetchWalletBalance }) => {
       <div className="flex items-center gap-2 mt-1">
         <button
           onClick={handlePrev}
-          className="text-gray-600 hover:text-blue-600 focus:outline-none cursor-pointer"
+          className="text-gray-600 hover:text-gray-600 focus:outline-none cursor-pointer"
           aria-label="Previous fund"
         >
           <IconStore.chevronLeft className="size-3" />
@@ -47,7 +47,7 @@ const AvailableFunds = ({ fetchWalletBalance }) => {
 
         <button
           onClick={handleNext}
-          className="text-gray-600 hover:text-blue-600 focus:outline-none cursor-pointer"
+          className="text-gray-600 hover:text-gray-600 focus:outline-none cursor-pointer"
           aria-label="Next fund"
         >
           <IconStore.chevronRight className="size-3" />

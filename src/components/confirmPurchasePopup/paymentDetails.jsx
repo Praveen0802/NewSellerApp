@@ -96,7 +96,7 @@ const PaymentDetails = ({
               <input
                 type="radio"
                 name="paymentMethod"
-                className="w-3 h-3 text-blue-600 cursor-pointer"
+                className="w-3 h-3 text-gray-600 cursor-pointer"
                 checked={selectedPayment?.name === field?.name}
                 onChange={() => handlePaymentChange(field)}
               />

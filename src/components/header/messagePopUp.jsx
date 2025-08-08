@@ -64,7 +64,7 @@ const MessagePopUp = ({ popUpData, onClose, showShimmer = false }) => {
         </button>
 
         <div className="mb-4 sm:mb-6">
-          <h2 className="text-xl sm:text-2xl font-medium text-blue-600 mb-1 sm:mb-2">
+          <h2 className="text-xl sm:text-2xl font-medium text-gray-600 mb-1 sm:mb-2">
             {title}
           </h2>
           <p className="text-sm sm:text-base text-gray-600">{sub_title}</p>
@@ -72,10 +72,10 @@ const MessagePopUp = ({ popUpData, onClose, showShimmer = false }) => {
 
         <div className="space-y-3 sm:space-y-4">
           <div className="flex items-center p-2 sm:p-3 bg-gray-50 rounded-lg">
-            <div className="bg-blue-100 rounded-full p-2 mr-3">
+            <div className="bg-gray-100 rounded-full p-2 mr-3">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600"
+                className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -95,10 +95,10 @@ const MessagePopUp = ({ popUpData, onClose, showShimmer = false }) => {
           </div>
 
           <div className="flex items-center p-2 sm:p-3 bg-gray-50 rounded-lg">
-            <div className="bg-blue-100 rounded-full p-2 mr-3">
+            <div className="bg-gray-100 rounded-full p-2 mr-3">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600"
+                className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

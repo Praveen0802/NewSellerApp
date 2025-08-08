@@ -209,7 +209,7 @@ const PayoutPage = (props) => {
       case "pending":
         return "text-yellow-600";
       case "processing":
-        return "text-blue-600";
+        return "text-gray-600";
       case "failed":
         return "text-red-600";
       default:

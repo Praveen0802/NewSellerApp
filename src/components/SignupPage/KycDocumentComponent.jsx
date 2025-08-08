@@ -202,8 +202,8 @@ const KycDocumentComponent = ({
       completed: { color: "bg-green-100 text-green-800", text: "Completed" },
       pending: { color: "bg-yellow-100 text-yellow-800", text: "Pending" },
       rejected: { color: "bg-red-100 text-red-800", text: "Rejected" },
-      in_progress: { color: "bg-blue-100 text-blue-800", text: "In Progress" },
-      submitted: { color: "bg-blue-100 text-blue-800", text: "Submitted" },
+      in_progress: { color: "bg-gray-100 text-blue-800", text: "In Progress" },
+      submitted: { color: "bg-gray-100 text-blue-800", text: "Submitted" },
     };
 
     const config = statusConfig[kycStatus.toLowerCase()] || {
@@ -292,7 +292,7 @@ const KycDocumentComponent = ({
           <p>Please complete the document signing process above.</p>
           <button
             onClick={handleRetry}
-            className="px-3 py-1 text-blue-600 hover:text-blue-800 underline"
+            className="px-3 py-1 text-gray-600 hover:text-blue-800 underline"
             disabled={kycLoader || ownerLoader}
           >
             Refresh Document
