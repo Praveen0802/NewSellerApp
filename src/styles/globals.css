@@ -54,3 +54,5 @@ button {
 .border-l-green-200 {
     border-left-color: oklch(0.63 0.19 147.36 / 0.24);
 }
+
+focus:ring-[#8BDDBF]

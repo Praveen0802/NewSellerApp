@@ -65,14 +65,14 @@ const InventoryLogsInfo = ({ show, onClose, data = [] }) => {
               >
                 <div
                   onClick={() => toggleLog(index)}
-                  className={`${isExpanded ? "bg-[#343432]" :"bg-[#FFFFFF]"} flex justify-between items-center px-3 cursor-pointer`}
+                  className={`${isExpanded ? "bg-[#343432]" :"bg-[#343432]"} flex justify-between items-center px-3 cursor-pointer`}
                 >
                   <div className="flex-1 py-3">
                     <div className="flex items-center gap-2">
-                      <span className={`text-sm font-medium ${isExpanded ? "text-white":"text-[#323A70]"}`}>
+                      <span className={`text-sm font-medium ${isExpanded ? "text-white":"text-[#ffff]"}`}>
                         Log #{index + 1}
                       </span>
-                      <span className="text-xs bg-gray-100 text-blue-800 px-2 py-1 rounded-full">
+                      <span className="text-xs  text-white px-2 py-1 rounded-full">
                         Ticket ID: {logEntry.ticket_id}
                       </span>
                     </div>
@@ -80,7 +80,7 @@ const InventoryLogsInfo = ({ show, onClose, data = [] }) => {
                   </div>
                   <div className="flex items-center gap-1">
                     {hasPayload && (
-                      <div className={`mt-1 text-xs py-3 ${isExpanded ? "text-white":"text-[#323A70]"}`}>
+                      <div className={`mt-1 text-xs py-3 ${isExpanded ? "text-white":"text-[#ffff]"}`}>
                         {payloadKeys.length} change
                         {payloadKeys.length !== 1 ? "s" : ""} recorded
                       </div>
@@ -90,7 +90,7 @@ const InventoryLogsInfo = ({ show, onClose, data = [] }) => {
                       {isExpanded ? (
                         <ChevronUp className="w-4 h-4 text-white" />
                       ) : (
-                        <ChevronDown className="w-4 h-4 text-[#323A70]" />
+                        <ChevronDown className="w-4 h-4 text-white" />
                       )}
                       </div>
                     </div>
