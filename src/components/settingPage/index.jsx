@@ -15,6 +15,7 @@ import MyRefferal from "./myRefferal";
 import SubjectDescriptionPopup from "./subjectDescriptionPopup";
 import KYC from "../KYC";
 import { ShieldCheck, WalletMinimal } from "lucide-react";
+import { useSelector } from "react-redux";
 
 const SettingsPage = (props) => {
   const { profile, apiData } = props;
@@ -22,6 +23,7 @@ const SettingsPage = (props) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSubjectDescriptionPopup, setShowSubjectDescriptionPopup] =
     useState(false);
+  const { kycStatus, userRoles } = useSelector((state) => state.common);
 
   const router = useRouter();
 
@@ -35,57 +37,67 @@ const SettingsPage = (props) => {
     //   title: "Overview",
     //   key: "overview",
     // },
-    {
-      icon: <IconStore.myaccount className={IconclassName} />,
-      title: "My Account",
-      key: "myAccount",
-    },
-    {
-      icon: <IconStore.password className={IconclassName} />,
-      title: "Change Password",
-      key: "changepassword",
-    },
-    {
-      icon: <IconStore.myContacts className={IconclassName} />,
-      title: "Address Book",
-      key: "addressBook",
-    },
+    ...(kycStatus?.kyc_status == 0 && userRoles?.user_type == "sellers"
+      ? [
+          {
+            icon: <ShieldCheck className={IconclassName} />,
+            title: "KYC Verification",
+            key: "kyc",
+          },
+        ]
+      : [
+          {
+            icon: <IconStore.myaccount className={IconclassName} />,
+            title: "My Account",
+            key: "myAccount",
+          },
+          {
+            icon: <IconStore.password className={IconclassName} />,
+            title: "Change Password",
+            key: "changepassword",
+          },
+          {
+            icon: <IconStore.myContacts className={IconclassName} />,
+            title: "Address Book",
+            key: "addressBook",
+          },
 
-    {
-      icon: <WalletMinimal   className={IconclassName} />,
-      title: "SB Pay",
-      key: "sbPay",
-    },
-    {
-      icon: <IconStore.myTeams className={IconclassName} />,
-      title: "My Team",
-      key: "myTeam",
-    },
-    // {
-    //   icon: <IconStore.tickets className={IconclassName} />,
-    //   title: "Ticket Delivery",
-    //   key: "ticketDelivery",
-    // },
-    {
-      icon: <IconStore.cards className={IconclassName} />,
-      title: "Linked Cards",
-      key: "linkedCards",
-    },
-    {
-      icon: <ShieldCheck className={IconclassName} />,
-      title: "KYC",
-      key: "kyc",
-    },
-    {
-      icon: <IconStore.referral className={IconclassName} />,
-      title: "My Referral",
-      key: "myRefferal",
-    },
-    {
-      icon: <IconStore.glitter className={IconclassName} />,
-      title: "Request a Feature",
-      key: "featureRequest",
-    },
+          {
+            icon: <WalletMinimal className={IconclassName} />,
+            title: "SB Pay",
+            key: "sbPay",
+          },
+          {
+            icon: <IconStore.myTeams className={IconclassName} />,
+            title: "My Team",
+            key: "myTeam",
+          },
+          // {
+          //   icon: <IconStore.tickets className={IconclassName} />,
+          //   title: "Ticket Delivery",
+          //   key: "ticketDelivery",
+          // },
+          {
+            icon: <IconStore.cards className={IconclassName} />,
+            title: "Linked Cards",
+            key: "linkedCards",
+          },
+          {
+            icon: <ShieldCheck className={IconclassName} />,
+            title: "KYC",
+            key: "kyc",
+          },
+          {
+            icon: <IconStore.referral className={IconclassName} />,
+            title: "My Referral",
+            key: "myRefferal",
+          },
+          {
+            icon: <IconStore.glitter className={IconclassName} />,
+            title: "Request a Feature",
+            key: "featureRequest",
+          },
+        ]),
   ];
 
   const handleTabClick = (tab) => {

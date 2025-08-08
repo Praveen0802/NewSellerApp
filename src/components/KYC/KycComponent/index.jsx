@@ -8,6 +8,7 @@ import {
   RefreshCcw,
   Clock,
   CheckCircle,
+  FileSignature,
 } from "lucide-react";
 import { useState } from "react";
 import DocumentUpload from "../DocumentUpload";
@@ -20,6 +21,8 @@ import {
 import { toast } from "react-toastify";
 import useS3Download from "@/Hooks/useS3Download";
 import RenderPreviewContent from "../renderPreviewContent";
+import KycDocumentComponent from "@/components/SignupPage/KycDocumentComponent";
+import { useSelector } from "react-redux";
 
 const KycComponent = ({
   photoId,
@@ -31,12 +34,20 @@ const KycComponent = ({
   setUploading,
   isBusiness,
 } = {}) => {
-  console.log(photoId, "hiiiii", address, contract, business_document);
+  const { currentUser } = useSelector((state) => state.currentUser);
+  const { kycStatus } = useSelector((state) => state.common);
+  console.log(kycStatus,'kycStatuskycStatuskycStatus')
   const [previewModal, setPreviewModal] = useState({
     open: false,
     url: "",
     title: "",
     fileType: "",
+  });
+
+  // New state for contract generation modal
+  const [contractModal, setContractModal] = useState({
+    open: false,
+    status: null, // to track KYC status from iframe
   });
 
   // Document configuration mapping
@@ -95,9 +106,7 @@ const KycComponent = ({
   // Extract document data from props
   const getDocumentData = (docType) => {
     const propData = propsMapping[docType];
-
     if (!propData) return null;
-
     return {
       status: propData.status,
       message: propData.msg,
@@ -132,7 +141,6 @@ const KycComponent = ({
     const docTypes = Object.keys(documentConfig);
     const statuses = docTypes.map((docType) => getDocumentStatus(docType));
 
-    // Count different status types
     const approved = statuses.filter((status) => status === "Approved").length;
     const rejected = statuses.filter((status) => status === "Rejected").length;
     const pending = statuses.filter((status) => status === "Pending").length;
@@ -140,7 +148,6 @@ const KycComponent = ({
       (status) => status === "not uploaded"
     ).length;
 
-    // Determine overall status based on individual statuses
     if (approved === docTypes.length) {
       return "Approved";
     } else if (rejected > 0) {
@@ -213,6 +220,27 @@ const KycComponent = ({
     return "unknown";
   };
 
+  // Handle contract generation
+  const handleGenerateContract = () => {
+    setContractModal({ open: true, status: null });
+  };
+
+  // Handle KYC success (close modal and refresh contract data)
+  const handleKycSuccess = async () => {
+    setContractModal({ open: false, status: "completed" });
+    toast.success("Contract generated successfully!");
+
+    // Refresh contract data after successful generation
+    if (onUploadSuccess) {
+      await onUploadSuccess("contract", null);
+    }
+  };
+
+  // Handle contract modal status change
+  const handleContractStatusChange = (status) => {
+    setContractModal((prev) => ({ ...prev, status }));
+  };
+
   const handleFileUpload = async (documentType, file) => {
     if (!file) return;
 
@@ -220,8 +248,7 @@ const KycComponent = ({
     const docType = saveDocsPropsMapping[documentType];
 
     try {
-      // Create FormData for file upload
-      console.log(file,'kkkkkkkkk',docType)
+      console.log(file, "kkkkkkkkk", docType);
       const formData = new FormData();
       formData.append("file", file);
       formData.append("document_type", docType);
@@ -240,38 +267,24 @@ const KycComponent = ({
         throw new Error(`Unknown document type: ${docType}`);
       }
 
-      // Check if the response indicates success
       if (response && response.success !== false) {
-        // Call success callback if provided
         if (onUploadSuccess) {
           toast.success(`${documentType} uploaded successfully`);
           onUploadSuccess(documentType, file);
         }
-
-        // Optional: Show success message
         console.log(`${documentType} uploaded successfully`);
       } else {
-        // Handle API error response
         const errorMessage =
           response?.message || `Failed to upload ${documentType}`;
         throw new Error(errorMessage);
       }
     } catch (error) {
       console.error(`Error uploading ${documentType}:`, error);
-
-      // More user-friendly error handling
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
         `Failed to upload ${documentType}. Please try again.`;
-
-      // You might want to use a toast notification instead of alert
       toast.error("Failed to upload document. Please try again.");
-
-      // Optional: Call error callback if you have one
-      // if (onUploadError) {
-      //   onUploadError(documentType, error);
-      // }
     } finally {
       setUploading((prev) => ({ ...prev, [documentType]: false }));
     }
@@ -356,7 +369,7 @@ const KycComponent = ({
             )}
           </div>
 
-          {/* Approved Status - Show document with view/download options */}
+          {/* Approved Status */}
           {status === "Approved" && docData?.data && (
             <div className="space-y-3">
               <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-200">
@@ -393,7 +406,7 @@ const KycComponent = ({
             </div>
           )}
 
-          {/* Pending Status - Show document with view/download options but indicate it's under review */}
+          {/* Pending Status */}
           {status === "Pending" && docData?.data && (
             <div className="space-y-3">
               <div className="flex items-center justify-between bg-yellow-50 p-3 rounded-lg border border-yellow-200">
@@ -430,12 +443,36 @@ const KycComponent = ({
             </div>
           )}
 
-          {/* Not Uploaded Status - Show upload component */}
+          {/* Not Uploaded Status - Add generate option for contract */}
           {status === "not uploaded" && (
             <div>
               <p className="text-sm text-gray-600 mb-3">
                 Please upload the required document
               </p>
+
+              {/* Add Generate Document option for contract */}
+              {docType === "contract" && (
+                <div className="mb-4">
+                  <button
+                    onClick={handleGenerateContract}
+                    className="flex items-center space-x-2 w-full justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium mb-3"
+                  >
+                    <FileSignature className="w-4 h-4" />
+                    <span>Generate Document</span>
+                  </button>
+
+                  {/* Divider */}
+                  <div className="flex items-center mb-3">
+                    <div className="flex-1 border-t border-gray-300"></div>
+                    <div className="px-3 text-xs text-gray-500 bg-white">
+                      OR
+                    </div>
+                    <div className="flex-1 border-t border-gray-300"></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Existing upload component */}
               <DocumentUpload
                 documentType={docType}
                 config={config}
@@ -446,7 +483,7 @@ const KycComponent = ({
             </div>
           )}
 
-          {/* Rejected Status - Show rejection message and re-upload option */}
+          {/* Rejected Status */}
           {status === "Rejected" && (
             <div className="space-y-3">
               <div className="flex items-start space-x-2 text-red-600 py-2 bg-red-50 p-3 rounded-lg border border-red-200">
@@ -460,7 +497,6 @@ const KycComponent = ({
                 </div>
               </div>
 
-              {/* Show current rejected document if available */}
               {docData?.data && (
                 <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border">
                   <div className="flex items-center space-x-3">
@@ -494,6 +530,30 @@ const KycComponent = ({
                     Please ensure your document meets all requirements
                   </p>
                 </div>
+
+                {/* Add Generate Document option for contract in rejected state */}
+                {docType === "contract" && (
+                  <div className="mb-4">
+                    <button
+                      onClick={handleGenerateContract}
+                      className="flex items-center space-x-2 w-full justify-center bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium mb-3"
+                    >
+                      <FileSignature className="w-4 h-4" />
+                      <span>Generate Document</span>
+                    </button>
+
+                    {/* Divider */}
+                    <div className="flex items-center mb-3">
+                      <div className="flex-1 border-t border-red-300"></div>
+                      <div className="px-3 text-xs text-red-600 bg-red-50">
+                        OR
+                      </div>
+                      <div className="flex-1 border-t border-red-300"></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Existing upload component */}
                 <DocumentUpload
                   documentType={docType}
                   config={config}
@@ -505,13 +565,36 @@ const KycComponent = ({
             </div>
           )}
 
-          {/* Error Status - Generic error handling */}
+          {/* Error Status */}
           {status === "error" && (
             <div className="space-y-3">
               <div className="flex items-center space-x-2 py-2">
-                {/* <AlertCircle className="w-4 h-4" /> */}
                 <span className="text-sm">{docData?.message}</span>
               </div>
+
+              {/* Add Generate Document option for contract in error state */}
+              {docType === "contract" && (
+                <div className="mb-4">
+                  <button
+                    onClick={handleGenerateContract}
+                    className="flex items-center space-x-2 w-full justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium mb-3"
+                  >
+                    <FileSignature className="w-4 h-4" />
+                    <span>Generate Document</span>
+                  </button>
+
+                  {/* Divider */}
+                  <div className="flex items-center mb-3">
+                    <div className="flex-1 border-t border-gray-300"></div>
+                    <div className="px-3 text-xs text-gray-500 bg-white">
+                      OR
+                    </div>
+                    <div className="flex-1 border-t border-gray-300"></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Existing upload component */}
               <DocumentUpload
                 documentType={docType}
                 config={config}
@@ -535,17 +618,18 @@ const KycComponent = ({
 
   return (
     <div className="w-full h-full">
-      {/* Header */}
-
       <h2 className="pb-2 sm:pb-4 text-base sm:text-lg md:text-xl p-3 sm:p-4 font-semibold">
         KYC Documents
       </h2>
 
       <div className="p-6 sm:p-4 bg-white border-[1px] flex flex-col gap-3 sm:gap-4 border-[#eaeaf1] w-full h-full">
         <div className="flex justify-between items-center">
-        <p className="text-gray-600">Upload required verification documents</p>
-        {renderOverallStatusBadge()}
+          <p className="text-gray-600">
+            Upload required verification documents
+          </p>
+          {renderOverallStatusBadge()}
         </div>
+
         {/* Progress Bar */}
         <div className="mb-6 bg-white rounded-lg border border-gray-200 p-4 ">
           <div className="flex justify-between items-center mb-2">
@@ -563,7 +647,6 @@ const KycComponent = ({
         </div>
 
         {/* Document List */}
-
         <div className="mb-6 grid grid-cols-1 gap-4">
           <div className="space-y-4 ">
             {Object.keys(documentConfig).map(renderDocumentCard)}
@@ -586,11 +669,51 @@ const KycComponent = ({
             )}
           </div>
         </div>
+
+        {/* Contract Generation Modal */}
+        {contractModal.open && (
+          <div className="fixed inset-0 bg-black/80 bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-[90%] h-[90%] flex flex-col max-w-6xl">
+              {/* Header */}
+              <div className="flex-shrink-0 flex items-center justify-between p-4 border-b">
+                <div className="flex items-center space-x-2">
+                  <FileSignature className="w-6 h-6 text-blue-600" />
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Generate Contract Document
+                  </h3>
+                  {contractModal.status && (
+                    <span className="text-xs bg-blue-100 px-2 py-1 rounded uppercase text-blue-800">
+                      {contractModal.status}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() =>
+                    setContractModal({ open: false, status: null })
+                  }
+                  className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                  title="Close"
+                >
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+
+              {/* Iframe Content */}
+              <div className="flex-1 overflow-hidden">
+                <KycDocumentComponent
+                  currentUser={currentUser}
+                  onStatusChange={handleContractStatusChange}
+                  onKycSuccess={handleKycSuccess}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Enhanced Preview Modal */}
         {previewModal.open && (
           <div className="fixed inset-0 bg-black/80 bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg shadow-xl w-[70%] h-[85%] flex flex-col max-w-4xl">
-              {/* Header - Fixed height */}
               <div className="flex-shrink-0 flex items-center justify-between p-4 border-b">
                 <div className="flex items-center space-x-2">
                   <h3 className="text-lg font-semibold text-gray-900 truncate">
@@ -608,8 +731,6 @@ const KycComponent = ({
                   <X className="w-5 h-5 text-gray-600" />
                 </button>
               </div>
-
-              {/* Content - Takes remaining height */}
               <div className="flex-1 overflow-hidden">
                 {RenderPreviewContent({
                   previewModal,

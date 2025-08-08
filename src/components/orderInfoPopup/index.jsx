@@ -14,6 +14,7 @@ import {
   addSalesPendingNotes,
 } from "@/utils/apiHandler/request";
 import { toast } from "react-toastify";
+import { Expand, Shrink } from "lucide-react";
 
 const OrderInfo = ({
   show,
@@ -23,8 +24,6 @@ const OrderInfo = ({
   type = "",
   showShimmer = false,
 } = {}) => {
-
-
   const [expandedVersion, setExpandedVersion] = useState(false);
 
   // Handle new array format data
@@ -245,7 +244,7 @@ const OrderInfo = ({
 
   // Format order object for OrderValues component
   const orderObject = {
-    order_id: order_details?.booking_no ||order_details?.order_id,
+    order_id: order_details?.booking_no || order_details?.order_id,
     order_date: order_details?.order_date
       ? formatTimestamp(order_details?.order_date)
       : "-",
@@ -334,15 +333,33 @@ const OrderInfo = ({
   console.log("order_details", order_details);
 
   return (
-    <RightViewModal className={"!w-[600px]"} show={show} onClose={onClose}>
-      <div className={`w-[600px]`}>
+    <RightViewModal
+      className={`${expandedVersion ? "!w-[100%]" : " !w-[600px]"}`}
+      show={show}
+      onClose={onClose}
+    >
+      <div className={`${expandedVersion ? "!w-[100%]" : " !w-[600px]"}`}>
         <div className={` overflow-auto rounded-md bg-white`}>
           <div className="flex items-center border-b-[1px] border-[#E0E1EA] justify-between py-[13px] px-[24px]">
             <p className="text-[18px] text-[#323A70] ">
               Order ID:
-              {order_id_label || order_details?.booking_no || order_details?.order_id}
+              {order_id_label ||
+                order_details?.booking_no ||
+                order_details?.order_id}
             </p>
-            <div className="flex items-center gap-2 cursor-pointer">
+            <div className="flex items-center gap-2 ">
+              {expandedVersion ? (
+                <Shrink
+                  className="w-4 h-4 text-gray-600 cursor-pointer"
+                  onClick={handleCollapseModal}
+                />
+              ) : (
+                <Expand
+                  className="w-4 h-4 text-gray-600 cursor-pointer"
+                  onClick={handleCollapseModal}
+                />
+              )}
+
               <IconStore.close
                 onClick={onClose}
                 className="size-4 cursor-pointer stroke-[#130061]"

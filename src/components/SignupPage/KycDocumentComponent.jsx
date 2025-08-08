@@ -27,11 +27,6 @@ const KycDocumentComponent = ({
   const [showIframe, setShowIframe] = useState(false);
   const [iframeError, setIframeError] = useState(false);
 
-  console.log("error", error);
-  console.log("kycLoader", kycLoader);
-  console.log("kycUrl", kycUrl);
-  console.log("hasInitialized", hasInitialized);
-  console.log("kycStatus", kycStatus);
 
   // Notify parent component about status changes
   useEffect(() => {

@@ -2,6 +2,7 @@ import {
   ADD_WALLET_POPUP,
   CONFIRM_PURCHASE_POPUP,
   FETCH_USER_ROLES,
+  GET_KYC_STATUS,
   SHOW_FULL_DISPLAY,
   UPDATE_NOTIFICATION_COUNT,
   USER_ACCESS_ROUTES,
@@ -45,6 +46,13 @@ export const updateRoleAccess = (payload) => {
 export const getUserAccessRoutes = (payload) => {
   return {
     type: USER_ACCESS_ROUTES,
+    payload,
+  };
+};
+
+export const updatedKYCStatus = (payload) => {
+  return {
+    type: GET_KYC_STATUS,
     payload,
   };
 };
