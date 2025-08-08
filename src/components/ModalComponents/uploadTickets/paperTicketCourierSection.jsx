@@ -508,7 +508,7 @@ const PaperTicketCourierSection = React.forwardRef(
                       </div>
                       {!isDisabled && (
                         <button
-                          className="p-1 text-red-500 hover:text-red-700"
+                          className="p-1 text-gray-900 hover:text-red-700"
                           onClick={() => handleDeleteUploaded(file.id)}
                         >
                           <Trash2 className="w-3 h-3" />
