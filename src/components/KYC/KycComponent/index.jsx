@@ -221,6 +221,7 @@ const KycComponent = ({
 
     try {
       // Create FormData for file upload
+      console.log(file,'kkkkkkkkk',docType)
       const formData = new FormData();
       formData.append("file", file);
       formData.append("document_type", docType);

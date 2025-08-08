@@ -65,6 +65,7 @@ const TabbedLayout = ({
   hideVisibleColumns = false,
   showTabFullWidth = false,
   customTableComponent = () => {},
+  showCustomTable=false,
   customComponent = () => {},
   transitionDirection: parentTransitionDirection = null,
   disableTransitions = false,
@@ -130,10 +131,9 @@ const TabbedLayout = ({
   );
 
   // Debounced scroll handler
-  const debouncedHandleScroll = useCallback(
-    debounce(handleScroll, 150),
-    [handleScroll]
-  );
+  const debouncedHandleScroll = useCallback(debounce(handleScroll, 150), [
+    handleScroll,
+  ]);
 
   // Helper function for debouncing
   function debounce(func, wait) {
@@ -446,6 +446,158 @@ const TabbedLayout = ({
     }
   };
 
+  const tabbedFilterActiveFilterCongig = () => {
+    return (
+      <div className={containerClassName}>
+        <div className="bg-white">
+          <p className="px-6 pt-4 text-[#323A70] text-[18px] font-semibold">
+            Overview
+          </p>
+
+          {/* List Items Section with Transitions */}
+          <div
+            className={`transition-all duration-300 ease-in-out overflow-hidden border-b-[1px] border-[#E0E1EA] ${
+              showListItems
+                ? "max-h-[500px] opacity-100 px-6 pb-3 pt-3"
+                : "max-h-0 opacity-0 px-6 py-0"
+            }`}
+          >
+            <div className="relative">
+              {!disableTransitions &&
+                isTransitioning &&
+                previousListItems.length > 0 && (
+                  <div
+                    className={`
+                  ${
+                    previousListItems?.length == 4
+                      ? "grid grid-cols-4 gap-4"
+                      : "flex gap-4 flex-nowrap"
+                  } min-w-min md:min-w-0 absolute inset-0 transition-transform overflow-scroll duration-300 ease-in-out z-10
+                  ${
+                    transitionDirection === "next"
+                      ? "transform -translate-x-full"
+                      : "transform translate-x-full"
+                  }
+                `}
+                  >
+                    {previousListItems?.map((item, index) => (
+                      <div
+                        key={`previous-${item.key || index}-${Date.now()}`}
+                        className="min-w-[200px]"
+                      >
+                        <AvailableList
+                          list={{
+                            name: item?.name,
+                            value: item?.value,
+                            smallTooptip: item?.smallTooptip,
+                            showCheckbox: item?.showCheckbox,
+                            isChecked: item?.isChecked,
+                            onCheckChange: undefined,
+                            onClick: undefined,
+                          }}
+                          loading={loading}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+              <div
+                className={`
+                ${
+                  currentListItems?.length == 4
+                    ? "grid grid-cols-4 gap-4"
+                    : "flex gap-4 flex-nowrap overflow-x-scroll hideScrollbar"
+                } min-w-min md:min-w-0 ${
+                  !disableTransitions
+                    ? "transition-transform duration-300 ease-in-out"
+                    : ""
+                }
+                ${
+                  !disableTransitions && isTransitioning
+                    ? "transform translate-x-0"
+                    : "transform translate-x-0"
+                }
+              `}
+                style={{
+                  transform:
+                    !disableTransitions && isTransitioning
+                      ? "translateX(0)"
+                      : "translateX(0)",
+                  animation:
+                    !disableTransitions && isTransitioning
+                      ? transitionDirection === "next"
+                        ? "slideInFromRight 0.3s ease-in-out"
+                        : "slideInFromLeft 0.3s ease-in-out"
+                      : "none",
+                }}
+              >
+                {currentListItems?.map((item, index) => (
+                  <div
+                    key={`current-${item.key || index}-${Date.now()}`}
+                    className="flex-grow flex-shrink flex-basis-[25%] min-w-[12rem]"
+                  >
+                    <AvailableList
+                      list={{
+                        name: item?.name,
+                        value: item?.value,
+                        showCheckbox: item?.showCheckbox,
+                        smallTooptip: item?.smallTooptip,
+                        isChecked: item?.isChecked,
+                        onCheckChange:
+                          item?.showCheckbox &&
+                          item?.key &&
+                          (!isTransitioning || disableTransitions)
+                            ? () =>
+                                handleCheckboxToggle(item.key, item.isChecked)
+                            : undefined,
+                        onClick:
+                          item?.showCheckbox &&
+                          item?.key &&
+                          (!isTransitioning || disableTransitions)
+                            ? () =>
+                                handleCheckboxToggle(item.key, item.isChecked)
+                            : undefined,
+                      }}
+                      loading={loading}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Section */}
+          {showFilters && getVisibleFilters().length > 0 && (
+            <div className="px-6 py-5">
+              {customComponent && customComponent()}
+              <FilterSection
+                filterConfig={getVisibleFilters()}
+                currentTab={selectedTab}
+                onFilterChange={handleFilterChange}
+                containerClassName="md:flex flex-wrap gap-3 items-center"
+                initialValues={currentFilterValues}
+              />
+            </div>
+          )}
+
+          {showSelectedFilterPills && (
+            <div className="px-[20px] border-t-1 border-gray-200">
+              <ActiveFiltersBox
+                activeFilters={currentFilterValues}
+                onFilterChange={onFilterChange}
+                onClearAllFilters={handleClearAllFilters}
+                currentTab={selectedTab}
+                filterConfig={filterConfig}
+                excludedKeys={excludedKeys}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={className}>
       {/* Header V2 or Original Top Right Controls */}
@@ -558,178 +710,37 @@ const TabbedLayout = ({
       )}
 
       {/* UPDATED: Scrollable container with scroll handler */}
-      <div 
-        ref={scrollContainerRef}
-        className={`${customTableComponent && "overflow-auto max-h-[calc(100vh-250px)]"}`}
-        onScroll={debouncedHandleScroll}
-      >
-        <div className={containerClassName}>
-          <div className="bg-white">
-            <p className="px-6 pt-4 text-[#323A70] text-[18px] font-semibold">
-              Overview
-            </p>
-            
-            {/* List Items Section with Transitions */}
-            <div
-              className={`transition-all duration-300 ease-in-out overflow-hidden border-b-[1px] border-[#E0E1EA] ${
-                showListItems
-                  ? "max-h-[500px] opacity-100 px-6 pb-3 pt-3"
-                  : "max-h-0 opacity-0 px-6 py-0"
-              }`}
-            >
-              <div className="relative">
-                {!disableTransitions &&
-                  isTransitioning &&
-                  previousListItems.length > 0 && (
-                    <div
-                      className={`
-                      ${
-                        previousListItems?.length == 4
-                          ? "grid grid-cols-4 gap-4"
-                          : "flex gap-4 flex-nowrap"
-                      } min-w-min md:min-w-0 absolute inset-0 transition-transform overflow-scroll duration-300 ease-in-out z-10
-                      ${
-                        transitionDirection === "next"
-                          ? "transform -translate-x-full"
-                          : "transform translate-x-full"
-                      }
-                    `}
-                    >
-                      {previousListItems?.map((item, index) => (
-                        <div
-                          key={`previous-${item.key || index}-${Date.now()}`}
-                          className="min-w-[200px]"
-                        >
-                          <AvailableList
-                            list={{
-                              name: item?.name,
-                              value: item?.value,
-                              smallTooptip: item?.smallTooptip,
-                              showCheckbox: item?.showCheckbox,
-                              isChecked: item?.isChecked,
-                              onCheckChange: undefined,
-                              onClick: undefined,
-                            }}
-                            loading={loading}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
+      {!showCustomTable &&  tabbedFilterActiveFilterCongig()}
 
-                <div
-                  className={`
-                    ${
-                      currentListItems?.length == 4
-                        ? "grid grid-cols-4 gap-4"
-                        : "flex gap-4 flex-nowrap overflow-x-scroll hideScrollbar"
-                    } min-w-min md:min-w-0 ${
-                    !disableTransitions
-                      ? "transition-transform duration-300 ease-in-out"
-                      : ""
-                  }
-                    ${
-                      !disableTransitions && isTransitioning
-                        ? "transform translate-x-0"
-                        : "transform translate-x-0"
-                    }
-                  `}
-                  style={{
-                    transform:
-                      !disableTransitions && isTransitioning
-                        ? "translateX(0)"
-                        : "translateX(0)",
-                    animation:
-                      !disableTransitions && isTransitioning
-                        ? transitionDirection === "next"
-                          ? "slideInFromRight 0.3s ease-in-out"
-                          : "slideInFromLeft 0.3s ease-in-out"
-                        : "none",
-                  }}
-                >
-                  {currentListItems?.map((item, index) => (
-                    <div
-                      key={`current-${item.key || index}-${Date.now()}`}
-                      className="flex-grow flex-shrink flex-basis-[25%] min-w-[12rem]"
-                    >
-                      <AvailableList
-                        list={{
-                          name: item?.name,
-                          value: item?.value,
-                          showCheckbox: item?.showCheckbox,
-                          smallTooptip: item?.smallTooptip,
-                          isChecked: item?.isChecked,
-                          onCheckChange:
-                            item?.showCheckbox &&
-                            item?.key &&
-                            (!isTransitioning || disableTransitions)
-                              ? () =>
-                                  handleCheckboxToggle(item.key, item.isChecked)
-                              : undefined,
-                          onClick:
-                            item?.showCheckbox &&
-                            item?.key &&
-                            (!isTransitioning || disableTransitions)
-                              ? () =>
-                                  handleCheckboxToggle(item.key, item.isChecked)
-                              : undefined,
-                        }}
-                        loading={loading}
-                      />
-                    </div>
-                  ))}
-                </div>
+      {showCustomTable && (
+        <div
+          ref={scrollContainerRef}
+          className={`${
+            customTableComponent && "overflow-auto max-h-[calc(100vh-250px)]"
+          }`}
+          onScroll={debouncedHandleScroll}
+        >
+          {tabbedFilterActiveFilterCongig()}
+          {customTableComponent && customTableComponent()}
+
+          {/* Loading indicator for pagination */}
+          {loadingMore && (
+            <div className="flex justify-center py-4">
+              <div className="flex items-center gap-2 text-gray-600">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span className="text-sm">Loading more...</span>
               </div>
             </div>
+          )}
 
-            {/* Filter Section */}
-            {showFilters && getVisibleFilters().length > 0 && (
-              <div className="px-6 py-5">
-                {customComponent && customComponent()}
-                <FilterSection
-                  filterConfig={getVisibleFilters()}
-                  currentTab={selectedTab}
-                  onFilterChange={handleFilterChange}
-                  containerClassName="md:flex flex-wrap gap-3 items-center"
-                  initialValues={currentFilterValues}
-                />
-              </div>
-            )}
-            
-            {showSelectedFilterPills && (
-              <div className="px-[20px] border-t-1 border-gray-200">
-                <ActiveFiltersBox
-                  activeFilters={currentFilterValues}
-                  onFilterChange={onFilterChange}
-                  onClearAllFilters={handleClearAllFilters}
-                  currentTab={selectedTab}
-                  filterConfig={filterConfig}
-                  excludedKeys={excludedKeys}
-                />
-              </div>
-            )}
-          </div>
+          {/* End of data indicator */}
+          {!hasNextPage && !loading && (
+            <div className="flex justify-center py-4 text-gray-500 text-sm">
+              No more data to load
+            </div>
+          )}
         </div>
-        
-        {customTableComponent && customTableComponent()}
-        
-        {/* Loading indicator for pagination */}
-        {loadingMore && (
-          <div className="flex justify-center py-4">
-            <div className="flex items-center gap-2 text-gray-600">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              <span className="text-sm">Loading more...</span>
-            </div>
-          </div>
-        )}
-
-        {/* End of data indicator */}
-        {!hasNextPage && !loading && (
-          <div className="flex justify-center py-4 text-gray-500 text-sm">
-            No more data to load
-          </div>
-        )}
-      </div>
+      )}
 
       {/* CSS Animations */}
       {!disableTransitions && (

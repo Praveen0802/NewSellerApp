@@ -791,6 +791,7 @@ const SalesPage = (props) => {
         loading={pageLoader}
         excludedKeys={["currency", "page"]}
         customTableComponent={customTableComponent}
+        showCustomTable={true}
         // NEW PROPS FOR SCROLL HANDLING
         onScrollEnd={handleScrollEnd}
         loadingMore={loadingMore}
