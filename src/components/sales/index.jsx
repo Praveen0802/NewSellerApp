@@ -135,7 +135,7 @@ const SalesPage = (props) => {
     { key: "event_date", label: "Event Date" },
     { key: "ticket_details", label: "Ticket Details" },
     { key: "quantity", label: "Quantity" },
-    { key: "ticket_type", label: "Ticket Type" },
+    { key: "ticket_type_label", label: "Ticket Type" },
     { key: "category", label: "Category" },
     { key: "order_status_label", label: "Order Status" },
     { key: "section", label: "Section" },
@@ -161,7 +161,6 @@ const SalesPage = (props) => {
 
       if (handleCountApiCall) {
         const count = await getSalesCount("", params);
-        console.log(count, "iiiiiiiii");
         setSalesCount(count?.sales_count);
       }
 
@@ -282,19 +281,19 @@ const SalesPage = (props) => {
   };
 
   const handleUploadAction = (rowData, rowIndex) => {
-    const ticketType = rowData.ticket_type;
+    // const ticketType = rowData.ticket_type;
 
-    // Find the matching object in the array
-    const matchingTicketType = response?.salesFilter?.data?.ticket_types.find(
-      (option) => option.name === ticketType
-    );
+    // // Find the matching object in the array
+    // const matchingTicketType = response?.salesFilter?.data?.ticket_types.find(
+    //   (option) => option.name === ticketType
+    // );
     const matchDate = separateDateTime(rowData?.event_date)?.date;
     const matchTime = separateDateTime(rowData?.event_date)?.time;
     setShowUploadPopup({
       show: true,
       rowData: {
         ...rowData,
-        ticket_type_id: matchingTicketType?.id,
+        // ticket_type_id: matchingTicketType?.id,
         matchDate,
         matchTime,
       },
