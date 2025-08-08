@@ -6,7 +6,7 @@ const PaperTicketCourierSection = React.forwardRef(
     const updated = rowData?.rawTicketData?.uploadTickets;
 
     // Check if component should be in disabled/readonly mode
-    const isDisabled = updated && updated.length > 0;
+    const isDisabled = false;
 
     // Transform updated data to component format
     const transformUpdatedData = useCallback((updatedArray) => {
@@ -28,11 +28,11 @@ const PaperTicketCourierSection = React.forwardRef(
 
     // Get initial data based on priority: updated data > initialData > defaults
     const getInitialData = useCallback(() => {
-      if (isDisabled && updated) {
+      if (updated) {
         return transformUpdatedData(updated);
       }
       return initialData;
-    }, [isDisabled, updated, transformUpdatedData, initialData]);
+    }, [ updated, transformUpdatedData, initialData]);
 
     // Internal state for courier details
     const [courierDetails, setCourierDetails] = useState(() => {
@@ -64,7 +64,7 @@ const PaperTicketCourierSection = React.forwardRef(
     // Handle courier details change (disabled when readonly)
     const handleCourierDetailChange = useCallback(
       (field, value) => {
-        if (isDisabled) return; // Prevent changes in disabled mode
+        // Prevent changes in disabled mode
 
         setCourierDetails((prev) => {
           const newDetails = {
@@ -89,13 +89,13 @@ const PaperTicketCourierSection = React.forwardRef(
           return newDetails;
         });
       },
-      [onChange, isDisabled]
+      [onChange]
     );
 
     // Handle file upload (disabled when readonly)
     const handleFileUpload = useCallback(
       (e) => {
-        if (isDisabled) return; // Prevent uploads in disabled mode
+       
 
         const files = Array.from(e.target.files);
         if (files.length > 0) {
@@ -133,7 +133,6 @@ const PaperTicketCourierSection = React.forwardRef(
     // Handle file deletion (disabled when readonly)
     const handleDeleteUploaded = useCallback(
       (id) => {
-        if (isDisabled) return; // Prevent deletion in disabled mode
 
         setUploadedFiles((prev) => {
           const updatedFiles = prev.filter((file) => file.id !== id);
@@ -155,14 +154,13 @@ const PaperTicketCourierSection = React.forwardRef(
           return updatedFiles;
         });
       },
-      [onChange, isDisabled]
+      [onChange]
     );
 
     // Handle browse files click (disabled when readonly)
     const handleBrowseFiles = useCallback(() => {
-      if (isDisabled) return; // Prevent file browsing in disabled mode
       fileInputRef.current?.click();
-    }, [isDisabled]);
+    }, []);
 
     // Update internal state when initialData or updated data changes
     useEffect(() => {
@@ -248,7 +246,6 @@ const PaperTicketCourierSection = React.forwardRef(
 
         // Method to programmatically update data from parent if needed
         updateData: (newData) => {
-          if (isDisabled) return; // Prevent updates in disabled mode
 
           const updatedCourierDetails = {
             courier_type: newData?.courier_type || "company",
@@ -267,7 +264,6 @@ const PaperTicketCourierSection = React.forwardRef(
 
         // Method to update only courier details
         updateCourierDetails: (newDetails) => {
-          if (isDisabled) return; // Prevent updates in disabled mode
 
           const updatedDetails = {
             ...courierDataRef.current.courierDetails,
@@ -282,7 +278,6 @@ const PaperTicketCourierSection = React.forwardRef(
 
         // Method to reset to initial state
         reset: () => {
-          if (isDisabled) return; // Prevent reset in disabled mode
 
           const data = getInitialData();
           const resetCourierDetails = {
@@ -302,7 +297,6 @@ const PaperTicketCourierSection = React.forwardRef(
 
         // Method to clear all data
         clear: () => {
-          if (isDisabled) return; // Prevent clear in disabled mode
 
           const emptyData = {
             courierDetails: {
@@ -336,12 +330,7 @@ const PaperTicketCourierSection = React.forwardRef(
           <h4 className="text-sm font-medium text-[#323A70]">
             Courier Details ({maxQuantity} tickets)
           </h4>
-          {isDisabled && (
-            <div className="flex items-center gap-1 text-xs text-gray-600">
-              <Lock className="w-3 h-3" />
-              <span>Read Only</span>
-            </div>
-          )}
+       
         </div>
 
         <div className="p-3 space-y-4">

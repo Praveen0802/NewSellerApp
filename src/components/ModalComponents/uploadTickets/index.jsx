@@ -46,10 +46,10 @@ const UploadTickets = ({
   rowIndex,
   handleConfirmClick,
   myListingPage = false,
-  mySalesPage = true,
+  mySalesPage = false,
 }) => {
   const proofUploadView = rowData?.handleProofUpload || false;
-
+console.log(rowData,'rowDatarowData')
   const ticketTypes = !isNaN(parseInt(rowData?.ticket_type))
     ? rowData?.ticket_type
     : rowData?.ticket_types || rowData?.ticket_type_id;
@@ -687,6 +687,7 @@ const UploadTickets = ({
   };
 
   const handleConfirmCtaClick = useCallback(async () => {
+    console.log(mySalesPage,'mySalesPagemySalesPage')
     if (mySalesPage) {
       onClose();
       return;
@@ -720,7 +721,7 @@ const UploadTickets = ({
         },
         uploadedFiles: [],
       };
-
+console.log(currentPaperTicketData,'currentPaperTicketDatacurrentPaperTicketData')
     if (proofUploadView && myListingPage) {
       setIsLoading(true);
       if (existingProofTickets?.length <= 0) {

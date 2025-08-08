@@ -144,15 +144,25 @@ const SalesPage = (props) => {
   ];
 
   // Modified API call to handle pagination
-  const apiCall = async (params, handleCountApiCall, isLoadMore = false) => {
+  const apiCall = async (
+    params,
+    handleCountApiCall,
+    isLoadMore = false,
+    isClear = false
+  ) => {
     // Only show main loader for initial load, not for pagination
     if (!isLoadMore) {
       setPageLoader(true);
     } else {
       setLoadingMore(true);
     }
+    let updatedFilters = {};
+    if (isClear) {
+      updatedFilters = { currency: currency };
+    } else {
+      updatedFilters = { ...filtersApplied, ...params, currency: currency };
+    }
 
-    const updatedFilters = { ...filtersApplied, ...params };
     setFiltersApplied(updatedFilters);
 
     try {
@@ -345,21 +355,25 @@ const SalesPage = (props) => {
     },
   ]);
 
-  const listItemsConfig = {
-    [profile]: Object.entries(overViewData).reduce((acc, [key, value]) => {
-      // Format decimal numbers to 2 decimal places
-      const formattedValue =
-        typeof value === "number" && value % 1 !== 0
-          ? parseFloat(value.toFixed(2))
-          : value;
-
-      acc.push({
-        name: convertKeyToDisplayName(key),
-        value: formattedValue,
-      });
-      return acc;
-    }, []),
+  const itemConfig = {
+    [profile]: [
+      { name: "Delivery Revenue", value: overViewData?.amount_with_currency },
+      {
+        name: "Orders",
+        value: overViewData?.orders,
+        smallTooptip: `${overViewData.ticket_count} Tickets`,
+      },
+      { name: "E-Ticket", value: overViewData?.e_tickets_count },
+      {
+        name: "External Transfer",
+        value: overViewData?.external_transfer_count,
+      },
+      { name: "Mobile Link/PKPASS", value: overViewData?.mobile_ticket_count },
+      { name: "Paper Ticket", value: overViewData?.paper_ticket_count },
+      { name: "Local Delivery", value: overViewData?.local_delivery_count },
+    ],
   };
+
 
   const [csvLoader, setCsvLoader] = useState(false);
   const [currency, setCurrency] = useState("GBP");
@@ -377,17 +391,6 @@ const SalesPage = (props) => {
       },
       {
         type: "select",
-        name: "team_members",
-        label: "Team Members",
-        value: filtersApplied?.team_members,
-        multiselect: true,
-        options: teamMembers,
-        parentClassName: "!w-[15%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-        labelClassName: "!text-[11px]",
-      },
-      {
-        type: "select",
         value: filtersApplied?.ticket_type,
         name: "ticket_type",
         label: "Ticket Type",
@@ -399,6 +402,57 @@ const SalesPage = (props) => {
         className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
         labelClassName: "!text-[11px]",
       },
+
+      {
+        type: "select",
+        name: "team_members",
+        label: "Team Members",
+        value: filtersApplied?.team_members,
+        multiselect: true,
+        options: teamMembers,
+        parentClassName: "!w-[15%]",
+        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+        labelClassName: "!text-[11px]",
+      },
+      {
+        type: "checkbox",
+        name: "ticket_in_hand",
+        label: "Tickets In Hand",
+        value: filtersApplied?.ticket_in_hand || false,
+        parentClassName: " !w-[15%] ",
+        className:
+          "!py-[3px] !px-[12px] pr-[20px] w-full text-xs sm:text-[10px] lg:text-xs",
+        labelClassName:
+          "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+        hideFromTable: true,
+      },
+
+      {
+        type: "date",
+        name: "orderDate",
+        singleDateMode: false,
+        value: filtersApplied?.orderDate,
+        label: "Order Date",
+        parentClassName: "!w-[150px]",
+        className: "!py-[8px] !px-[16px] mobile:text-xs",
+      },
+      {
+        type: "date",
+        name: "delivery_date",
+        singleDateMode: false,
+        label: "Delivery Date",
+        parentClassName: "!w-[150px]",
+        className: "!py-[8px] !px-[16px] mobile:text-xs",
+      },
+      {
+        type: "date",
+        name: "event_Date",
+        singleDateMode: false,
+        label: "Event Date",
+        parentClassName: "!w-[150px]",
+        className: "!py-[8px] !px-[16px] mobile:text-xs",
+      },
+
       {
         type: "select",
         name: "tournament",
@@ -409,45 +463,38 @@ const SalesPage = (props) => {
         className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
         labelClassName: "!text-[11px]",
       },
-      {
-        type: "date",
-        name: "orderDate",
-        singleDateMode: false,
-        label: "Order Date",
-        parentClassName: "!w-[150px]",
-        className: "!py-[8px] !px-[16px] mobile:text-xs",
-      },
-      {
-        type: "select",
-        name: "order_status",
-        label: "Order Status",
-        value: filtersApplied?.order_status,
-        options: [
-          { value: "paid", label: "Paid" },
-          { value: "completed", label: "Completed" },
-        ],
-        parentClassName: "!w-[12%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-        labelClassName: "!text-[11px]",
-      },
-      {
-        type: "select",
-        name: "payment_status",
-        label: "Payment Status",
-        value: filtersApplied?.payment_status,
-        options: [
-          { value: "paid", label: "Paid" },
-          { value: "unpaid", label: "Unpaid" },
-        ],
-        parentClassName: "!w-[12%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-        labelClassName: "!text-[11px]",
-      },
+
+      // {
+      //   type: "select",
+      //   name: "order_status",
+      //   label: "Order Status",
+      //   value: filtersApplied?.order_status,
+      //   options: [
+      //     { value: "paid", label: "Paid" },
+      //     { value: "completed", label: "Completed" },
+      //   ],
+      //   parentClassName: "!w-[12%]",
+      //   className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      //   labelClassName: "!text-[11px]",
+      // },
+      // {
+      //   type: "select",
+      //   name: "payment_status",
+      //   label: "Payment Status",
+      //   value: filtersApplied?.payment_status,
+      //   options: [
+      //     { value: "paid", label: "Paid" },
+      //     { value: "unpaid", label: "Unpaid" },
+      //   ],
+      //   parentClassName: "!w-[12%]",
+      //   className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+      //   labelClassName: "!text-[11px]",
+      // },
       {
         type: "select",
         value: filtersApplied?.category,
         name: "category",
-        label: "Ticket Type",
+        label: "Category",
         options: response?.salesFilter?.data?.categories?.map((type) => ({
           value: type?.id,
           label: type?.name,
@@ -475,6 +522,20 @@ const SalesPage = (props) => {
         ...params,
         order_date_from: value?.startDate,
         order_date_to: value?.endDate,
+        page: 1, // Reset to first page on filter change
+      };
+    } else if (filterKey === "delivery_date") {
+      params = {
+        ...params,
+        delivery_date_from: value?.startDate,
+        delivery_date_to: value?.endDate,
+        page: 1, // Reset to first page on filter change
+      };
+    } else if (filterKey === "event_date") {
+      params = {
+        ...params,
+        event_date_from: value?.startDate,
+        event_date_to: value?.endDate,
         page: 1, // Reset to first page on filter change
       };
     } else {
@@ -660,6 +721,10 @@ const SalesPage = (props) => {
     }
   };
 
+  const handleClearAllFilters = async () => {
+    await apiCall({}, false, false, true);
+  };
+
   const customTableComponent = () => {
     return (
       <div className="p-4">
@@ -708,7 +773,7 @@ const SalesPage = (props) => {
       <TabbedLayout
         tabs={tabsConfig}
         initialTab={profile || "pending"}
-        listItemsConfig={listItemsConfig}
+        listItemsConfig={itemConfig}
         useHeaderV2={true}
         filterConfig={filterConfig}
         onTabChange={handleTabChange}
@@ -724,13 +789,14 @@ const SalesPage = (props) => {
         showTabFullWidth={true}
         currentFilterValues={{ ...filtersApplied, order_status: "" }}
         loading={pageLoader}
-        excludedKeys={["currency","page"]}
+        excludedKeys={["currency", "page"]}
         customTableComponent={customTableComponent}
         // NEW PROPS FOR SCROLL HANDLING
         onScrollEnd={handleScrollEnd}
         loadingMore={loadingMore}
         hasNextPage={hasNextPage}
         scrollThreshold={100}
+        onClearAllFilters={handleClearAllFilters}
       />
       <LogDetailsModal
         show={showLogDetailsModal?.flag}
