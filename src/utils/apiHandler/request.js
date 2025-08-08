@@ -2333,7 +2333,6 @@ export const getAuthAddress = async (token, params) => {
 };
 
 export const saveSellerContract = async (data) => {
-  console.log(data,'datadata')
   try {
     const response = await axios({
       url: "/api/save-seller-contract",
