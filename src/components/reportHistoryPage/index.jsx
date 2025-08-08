@@ -439,7 +439,7 @@ const RportHistory = (props) => {
               <div
                 key={currency}
                 className={`w-3 h-3 rounded-full transition-colors ${
-                  index === currentCurrencyIndex ? "bg-blue-500" : "bg-gray-300"
+                  index === currentCurrencyIndex ? "bg-green-500" : "bg-gray-300"
                 }`}
               />
             ))}

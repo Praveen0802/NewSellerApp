@@ -29,7 +29,7 @@ const TXPayButton = () => {
 const TXPay = (data) => {
   return (
     <div className="bg-white border-l-[1px] border-[#DADBE5] h-full">
-      <div className="bg-[#F1F0FE] p-5 flex justify-between items-center cursor-pointer sticky top-0 z-999">
+      <div className="bg-gray-100 p-5 flex justify-between items-center cursor-pointer sticky top-0 z-10">
         <p className="text-[18px] font-medium">SB Pay</p>
         <TXPayButton />
       </div>

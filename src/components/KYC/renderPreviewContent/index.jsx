@@ -197,7 +197,7 @@ const RenderPreviewContent = ({
         <div className="flex flex-col space-y-2">
           <button
             onClick={() => window.open(url, "_blank")}
-            className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 transition-colors"
+            className="bg-gray-900 text-white px-4 py-2 rounded text-sm hover:bg-gray-700 transition-colors"
           >
             Open in New Tab
           </button>
