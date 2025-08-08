@@ -446,8 +446,13 @@ const KycComponent = ({
           {/* Not Uploaded Status - Add generate option for contract */}
           {status === "not uploaded" && (
             <div>
-              <p className="text-sm text-gray-600 mb-3">
+              <p className="text-sm text-gray-600 mb-3 flex space-x-1">
                 Please upload the required document
+                {docType === "contract" && (
+                  <span className="text-sm ml-2 cursor-pointer flex justify-center items-center -mt-0.5 text-blue-600 underline" onClick={() => openPreview("", config.title)}>
+                    (<FileText className="w-4 mr-1"/>Preview document)
+                  </span>
+                )}
               </p>
 
               {/* Add Generate Document option for contract */}
@@ -455,10 +460,10 @@ const KycComponent = ({
                 <div className="mb-4">
                   <button
                     onClick={handleGenerateContract}
-                    className="flex items-center space-x-2 w-full justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium mb-3"
+                    className="flex items-center space-x-2 w-full justify-center bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors font-medium mb-3"
                   >
                     <FileSignature className="w-4 h-4" />
-                    <span>Generate Document</span>
+                    <span>Sign in Document</span>
                   </button>
 
                   {/* Divider */}
@@ -536,7 +541,7 @@ const KycComponent = ({
                   <div className="mb-4">
                     <button
                       onClick={handleGenerateContract}
-                      className="flex items-center space-x-2 w-full justify-center bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium mb-3"
+                      className="flex items-center space-x-2 w-full justify-center bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors font-medium mb-3"
                     >
                       <FileSignature className="w-4 h-4" />
                       <span>Generate Document</span>
@@ -577,7 +582,7 @@ const KycComponent = ({
                 <div className="mb-4">
                   <button
                     onClick={handleGenerateContract}
-                    className="flex items-center space-x-2 w-full justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium mb-3"
+                    className="flex items-center space-x-2 w-full justify-center bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors font-medium mb-3"
                   >
                     <FileSignature className="w-4 h-4" />
                     <span>Generate Document</span>
@@ -688,9 +693,10 @@ const KycComponent = ({
                   )}
                 </div>
                 <button
-                  onClick={() =>
+                  onClick={() => {
                     setContractModal({ open: false, status: null })
-                  }
+                    window.location.reload()
+                  }}
                   className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer"
                   title="Close"
                 >
