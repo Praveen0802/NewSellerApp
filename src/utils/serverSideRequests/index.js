@@ -123,7 +123,7 @@ export const fetchSettingsPageDetails = async (profile, token, ctx) => {
     } else if (profile === "kyc") {
       // TODO: need to add business check
       const response = await getKYCStatus(token);
-      console.log(response, "responseresponseresponse");
+
       let isBusiness = response?.is_business == 1 ? true : false;
 
       let promises = [
