@@ -1,6 +1,7 @@
 import Button from "@/components/commonComponents/button";
 import React from "react";
 import TradeTicketsContainer from "./tradeTicketsContainer";
+import { FetchEventSearch } from "@/utils/apiHandler/request";
 
 const TradeTickets = ({ resultData, handleScrollEnd, loader }) => {
   const tracking = {
@@ -28,6 +29,12 @@ const TradeTickets = ({ resultData, handleScrollEnd, loader }) => {
     keyValue: "tradeOrders",
     meta: resultData?.tradeOrders?.data,
   };
+  const fetchApiCall = async (params) => {
+    // setLoading(true);
+    // const response = await FetchEventSearch("", params);
+    // setLoading(false);
+  };
+  
 
   return (
     <div className="border-[1px] border-[#eaeaf1] rounded-md bg-white">

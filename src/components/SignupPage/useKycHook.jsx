@@ -60,7 +60,10 @@ const useKycHook = ({ currentUser } = {}) => {
       try {
         console.log("Polling document status...");
         const payload = { id: requestId };
-        const resp = await getZohoDocStatus(null, payload);
+        // const resp = await getZohoDocStatus(null, payload);
+        const resp = {
+          data: {},
+        };
         const { request_status = null } = resp?.data ?? {};
 
         if (isMountedRef.current && request_status) {
