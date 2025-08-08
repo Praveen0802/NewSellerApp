@@ -13,6 +13,8 @@ import {
 import { useState } from "react";
 import DocumentUpload from "../DocumentUpload";
 import {
+  getZohoDocsDownload,
+  getZohoDocStatus,
   saveAddressDocument,
   savePhotoId,
   saveSellerBusinessDocuments,
