@@ -10,7 +10,7 @@ const RenderPreviewContent = ({
   if (!url) {
     return (
       <iframe
-        src="/seller_documents.pdf" // Path to your local PDF in public/assets
+        src="/seller_documents.pdf" // Path to your local PDF
         title="Default PDF Preview"
         className="w-full h-full"
       />
