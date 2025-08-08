@@ -23,6 +23,7 @@ import useS3Download from "@/Hooks/useS3Download";
 import RenderPreviewContent from "../renderPreviewContent";
 import KycDocumentComponent from "@/components/SignupPage/KycDocumentComponent";
 import { useSelector } from "react-redux";
+import { getCookie } from "@/utils/helperFunctions/cookie";
 
 const KycComponent = ({
   photoId,
@@ -693,8 +694,17 @@ const KycComponent = ({
                   )}
                 </div>
                 <button
-                  onClick={() => {
+                  onClick={async() => {
                     setContractModal({ open: false, status: null })
+                    const token = getCookie("auth_token") || "";
+                    if (token) {
+                      const zohoRequestId = localStorage.getItem("request_id");
+                      const response = await getZohoDocStatus(token,zohoRequestId);
+                      const requestStatus = response?.requests?.request_status;
+                      if (requestStatus === "Completed") {
+                        getZohoDocsDownload(token, zohoRequestId);
+                      }
+                    }
                     window.location.reload()
                   }}
                   className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer"
