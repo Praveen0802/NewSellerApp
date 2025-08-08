@@ -153,7 +153,6 @@ const AddressBook = (props) => {
         id: Id,
       });
       const selectedPopupData = response.filter((item) => item.id === Id);
-      console.log("selectedPopupData", selectedPopupData);
 
       setEditAdressValues({ id: Id, ...selectedPopupData?.[0] });
     } finally {

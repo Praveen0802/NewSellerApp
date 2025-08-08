@@ -32,7 +32,7 @@ import Design from "../../../public/design-1.svg";
 import { useSelector } from "react-redux";
 import KycDocumentComponent from "./KycDocumentComponent";
 
-const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
+const SignupFlow = ({ refer_code, currentScreen = null, currencies } = {}) => {
   const isKycScreen = currentScreen === "kyc-verification";
 
   //TO Avoid flickering
@@ -64,7 +64,7 @@ const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
   const [signUrl, setSignUrl] = useState("");
   const [actionId, setActionId] = useState("");
   const [isPolling, setIsPolling] = useState(false);
-  const maxDate = new Date(new Date().getFullYear() - 10, 11, 31); 
+  const maxDate = new Date(new Date().getFullYear() - 10, 11, 31);
   const defaultViewDate = maxDate.toISOString().split("T")[0];
 
   // City related states
@@ -78,14 +78,11 @@ const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
 
   // Get country and phone code options from hook
   const { allCountryCodeOptions, countryOptions } = useCountryCodes();
-
   // Currency options (keeping existing)
-  const currencyOptions = [
-    { value: "USD", label: "$ USD" },
-    { value: "EUR", label: "€ EUR" },
-    { value: "GBP", label: "£ GBP" },
-    { value: "JPY", label: "¥ JPY" },
-  ];
+  const currencyOptions = currencies?.map((currency) => ({
+    label: currency?.code,
+    value: currency?.code,
+  }));
 
   // Stepper configuration
   const stepperSteps = [
@@ -230,7 +227,6 @@ const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
       value = e.target?.value;
     }
 
-    console.log(value, e, type, "valuevalue");
 
     setFormData((prev) => ({
       ...prev,
@@ -520,7 +516,7 @@ const SignupFlow = ({ refer_code, currentScreen = null } = {}) => {
           ...errorFields,
         }));
 
-         // Switch to the correct form step for the first error
+        // Switch to the correct form step for the first error
         const firstErrorField = Object.keys(errorFields)[0];
         if (firstErrorField) {
           setFormStep(getStepForField(firstErrorField));

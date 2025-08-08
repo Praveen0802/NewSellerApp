@@ -1178,10 +1178,9 @@ export const addTeamMembers = async (
       ...(data && { data: data }),
       ...(params && { params: params }),
     });
-    return response?.data?.success ? response?.data?.data : {};
+    return response?.data ? response?.data : {};
   } catch (error) {
-    console.log("ERROR in fetchUserDetails", error);
-    throw error;
+    return error?.response?.data;
   }
 };
 

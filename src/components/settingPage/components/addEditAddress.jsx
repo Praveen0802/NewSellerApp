@@ -96,7 +96,6 @@ const AddEditAddress = ({
     country_code: phone_code = "",
   } = addressDetails;
 
-  console.log(addressDetails, "xxxxxxxxxxxxxxxxxxxx");
   const editType = type === "edit";
   const [loader, setLoader] = useState(false);
   const [cityOptions, setCityOptions] = useState([]);

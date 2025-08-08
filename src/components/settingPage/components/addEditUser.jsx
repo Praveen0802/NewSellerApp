@@ -349,12 +349,25 @@ const AddEditUser = ({
     try {
       if (!editType) {
         const response = await addTeamMembers("", "", "POST", payload);
+        if (response?.success) {
+          toast.success("User added successfully");
+          onClose({ submit: true });
+        } else {
+          if (response?.message?.email) {
+            toast.error(
+              response?.message?.email?.[0] || "Error in adding user"
+            );
+          } else {
+            toast.error("Error in adding user");
+          }
+        }
       } else {
         const response = await updateTeamMembers("", "", "PUT", payload);
+        toast.success(`User ${editType ? "updated" : "added"} successfully`);
+        onClose({ submit: true });
       }
 
-      toast.success(`User ${editType ? "updated" : "added"} successfully`);
-      onClose({ submit: true });
+    
     } catch (error) {
       toast.error(`Error in ${editType ? "updating" : "adding"} user`);
     } finally {

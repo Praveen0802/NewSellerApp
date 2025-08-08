@@ -19,7 +19,7 @@ const FloatingDateRange = ({
   error = "",
   singleDateMode = false,
   hideLabel = false,
-  staticLabel = false, // New prop for static label
+  staticLabel = false,
   subParentClassName = "",
   minDate = null,
   maxDate = null,
@@ -27,6 +27,7 @@ const FloatingDateRange = ({
   showYear = false,
   showMonth = false,
 }) => {
+  console.log(maxDate, 'maxDatemaxDatemaxDate')
   const [isFocused, setIsFocused] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [startDate, setStartDate] = useState(value.startDate || "");
@@ -41,7 +42,6 @@ const FloatingDateRange = ({
   });
   const [showYearDropdown, setShowYearDropdown] = useState(false);
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
-  // Add this new state to track if we're in selection mode
   const [isInSelectionMode, setIsInSelectionMode] = useState(false);
 
   const dropdownRef = useRef(null);
@@ -98,25 +98,20 @@ const FloatingDateRange = ({
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
 
-    // Estimated dropdown height (adjust based on your actual dropdown size)
     const dropdownHeight = 350;
     const dropdownWidth = inputRect.width;
 
-    // Check if there's enough space below
     const spaceBelow = viewportHeight - inputRect.bottom;
     const spaceAbove = inputRect.top;
 
-    // Determine vertical position
     const shouldOpenUpward =
       openUpward ||
       (spaceBelow < dropdownHeight && spaceAbove > dropdownHeight);
 
-    // Determine horizontal position
     let leftOffset = 0;
     const spaceRight = viewportWidth - inputRect.left;
 
     if (spaceRight < dropdownWidth) {
-      // If not enough space on the right, align to the right edge
       leftOffset = Math.min(0, spaceRight - dropdownWidth);
     }
 
@@ -131,6 +126,18 @@ const FloatingDateRange = ({
     const position = calculateDropdownPosition();
     setDropdownPosition(position);
   };
+
+  // Initialize current month based on maxDate when component mounts or maxDate changes
+  useEffect(() => {
+    if (maxDate && !value?.startDate) {
+      // If maxDate is provided and no value is set, start calendar at maxDate
+      const maxDateParsed = parseLocalDate(maxDate);
+      setCurrentMonth(maxDateParsed);
+    } else if (value?.startDate) {
+      // If value is provided, use that for current month
+      setCurrentMonth(parseLocalDate(value.startDate));
+    }
+  }, [maxDate, value?.startDate]);
 
   // Format and set display value when value prop changes
   useEffect(() => {
@@ -172,7 +179,6 @@ const FloatingDateRange = ({
         setIsOpen(false);
         setShowYearDropdown(false);
         setShowMonthDropdown(false);
-        // Reset selection mode when closing
         setIsInSelectionMode(false);
       }
     };
@@ -218,21 +224,29 @@ const FloatingDateRange = ({
     return `${formattedDay}/${formattedMonth}/${formattedYear}`;
   };
 
-  // Check if a date is within the allowed range
+  // Enhanced date range check function
   const isDateInRange = (date) => {
+    if (!date) return false;
+    
     const dateToCheck = new Date(date);
     dateToCheck.setHours(0, 0, 0, 0);
 
     if (minDateObj) {
       const minDateCheck = new Date(minDateObj);
       minDateCheck.setHours(0, 0, 0, 0);
-      if (dateToCheck < minDateCheck) return false;
+      if (dateToCheck < minDateCheck) {
+        console.log('Date is before minDate:', dateToCheck, minDateCheck);
+        return false;
+      }
     }
 
     if (maxDateObj) {
       const maxDateCheck = new Date(maxDateObj);
       maxDateCheck.setHours(0, 0, 0, 0);
-      if (dateToCheck > maxDateCheck) return false;
+      if (dateToCheck > maxDateCheck) {
+        console.log('Date is after maxDate:', dateToCheck, maxDateCheck);
+        return false;
+      }
     }
 
     return true;
@@ -247,7 +261,6 @@ const FloatingDateRange = ({
       setIsFocused(true);
       setTempStartDate(startDate ? parseLocalDate(startDate) : null);
       setTempEndDate(endDate ? parseLocalDate(endDate) : null);
-      // Set selection mode when opening
       setIsInSelectionMode(true);
     }
   };
@@ -290,7 +303,6 @@ const FloatingDateRange = ({
       }
     }
     setIsOpen(false);
-    // Reset selection mode after applying
     setIsInSelectionMode(false);
   };
 
@@ -304,11 +316,12 @@ const FloatingDateRange = ({
       onChange({ startDate: "", endDate: "" }, keyValue);
     }
     setIsOpen(false);
-    // Reset selection mode after clearing
     setIsInSelectionMode(false);
   };
 
   const handleDateClick = (date) => {
+    console.log('Clicked date:', date, 'Is in range:', isDateInRange(date));
+    
     if (!isDateInRange(date)) {
       return;
     }
@@ -330,7 +343,6 @@ const FloatingDateRange = ({
       }
 
       setIsOpen(false);
-      // Reset selection mode after date selection
       setIsInSelectionMode(false);
     } else {
       if (!tempStartDate || (tempStartDate && tempEndDate)) {
@@ -345,9 +357,32 @@ const FloatingDateRange = ({
     }
   };
 
+  // Enhanced navigation with date range constraints
   const navigateMonth = (direction) => {
     const newMonth = new Date(currentMonth);
     newMonth.setMonth(newMonth.getMonth() + direction);
+    
+    // Check if the new month would be outside allowed range
+    if (direction > 0 && maxDateObj) {
+      // Moving forward - check if new month exceeds maxDate
+      const firstDayOfNewMonth = new Date(newMonth.getFullYear(), newMonth.getMonth(), 1);
+      const lastDayOfMaxMonth = new Date(maxDateObj.getFullYear(), maxDateObj.getMonth() + 1, 0);
+      
+      if (firstDayOfNewMonth > lastDayOfMaxMonth) {
+        return; // Don't navigate beyond maxDate month
+      }
+    }
+    
+    if (direction < 0 && minDateObj) {
+      // Moving backward - check if new month is before minDate
+      const lastDayOfNewMonth = new Date(newMonth.getFullYear(), newMonth.getMonth() + 1, 0);
+      const firstDayOfMinMonth = new Date(minDateObj.getFullYear(), minDateObj.getMonth(), 1);
+      
+      if (lastDayOfNewMonth < firstDayOfMinMonth) {
+        return; // Don't navigate before minDate month
+      }
+    }
+    
     setCurrentMonth(newMonth);
   };
 
@@ -373,8 +408,8 @@ const FloatingDateRange = ({
           <button
             key={year}
             onClick={(e) => {
-              e.preventDefault(); // Prevent default behavior
-              e.stopPropagation(); // Stop event bubbling
+              e.preventDefault();
+              e.stopPropagation();
               handleYearSelect(year);
             }}
             className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-100 whitespace-nowrap ${
@@ -398,8 +433,8 @@ const FloatingDateRange = ({
           <button
             key={month.value}
             onClick={(e) => {
-              e.preventDefault(); // Prevent default behavior
-              e.stopPropagation(); // Stop event bubbling
+              e.preventDefault();
+              e.stopPropagation();
               handleMonthSelect(month.value);
             }}
             className={`w-full px-3 py-2 text-left text-xs hover:bg-gray-100 whitespace-nowrap ${
@@ -499,6 +534,13 @@ const FloatingDateRange = ({
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Check if navigation buttons should be disabled
+    const canNavigateBackward = !minDateObj || 
+      new Date(year, month - 1, 1) >= new Date(minDateObj.getFullYear(), minDateObj.getMonth(), 1);
+      
+    const canNavigateForward = !maxDateObj || 
+      new Date(year, month + 1, 1) <= new Date(maxDateObj.getFullYear(), maxDateObj.getMonth(), 1);
+
     return (
       <>
       <div className={`w-full relative`}>
@@ -509,7 +551,12 @@ const FloatingDateRange = ({
               e.stopPropagation();
               navigateMonth(-1);
             }}
-            className="p-0.5 text-xs rounded cursor-pointer hover:bg-gray-100 flex-shrink-0"
+            disabled={!canNavigateBackward}
+            className={`p-0.5 text-xs rounded flex-shrink-0 ${
+              canNavigateBackward 
+                ? "cursor-pointer hover:bg-gray-100" 
+                : "cursor-not-allowed text-gray-300"
+            }`}
           >
             &lt;
           </button>
@@ -519,8 +566,8 @@ const FloatingDateRange = ({
               <div className="relative flex-1 max-w-[120px]">
                 <button
                   onClick={(e) => {
-                    e.preventDefault(); // Add this
-                    e.stopPropagation(); // Add this
+                    e.preventDefault();
+                    e.stopPropagation();
                     setShowMonthDropdown(!showMonthDropdown);
                     setShowYearDropdown(false);
                   }}
@@ -541,8 +588,8 @@ const FloatingDateRange = ({
               <div className="relative flex-1 max-w-[80px]">
                 <button
                   onClick={(e) => {
-                    e.preventDefault(); // Add this
-                    e.stopPropagation(); // Add this
+                    e.preventDefault();
+                    e.stopPropagation();
                     setShowYearDropdown(!showYearDropdown);
                     setShowMonthDropdown(false);
                   }}
@@ -571,7 +618,12 @@ const FloatingDateRange = ({
               e.stopPropagation();
               navigateMonth(1);
             }}
-            className="p-0.5 cursor-pointer text-xs rounded hover:bg-gray-100 flex-shrink-0"
+            disabled={!canNavigateForward}
+            className={`p-0.5 text-xs rounded flex-shrink-0 ${
+              canNavigateForward 
+                ? "cursor-pointer hover:bg-gray-100" 
+                : "cursor-not-allowed text-gray-300"
+            }`}
           >
             &gt;
           </button>
@@ -625,7 +677,6 @@ const FloatingDateRange = ({
     );
   };
 
-  // Modify the error display logic to consider selection mode
   const shouldShowError = error && !isInSelectionMode;
 
   const baseClasses = `block w-full px-2 py-2 text-xs  rounded border-[1px] focus:outline-none ${
@@ -691,7 +742,6 @@ const FloatingDateRange = ({
         />
       </div>
 
-      {/* Only show error when not in selection mode */}
       {shouldShowError && (
         <p className="mt-0.5 text-xs text-red-500">{error}</p>
       )}
