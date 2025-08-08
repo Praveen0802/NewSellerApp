@@ -673,7 +673,7 @@ const KycComponent = ({
         {/* Contract Generation Modal */}
         {contractModal.open && (
           <div className="fixed inset-0 bg-black/80 bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-[90%] h-[90%] flex flex-col max-w-6xl">
+            <div className="bg-white rounded-lg shadow-xl w-[90%] max-w-6xl max-h-[90vh] flex flex-col">
               {/* Header */}
               <div className="flex-shrink-0 flex items-center justify-between p-4 border-b">
                 <div className="flex items-center space-x-2">
@@ -699,7 +699,7 @@ const KycComponent = ({
               </div>
 
               {/* Iframe Content */}
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto">
                 <KycDocumentComponent
                   currentUser={currentUser}
                   onStatusChange={handleContractStatusChange}
