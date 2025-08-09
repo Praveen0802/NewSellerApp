@@ -530,6 +530,7 @@ const CommonInventoryTable = ({
 
     return (
       <SimpleEditableCell
+        rowValue={row}
         value={row[header.key]}
         type={header.type || "text"}
         options={fetchOptions()}

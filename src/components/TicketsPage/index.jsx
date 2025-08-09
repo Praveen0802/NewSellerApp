@@ -688,7 +688,7 @@ console.log(mockListingHistory,'mockListingHistory')
     const allFilters = mockListingHistory
       .map((match) => match.filter)
       .filter(Boolean);
-     
+
       
 
     // Create headers based on the structure you want
@@ -750,6 +750,13 @@ console.log(mockListingHistory,'mockListingHistory')
         editable: true,
         iconHandling: true,
         type: "number",
+        iconBefore: (rowValue) => (
+          <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
+            <p className="text-xs sm:text-[10px] lg:text-xs">
+              {rowValue?.price_type}
+            </p>
+          </div>
+        ),
       },
       {
         key: "price",
@@ -757,6 +764,13 @@ console.log(mockListingHistory,'mockListingHistory')
         editable: true,
         iconHandling: true,
         type: "number",
+        iconBefore: (rowValue) => (
+          <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
+            <p className="text-xs sm:text-[10px] lg:text-xs">
+              {rowValue?.price_type}
+            </p>
+          </div>
+        ),
       },
       {
         key: "price_type",

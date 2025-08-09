@@ -441,6 +441,7 @@ const SimpleEditableCell = ({
   placeholder = "Enter...",
   saveOnChange = true,
   iconBefore = null,
+  rowValue = {},
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -667,7 +668,7 @@ const SimpleEditableCell = ({
 
     return (
       <div className="absolute left-2 top-1/2 transform -translate-y-1/2 pointer-events-none z-10">
-        {typeof iconBefore === "function" ? iconBefore() : iconBefore}
+        {typeof iconBefore === "function" ? iconBefore(rowValue) : iconBefore}
       </div>
     );
   };
