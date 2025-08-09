@@ -118,7 +118,7 @@ const FloatingLabelInput = ({
       ];
 
       const isNumberKey = /^[0-9]$/.test(e.key);
-      const isDecimalPoint = e.key === "." && !e.target.value.includes(".");
+      const isDecimalPoint = e.key === "." && !e.target.value?.includes(".");
       const isNegativeSign =
         e.key === "-" &&
         e.target.selectionStart === 0 &&
@@ -203,7 +203,7 @@ const FloatingLabelInput = ({
   const shouldShowDelete = showDelete && value && value.length > 0;
 
   const getLeftPadding = () => {
-    return value.length <= 3 && iconBefore && checkLength
+    return value?.length <= 3 && iconBefore && checkLength
       ? "pl-12"
       : iconBefore && !checkLength
       ? "pl-12"
@@ -241,7 +241,7 @@ const FloatingLabelInput = ({
       {!hideLabel && (
         <FloatingPlaceholder
           className={`${labelClassName} ${
-            value.length <= 3 && iconBefore && "!left-12"
+            value?.length <= 3 && iconBefore && "!left-12"
           } `}
           isFocused={isFocused}
           hasError={!!error}
@@ -260,7 +260,7 @@ const FloatingLabelInput = ({
 
       <div className="relative">
         {/* Left icon - iconBefore with tooltip */}
-        {((value.length <= 3 && iconBefore && checkLength) ||
+        {((value?.length <= 3 && iconBefore && checkLength) ||
           (iconBefore && !checkLength)) && (
           <div
             className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer hover:text-gray-600 transition-colors"

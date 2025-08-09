@@ -16,6 +16,7 @@ import { MultiSelectEditableCell, SimpleEditableCell } from "../selectCell";
 import { fetchBlockDetails } from "@/utils/apiHandler/request";
 import ListingsMarketplace from "@/components/ModalComponents/listSalesModal";
 import { dayOfWeek } from "@/utils/helperFunctions";
+import ticketService from "../../../../public/ticketService.svg";
 
 const CommonInventoryTable = ({
   inventoryData,
@@ -46,6 +47,7 @@ const CommonInventoryTable = ({
   // NEW: Hide chevron down arrow
   hideChevronDown = false,
 }) => {
+  console.log(matchDetails, "matchDetailsmatchDetails");
   const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
   const [hasScrolledLeft, setHasScrolledLeft] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -615,6 +617,9 @@ const CommonInventoryTable = ({
                   } text-white truncate`}
                 >
                   {matchDetails?.match_name || "Match Details"}
+                  {matchDetails?.tournament_name
+                    ? ` - ${matchDetails?.tournament_name}`
+                    : ""}
                 </h3>
               </div>
 
@@ -675,6 +680,19 @@ const CommonInventoryTable = ({
                 isMobile ? "space-x-2 pr-2" : "space-x-4 pr-4"
               }`}
             >
+              {mode === "multiple" && totalTicketsCount && (
+                <div className="flex gap-1 items-center">
+                  <Image
+                    src={ticketService}
+                    width={16}
+                    height={16}
+                    alt="logo"
+                  />
+                  <span className={`text-white text-[12px] text-right`}>
+                    {totalTicketsCount}
+                  </span>
+                </div>
+              )}
               {!isMobile && (
                 <button
                   onClick={(e) => {
@@ -689,15 +707,6 @@ const CommonInventoryTable = ({
               )}
 
               {/* Show ticket count for multiple mode */}
-              {mode === "multiple" && totalTicketsCount && (
-                <span
-                  className={`text-gray-300 text-right ${
-                    isMobile ? "text-[10px] w-[40px]" : "text-xs w-[60px]"
-                  }`}
-                >
-                  {totalTicketsCount} ticket{totalTicketsCount !== 1 ? "s" : ""}
-                </span>
-              )}
 
               <div
                 className={`bg-[#FFFFFF26] ${
@@ -963,7 +972,7 @@ const CommonInventoryTable = ({
                           isMobile ? "py-1.5 px-1" : "py-2 px-2"
                         } text-left text-[#7D82A4] ${
                           isMobile ? "text-[10px]" : "text-xs"
-                        } border-r border-[#DADBE5] font-medium whitespace-nowrap text-center`}
+                        }  whitespace-nowrap text-center`}
                         style={{
                           width: `${
                             stickyColumnsWidth / stickyHeaders.length
@@ -980,7 +989,7 @@ const CommonInventoryTable = ({
                           {/* CONDITIONAL: Only show scroll buttons if not hiding chevron down */}
                           {!hideChevronDown &&
                             index === stickyHeaders.length - 1 && (
-                              <div className="flex items-center justify-center space-x-1">
+                              <div className="flex items-center justify-center ">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -997,7 +1006,7 @@ const CommonInventoryTable = ({
                                   title="Scroll Left"
                                 >
                                   <ChevronRight
-                                    size={isMobile ? 12 : 16}
+                                    size={isMobile ? 12 : 14}
                                     className="rotate-180"
                                     color={canScrollLeft ? "" : "#B4B7CB"}
                                   />
@@ -1018,7 +1027,7 @@ const CommonInventoryTable = ({
                                   title="Scroll Right"
                                 >
                                   <ChevronRight
-                                    size={isMobile ? 12 : 16}
+                                    size={isMobile ? 12 : 14}
                                     color={canScrollRight ? "" : "#B4B7CB"}
                                   />
                                 </button>

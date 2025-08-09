@@ -66,6 +66,7 @@ import { MultiSelectEditableCell, SimpleEditableCell } from "./selectCell";
 import CommonInventoryTable from "./customInventoryTable";
 import ListingsMarketplace from "../ModalComponents/listSalesModal";
 import Tooltip from "./simmpleTooltip";
+import RequestEvent from "./requestFeaturePopup";
 
 const AddInventoryPage = (props) => {
   const { matchId, response } = props;
@@ -1609,7 +1610,7 @@ const AddInventoryPage = (props) => {
               onToggleCollapse={handleToggleCollapse}
               getStickyColumnsForRow={getStickyColumnsForRow}
               stickyHeaders={["", "", ""]}
-              stickyColumnsWidth={isMobile ? 100 : 120}
+              stickyColumnsWidth={120}
             />
           </div>
         </div>
@@ -1713,7 +1714,7 @@ const AddInventoryPage = (props) => {
         />
       }
       {showRequestPopup && (
-        <SubjectDescriptionPopup
+        <RequestEvent
           show={showRequestPopup}
           onClose={() => setShowRequestPopup(false)}
         />

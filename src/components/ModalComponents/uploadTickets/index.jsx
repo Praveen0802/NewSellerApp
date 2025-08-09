@@ -36,6 +36,7 @@ import PaperTicketCourierSection from "./paperTicketCourierSection";
 import TemplateContentRenderer from "./templateContent";
 import SubUploadParent from "./subUploadParent";
 import { readCookie } from "@/utils/helperFunctions/cookie";
+import { separateDateTime } from "@/utils/helperFunctions";
 
 const UploadTickets = ({
   show,
@@ -49,7 +50,7 @@ const UploadTickets = ({
   mySalesPage = false,
 }) => {
   const proofUploadView = rowData?.handleProofUpload || false;
-console.log(rowData,'rowDatarowData')
+  console.log(matchDetails, "rowDatarowData");
   const ticketTypes = !isNaN(parseInt(rowData?.ticket_type))
     ? rowData?.ticket_type
     : rowData?.ticket_types || rowData?.ticket_type_id;
@@ -62,9 +63,7 @@ console.log(rowData,'rowDatarowData')
     existingUploadedTickets,
     "existingUploadedTicketsexistingUploadedTickets"
   );
-  const hasExistingTickets =
-    existingUploadedTickets.length > 0 &&
-    existingUploadedTickets?.[0]?.upload_tickets;
+  const hasExistingTickets =false
   const existingProofTickets = rowData?.rawTicketData?.popUpload || [];
   // Updated maxQuantity calculation for proof upload
   const maxQuantity = proofUploadView
@@ -378,29 +377,35 @@ console.log(rowData,'rowDatarowData')
 
   // Common Match Header Component
   const MatchHeader = () => (
-    <div className="bg-[#343432] text-xs py-3 rounded-t-md text-white px-4 flex items-center justify-between">
-      <h3 className="font-medium">{matchDetails?.match_name}</h3>
-      <div className="flex items-center gap-2 justify-center">
-        <Calendar className="w-4 h-4" />
-        <span className="text-xs">
-          {matchDetails?.match_date_format || rowData?.matchDate}
-        </span>
+    <div className="bg-[#343432] text-xs py-3 rounded-t-md text-white px-4 flex items-center justify-between min-w-0">
+      <h3 className="font-medium truncate flex-shrink-0 max-w-[200px]">
+        {matchDetails?.match_name}
+      </h3>
+      <div className="flex items-center gap-4 flex-shrink-0">
+        <div className="flex items-center gap-1">
+          <Calendar className="w-4 h-4 flex-shrink-0" />
+          <span className="text-xs whitespace-nowrap">
+            {matchDetails?.match_date_format ||
+              separateDateTime(matchDetails?.match_date)?.date ||
+              rowData?.matchDate}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Clock className="w-4 h-4 flex-shrink-0" />
+          <span className="text-xs whitespace-nowrap">
+            {matchDetails?.match_time || rowData?.matchTime}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <MapPin className="w-4 h-4 flex-shrink-0" />
+          <span className="text-xs whitespace-nowrap">
+            {matchDetails?.stadium_name || rowData?.venue}
+          </span>
+        </div>
+        <button className="flex-shrink-0">
+          <ChevronUp className="w-4 h-4" />
+        </button>
       </div>
-      <div className="flex items-center gap-2 justify-center">
-        <Clock className="w-4 h-4" />
-        <span className="text-xs">
-          {matchDetails?.match_time || rowData?.matchTime}
-        </span>
-      </div>
-      <div className="flex items-center gap-2 justify-center">
-        <MapPin className="w-4 h-4" />
-        <span className="text-xs">
-          {matchDetails?.stadium_name || rowData?.venue}
-        </span>
-      </div>
-      <button className="ml-2">
-        <ChevronUp className="w-4 h-4" />
-      </button>
     </div>
   );
 
@@ -425,7 +430,9 @@ console.log(rowData,'rowDatarowData')
       </div>
 
       <div className="grid grid-cols-4 bg-[#F9F9FB] py-2 px-3 border-b border-gray-200">
-        <div className="text-xs truncate">{rowData?.id || "N/A"}</div>
+        <div className="text-xs truncate">
+          {rowData?.rawTicketData?.s_no || rowData?.id || "N/A"}
+        </div>
         <div className="text-xs truncate">
           {proofUploadView ? "1 Document" : maxQuantity}
         </div>
@@ -687,7 +694,7 @@ console.log(rowData,'rowDatarowData')
   };
 
   const handleConfirmCtaClick = useCallback(async () => {
-    console.log(mySalesPage,'mySalesPagemySalesPage')
+    console.log(mySalesPage, "mySalesPagemySalesPage");
     if (mySalesPage) {
       onClose();
       return;
@@ -721,7 +728,10 @@ console.log(rowData,'rowDatarowData')
         },
         uploadedFiles: [],
       };
-console.log(currentPaperTicketData,'currentPaperTicketDatacurrentPaperTicketData')
+    console.log(
+      currentPaperTicketData,
+      "currentPaperTicketDatacurrentPaperTicketData"
+    );
     if (proofUploadView && myListingPage) {
       setIsLoading(true);
       if (existingProofTickets?.length <= 0) {
@@ -1100,19 +1110,12 @@ console.log(currentPaperTicketData,'currentPaperTicketDatacurrentPaperTicketData
                   </div>
                   <div className="px-3 py-2 flex items-center">
                     {assignedFile ? (
-                      <div className="flex bg-gray-100 rounded px-2 py-1 items-center justify-between w-full">
+                      <div className="flex bg-[#F2FBF9] border  border-[#03BA8A] rounded px-2 py-1 items-center justify-between w-full">
                         <div className="flex items-center gap-2 flex-1">
                           <span className="text-xs text-gray-700 truncate max-w-24">
                             {assignedFile.name}
                           </span>
-                          {assignedFile.isExisting && (
-                            <div className="flex items-center gap-1">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              <span className="text-xs text-green-600">
-                                Uploaded
-                              </span>
-                            </div>
-                          )}
+                          
                         </div>
                         <div className="flex items-center gap-1">
                           {assignedFile.isExisting && (
@@ -1132,7 +1135,7 @@ console.log(currentPaperTicketData,'currentPaperTicketDatacurrentPaperTicketData
                               handleDeleteUpload(assignedFile);
                             }}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <X className="w-4 h-4" />
                           </button>
                         </div>
                       </div>

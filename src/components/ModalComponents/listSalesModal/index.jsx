@@ -19,48 +19,48 @@ import {
 // Shimmer Loader Component
 const ShimmerLoader = () => {
   return (
-    <div className="animate-pulse w-4xl">
+    <div className="animate-pulse w-full">
       {/* Header shimmer */}
-      <div className="grid grid-cols-6 border-b border-gray-200 bg-white">
-        <div className="p-3">
+      <div className="flex border-b border-gray-200 bg-white">
+        <div className="p-3 w-32">
           <div className="h-4 bg-gray-200 rounded w-3/4"></div>
         </div>
-        <div className="p-3">
+        <div className="p-3 w-20">
           <div className="h-4 bg-gray-200 rounded w-1/2"></div>
         </div>
-        <div className="p-3">
+        <div className="p-3 w-24">
           <div className="h-4 bg-gray-200 rounded w-2/3"></div>
         </div>
-        <div className="p-3">
+        <div className="p-3 w-24">
           <div className="h-4 bg-gray-200 rounded w-1/2"></div>
         </div>
-        <div className="p-3">
+        <div className="p-3 w-28">
           <div className="h-4 bg-gray-200 rounded w-3/4"></div>
         </div>
-        <div className="p-3">
+        <div className="p-3 flex-1">
           <div className="h-4 bg-gray-200 rounded w-full"></div>
         </div>
       </div>
 
       {/* Row shimmers */}
       {[...Array(6)].map((_, index) => (
-        <div key={index} className="grid grid-cols-6 border-b border-gray-200">
-          <div className="p-3">
+        <div key={index} className="flex border-b border-gray-200">
+          <div className="p-3 w-32">
             <div className="h-4 bg-gray-200 rounded w-2/3"></div>
           </div>
-          <div className="p-3">
+          <div className="p-3 w-20">
             <div className="h-4 bg-gray-200 rounded w-1/3"></div>
           </div>
-          <div className="p-3">
+          <div className="p-3 w-24">
             <div className="h-4 bg-gray-200 rounded w-1/2"></div>
           </div>
-          <div className="p-3">
+          <div className="p-3 w-24">
             <div className="h-4 bg-gray-200 rounded w-3/4"></div>
           </div>
-          <div className="p-3">
+          <div className="p-3 w-28">
             <div className="h-4 bg-gray-200 rounded w-1/2"></div>
           </div>
-          <div className="p-3">
+          <div className="p-3 flex-1">
             <div className="h-4 bg-gray-200 rounded w-5/6"></div>
           </div>
         </div>
@@ -163,9 +163,18 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
 
   // Function to handle price input change
   const handlePriceChange = (ticketId, value) => {
+    // Allow only numbers and decimal point
+    const cleanValue = value.replace(/[^0-9.]/g, "");
+    
+    // Prevent multiple decimal points
+    const parts = cleanValue.split('.');
+    const formattedValue = parts.length > 2 
+      ? parts[0] + '.' + parts.slice(1).join('')
+      : cleanValue;
+    
     setEditPrices({
       ...editPrices,
-      [ticketId]: value,
+      [ticketId]: formattedValue,
     });
   };
 
@@ -263,7 +272,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
           <div className="px-4 py-2 border-b border-gray-200 flex items-center gap-4">
             <div className="flex items-center gap-2 pr-4 border-r border-gray-200">
               <span className="text-[#323A70]">
-                <Calendar className="w-4 h-4 text-[#343432]" />
+                <Calendar className="w-4 h-4 text-[#00A3ED]" />
               </span>
               <span className="text-sm text-[#323A70]">
                 {matchDetails.date}
@@ -271,7 +280,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[#323A70]">
-                <MapPin className="w-4 h-4 text-[#343432]" />
+                <MapPin className="w-4 h-4 text-[#00A3ED]" />
               </span>
               <span className="text-sm ">{matchDetails.venue}</span>
             </div>
@@ -310,29 +319,29 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
             {/* Data State */}
             {!isLoading && !error && listingsArray.length > 0 && (
               <>
-                {/* Table header */}
-                <div className="grid grid-cols-6 border-b border-gray-200 bg-white">
-                  <div className="p-3 text-sm font-medium text-[#323A70]">
+                {/* Table header with flex layout */}
+                <div className="flex border-b border-gray-200 bg-white">
+                  <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-32">
                     Section/Block
                   </div>
-                  <div className="p-3 text-sm font-medium text-[#323A70]">
+                  <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-20">
                     Row
                   </div>
-                  <div className="p-3 text-sm font-medium text-[#323A70]">
+                  <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-24">
                     Quantity
                   </div>
-                  <div className="p-3 text-sm font-medium text-[#323A70]">
+                  <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-24">
                     Category
                   </div>
-                  <div className="p-3 text-sm font-medium text-[#323A70] flex items-center">
+                  <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-28 flex items-center">
                     Payout Price <ChevronDown className="ml-1 w-4 h-4" />
                   </div>
-                  <div className="p-3 text-sm font-medium text-[#323A70]">
+                  <div className="p-3 text-[12px] font-medium text-[#7D82A4] flex-1">
                     Benefits & Restrictions
                   </div>
                 </div>
 
-                {/* Table rows - Loop through data */}
+                {/* Table rows with flex layout */}
                 {listingsArray.map((item, index) => {
                   // Null check for item
                   if (!item) return null;
@@ -340,64 +349,77 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
                   return (
                     <div
                       key={item.ticket_id || index}
-                      className={`grid grid-cols-6 border-b border-gray-200 hover:bg-gray-50 `}
+                      className="flex border-b border-gray-200 hover:bg-gray-50"
                     >
-                      <div className="p-3 text-sm">{item.block_id || "-"}</div>
-                      <div className="p-3 text-sm">-</div>
-                      <div className="p-3 text-sm">{item.quantity || "-"}</div>
-                      <div className="p-3 text-sm">
+                      <div className="p-3 text-sm w-32 truncate" title={item.block_id}>
+                        {item.block_id || "-"}
+                      </div>
+                      <div className="p-3 text-sm w-20">-</div>
+                      <div className="p-3 text-sm w-24">
+                        {item.quantity || "-"}
+                      </div>
+                      <div className="p-3 text-sm w-24 truncate" title={item.ticket_category}>
                         {item.ticket_category || "-"}
                       </div>
-                      <div className="p-3 text-sm">
+                      <div className="p-3 text-sm w-32">
                         {editingRow === item.ticket_id ? (
-                          <div className="flex items-center">
-                            <span className="mr-1">$</span>
+                          // Edit Mode - Show input field with save/cancel buttons
+                          <div className="flex items-center gap-1">
+                            <span className="text-gray-600">$</span>
                             <input
                               type="text"
                               value={editPrices[item.ticket_id] || ""}
                               onChange={(e) =>
                                 handlePriceChange(
                                   item.ticket_id,
-                                  e.target.value
+                                  e.target.value.replace(/[^0-9.]/g, "")
                                 )
                               }
-                              className="border border-blue-500 rounded w-16 px-2 py-1 text-sm"
+                              className="border border-blue-500 rounded w-16 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              placeholder="0.00"
+                              autoFocus
                             />
-                            <div className="flex ml-2">
+                            <div className="flex gap-1">
                               <button
                                 onClick={() => savePrice(item)}
-                                className="bg-blue-600 cursor-pointer text-white rounded p-1 mr-1"
+                                className="bg-green-600 hover:bg-green-700 text-white rounded p-1 transition-colors"
+                                title="Save price"
                               >
-                                <Check className="w-4 h-4" />
+                                <Check className="w-3 h-3" />
                               </button>
                               <button
                                 onClick={cancelEdit}
-                                className="bg-gray-200 cursor-pointer text-gray-700 rounded p-1"
+                                className="bg-gray-400 hover:bg-gray-500 text-white rounded p-1 transition-colors"
+                                title="Cancel edit"
                               >
-                                <X className="w-4 h-4" />
+                                <X className="w-3 h-3" />
                               </button>
                             </div>
                           </div>
                         ) : (
-                          <div className="flex items-center">
+                          // Display Mode - Show price with edit option if flag === 1
+                          <div className="flex items-center justify-between group">
                             <span
-                              className={
-                                item.flag === 1 ? "cursor-pointer" : ""
-                              }
+                              className={`${
+                                item.flag === 1 
+                                  ? "cursor-pointer hover:text-blue-600 transition-colors" 
+                                  : "text-gray-700"
+                              }`}
                               onClick={() =>
                                 item.flag === 1 &&
                                 startEditPrice(item.ticket_id, item.price)
                               }
+                              title={item.flag === 1 ? "Click to edit price" : "Price not editable"}
                             >
                               {item.price || "-"}
                             </span>
                             {item.flag === 1 && (
                               <button
                                 onClick={() =>
-                                  item.flag === 1 &&
                                   startEditPrice(item.ticket_id, item.price)
                                 }
-                                className="ml-2 cursor-pointer bg-gray-400 text-white rounded p-1"
+                                className="ml-2 opacity-0 group-hover:opacity-100 bg-blue-500 hover:bg-blue-600 text-white rounded p-1 transition-all duration-200"
+                                title="Edit price"
                               >
                                 <Edit className="w-3 h-3" />
                               </button>
@@ -405,9 +427,11 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
                           </div>
                         )}
                       </div>
-                      <div className="p-3 text-sm flex items-center justify-between">
-                        <span>{getBenefitsText(item.ticket_details)}</span>
-                        <button className="text-gray-400">
+                      <div className="p-3 text-sm flex-1 flex items-center justify-between">
+                        <span className="truncate pr-2" title={getBenefitsText(item.ticket_details)}>
+                          {getBenefitsText(item.ticket_details)}
+                        </span>
+                        <button className="text-gray-400 flex-shrink-0">
                           <IconStore.document />
                         </button>
                       </div>

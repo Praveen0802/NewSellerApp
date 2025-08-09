@@ -130,28 +130,55 @@ const FloatingSelect = ({
     }
   };
 
-  const handleSelectAll = (e) => {
-    e.stopPropagation();
-
-    // Extract values from filtered options in the same format they're stored in selected state
-    const allSelectedValues = filteredOptions.map((option) => {
-      // If options are objects with value property, extract just the value
-      // Otherwise use the option itself (for simple value arrays)
-      return option.value !== undefined ? option.value : option;
+  // Check if all filtered options are selected
+  const areAllSelected = () => {
+    if (!multiselect || filteredOptions.length === 0) return false;
+    
+    return filteredOptions.every((option) => {
+      const optionValue = option.value !== undefined ? option.value : option;
+      return selected.some((item) => {
+        const itemValue =
+          typeof item === "object" && item !== null ? item.value : item;
+        return itemValue === optionValue;
+      });
     });
-
-    setSelected(allSelectedValues);
-
-    if (onSelect) {
-      onSelect(allSelectedValues, keyValue, "select");
-    }
   };
 
-  const handleDeselectAll = (e) => {
+  const handleToggleSelectAll = (e) => {
     e.stopPropagation();
-    setSelected([]);
-    if (onSelect) {
-      onSelect([], keyValue, "select");
+
+    if (areAllSelected()) {
+      // Deselect all filtered options
+      const filteredValues = filteredOptions.map((option) => {
+        return option.value !== undefined ? option.value : option;
+      });
+
+      const newSelected = selected.filter((item) => {
+        const itemValue =
+          typeof item === "object" && item !== null ? item.value : item;
+        return !filteredValues.includes(itemValue);
+      });
+
+      setSelected(newSelected);
+      if (onSelect) {
+        onSelect(newSelected, keyValue, "select");
+      }
+    } else {
+      // Select all filtered options that aren't already selected
+      const newOptions = filteredOptions.filter((option) => {
+        const optionValue = option.value !== undefined ? option.value : option;
+        return !selected.some((item) => {
+          const itemValue =
+            typeof item === "object" && item !== null ? item.value : item;
+          return itemValue === optionValue;
+        });
+      });
+
+      const newSelected = [...selected, ...newOptions];
+      setSelected(newSelected);
+      if (onSelect) {
+        onSelect(newSelected, keyValue, "select");
+      }
     }
   };
 
@@ -320,19 +347,18 @@ const FloatingSelect = ({
       {isOpen && !disabled && (
         <div className={getDropdownPositionClasses()}>
           {multiselect && (
-            <div className="flex justify-between items-center px-3 py-2 border-b border-gray-100">
-              <button
-                onClick={handleSelectAll}
-                className="text-sm text-gray-600 cursor-pointer hover:text-blue-800"
-              >
-                Select All
-              </button>
-              <button
-                onClick={handleDeselectAll}
-                className="text-sm text-gray-600 cursor-pointer hover:text-blue-800"
-              >
-                Deselect All
-              </button>
+            <div className="flex items-center px-3 py-2 border-b border-gray-100 cursor-pointer hover:bg-gray-50" onClick={handleToggleSelectAll}>
+              <div className="mr-3">
+                <input
+                  type="checkbox"
+                  checked={areAllSelected()}
+                  onChange={() => {}}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+              </div>
+              <span className="text-sm text-gray-700 select-none">
+                Select all
+              </span>
             </div>
           )}
           <ul

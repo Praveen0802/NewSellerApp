@@ -679,7 +679,7 @@ const TicketsPage = (props) => {
     },
     [isGlobalEditMode, globalEditingTickets]
   );
-
+console.log(mockListingHistory,'mockListingHistory')
   // NEW: Construct headers dynamically from filters - REMAINS SAME
   const constructHeadersFromListingHistory = useMemo(() => {
     if (!mockListingHistory || mockListingHistory.length === 0) return [];
@@ -688,6 +688,8 @@ const TicketsPage = (props) => {
     const allFilters = mockListingHistory
       .map((match) => match.filter)
       .filter(Boolean);
+     
+      
 
     // Create headers based on the structure you want
     const headers = [
@@ -725,21 +727,16 @@ const TicketsPage = (props) => {
       {
         key: "row",
         label: "Row",
+        increasedWidth: "!w-[100px] !min-w-[100px] ",
         editable: true,
         type: "text",
       },
       {
         key: "quantity",
         label: "Quantity",
+        increasedWidth: "!w-[100px] !min-w-[100px] ",
         editable: true,
         type: "number",
-        options: [
-          { value: "1", label: "1" },
-          { value: "2", label: "2" },
-          { value: "3", label: "3" },
-          { value: "4", label: "4" },
-          { value: "5", label: "5" },
-        ],
       },
       {
         key: "seat",
@@ -751,12 +748,14 @@ const TicketsPage = (props) => {
         key: "web_price",
         label: "Face Value",
         editable: true,
+        iconHandling: true,
         type: "number",
       },
       {
         key: "price",
         label: "Price",
         editable: true,
+        iconHandling: true,
         type: "number",
       },
       {
@@ -882,7 +881,8 @@ const TicketsPage = (props) => {
               label,
             })
           );
-        } else if (header.key === "listing_note") {
+        } 
+         else if (header.key === "listing_note") {
           header.options = Array.from(allListingNotes.entries()).map(
             ([value, label]) => ({
               value,
@@ -890,7 +890,17 @@ const TicketsPage = (props) => {
             })
           );
         }
+        // if(header?.iconHandling){
+        //   header.iconBefore =(
+        //     <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
+        //       <p className="text-xs sm:text-[10px] lg:text-xs">
+        //         {matchDetails?.currency_icon?.[0] || "$"}
+        //       </p>
+        //     </div>
+        //   )
+        // }
       });
+      
     }
 
     return headers;
@@ -1682,6 +1692,7 @@ const TicketsPage = (props) => {
   // Render match tables using ticketsByMatch
   const renderMatchTables = useCallback(() => {
     return Object.entries(ticketsByMatch).map(([matchIndex, matchData]) => {
+      console.log(matchData,'matchDatamatchData')
       return (
         <div key={`match-${matchIndex}`} className="not-last:mb-4">
           <CommonInventoryTable
@@ -1709,6 +1720,7 @@ const TicketsPage = (props) => {
               country_name: matchData.matchInfo?.country_name,
               city_name: matchData.matchInfo?.city_name,
               match_id: matchData.matchInfo?.m_id,
+              tournament_name: matchData.matchInfo?.tournament_name,
             }}
             isEditMode={isGlobalEditMode}
             editingRowIndex={
@@ -1729,7 +1741,7 @@ const TicketsPage = (props) => {
             getStickyColumnsForRow={getStickyColumnsForRow}
             stickyHeaders={["", "", "", ""]}
             myListingPage={true}
-            stickyColumnsWidth={170}
+            stickyColumnsWidth={140}
           />
         </div>
       );

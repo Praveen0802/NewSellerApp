@@ -35,6 +35,7 @@ import {
   ChevronLeft,
   ChevronRight,
   HardDriveUpload,
+  Calendar,
 } from "lucide-react";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import UploadTickets from "../ModalComponents/uploadTickets";
@@ -65,7 +66,7 @@ const BulkInventory = (props) => {
   console.log(response, "responseresponseresponse");
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-
+  const matchVenueDetails = response?.match_data[0];
   // Extract the original response structure (KEEP EXACTLY THE SAME)
   const {
     block_data = {},
@@ -1354,43 +1355,68 @@ const BulkInventory = (props) => {
       />
 
       <div className="bg-white">
-        <div className="border-b-[1px] p-5 border-[#E0E1EA] flex justify-between items-center">
-          <div className="w-full flex items-center gap-5">
-            <div className="text-lg font-semibold text-[#323A70]">
-              Bulk Inventory Management
+        <div className="border-b-[1px] p-5 flex flex-col gap-4 border-[#E0E1EA]">
+          <div className=" flex justify-between items-center">
+            <div className="w-full flex items-center gap-5">
+              <div className="flex gap-2 items-center">
+                <MapPin className="w-4 h-4 text-[#00A3ED]" />
+                <p className="text-[#323A70]">{`${
+                  matchVenueDetails?.stadium_name
+                }${
+                  matchVenueDetails?.city_name
+                    ? `,${matchVenueDetails?.city_name}`
+                    : ""
+                }${
+                  matchVenueDetails?.country_name
+                    ? `, ${matchVenueDetails?.country_name}`
+                    : ""
+                }`}</p>
+              </div>
             </div>
 
-            {allMatchDetails.length > 0 && (
-              <div className="flex gap-4 items-center">
-                <div className="flex gap-2 items-center pr-4 border-r-[1px] border-[#DADBE5]">
-                  <span className="text-[#3a3c42] truncate text-[14px]">
-                    {allMatchDetails.length} Match(es) • {totalTicketCount}{" "}
-                    Ticket(s)
-                  </span>
-                </div>
-              </div>
-            )}
+            <div className="flex items-center">
+              {allMatchDetails.length > 0 && (
+                <p
+                  onClick={() => setShowViewPopup(true)}
+                  className="text-[13px] whitespace-nowrap font-semibold text-[#343432] cursor-pointer hover:underline mr-6"
+                >
+                  View Map
+                </p>
+              )}
+              <CompactInfoCard
+                title="Listing Visibility"
+                progress={20}
+                segments={5}
+                tooltipText="Click to learn more"
+                handleClick={handleOpenTicketInfoPopup}
+              />
+            </div>
           </div>
-
-          <div className="flex items-center">
-            {allMatchDetails.length > 0 && (
-              <p
-                onClick={() => setShowViewPopup(true)}
-                className="text-[13px] whitespace-nowrap font-semibold text-[#343432] cursor-pointer hover:underline mr-6"
-              >
-                View Map
-              </p>
-            )}
-            <CompactInfoCard
-              title="Listing Visibility"
-              progress={20}
-              segments={5}
-              tooltipText="Click to learn more"
-              handleClick={handleOpenTicketInfoPopup}
-            />
-          </div>
+          {allMatchDetails.length > 0 && (
+            <div className="flex gap-4 items-center flex-wrap">
+              {allMatchDetails?.map((list, index) => {
+                return (
+                  <div
+                    key={index}
+                    className="flex gap-3 items-center border border-[#DADBE5] p-2 rounded-md"
+                  >
+                    <p className="text-[#323A70] text-[14px] font-medium">
+                      {list?.match_name}
+                    </p>
+                    <div className="flex gap-1 items-center">
+                      <Calendar className="w-3 h-3 text-[#00A3ED]" />{" "}
+                      <p className="text-[12px]">{list?.match_date_format}</p>{" "}
+                    </div>
+                    <div className="flex gap-1 items-center">
+                      <Clock className="w-3 h-3 text-[#00A3ED]" />{" "}
+                      <p className="text-[12px]">{list?.match_time}</p>{" "}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
-
         {allMatchDetails.length > 0 && (
           <>
             {/* Filter Section with Control Icons */}
