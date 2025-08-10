@@ -1324,6 +1324,20 @@ export const getCurrencyDetails = async (token, params) => {
     throw error;
   }
 };
+export const getSalesTicketDetails = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.GET_SALES_TICKET_DETAILS}`,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getSalesTicketDetails", error);
+    // throw error;
+  }
+};
 
 export const getDialingCode = async (token, params) => {
   try {
@@ -1499,6 +1513,37 @@ export const fetchSalesOrderDetails = async (token, params) => {
     return orderDetails;
   }
 };
+
+export const getTicketTypes = async(token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_TICKET_TYPES,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getTicketTypes", error);
+    throw error;
+  }
+}
+
+export const updateTicketTypes = async(token, data) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.UPDATE_TICKET_TYPES,
+      method: "POST",
+      ...(token && { token: token }),
+      data: data,
+    });
+    return response?.data?.success ? response?.data : {};
+  } catch (error) {
+    console.log("ERROR in updateTicketTypes", error);
+    // throw error;
+    return error?.response?.data
+  }
+}
 
 export const fetchSalesOrderLogs = async (token, params) => {
   try {
@@ -2328,6 +2373,98 @@ export const getAuthAddress = async (token, params) => {
   } catch (error) {
     console.log("ERROR in GetAuthPhotoId", error);
     throw error;
+  }
+};
+
+export const deleteSaleTicket = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.DELETE_SALES_TICKET,
+      method: "POST",
+      ...(token && { token: token }),
+      ...(data && { data: data }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in GetAuthPhotoId", error);
+    throw error;
+  }
+};
+
+
+export const downloadSaleAction = async (token, id,params) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.DOWNLOAD_SALES_TICKET}/${id}`,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in GetAuthPhotoId", error);
+    throw error;
+  }
+};
+
+export const saveSalesUploadedTickets = async (data, id) => {
+  try {
+    const response = await axios({
+      url: `/api/sales/upload-tickets?booking_id=${id}`,
+      method: "POST",
+      data: data,
+    });
+    console.log(response,'responseresponse')
+    return response ? response : {};
+  } catch (error) {
+    console.log("ERROR in savePhotoId", error);
+    // throw error;
+  }
+};
+
+export const savePaperTicketsUpload = async (data, id) => {
+  try {
+    const response = await axios({
+      url: `/api/sales/paper-ticket-upload?booking_id=${id}`,
+      method: "POST",
+      data: data,
+    });
+    console.log(response,'responseresponse')
+    return response ? response : {};
+  } catch (error) {
+    console.log("ERROR in savePhotoId", error);
+    // throw error;
+  }
+};
+
+
+export const saveMobileTickets = async (data, id) => {
+  try {
+    const response = await axios({
+      url: `/api/sales/upload-mobile-ticket?booking_id=${id}`,
+      method: "POST",
+      data: data,
+    });
+    console.log(response,'responseresponse')
+    return response ? response : {};
+  } catch (error) {
+    console.log("ERROR in savePhotoId", error);
+    // throw error;
+  }
+};
+
+export const saveAdditionalInstructionFile = async (data, id) => {
+  try {
+    const response = await axios({
+      url: `/api/sales/upload-instruction-file`,
+      method: "POST",
+      data: data,
+    });
+    console.log(response,'responseresponse')
+    return response ? response : {};
+  } catch (error) {
+    console.log("ERROR in savePhotoId", error);
+    // throw error;
   }
 };
 

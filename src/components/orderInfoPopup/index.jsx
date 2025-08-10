@@ -12,9 +12,13 @@ import RightViewModal from "../commonComponents/rightViewModal";
 import {
   addReportsNotes,
   addSalesPendingNotes,
+  downloadSaleAction,
+  updateTicketTypes,
 } from "@/utils/apiHandler/request";
 import { toast } from "react-toastify";
-import { Expand, Shrink, X } from "lucide-react";
+import { Download, Expand, Shrink, X } from "lucide-react";
+import AttendeeDetails from "./attendeeDetails";
+import useS3Download from "@/Hooks/useS3Download";
 
 const OrderInfo = ({
   show,
@@ -23,20 +27,25 @@ const OrderInfo = ({
   refreshPopupData = () => {},
   type = "",
   showShimmer = false,
+  ticketTypesList = [],
 } = {}) => {
   const [expandedVersion, setExpandedVersion] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [downloadLoader, setDownloadLoader] = useState(false);
 
+  const { downloadFile } = useS3Download();
+  console.log(orderData, ticketTypesList, "orderDataorderData");
   // Handle new array format data
   const data = orderData && orderData.length > 0 ? orderData[0] : null;
+  const [updatedOrderObject, setUpdatedOrderObject] = useState(null);
 
   // Enhanced transition handler
   const handleCollapseModal = () => {
     if (isTransitioning) return; // Prevent multiple rapid clicks
-    
+
     setIsTransitioning(true);
     setExpandedVersion(!expandedVersion);
-    
+
     // Reset transition state after animation completes
     setTimeout(() => {
       setIsTransitioning(false);
@@ -187,6 +196,25 @@ const OrderInfo = ({
               <div className="h-6 bg-blue-200 rounded-full w-28"></div>
             </div>
           </div>
+
+          {/* Attendee Details Shimmer */}
+          <div className="border border-gray-200 rounded-lg p-4">
+            <div className="h-5 bg-gray-200 rounded w-36 mb-3"></div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <div className="h-4 bg-gray-200 rounded w-20"></div>
+                <div className="h-4 bg-gray-200 rounded w-24"></div>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="h-4 bg-gray-200 rounded w-16"></div>
+                <div className="h-4 bg-gray-200 rounded w-20"></div>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="h-4 bg-gray-200 rounded w-24"></div>
+                <div className="h-4 bg-gray-200 rounded w-16"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -226,8 +254,6 @@ const OrderInfo = ({
     order_id_label,
   } = data;
 
-  console.log("order_details", order_details);
-
   // Extract order notes from ticket details
   const order_notes = ticket_details?.[0]?.order_notes || "";
   // const order_notes = "";
@@ -235,14 +261,29 @@ const OrderInfo = ({
   // Extract ticket file from attendee details
   const ticket_file = attendee_details?.[0]?.ticket_file;
 
-  console.log("ticket_file", ticket_file);
+  console.log("ticket_file", order_details);
+
+  const handleDownLoadActionClick = async () => {
+    setDownloadLoader(true);
+    const response = await downloadSaleAction("", order_details?.order_id);
+    console.log(response?.url, "kkkkk");
+    downloadFile(response?.url, "ticket");
+    setDownloadLoader(false);
+  };
 
   const ctaText = [
     { title: "Order Notes", cta: order_notes ? "View Note" : "+ Add Note" },
-    // {
-    //   title: "Additional File",
-    //   cta: ticket_file ? "Download File" : "No File",
-    // },
+    ...(data?.ticket_file_included
+      ? [
+          {
+            title: "Additional File",
+            cta: ticket_file ? "Download File" : "No File",
+            icon: <Download className="size-4 text-white" />,
+            onClick: handleDownLoadActionClick,
+            loading: downloadLoader,
+          },
+        ]
+      : []),
   ];
 
   function formatTimestamp(isoString) {
@@ -269,10 +310,11 @@ const OrderInfo = ({
         ? "Pending"
         : "Inactive",
     delivered_by: order_details?.delivered_by || "Not specified",
+    delivery_details:order_details?.delivery_status_label,
     days_to_event: order_details?.days_in_event,
     ticket_type: ticket_details?.[0]?.ticket_types,
   };
-
+console.log(orderObject,'orderObjectorderObject')
   // Format customer details - prioritize attendee details, then user address, then address
   const attendee = attendee_details?.[0];
 
@@ -340,19 +382,67 @@ const OrderInfo = ({
     }
   };
 
-  console.log("order_details", order_details);
+  const handleTicketTypeChange = async (selectedTicketType) => {
+    try {
+      console.log("Selected ticket type:", selectedTicketType);
+
+      // Immediately update the local orderObject state
+      const newOrderObject = {
+        ...orderObject,
+        ticket_type: selectedTicketType.label,
+        ticket_type_id: selectedTicketType.value,
+      };
+
+      setUpdatedOrderObject(newOrderObject);
+
+      // Here you can implement your API call to update the ticket type
+      // Example API call structure:
+
+      const payload = {
+        booking_id: `${order_details?.order_id}`,
+        ticket_type: selectedTicketType.value,
+      };
+
+      const response = await updateTicketTypes("", payload);
+      if (response?.success) {
+        toast.success("Ticket type updated successfully", {
+          position: "top-center",
+        });
+        // refreshPopupData?.(); // Refresh the order details
+      } else {
+        toast.error(response?.message || "Failed to update ticket type", {
+          position: "top-center",
+        });
+        // Revert the local state if API call fails
+        setUpdatedOrderObject(null);
+      }
+
+      // For now, just show a success message
+    } catch (error) {
+      console.error("Error updating ticket type:", error);
+      toast.error("Failed to update ticket type", {
+        position: "top-center",
+      });
+      // Revert the local state if there's an error
+      setUpdatedOrderObject(null);
+    }
+  };
+
+  const currentOrderObject = updatedOrderObject || orderObject;
 
   return (
     <RightViewModal
       className={`transition-all duration-300 ease-in-out ${
-        expandedVersion ? "!w-[100vw] !max-w-none" : "!w-[600px]"
+        expandedVersion ? "!w-[100vw] !max-w-none" : "!w-[650px]"
       }`}
       show={show}
       onClose={onClose}
     >
-      <div className={`transition-all duration-300 ease-in-out ${
-        expandedVersion ? "w-full" : "w-[600px]"
-      }`}>
+      <div
+        className={`transition-all duration-300 ease-in-out ${
+          expandedVersion ? "w-full" : "w-[650px]"
+        }`}
+      >
         <div className="overflow-auto rounded-md bg-white h-full">
           <div className="flex items-center border-b-[1px] border-[#E0E1EA] justify-between py-[13px] px-[24px]">
             <p className="text-[18px] text-[#323A70]">
@@ -362,9 +452,9 @@ const OrderInfo = ({
                 order_details?.order_id}
             </p>
             <div className="flex items-center gap-2">
-              <div 
+              <div
                 className={`transition-all duration-300 ease-in-out ${
-                  isTransitioning ? 'opacity-50' : 'opacity-100'
+                  isTransitioning ? "opacity-50" : "opacity-100"
                 }`}
               >
                 {expandedVersion ? (
@@ -386,7 +476,7 @@ const OrderInfo = ({
               />
             </div>
           </div>
-          
+
           <div className="p-[24px] flex flex-col gap-4">
             <div className="transition-all duration-300 ease-in-out">
               <CtaValues
@@ -395,22 +485,30 @@ const OrderInfo = ({
                 onSaveNote={handleSaveNote}
               />
             </div>
-            
-            <div className={`flex gap-4 transition-all duration-300 ease-in-out ${
-              expandedVersion ? "flex-row" : "flex-col"
-            }`}>
-              <div className={`transition-all duration-300 ease-in-out ${
-                expandedVersion ? "w-1/2 flex-shrink-0" : "w-full"
-              }`}>
+
+            <div
+              className={`flex gap-4 transition-all duration-300 ease-in-out ${
+                expandedVersion ? "flex-row" : "flex-col"
+              }`}
+            >
+              <div
+                className={`transition-all duration-300 ease-in-out ${
+                  expandedVersion ? "w-1/2 flex-shrink-0" : "w-full"
+                }`}
+              >
                 <OrderValues
-                  orderObject={orderObject}
+                  orderObject={currentOrderObject}
                   order_id_label={order_id_label}
+                  ticketTypesList={ticketTypesList}
+                  onTicketTypeChange={handleTicketTypeChange}
                 />
               </div>
-              
-              <div className={`transition-all duration-300 ease-in-out ${
-                expandedVersion ? "w-1/2 flex-shrink-0" : "w-full"
-              }`}>
+
+              <div
+                className={`transition-all duration-300 ease-in-out ${
+                  expandedVersion ? "w-1/2 flex-shrink-0" : "w-full"
+                }`}
+              >
                 <CustomerDetails
                   customerEmail={customerEmail}
                   customerName={customerName}
@@ -418,16 +516,23 @@ const OrderInfo = ({
                 />
               </div>
             </div>
-            
+
             {transformedTicketDetails && (
               <div className="transition-all duration-300 ease-in-out">
                 <OrderedTickets ticket_details={transformedTicketDetails} />
               </div>
             )}
-            
+
             {benefits.length > 0 && (
               <div className="transition-all duration-300 ease-in-out">
                 <Benifits benefits_restrictions={benefits} />
+              </div>
+            )}
+
+            {/* Add AttendeeDetails component */}
+            {attendee_details && attendee_details.length > 0 && (
+              <div className="transition-all duration-300 ease-in-out">
+                <AttendeeDetails attendee_details={attendee_details} />
               </div>
             )}
           </div>

@@ -679,7 +679,7 @@ const TicketsPage = (props) => {
     },
     [isGlobalEditMode, globalEditingTickets]
   );
-console.log(mockListingHistory,'mockListingHistory')
+  console.log(mockListingHistory, "mockListingHistory");
   // NEW: Construct headers dynamically from filters - REMAINS SAME
   const constructHeadersFromListingHistory = useMemo(() => {
     if (!mockListingHistory || mockListingHistory.length === 0) return [];
@@ -688,8 +688,6 @@ console.log(mockListingHistory,'mockListingHistory')
     const allFilters = mockListingHistory
       .map((match) => match.filter)
       .filter(Boolean);
-     
-      
 
     // Create headers based on the structure you want
     const headers = [
@@ -881,8 +879,7 @@ console.log(mockListingHistory,'mockListingHistory')
               label,
             })
           );
-        } 
-         else if (header.key === "listing_note") {
+        } else if (header.key === "listing_note") {
           header.options = Array.from(allListingNotes.entries()).map(
             ([value, label]) => ({
               value,
@@ -900,7 +897,6 @@ console.log(mockListingHistory,'mockListingHistory')
         //   )
         // }
       });
-      
     }
 
     return headers;
@@ -1692,7 +1688,6 @@ console.log(mockListingHistory,'mockListingHistory')
   // Render match tables using ticketsByMatch
   const renderMatchTables = useCallback(() => {
     return Object.entries(ticketsByMatch).map(([matchIndex, matchData]) => {
-      console.log(matchData,'matchDatamatchData')
       return (
         <div key={`match-${matchIndex}`} className="not-last:mb-4">
           <CommonInventoryTable
@@ -1890,6 +1885,7 @@ console.log(mockListingHistory,'mockListingHistory')
         rowIndex={showUploadPopup?.rowIndex}
         onClose={() => {
           setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
+          fetchData({ ...filtersApplied, page: currentPage });
         }}
       />
       {viewDetailsPopup?.show && (

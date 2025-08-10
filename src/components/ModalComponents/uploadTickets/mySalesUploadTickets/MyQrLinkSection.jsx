@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Copy, Check, Edit2 } from "lucide-react";
 
-const QRLinksSection = React.forwardRef(
+const MyQRLinksSection = React.forwardRef(
   (
     {
       maxQuantity = 0,
@@ -70,11 +70,10 @@ const QRLinksSection = React.forwardRef(
     console.log(ticketLinks,'ticketLinksticketLinks')
     // Use ref to store the latest data for instant access
     const ticketLinksRef = useRef(ticketLinks);
-
     // Update ref whenever state changes
-    // useEffect(() => {
-    //   ticketLinksRef.current = ticketLinks;
-    // }, [ticketLinks]);
+    useEffect(() => {
+      ticketLinksRef.current = ticketLinks;
+    }, [ticketLinks]);
 
     // Update links when existingUploadTickets changes or maxQuantity changes
     useEffect(() => {
@@ -343,6 +342,7 @@ const QRLinksSection = React.forwardRef(
               ticketIndex >= 0 &&
               ticketIndex < newData.length
             ) {
+                console.log('jeeeeeeeee')
               // Revert specific ticket
               const link = newData[ticketIndex];
               if (link.isExisting) {
@@ -353,6 +353,7 @@ const QRLinksSection = React.forwardRef(
                 };
               }
             } else {
+                console.log('jeeeeeeeeeHaiiii')
               // Revert all existing entries
               newData.forEach((link, index) => {
                 if (link.isExisting) {
@@ -525,6 +526,6 @@ const QRLinksSection = React.forwardRef(
   }
 );
 
-QRLinksSection.displayName = "QRLinksSection";
+MyQRLinksSection.displayName = "MyQRLinksSection";
 
-export default QRLinksSection;
+export default MyQRLinksSection;

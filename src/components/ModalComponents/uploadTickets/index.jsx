@@ -50,7 +50,7 @@ const UploadTickets = ({
   mySalesPage = false,
 }) => {
   const proofUploadView = rowData?.handleProofUpload || false;
-  console.log(matchDetails, "rowDatarowData");
+  console.log(rowData, "rowDatarowData");
   const ticketTypes = !isNaN(parseInt(rowData?.ticket_type))
     ? rowData?.ticket_type
     : rowData?.ticket_types || rowData?.ticket_type_id;
@@ -59,11 +59,8 @@ const UploadTickets = ({
   const normalFlow = !ETicketsFlow && !paperTicketFlow;
 
   const existingUploadedTickets = rowData?.rawTicketData?.uploadTickets || [];
-  console.log(
-    existingUploadedTickets,
-    "existingUploadedTicketsexistingUploadedTickets"
-  );
-  const hasExistingTickets =false
+
+  const hasExistingTickets = false;
   const existingProofTickets = rowData?.rawTicketData?.popUpload || [];
   // Updated maxQuantity calculation for proof upload
   const maxQuantity = proofUploadView
@@ -129,7 +126,10 @@ const UploadTickets = ({
       }
       setProofUploadedFiles([]);
     } else {
-      if (hasExistingTickets) {
+      if (
+        existingUploadedTickets.length > 0 &&
+        existingUploadedTickets?.[0]?.upload_tickets
+      ) {
         const existingFiles = existingUploadedTickets
           .filter((ticket) => ticket.upload_tickets) // Only include tickets with URLs
           .map((ticket, index) => ({
@@ -212,12 +212,6 @@ const UploadTickets = ({
             file: file,
           }));
           setUploadedFiles((prev) => [...prev, ...newFiles]);
-
-          if (files.length > remainingSlots) {
-            alert(
-              `Only ${remainingSlots} more files can be uploaded. ${remainingSlots} files were added.`
-            );
-          }
         }
       }
     },
@@ -386,8 +380,8 @@ const UploadTickets = ({
           <Calendar className="w-4 h-4 flex-shrink-0" />
           <span className="text-xs whitespace-nowrap">
             {matchDetails?.match_date_format ||
-              separateDateTime(matchDetails?.match_date)?.date ||
-              rowData?.matchDate}
+              rowData?.matchDate ||
+              separateDateTime(matchDetails?.match_date)?.date}
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -728,10 +722,7 @@ const UploadTickets = ({
         },
         uploadedFiles: [],
       };
-    console.log(
-      currentPaperTicketData,
-      "currentPaperTicketDatacurrentPaperTicketData"
-    );
+
     if (proofUploadView && myListingPage) {
       setIsLoading(true);
       if (existingProofTickets?.length <= 0) {
@@ -1019,12 +1010,12 @@ const UploadTickets = ({
       : transferredFiles;
 
     const handleDeleteUpload = async (assignedFile) => {
-      console.log(assignedFile, "assignedFileassignedFile");
       try {
         // If the file has an existing ID, call the API first
         if (
           assignedFile?.url &&
-          (assignedFile?.existingId || assignedFile?.id)
+          (assignedFile?.existingId || assignedFile?.id) &&
+          !mySalesPage
         ) {
           const idToDelete = assignedFile.existingId || assignedFile.id;
           console.log(idToDelete, "idToDelete");
@@ -1115,7 +1106,6 @@ const UploadTickets = ({
                           <span className="text-xs text-gray-700 truncate max-w-24">
                             {assignedFile.name}
                           </span>
-                          
                         </div>
                         <div className="flex items-center gap-1">
                           {assignedFile.isExisting && (

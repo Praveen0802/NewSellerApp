@@ -19,6 +19,8 @@ import {
   fetchSalesOrderLogs,
   fetchSalesPageData,
   getSalesCount,
+  getSalesTicketDetails,
+  getTicketTypes,
 } from "@/utils/apiHandler/request";
 import { Clock, Eye, Upload } from "lucide-react";
 import { inventoryLog } from "@/data/testOrderDetails";
@@ -29,63 +31,12 @@ import FloatingSelect from "../floatinginputFields/floatingSelect";
 import Image from "next/image";
 import Tooltip from "../addInventoryPage/simmpleTooltip";
 import UploadTickets from "../ModalComponents/uploadTickets";
+import MySalesUploadTickets from "../ModalComponents/uploadTickets/mySalesUploadTickets";
 
-function convertISOToMMDDYYYY(isoTimestamp, options = {}) {
-  // Handle null, undefined, empty string, or non-string inputs
-  if (!isoTimestamp || typeof isoTimestamp !== "string") {
-    return options.returnNullOnError ? null : "";
-  }
-
-  try {
-    // Create date object from ISO string
-    const date = new Date(isoTimestamp);
-
-    // Check if date is valid
-    if (isNaN(date.getTime())) {
-      return options.returnNullOnError ? null : "";
-    }
-
-    // Extract date components
-    const month = date.getMonth() + 1; // getMonth() returns 0-11
-    const day = date.getDate();
-    const year = date.getFullYear();
-
-    // Handle invalid date components
-    if (
-      !month ||
-      !day ||
-      !year ||
-      month < 1 ||
-      month > 12 ||
-      day < 1 ||
-      day > 31
-    ) {
-      return options.returnNullOnError ? null : "";
-    }
-
-    // Format with or without zero padding
-    const mm = options.noPadding
-      ? month.toString()
-      : month.toString().padStart(2, "0");
-    const dd = options.noPadding
-      ? day.toString()
-      : day.toString().padStart(2, "0");
-
-    // Custom separator (default is '/')
-    const separator = options.separator || "/";
-
-    return `${mm}${separator}${dd}${separator}${year}`;
-  } catch (error) {
-    // Handle any parsing errors
-    if (options.throwOnError) {
-      throw new Error(`Failed to convert ISO timestamp: ${error.message}`);
-    }
-    return options.returnNullOnError ? null : "";
-  }
-}
 
 const SalesPage = (props) => {
   const { profile, response = {} } = props;
+  console.log(response,'responseresponse')
   const { tournamentList } = response;
   const tournamentOptions = tournamentList?.map((item) => ({
     value: item.tournament_id,
@@ -103,7 +54,6 @@ const SalesPage = (props) => {
     order_status: profile,
     page: 1,
   });
-  console.log(response, "oooooooooooooo");
   const { teamMembers } = useTeamMembersDetails();
 
   const [activeTab, setActiveTab] = useState(profile || "pending");
@@ -138,6 +88,7 @@ const SalesPage = (props) => {
     { key: "ticket_type_label", label: "Ticket Type" },
     { key: "category", label: "Category" },
     { key: "order_status_label", label: "Order Status" },
+    { key: "delivery_status_label", label: "Delivery Status" },
     { key: "section", label: "Section" },
     { key: "row", label: "Row" },
     { key: "days_to_event", label: "Days to Event" },
@@ -259,12 +210,18 @@ const SalesPage = (props) => {
     const salesData = await fetchSalesOrderDetails("", {
       booking_id: item?.order_id?.replace("1BX", ""),
     });
+    const ticketTypes = await getTicketTypes();
+    const ticketTypesList = ticketTypes?.ticket_types?.map((list) => ({
+      label: list?.name,
+      value: list?.id,
+    }));
     setShowInfoPopup({
       flag: true,
       data: salesData?.map((list) => ({
         ...list,
         order_id_label: item?.booking_no ?? null,
       })),
+      ticketTypesList: ticketTypesList,
       bg_id: item?.bg_id,
       isLoading: false,
     });
@@ -277,10 +234,10 @@ const SalesPage = (props) => {
       isLoading: true,
     }));
     const orderLogs = await fetchSalesOrderLogs("", {
-      booking_id: item?.bg_id,
+      booking_id: item?.order_id?.replace("1BX", ""),
     });
     const inventoryLogs = await fetchSalesInventoryLogs("", {
-      ticket_id: item?.bg_id,
+      ticket_id: item?.order_id?.replace("1BX", ""),
     });
     setShowLogDetailsModal({
       flag: true,
@@ -289,26 +246,157 @@ const SalesPage = (props) => {
       isLoading: false,
     });
   };
+  const [uploadPopupLoading, setUploadPopupLoading] = useState(false);
 
-  const handleUploadAction = (rowData, rowIndex) => {
-    // const ticketType = rowData.ticket_type;
+  const handleUploadAction = async (rowData, rowIndex) => {
+    try {
+      // Set loading state before API call
+      setUploadPopupLoading(true);
 
-    // // Find the matching object in the array
-    // const matchingTicketType = response?.salesFilter?.data?.ticket_types.find(
-    //   (option) => option.name === ticketType
-    // );
-    const matchDate = separateDateTime(rowData?.event_date)?.date;
-    const matchTime = separateDateTime(rowData?.event_date)?.time;
-    setShowUploadPopup({
-      show: true,
-      rowData: {
-        ...rowData,
-        // ticket_type_id: matchingTicketType?.id,
-        matchDate,
-        matchTime,
-      },
-      rowIndex,
-    });
+      // Show the popup with loading state
+      setShowUploadPopup({
+        show: true,
+        loading: true,
+        rowData: null,
+        rowIndex,
+      });
+
+      // Fetch ticket details from API
+      const response = await getSalesTicketDetails("", {
+        booking_id: rowData?.id,
+      });
+
+      // Check different possible response structures
+      let ticketDetails = response?.ticket_details || response;
+
+      // Check ticket type to determine flow
+      const ticketType = parseInt(
+        rowData?.ticket_type || rowData?.ticket_types || rowData?.ticket_type_id
+      );
+      const isETicketFlow = ticketType === 4;
+      const isPaperTicketFlow = ticketType === 3;
+      const isNormalFlow = !isETicketFlow && !isPaperTicketFlow;
+
+      if (isETicketFlow) {
+        // Existing E-Ticket flow logic
+        const qrLinksData =
+          ticketDetails?.map((ticket, index) => ({
+            id: ticket.id,
+            ticketId: ticket.ticket_id,
+            serial: ticket.serial,
+            qr_link_android: ticket.qr_link_android || "",
+            qr_link_ios: ticket.qr_link_ios || "",
+            isExisting: true,
+            originalAndroid: ticket.qr_link_android || "",
+            originalIos: ticket.qr_link_ios || "",
+          })) || [];
+
+        qrLinksData.sort((a, b) => a.serial - b.serial);
+
+        const matchDate = separateDateTime(rowData?.event_date)?.date;
+        const matchTime = separateDateTime(rowData?.event_date)?.time;
+
+        setShowUploadPopup({
+          show: true,
+          loading: false,
+          rowData: {
+            ...rowData,
+            matchDate,
+            matchTime,
+            qrLinksData,
+            originalTicketDetails: ticketDetails,
+          },
+          rowIndex,
+        });
+      } else if (isPaperTicketFlow && response?.tracking_details) {
+        // NEW: Paper Ticket Flow Logic
+
+        // Prepare paper ticket data from first ticket detail only
+        const paperTicketData = {
+          courier_type: "company", // default value
+          courier_company: response?.tracking_details?.delivery_provider || "",
+          tracking_details: response?.tracking_details?.tracking_number || "",
+          tracking_link: response?.tracking_details?.tracking_link || "",
+          pod_file: response?.tracking_details?.pod || null,
+        };
+
+        // Prepare paper ticket file upload data if POD file exists
+        const paperTicketFileUpload = response?.tracking_details?.pod
+          ? [
+              {
+                fileName: `POD_${response?.tracking_details.id}.png`,
+                url: response?.tracking_details.pod,
+                id: response?.tracking_details.id,
+                ticketId: response?.tracking_details.ticket_id,
+                serial: response?.tracking_details.serial || 1,
+                isExisting: true,
+                existingId: response?.tracking_details.id,
+              },
+            ]
+          : [];
+
+        const matchDate = separateDateTime(rowData?.event_date)?.date;
+        const matchTime = separateDateTime(rowData?.event_date)?.time;
+
+        // Update popup with paper ticket data
+        setShowUploadPopup({
+          show: true,
+          loading: false,
+          rowData: {
+            ...rowData,
+            matchDate,
+            matchTime,
+            paper_ticket_details: paperTicketData,
+            paperTicketFileUpload: paperTicketFileUpload,
+            originalTicketDetails: ticketDetails,
+            originalPaperTicketDetails: response?.tracking_details,
+          },
+          rowIndex,
+        });
+      } else {
+        // Existing normal flow logic
+        const myListingFileUpload =
+          ticketDetails?.map((ticket, index) => ({
+            fileName: ticket.ticket_file_name,
+            url: ticket.ticket_file,
+            id: ticket.id,
+            ticketId: ticket.ticket_id,
+            serial: ticket.serial,
+            isExisting: true,
+            existingId: ticket.id,
+          })) || [];
+
+        myListingFileUpload.sort((a, b) => a.serial - b.serial);
+
+        const matchDate = separateDateTime(rowData?.event_date)?.date;
+        const matchTime = separateDateTime(rowData?.event_date)?.time;
+
+        setShowUploadPopup({
+          show: true,
+          loading: false,
+          rowData: {
+            ...rowData,
+            matchDate,
+            matchTime,
+            myListingFileUpload,
+            originalTicketDetails: ticketDetails,
+          },
+          rowIndex,
+        });
+      }
+    } catch (error) {
+      console.error("Error in handleUploadAction:", error);
+      toast.error("Failed to load ticket details");
+
+      setShowUploadPopup({
+        show: false,
+        loading: false,
+        rowData: null,
+        rowIndex: null,
+      });
+    } finally {
+      setUploadPopupLoading(false);
+    }
   };
 
   // Create right sticky columns with action buttons
@@ -324,7 +412,7 @@ const SalesPage = (props) => {
       ),
       className: " cursor-pointer",
     },
-    ...(profile == "confirmed"
+    ...(profile != "pending"
       ? [
           {
             icon: (
@@ -373,7 +461,6 @@ const SalesPage = (props) => {
       { name: "Local Delivery", value: overViewData?.local_delivery_count },
     ],
   };
-
 
   const [csvLoader, setCsvLoader] = useState(false);
   const [currency, setCurrency] = useState("GBP");
@@ -815,26 +902,36 @@ const SalesPage = (props) => {
       <OrderInfo
         show={showInfoPopup?.flag}
         data={showInfoPopup?.data}
-        onClose={() => setShowInfoPopup({ flag: false, data: [] })}
+        onClose={() => {
+          setShowInfoPopup({ flag: false, data: [] });
+          apiCall({page:1});
+        }}
+        ticketTypesList={showInfoPopup?.ticketTypesList}
         refreshPopupData={refreshPopupData}
         type="sales"
         showShimmer={showInfoPopup?.isLoading}
       />
 
       {showUploadPopup?.show && (
-        <UploadTickets
+        <MySalesUploadTickets
           show={showUploadPopup?.show}
+          loading={showUploadPopup?.loading} // Pass loading state
           rowData={showUploadPopup?.rowData}
           matchDetails={{
             match_name: showUploadPopup?.rowData?.event,
-            match_date_format: showInfoPopup?.rowData?.matchDate,
-            match_time: showInfoPopup?.rowData?.matchTime,
-            stadium_name: showInfoPopup?.rowData?.venue,
+            match_date_format: showUploadPopup?.rowData?.matchDate,
+            match_time: showUploadPopup?.rowData?.matchTime,
+            stadium_name: showUploadPopup?.rowData?.venue,
           }}
           rowIndex={showUploadPopup?.rowIndex}
           mySalesPage={true}
           onClose={() => {
-            setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
+            setShowUploadPopup({
+              show: false,
+              loading: false,
+              rowData: null,
+              rowIndex: null,
+            });
           }}
         />
       )}

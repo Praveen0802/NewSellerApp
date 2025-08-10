@@ -3,9 +3,11 @@ const ROOT_URL = process.env.API_BASE_URL;
 export const API_ROUTES = {
   REPORTS_OVERVIEW: `/reports/overview`,
   GET_USER_CAN_ACCESS: `/roles-permissions/permission/access`,
+  UPDATE_TICKET_TYPES:`/sales/update-ticket-type`,
   LMT_TRADE_TRACKING: `/purchase/lmt-trade/tracking/history`,
   GET_SALES_COUNT: `/sales/get-sales-count`,
   GET_KYC_STATUS: `/settings/get-user-status`,
+  GET_TICKET_TYPES:`/sales/ticket-types`,
   GET_ADDITIONAL_TEMPLATE: `/settings/get-additional-template`,
   LMT_TRADE_ORDERS: `/purchase/lmt-trade/history`,
   GET_MY_LISTING_OVERVIEW: `/my-listings/overview`,
@@ -93,6 +95,7 @@ export const API_ROUTES = {
   ADD_SAVED_CARDS:"/settings/lmt-pay/add-card",
   PAYMENT_CONFIG: `/settings/lmt-pay/payment-config`,
   GET_CURRENCY: "/currencies",
+  GET_SALES_TICKET_DETAILS:`/sales/ticket-details`,
   GET_DIALING_CODE: "/settings/dialing-code",
   REMOVE_SAVED_CARD: "/remove-saved-card",
   ACCOUNT_REFERENCE: "/settings/lmt-pay/account-reference",
@@ -136,6 +139,8 @@ export const API_ROUTES = {
   GET_AUTH_SELLER_CONTRACT: "/auth/seller-contract-document",
   GET_AUTH_PHOTO_ID: "/auth/seller-photo-document",
   GET_AUTH_ADDDRESS: "/auth/seller-address-document",
+  DELETE_SALES_TICKET:"/sales/delete-ticket",
+  DOWNLOAD_SALES_TICKET:"/sales/download-all-tickets",
   SAVE_SELLER_CONTRACT: "/auth/seller-contract-document",
   SAVE_PHOTO_ID: "/auth/seller-photo-document",
   SAVE_ADDRESS_DOCUMENT: "/auth/seller-address-document",
@@ -151,4 +156,8 @@ export const API_ROUTES = {
   GET_PAYOUT_ORDERS: "/payouts/payout-orders",
   SELLER_BUSINESS_DOCUMENT: "/auth/seller-business-document",
   GET_ZOHO_SIGN_DOCUMENT: "/zoho-sign/document",
+  MY_SALES_UPLOAD_TICKETS:"/sales/upload-tickets",
+  MY_SALES_UPLOAD_MOBILE_TICKETS:"/sales/upload-mobile-tickets",
+  UPLOAD_POD_TICKETS:"/sales/upload-pod",
+  INSTRUCTION_FILE_UPLOAD:"/sales/upload-instruction-file"
 };

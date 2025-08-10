@@ -66,24 +66,28 @@ const CtaValues = ({ ctaText, order_notes, onSaveNote = () => {} } = {}) => {
               key={index}
               className="px-4 flex border border-[#E0E1EA] rounded-lg w-1/2 justify-between items-center py-3 bg-white shadow-sm hover:shadow-md transition-shadow duration-200"
             >
-              <p className="text-base font-semibold text-[#343432]">
+              <p className="text-base flex gap-2 items-center font-semibold text-[#343432]">
                 {item?.title}
               </p>
               <Button
-                onClick={() => handleNoteAction(item)}
+                onClick={() => {
+                  if (item?.onClick) {
+                    item?.onClick(item);
+                  } else {
+                    handleNoteAction(item);
+                  }
+                }}
                 classNames={{
-                  root: `${
-                    isAddNotes(item)
-                      ? "bg-[#343432] text-white"
-                      : item.cta === "No File"
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-green-600 hover:bg-green-700"
-                  } px-3 py-2 transition-colors duration-200`,
+                  root: `${"bg-[#343432] text-white"} px-3 py-2 transition-colors duration-200`,
                   label_: "text-xs text-white font-medium",
                 }}
-                label={item?.cta}
+                // loading={item?.loading}
                 disabled={item.cta === "No File"}
-              />
+              >
+                
+                {item?.icon && item?.icon}
+                {item?.cta}
+              </Button>
             </div>
           );
         })}

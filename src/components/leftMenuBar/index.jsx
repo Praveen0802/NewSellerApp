@@ -948,25 +948,37 @@ const LeftMenuBar = () => {
       name: "Pending",
       route: "sales/pending",
       key: "sales-pending",
-      // count: salesCount?.find((item) => item.label === "Initiated")?.count || 0,
+      // count: salesCount?.find((item) => item.status === "pending")?.orders || 0,
+    },
+    {
+      name: "Awaiting Delivery",
+      route: "sales/confirmed",
+      key: "sales-confirmed",
+      // count: salesCount?.find((item) => item.status === "confirmed")?.orders || 0,
     },
     {
       name: "Delivered",
       route: "sales/delivered",
       key: "sales-delivered",
-      // count: salesCount?.find((item) => item.label === "Delivered")?.count || 0,
+      // count: salesCount?.find((item) => item.status === "delivered")?.orders || 0,
     },
     {
       name: "Completed",
       route: "sales/completed",
       key: "sales-completed",
-      // count: salesCount?.find((item) => item.label === "Confirmed")?.count || 0,
+      // count: salesCount?.find((item) => item.status === "completed")?.orders || 0,
     },
     {
       name: "Cancelled",
       route: "sales/cancelled",
       key: "sales-cancelled",
-      // count: salesCount?.find((item) => item.label === "Cancelled")?.count || 0,
+      // count: salesCount?.find((item) => item.status === "cancelled")?.orders || 0,
+    },
+    {
+      name: "Replaced",
+      route: "sales/replaced",
+      key: "sales-replaced",
+      // count: salesCount?.find((item) => item.status === "replaced")?.orders || 0,
     },
   ];
 
@@ -1103,7 +1115,7 @@ const LeftMenuBar = () => {
 
   // Helper function to determine if a sales sub-item should be active
   const getSalesActiveState = () => {
-    const currentPath = router?.pathname;
+    const currentPath = window.location.pathname;
     if (currentPath.startsWith("/sales/")) {
       const salesPage = currentPath.replace("/sales/", "");
       return `sales-${salesPage}`;
@@ -1118,10 +1130,12 @@ const LeftMenuBar = () => {
       const salesActiveKey = getSalesActiveState();
       if (salesActiveKey) {
         setActive(salesActiveKey);
-        setSalesExpanded(true);
+        setSalesExpanded(true); // Always expand sales menu when on a sales page
       }
     } else {
       setActive(currentPath);
+      // Optionally collapse sales menu when not on sales pages
+      // setSalesExpanded(false);
     }
   }, [router?.pathname]);
   const handleSelectedClick = (index, item) => {
@@ -1275,8 +1289,8 @@ const LeftMenuBar = () => {
                                 onClick={() => handleSubItemClick(subItem)}
                                 className={`cursor-pointer flex items-center justify-between p-2 text-sm transition-colors duration-200 relative ${
                                   subItem?.key === active
-                                    ? "bg-[#64EAA5] rounded-md text-black"
-                                    : "text-gray-300 hover:bg-[#5f6365] rounded-md"
+                                    ? "bg-[#64EAA5] text-black"
+                                    : "text-gray-300 hover:bg-[#5f6365]"
                                 }`}
                               >
                                 <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-400"></div>
@@ -1459,33 +1473,35 @@ const LeftMenuBar = () => {
                 {/* Sub items for desktop */}
                 {item?.hasSubItems && salesExpanded && showFullDisplay && (
                   <div className="ml-4 mt-2 space-y-1 relative">
-                    {item?.subItems?.map((subItem, subIndex) => (
-                      <div
-                        key={subItem.key}
-                        onClick={() => handleSubItemClick(subItem)}
-                        className={`cursor-pointer flex items-center justify-between p-2 text-sm transition-colors duration-200 rounded relative ${
-                          subItem?.key === active
-                            ? "bg-[#64EAA5] text-black"
-                            : "text-gray-300 hover:bg-[#5f6365]"
-                        }`}
-                      >
-                        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-400"></div>
-                        <div className="absolute left-0 top-1/2 w-4 h-0.5 bg-gray-400 -translate-y-1/2"></div>
-                        {subIndex < item?.subItems?.length - 1 && (
-                          <div className="absolute left-0 top-1/2 bottom-0 w-0.5 bg-gray-400"></div>
-                        )}
+                    {item?.subItems?.map((subItem, subIndex) => {
+                      return (
+                        <div
+                          key={subItem.key}
+                          onClick={() => handleSubItemClick(subItem)}
+                          className={`cursor-pointer flex items-center justify-between p-2 text-sm transition-colors duration-200 rounded relative ${
+                            subItem?.key === active
+                              ? "bg-[#64EAA5] text-black"
+                              : "text-gray-300 hover:bg-[#5f6365]"
+                          }`}
+                        >
+                          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-400"></div>
+                          <div className="absolute left-0 top-1/2 w-4 h-0.5 bg-gray-400 -translate-y-1/2"></div>
+                          {subIndex < item?.subItems?.length - 1 && (
+                            <div className="absolute left-0 top-1/2 bottom-0 w-0.5 bg-gray-400"></div>
+                          )}
 
-                        <div className="flex items-center gap-2 ml-4">
-                          <span>{subItem.name}</span>
+                          <div className="flex items-center gap-2 ml-4">
+                            <span>{subItem.name}</span>
+                          </div>
+
+                          {subItem.count !== undefined && (
+                            <span className="bg-gray-600 text-white text-xs px-2 py-0.5 rounded-full ml-auto">
+                              {subItem.count}
+                            </span>
+                          )}
                         </div>
-
-                        {subItem.count !== undefined && (
-                          <span className="bg-gray-600 text-white text-xs px-2 py-0.5 rounded-full ml-auto">
-                            {subItem.count}
-                          </span>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
