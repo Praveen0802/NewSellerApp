@@ -40,17 +40,17 @@ const AttendeeDetails = ({ attendee_details = [] }) => {
           <thead>
             <tr className="border-b border-gray-200">
               <th className="text-left py-2 px-2 font-medium text-gray-700">
-                Ticket ID
+                Name
               </th>
               <th className="text-left py-2 px-2 font-medium text-gray-700">
-                Name
+                Date of Birth
               </th>
 
               <th className="text-left py-2 px-2 font-medium text-gray-700">
-                Upload Date
+                Nationality
               </th>
               <th className="text-left py-2 px-2 font-medium text-gray-700">
-                Download Date
+                City
               </th>
             </tr>
           </thead>
@@ -67,34 +67,18 @@ const AttendeeDetails = ({ attendee_details = [] }) => {
                   key={attendee.id || index}
                   className="border-b border-gray-100 hover:bg-gray-50"
                 >
-                  <td className="py-3 px-2 text-gray-600">
-                    {attendee.ticketid || "-"}
-                  </td>
                   <td className="py-3 px-2 text-gray-900 font-medium">
                     {fullName}
                   </td>
+                  <td className="py-3 px-2 text-gray-600">
+                    {attendee.dob || "-"}
+                  </td>
 
                   <td className="py-3 px-2 text-gray-600 text-xs">
-                    {attendee.ticket_upload_date
-                      ? new Date(
-                          attendee.ticket_upload_date
-                        ).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })
-                      : "-"}
+                    {attendee.nationality || "-"}
                   </td>
                   <td className="py-3 px-2 text-gray-600 text-xs">
-                    {attendee.ticket_download_date
-                      ? new Date(
-                          attendee.ticket_download_date
-                        ).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })
-                      : "-"}
+                    {attendee.city || "-"}
                   </td>
                 </tr>
               );
