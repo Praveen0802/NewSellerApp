@@ -261,7 +261,7 @@ const CustomSelectEditableCell = ({
             }}
           >
             {/* Placeholder option */}
-            <div
+            {/* <div
               className={`px-3 py-2 cursor-pointer hover:bg-gray-100 transition-colors ${
                 !editValue ? "bg-blue-50 text-blue-700" : "text-gray-700"
               }`}
@@ -271,7 +271,7 @@ const CustomSelectEditableCell = ({
               }}
             >
               <span className="text-xs">{placeholder}</span>
-            </div>
+            </div> */}
 
             {/* Options */}
             {options.map((option) => {

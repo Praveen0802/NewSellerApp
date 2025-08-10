@@ -629,7 +629,7 @@ const CommonInventoryTable = ({
                   className={`flex items-center space-x-1 sm:space-x-2 ${
                     isMobile ? "py-3 pr-2" : "py-4 pr-4"
                   } ${
-                    isMobile ? "w-[120px]" : "w-[170px]"
+                    isMobile ? "w-[130px]" : "w-[170px]"
                   } border-r-[1px] border-[#51428E]`}
                 >
                   <Calendar1Icon
@@ -866,7 +866,7 @@ const CommonInventoryTable = ({
                           ? header?.increasedWidth
                           : isMobile
                           ? "min-w-[100px]"
-                          : "min-w-[140px]"
+                          : "min-w-[130px]"
                       } text-left text-[#7D82A4] font-medium whitespace-nowrap ${
                         isMobile ? "text-[10px]" : "text-xs"
                       } border-r border-[#DADBE5]`}
@@ -914,7 +914,7 @@ const CommonInventoryTable = ({
                               ? header?.increasedWidth
                               : isMobile
                               ? "min-w-[100px]"
-                              : "min-w-[140px]"
+                              : "min-w-[130px]"
                           } whitespace-nowrap overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
                             isRowDisabled ? "bg-gray-50" : ""
                           } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
