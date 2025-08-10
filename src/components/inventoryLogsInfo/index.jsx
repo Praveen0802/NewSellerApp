@@ -1,5 +1,5 @@
-import React, { useState } from "react";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { useState } from "react";
 import RightViewModal from "../commonComponents/rightViewModal";
 
 const InventoryLogsInfo = ({ show, onClose, data = [] }) => {
@@ -39,7 +39,7 @@ const InventoryLogsInfo = ({ show, onClose, data = [] }) => {
   const displayData = data;
 
   return (
-    <RightViewModal className="!w-[670px]" show={show} onClose={onClose}>
+    <RightViewModal className="!w-[800px]" show={show} onClose={onClose}>
       <div className="w-full bg-white rounded-lg">
         <div className="flex justify-between items-center p-3 border-b border-gray-200 sticky top-0 bg-white z-999">
           <p className="text-lg font-medium text-gray-800">Log Details</p>
@@ -65,33 +65,52 @@ const InventoryLogsInfo = ({ show, onClose, data = [] }) => {
               >
                 <div
                   onClick={() => toggleLog(index)}
-                  className={`${isExpanded ? "bg-[#343432]" :"bg-[#343432]"} flex justify-between items-center px-3 cursor-pointer`}
+                  className={`${
+                    isExpanded ? "bg-[#343432]" : "bg-[#343432]"
+                  } flex justify-between items-center px-3 cursor-pointer`}
                 >
                   <div className="flex-1 py-3">
                     <div className="flex items-center gap-2">
-                      <span className={`text-sm font-medium ${isExpanded ? "text-white":"text-[#ffff]"}`}>
+                      <span
+                        className={`text-sm font-medium ${
+                          isExpanded ? "text-white" : "text-[#ffff]"
+                        }`}
+                      >
                         Log #{index + 1}
                       </span>
                       <span className="text-xs  text-white px-2 py-1 rounded-full">
                         Ticket ID: {logEntry.ticket_id}
                       </span>
                     </div>
-                    
                   </div>
                   <div className="flex items-center gap-1">
                     {hasPayload && (
-                      <div className={`mt-1 text-xs py-3 ${isExpanded ? "text-white":"text-[#ffff]"}`}>
+                      <div
+                        className={`mt-1 text-xs py-3 ${
+                          isExpanded ? "text-white" : "text-[#ffff]"
+                        }`}
+                      >
                         {payloadKeys.length} change
                         {payloadKeys.length !== 1 ? "s" : ""} recorded
                       </div>
                     )}
-                    <div className={`pl-3 ml-2 h-full border-l-[1px] py-3 ${isExpanded ? "border-l-[#51428E]":" border-l-[#E0E1EA]"}`}>
-                      <div className={`h-6 w-6 flex items-center justify-center rounded-full  ${isExpanded ? "bg-[#343432]":"bg-[#DADBE54D]"}`}>
-                      {isExpanded ? (
-                        <ChevronUp className="w-4 h-4 text-white" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-white" />
-                      )}
+                    <div
+                      className={`pl-3 ml-2 h-full border-l-[1px] py-3 ${
+                        isExpanded
+                          ? "border-l-[#51428E]"
+                          : " border-l-[#E0E1EA]"
+                      }`}
+                    >
+                      <div
+                        className={`h-6 w-6 flex items-center justify-center rounded-full  ${
+                          isExpanded ? "bg-[#343432]" : "bg-[#DADBE54D]"
+                        }`}
+                      >
+                        {isExpanded ? (
+                          <ChevronUp className="w-4 h-4 text-white" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-white" />
+                        )}
                       </div>
                     </div>
                   </div>
@@ -101,39 +120,105 @@ const InventoryLogsInfo = ({ show, onClose, data = [] }) => {
                 {isExpanded && (
                   <div className="p-3 bg-white">
                     {hasPayload ? (
-                      <div className="space-y-2">
+                      <div className="w-full">
                         <h4 className="text-sm font-medium text-gray-700 mb-2">
                           Changes Made:
                         </h4>
-                        <div className={`grid gap-1 ${Object.entries(logEntry.json_payload).length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                          {Object.entries(logEntry.json_payload).map(
-                            ([key, value], payloadIndex) => (
-                              <div
-                                key={payloadIndex}
-                                className="border border-blue-100 "
-                              >
-                                <div className="grid grid-cols-2 content-stretch h-full">
-                                  <div className="p-2 text-sm text-gray-600 border-r border-blue-100">
-                                    {formatKeyName(key)}
-                                  </div>
-                                  <div className="p-2 text-sm text-gray-800 font-medium">
-                                    {key?.includes('link') ? (
-                                      <a
-                                        href={value}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-gray-600 cursor-pointer"
-                                      >{'Click here'}
-                                      </a>
-                                    ):
-                                    (<span className="inline-flex items-center px-2 py-1 rounded-full text-xs">
-                                      {formatValue(value)}
-                                    </span>)}
-                                  </div>
-                                </div>
-                              </div>
-                            )
-                          )}
+                        <div className="flex flex-wrap -mx-2">
+                          {/* First Table */}
+                          <div className="w-full md:w-1/2 px-2 mb-4">
+                            <table className="min-w-full border border-gray-200">
+                              <tbody className="bg-white divide-y divide-gray-200">
+                                {Object.entries(logEntry.json_payload)
+                                  .slice(
+                                    0,
+                                    Math.ceil(
+                                      Object.keys(logEntry.json_payload)
+                                        .length / 2
+                                    )
+                                  )
+                                  .map(([key, value], payloadIndex) => (
+                                    <tr
+                                      key={payloadIndex}
+                                      className="hover:bg-gray-50"
+                                    >
+                                      <td
+                                        className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-600 border-r border-gray-100 max-w-[150px] truncate"
+                                        title={formatKeyName(key)}
+                                      >
+                                        {formatKeyName(key)}
+                                      </td>
+                                      <td className="px-4 py-2 text-sm text-gray-800 max-w-[200px] overflow-hidden">
+                                        {key?.toLowerCase().includes("link") ? (
+                                          <a
+                                            href={value}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-600 hover:underline"
+                                          >
+                                            Click here
+                                          </a>
+                                        ) : (
+                                          <span
+                                            className="inline-flex items-center px-2 py-1 rounded text-xs max-w-full truncate"
+                                            title={formatValue(value)}
+                                          >
+                                            {formatValue(value)}
+                                          </span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  ))}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          {/* Second Table */}
+                          <div className="w-full md:w-1/2 px-2 mb-4">
+                            <table className="min-w-full border border-gray-200">
+                              <tbody className="bg-white divide-y divide-gray-200">
+                                {Object.entries(logEntry.json_payload)
+                                  .slice(
+                                    Math.ceil(
+                                      Object.keys(logEntry.json_payload)
+                                        .length / 2
+                                    )
+                                  )
+                                  .map(([key, value], payloadIndex) => (
+                                    <tr
+                                      key={payloadIndex}
+                                      className="hover:bg-gray-50"
+                                    >
+                                      <td
+                                        className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-600 border-r border-gray-100 max-w-[150px] truncate"
+                                        title={formatKeyName(key)}
+                                      >
+                                        {formatKeyName(key)}
+                                      </td>
+                                      <td className="px-4 py-2 text-sm text-gray-800 max-w-[200px] overflow-hidden">
+                                        {key?.toLowerCase().includes("link") ? (
+                                          <a
+                                            href={value}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-600 hover:underline"
+                                          >
+                                            Click here
+                                          </a>
+                                        ) : (
+                                          <span
+                                            className="inline-flex items-center px-2 py-1 rounded text-xs max-w-full truncate"
+                                            title={formatValue(value)}
+                                          >
+                                            {formatValue(value)}
+                                          </span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  ))}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
                       </div>
                     ) : (
