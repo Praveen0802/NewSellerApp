@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import { debounce } from "lodash";
+import CustomSelectEditableCell from "./customSimpleEditableCell";
 
 const MultiSelectEditableCell = ({
   value,
@@ -11,6 +12,7 @@ const MultiSelectEditableCell = ({
   disabled = false,
   placeholder = "Select options...",
   saveOnChange = true,
+  alwaysShowAsEditable = false,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -23,6 +25,7 @@ const MultiSelectEditableCell = ({
     showAbove: false,
   });
   const dropdownRef = useRef(null);
+  const containerRef = useRef(null);
 
   // Convert string value to array if needed
   const normalizeValue = (val) => {
@@ -44,7 +47,7 @@ const MultiSelectEditableCell = ({
     if (!dropdownRef.current) return;
 
     const rect = dropdownRef.current.getBoundingClientRect();
-    const dropdownHeight = 300; // Increased height for better visibility
+    const dropdownHeight = 300;
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
     const spaceBelow = viewportHeight - rect.bottom;
@@ -56,7 +59,6 @@ const MultiSelectEditableCell = ({
       placeholder.length
     );
 
-    // Calculate minimum width needed (rough estimation: 8px per character + padding)
     const minWidthFromContent = Math.max(maxOptionLength * 8 + 60, 250);
     const maxAllowedWidth = Math.min(viewportWidth - rect.left - 20, 400);
     const optimalWidth = Math.min(minWidthFromContent, maxAllowedWidth);
@@ -103,62 +105,64 @@ const MultiSelectEditableCell = ({
     }
   }, [isDropdownOpen, calculateDropdownPosition]);
 
-  // FIXED: Handle click to open dropdown immediately
-  const handleClick = () => {
+  // FIXED: Immediate click handler - no waiting for hover
+  const handleClick = useCallback((e) => {
     if (disabled) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Always enter edit mode immediately on first click
     setIsEditing(true);
-    setIsDropdownOpen(true); // Open dropdown immediately
-  };
+    setIsDropdownOpen(true);
+  }, [disabled]);
+
+  // FIXED: Handle input field click separately
+  const handleInputClick = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (disabled) return;
+    
+    // Always toggle dropdown when clicking on input
+    setIsDropdownOpen(prev => !prev);
+    
+    // Ensure we're in editing mode
+    if (!isEditing) {
+      setIsEditing(true);
+    }
+  }, [disabled, isEditing]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
         const dropdown = document.querySelector("[data-multiselect-dropdown]");
         if (dropdown && dropdown.contains(event.target)) {
           return;
         }
         setIsDropdownOpen(false);
-      }
-    };
-
-    const handleScroll = (event) => {
-      if (isDropdownOpen) {
-        const dropdown = document.querySelector("[data-multiselect-dropdown]");
-        if (dropdown && dropdown.contains(event.target)) {
-          return;
+        // Exit editing mode when clicking outside
+        if (isDropdownOpen) {
+          setIsEditing(false);
         }
-
-        let currentElement = event.target;
-        while (currentElement && currentElement !== document) {
-          if (
-            currentElement.hasAttribute &&
-            currentElement.hasAttribute("data-multiselect-dropdown")
-          ) {
-            return;
-          }
-          currentElement = currentElement.parentElement;
-        }
-
-        setIsDropdownOpen(false);
       }
     };
 
     const handleKeyDown = (event) => {
       if (event.key === "Escape" && isDropdownOpen) {
         setIsDropdownOpen(false);
+        setIsEditing(false);
       }
     };
 
     if (isDropdownOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      document.addEventListener("scroll", handleScroll, true);
       document.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("scroll", handleScroll, true);
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isDropdownOpen]);
@@ -226,20 +230,6 @@ const MultiSelectEditableCell = ({
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSave();
-    } else if (e.key === "Escape") {
-      handleCancel();
-    }
-  };
-
-  // FIXED: Handle input field click to toggle dropdown
-  const handleInputClick = (e) => {
-    e.stopPropagation();
-    setIsDropdownOpen(!isDropdownOpen);
-  };
-
   const getDisplayValue = () => {
     const normalizedValue = normalizeValue(value);
     if (normalizedValue.length === 0) return placeholder;
@@ -254,21 +244,20 @@ const MultiSelectEditableCell = ({
     return normalizedValue.length;
   };
 
+  // Editing mode with dropdown
   if (isEditing && !disabled) {
     return (
-      <div className="relative w-full" ref={dropdownRef}>
+      <div className="relative w-full" ref={containerRef}>
         <div
+          ref={dropdownRef}
           className={`border rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] transition-colors ${
             isFocused || isDropdownOpen
               ? "border-green-500 ring-2 ring-green-600"
               : "border-[#DADBE5] hover:border-green-600"
           }`}
-          onClick={handleInputClick} // FIXED: Use the new click handler
-          onKeyDown={handleKeyPress}
+          onClick={handleInputClick}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          onMouseEnter={() => !isDropdownOpen && setIsFocused(true)}
-          onMouseLeave={() => !isDropdownOpen && setIsFocused(false)}
           tabIndex={0}
         >
           <div className="flex justify-between items-center">
@@ -381,7 +370,8 @@ const MultiSelectEditableCell = ({
     );
   }
 
-  if (isRowHovered && !disabled) {
+  // Hover/clickable mode - Show immediately if alwaysShowAsEditable is true
+  if ((alwaysShowAsEditable || isRowHovered) && !disabled) {
     return (
       <div className={`cursor-pointer ${className}`} onClick={handleClick}>
         <div className="border border-[#DADBE5] rounded px-2 py-1 text-xs focus:outline-none bg-white w-full cursor-pointer hover:border-green-600 hover:ring-2 hover:ring-green-600 transition-colors">
@@ -405,6 +395,7 @@ const MultiSelectEditableCell = ({
     );
   }
 
+  // Default display mode
   return (
     <div
       className={`${
@@ -427,9 +418,6 @@ const MultiSelectEditableCell = ({
   );
 };
 
-// Updated SimpleEditableCell component with iconBefore support
-// Updated SimpleEditableCell component with DD/MM/YYYY date formatting
-// Updated SimpleEditableCell component with DD/MM/YYYY date formatting and fixed click issues
 const SimpleEditableCell = ({
   value,
   type = "text",
@@ -441,6 +429,8 @@ const SimpleEditableCell = ({
   placeholder = "Enter...",
   saveOnChange = true,
   iconBefore = null,
+  rowValue = {},
+  alwaysShowAsEditable = false,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -448,26 +438,23 @@ const SimpleEditableCell = ({
   const inputRef = useRef(null);
   const [shouldFocusInput, setShouldFocusInput] = useState(false);
 
-  // Helper function to format date from YYYY-MM-DD to DD/MM/YYYY
+  // Helper functions for date formatting (keep existing ones)
   const formatDateForDisplay = (dateString) => {
     if (!dateString) return "";
     
     try {
-      // If it's already in DD/MM/YYYY format, return as is
       if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
         return dateString;
       }
       
-      // If it's in YYYY-MM-DD format (from input[type="date"])
       if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const [year, month, day] = dateString.split('-');
         return `${day}/${month}/${year}`;
       }
       
-      // Try to parse other date formats
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
-        return dateString; // Return original if can't parse
+        return dateString;
       }
       
       const day = date.getDate().toString().padStart(2, '0');
@@ -481,26 +468,22 @@ const SimpleEditableCell = ({
     }
   };
 
-  // Helper function to convert DD/MM/YYYY to YYYY-MM-DD for input[type="date"]
   const formatDateForInput = (dateString) => {
     if (!dateString) return "";
     
     try {
-      // If it's already in YYYY-MM-DD format, return as is
       if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
         return dateString;
       }
       
-      // If it's in DD/MM/YYYY format
       if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
         const [day, month, year] = dateString.split('/');
         return `${year}-${month}-${day}`;
       }
       
-      // Try to parse other formats
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
-        return ""; // Return empty if can't parse
+        return "";
       }
       
       return date.toISOString().split('T')[0];
@@ -510,18 +493,16 @@ const SimpleEditableCell = ({
     }
   };
 
-  // Helper function to convert YYYY-MM-DD back to DD/MM/YYYY when saving
   const formatDateForSave = (dateString) => {
     if (!dateString) return "";
     
     try {
-      // If it's in YYYY-MM-DD format (from input[type="date"])
       if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const [year, month, day] = dateString.split('-');
         return `${day}/${month}/${year}`;
       }
       
-      return dateString; // Return as is if not in YYYY-MM-DD format
+      return dateString;
     } catch (error) {
       console.error('Error formatting date for save:', error);
       return dateString;
@@ -529,38 +510,61 @@ const SimpleEditableCell = ({
   };
 
   useEffect(() => {
-    if (type === "date") {
-      // For date inputs, store the display format but show input format when editing
-      setEditValue(value);
-    } else {
-      setEditValue(value);
-    }
+    setEditValue(value);
   }, [value, type]);
 
-  const handleClick = () => {
+  // IMPORTANT: For select type, use the custom select component
+  if (type === "select") {
+    return (
+      <CustomSelectEditableCell
+        value={value}
+        options={options}
+        onSave={onSave}
+        className={className}
+        isRowHovered={isRowHovered}
+        disabled={disabled}
+        placeholder={placeholder}
+        saveOnChange={saveOnChange}
+        iconBefore={iconBefore}
+        rowValue={rowValue}
+        alwaysShowAsEditable={alwaysShowAsEditable}
+      />
+    );
+  }
+
+  // For all other types, continue with existing logic
+  const handleClick = useCallback((e) => {
     if (disabled) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
     setIsEditing(true);
     setShouldFocusInput(true);
-  };
+  }, [disabled]);
 
-  // Handle date input click - prevent double click issue
-  const handleDateInputClick = (e) => {
+  const handleDateInputClick = useCallback((e) => {
     e.stopPropagation();
+    
+    if (disabled) return;
+    
     if (!isEditing) {
       setIsEditing(true);
       setShouldFocusInput(true);
-    } else {
-      // If already editing, let the browser handle the date picker
-      if (inputRef.current && type === "date") {
-        inputRef.current.showPicker?.(); // Modern browsers support this
-      }
     }
-  };
+    
+    if (inputRef.current && type === "date") {
+      setTimeout(() => {
+        if (inputRef.current?.showPicker) {
+          inputRef.current.showPicker();
+        }
+      }, 0);
+    }
+  }, [disabled, isEditing, type]);
 
   const handleSave = () => {
     let valueToSave = editValue;
     
-    // Format date value before saving
     if (type === "date") {
       valueToSave = formatDateForSave(editValue);
     }
@@ -582,7 +586,6 @@ const SimpleEditableCell = ({
     if (saveOnChange && newValue !== value) {
       let valueToSave = newValue;
       
-      // Format date value before saving
       if (type === "date") {
         valueToSave = formatDateForSave(newValue);
       }
@@ -602,6 +605,8 @@ const SimpleEditableCell = ({
   const handleBlur = () => {
     if (!saveOnChange) {
       handleSave();
+    } else {
+      setIsEditing(false);
     }
   };
 
@@ -610,31 +615,22 @@ const SimpleEditableCell = ({
       setShouldFocusInput(false);
       
       if (type === "date") {
-        // For date inputs, focus and try to open picker immediately
         inputRef.current.focus();
         setTimeout(() => {
-          if (inputRef.current && inputRef.current.showPicker) {
+          if (inputRef.current?.showPicker) {
             inputRef.current.showPicker();
           }
         }, 0);
-      } else if (type !== "select") {
-        // For other input types, focus and select
+      } else {
         inputRef.current.focus();
         if (inputRef.current.select) {
           inputRef.current.select();
         }
-      } else {
-        // For select inputs, just focus
-        inputRef.current.focus();
       }
     }
   }, [isEditing, type, shouldFocusInput]);
 
   const getDisplayValue = () => {
-    if (type === "select" && options.length > 0) {
-      const option = options.find((opt) => opt.value == value);
-      return option ? option.label : !value ? placeholder : value;
-    }
     if (type === "checkbox") {
       return value ? "Yes" : "No";
     }
@@ -646,60 +642,32 @@ const SimpleEditableCell = ({
 
   const hasValue = () => {
     if (type === "checkbox") return true;
-    if (type === "select") {
-      const option = options.find((opt) => opt.value === value);
-      return !!option;
-    }
     if (type === "date") {
       return !!(value && value.toString().trim());
     }
     return !!(value && value.toString().trim());
   };
 
-  // Helper function to get padding based on iconBefore
   const getInputPadding = () => {
     return iconBefore ? "pl-10 pr-2" : "px-2";
   };
 
-  // Render iconBefore if present
   const renderIconBefore = () => {
     if (!iconBefore) return null;
 
     return (
       <div className="absolute left-2 top-1/2 transform -translate-y-1/2 pointer-events-none z-10">
-        {typeof iconBefore === "function" ? iconBefore() : iconBefore}
+        {typeof iconBefore === "function" ? iconBefore(rowValue) : iconBefore}
       </div>
     );
   };
 
+  // Editing mode (for non-select types)
   if (isEditing && !disabled) {
     return (
       <div className="w-full relative">
         {renderIconBefore()}
-        {type === "select" ? (
-          <select
-            ref={inputRef}
-            value={editValue || ""}
-            onChange={(e) => handleChange(e.target.value)}
-            onKeyDown={handleKeyPress}
-            onBlur={handleBlur}
-            onFocus={() => setIsFocused(true)}
-            onMouseEnter={() => setIsFocused(true)}
-            onMouseLeave={() => setIsFocused(false)}
-            className={`border rounded ${getInputPadding()} py-1 text-xs focus:outline-none bg-white w-full text-[#323A70] transition-colors ${
-              isFocused
-                ? "border-green-600 ring-2 ring-green-500"
-                : "border-[#DADBE5] hover:border-green-500"
-            }`}
-          >
-            <option value="">{placeholder}</option>
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        ) : type === "checkbox" ? (
+        {type === "checkbox" ? (
           <div className="flex items-center">
             <input
               ref={inputRef}
@@ -709,8 +677,6 @@ const SimpleEditableCell = ({
               onKeyDown={handleKeyPress}
               onBlur={handleBlur}
               onFocus={() => setIsFocused(true)}
-              onMouseEnter={() => setIsFocused(true)}
-              onMouseLeave={() => setIsFocused(false)}
               className={`w-4 h-4 text-gray-600 bg-gray-100 rounded transition-colors ${
                 isFocused
                   ? "border-green-500 ring-2 ring-green-500"
@@ -744,8 +710,6 @@ const SimpleEditableCell = ({
             onKeyDown={handleKeyPress}
             onBlur={handleBlur}
             onFocus={() => setIsFocused(true)}
-            onMouseEnter={() => setIsFocused(true)}
-            onMouseLeave={() => setIsFocused(false)}
             className={`border rounded ${getInputPadding()} py-1 text-xs focus:outline-none w-full bg-white text-[#323A70] transition-colors placeholder:text-gray-400 ${
               isFocused
                 ? "border-green-500 ring-2 ring-green-500"
@@ -757,27 +721,18 @@ const SimpleEditableCell = ({
     );
   }
 
-  if (isRowHovered && !disabled) {
+  // Hover/clickable mode
+  if ((alwaysShowAsEditable || isRowHovered) && !disabled) {
     return (
       <div className={`cursor-pointer ${className}`} onClick={handleClick}>
         <div className="relative">
           {renderIconBefore()}
-          {type === "select" ? (
-            <select
-              value={editValue || ""}
-              className={`border border-[#DADBE5] rounded ${getInputPadding()} py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors`}
-              onClick={handleClick}
-              readOnly
-            >
-              <option>{getDisplayValue()}</option>
-            </select>
-          ) : type === "checkbox" ? (
+          {type === "checkbox" ? (
             <div className="flex items-center">
               <input
                 type="checkbox"
                 checked={editValue}
                 className="w-4 h-4 text-gray-600 bg-gray-100 border-[#DADBE5] rounded cursor-pointer hover:border-green-600 transition-colors"
-                onClick={handleClick}
                 readOnly
               />
             </div>
@@ -787,7 +742,6 @@ const SimpleEditableCell = ({
               value={type === "date" ? formatDateForDisplay(editValue) : (editValue || "")}
               placeholder={placeholder}
               className={`border border-[#DADBE5] rounded ${getInputPadding()} py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors placeholder:text-gray-400`}
-              onClick={type === "date" ? handleClick : handleClick}
               readOnly
             />
           )}
@@ -796,6 +750,7 @@ const SimpleEditableCell = ({
     );
   }
 
+  // Default display mode
   return (
     <div
       className={`${

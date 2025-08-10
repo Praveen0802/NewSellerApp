@@ -1,17 +1,5 @@
-import {
-  FileText,
-  Check,
-  AlertCircle,
-  Eye,
-  X,
-  Download,
-  RefreshCcw,
-  Clock,
-  CheckCircle,
-  FileSignature,
-} from "lucide-react";
-import { useState } from "react";
-import DocumentUpload from "../DocumentUpload";
+import KycDocumentComponent from "@/components/SignupPage/KycDocumentComponent";
+import useS3Download from "@/Hooks/useS3Download";
 import {
   getZohoDocsDownload,
   getZohoDocStatus,
@@ -20,12 +8,24 @@ import {
   saveSellerBusinessDocuments,
   saveSellerContract,
 } from "@/utils/apiHandler/request";
-import { toast } from "react-toastify";
-import useS3Download from "@/Hooks/useS3Download";
-import RenderPreviewContent from "../renderPreviewContent";
-import KycDocumentComponent from "@/components/SignupPage/KycDocumentComponent";
-import { useSelector } from "react-redux";
 import { getCookie } from "@/utils/helperFunctions/cookie";
+import {
+  AlertCircle,
+  Check,
+  CheckCircle,
+  Clock,
+  Download,
+  Eye,
+  FileSignature,
+  FileText,
+  RefreshCcw,
+  X,
+} from "lucide-react";
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import DocumentUpload from "../DocumentUpload";
+import RenderPreviewContent from "../renderPreviewContent";
 
 const KycComponent = ({
   photoId,
@@ -39,7 +39,7 @@ const KycComponent = ({
 } = {}) => {
   const { currentUser } = useSelector((state) => state.currentUser);
   const { kycStatus } = useSelector((state) => state.common);
-  console.log(kycStatus,'kycStatuskycStatuskycStatus')
+  console.log(kycStatus, "kycStatuskycStatuskycStatus");
   const [previewModal, setPreviewModal] = useState({
     open: false,
     url: "",
@@ -216,10 +216,72 @@ const KycComponent = ({
 
   const getFileType = (url) => {
     if (!url) return "unknown";
-    const extension = url.split(".").pop()?.toLowerCase();
-    if (["pdf"].includes(extension)) return "pdf";
-    if (["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(extension))
-      return "image";
+
+    const lowerUrl = url.toLowerCase();
+    const hasExplicitExtension = url.includes(".");
+
+    // File type mappings
+    const fileTypeMappings = {
+      // Document types
+      pdf: "pdf",
+      doc: "doc",
+      docx: "doc",
+      txt: "doc",
+      rtf: "doc",
+      odt: "doc",
+
+      // Spreadsheet types
+      xls: "sheet",
+      xlsx: "sheet",
+      csv: "sheet",
+      ods: "sheet",
+
+      // Data types
+      json: "json",
+      xml: "json",
+
+      // Archive types
+      zip: "zip",
+      rar: "zip",
+      "7z": "zip",
+      tar: "zip",
+      gz: "zip",
+
+      // Image types
+      jpg: "image",
+      jpeg: "image",
+      png: "image",
+      gif: "image",
+      bmp: "image",
+      webp: "image",
+      svg: "image",
+
+      // Presentation types
+      ppt: "presentation",
+      pptx: "presentation",
+      odp: "presentation",
+    };
+
+    // First try to get the extension the standard way if it exists
+    let extension = "";
+    if (hasExplicitExtension) {
+      extension = url.split(".").pop()?.toLowerCase() || "";
+      if (fileTypeMappings[extension]) {
+        return fileTypeMappings[extension];
+      }
+    }
+
+    // If no explicit extension or not recognized, check last few characters
+    const lastChars = lowerUrl.slice(-5); // Check last 5 characters
+
+    // Check for known extensions in last few chars
+    for (const [ext, type] of Object.entries(fileTypeMappings)) {
+      if (new RegExp(`${ext}[^a-z0-9]*$`).test(lastChars)) {
+        return type;
+      }
+    }
+
+    // Default return for unknown file types
     return "unknown";
   };
 
@@ -452,8 +514,12 @@ const KycComponent = ({
               <p className="text-sm text-gray-600 mb-3 flex space-x-1">
                 Please upload the required document
                 {docType === "contract" && (
-                  <span className="text-sm ml-2 cursor-pointer flex justify-center items-center -mt-0.5 text-blue-600 underline" onClick={() => openPreview("", config.title)}>
-                    (<FileText className="w-4 mr-1"/>Preview document)
+                  <span
+                    className="text-sm ml-2 cursor-pointer flex justify-center items-center -mt-0.5 text-blue-600 underline"
+                    onClick={() => openPreview("", config.title)}
+                  >
+                    (<FileText className="w-4 mr-1" />
+                    Preview document)
                   </span>
                 )}
               </p>
@@ -696,21 +762,22 @@ const KycComponent = ({
                   )}
                 </div>
                 <button
-                  onClick={async() => {
-                    setContractModal({ open: false, status: null })
+                  onClick={async () => {
+                    setContractModal({ open: false, status: null });
                     const token = getCookie("auth_token") || "";
                     if (token) {
                       const zohoRequestId = localStorage.getItem("request_id");
                       const body = {
-                        id : zohoRequestId,
-                      }
-                      const response = await getZohoDocStatus(token,body);
-                      const requestStatus = response?.data?.requests?.request_status;
+                        id: zohoRequestId,
+                      };
+                      const response = await getZohoDocStatus(token, body);
+                      const requestStatus =
+                        response?.data?.requests?.request_status;
                       if (requestStatus == "completed") {
                         await getZohoDocsDownload(token, body);
                       }
                     }
-                    window.location.reload()
+                    window.location.reload();
                   }}
                   className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer"
                   title="Close"

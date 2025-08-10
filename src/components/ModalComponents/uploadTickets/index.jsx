@@ -81,6 +81,12 @@ const UploadTickets = ({
   const [proofUploadedFiles, setProofUploadedFiles] = useState([]);
   const [proofTransferredFiles, setProofTransferredFiles] = useState([]);
 
+  // NEW: Drag and drop states
+  const [draggedFile, setDraggedFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [dragOverSlot, setDragOverSlot] = useState(null);
+
   // State for Paper Ticket Flow - storing courier info
   const [paperTicketDetails, setPaperTicketDetails] = useState({
     courier_type: "company",
@@ -261,9 +267,9 @@ const UploadTickets = ({
     console.log(templateDataRef?.current, "templateContent updated");
   }, [templateDataRef.current]);
 
-  // Enhanced handleTransferSingleFile for proof upload
+  // NEW: Enhanced handleTransferSingleFile with drag support and target slot
   const handleTransferSingleFile = useCallback(
-    (fileId) => {
+    (fileId, targetSlot = null) => {
       if (proofUploadView) {
         if (proofTransferredFiles.length >= maxQuantity) {
           alert("Maximum limit reached. Only one proof document allowed.");
@@ -293,7 +299,34 @@ const UploadTickets = ({
         }
 
         if (fileToTransfer) {
-          setTransferredFiles((prev) => [...prev, fileToTransfer]);
+          // NEW: If targetSlot is specified and valid, insert at that position
+          if (targetSlot !== null && targetSlot >= 1 && targetSlot <= maxQuantity) {
+            setTransferredFiles((prev) => {
+              const newTransferred = [...prev];
+              const targetIndex = targetSlot - 1;
+              
+              // If target slot is empty or beyond current length, add at that position
+              if (targetIndex >= newTransferred.length) {
+                // Fill gaps with nulls if necessary
+                while (newTransferred.length < targetIndex) {
+                  newTransferred.push(null);
+                }
+                newTransferred.push(fileToTransfer);
+              } else if (!newTransferred[targetIndex]) {
+                // Target slot is empty, place file there
+                newTransferred[targetIndex] = fileToTransfer;
+              } else {
+                // Target slot is occupied, add at end
+                newTransferred.push(fileToTransfer);
+              }
+              
+              return newTransferred.filter(file => file !== null);
+            });
+          } else {
+            // Original behavior - add at end
+            setTransferredFiles((prev) => [...prev, fileToTransfer]);
+          }
+          
           setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
         }
       }
@@ -849,9 +882,7 @@ const UploadTickets = ({
     // Handle template selection logic here
   }, []);
 
-  // Add these component definitions inside your UploadTickets component:
-
-  // File Upload Section Component
+  // NEW: Enhanced File Upload Section Component with Drag Functionality
   const FileUploadSection = () => {
     // Use the appropriate state variables based on proof upload view
     const currentUploadedFiles = proofUploadView
@@ -882,7 +913,7 @@ const UploadTickets = ({
     // Enhanced drag area disabled logic
     const isDragAreaDisabled = proofUploadView
       ? currentTransferredFiles.length >= 1
-      : false;
+      : transferredFiles.length >= maxQuantity;
 
     // Enhanced no files message
     const getNoFilesMessage = () => {
@@ -901,6 +932,58 @@ const UploadTickets = ({
         }
         return "No files uploaded yet";
       }
+    };
+
+    // NEW: Drag handlers for file items
+    const handleDragStart = (e, file) => {
+      if (!canTransferFile(file.id)) {
+        e.preventDefault();
+        return;
+      }
+
+      // Set drag data for better compatibility
+      e.dataTransfer.setData("text/plain", JSON.stringify(file));
+      e.dataTransfer.effectAllowed = "move";
+
+      // Store dragged file globally for fallback
+      window.currentDraggedFile = file;
+      setIsDragging(true);
+      setDraggedFile(file);
+
+      // Create ghost image
+      const ghostElement = document.createElement("div");
+      ghostElement.innerHTML = `
+          <div style="
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px dashed #0137D5;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 12px;
+            color: #323A70;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          ">
+            📄 ${file.name}
+          </div>
+        `;
+      ghostElement.style.position = "absolute";
+      ghostElement.style.top = "-1000px";
+      document.body.appendChild(ghostElement);
+
+      e.dataTransfer.setDragImage(ghostElement, 10, 10);
+
+      setTimeout(() => {
+        document.body.removeChild(ghostElement);
+      }, 0);
+    };
+
+    const handleDragEnd = () => {
+      window.currentDraggedFile = null;
+      setIsDragging(false);
+      setDraggedFile(null);
     };
 
     return (
@@ -962,9 +1045,23 @@ const UploadTickets = ({
               currentUploadedFiles.map((file) => (
                 <div
                   key={file.id}
-                  className="flex items-center justify-between p-2 border-b border-gray-200 last:border-b-0 bg-white"
+                  draggable={canTransferFile(file.id)}
+                  onDragStart={(e) => handleDragStart(e, file)}
+                  onDragEnd={handleDragEnd}
+                  className={`flex items-center justify-between p-2 border-b border-gray-200 last:border-b-0 bg-white transition-all duration-200 ${
+                    canTransferFile(file.id)
+                      ? "cursor-grab hover:bg-blue-50 hover:border-l-4 hover:border-l-blue-500"
+                      : "cursor-not-allowed opacity-60"
+                  } ${
+                    isDragging && draggedFile?.id === file.id
+                      ? "opacity-50 transform scale-95"
+                      : ""
+                  }`}
                 >
                   <div className="flex items-center gap-2">
+                    {canTransferFile(file.id) && (
+                      <div className="text-gray-400 text-xs">⋮⋮</div>
+                    )}
                     <span className="text-xs text-gray-700 truncate max-w-32">
                       {file.name}
                     </span>
@@ -1001,13 +1098,75 @@ const UploadTickets = ({
       </>
     );
   };
+
   console.log(transferredFiles, "transferredFiles");
-  // Ticket Assignment Section Component
+  
+  // NEW: Enhanced Ticket Assignment Section Component with Drag Drop Support
   const TicketAssignmentSection = () => {
     // Use the appropriate state variables based on proof upload view
     const currentTransferredFiles = proofUploadView
       ? proofTransferredFiles
       : transferredFiles;
+
+    // NEW: Drop handlers for assignment area
+    const handleDragOver = (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      setDragOver(true);
+    };
+
+    const handleDragLeave = (e) => {
+      if (!e.currentTarget.contains(e.relatedTarget)) {
+        setDragOver(false);
+        setDragOverSlot(null);
+      }
+    };
+
+    // NEW: Drop handler with target slot support
+    const handleDrop = (e, targetSlot = null) => {
+      e.preventDefault();
+      setDragOver(false);
+      setDragOverSlot(null);
+
+      // Get drag data
+      let draggedFileData = null;
+      try {
+        const dragData = e.dataTransfer.getData("text/plain");
+        if (dragData) {
+          draggedFileData = JSON.parse(dragData);
+        }
+      } catch (error) {
+        console.warn("Failed to parse drag data, using fallback");
+      }
+
+      // Fallback to global variable if drag data parsing fails
+      const fileToTransfer = draggedFileData || window.currentDraggedFile;
+
+      if (fileToTransfer && canTransferFile(fileToTransfer.id)) {
+        handleTransferSingleFile(fileToTransfer.id, targetSlot);
+      }
+    };
+
+    // NEW: Individual slot drag handlers
+    const handleSlotDragOver = (e, slotNumber) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragOverSlot(slotNumber);
+      e.dataTransfer.dropEffect = "move";
+    };
+
+    const handleSlotDragLeave = (e, slotNumber) => {
+      e.stopPropagation();
+      if (!e.currentTarget.contains(e.relatedTarget)) {
+        setDragOverSlot(null);
+      }
+    };
+
+    // NEW: Slot-specific drop handler
+    const handleSlotDrop = (e, slotNumber) => {
+      e.stopPropagation();
+      handleDrop(e, slotNumber);
+    };
 
     const handleDeleteUpload = async (assignedFile) => {
       try {
@@ -1069,14 +1228,27 @@ const UploadTickets = ({
         setIsLoading(false);
       }
     };
+
     return (
-      <div className="p-3">
+      <div 
+        className={`p-3 transition-all duration-200 ${
+          dragOver ? "bg-blue-50 border-l-4 border-l-blue-500" : ""
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         <div className="flex justify-between items-center mb-2">
           <h4 className="text-sm font-medium text-[#323A70]">
             {proofUploadView
               ? `Proof Assignment (${currentTransferredFiles.length}/${maxQuantity})`
               : `Ticket Assignment (${currentTransferredFiles.length}/${maxQuantity})`}
           </h4>
+          {dragOver && (
+            <div className="text-xs text-blue-600 animate-pulse">
+              Drop file here to assign
+            </div>
+          )}
         </div>
 
         <div className="max-h-60 overflow-y-auto">
@@ -1088,11 +1260,21 @@ const UploadTickets = ({
             Array.from({ length: maxQuantity }, (_, index) => {
               const itemNumber = index + 1;
               const assignedFile = currentTransferredFiles[index];
+              const isSlotDraggedOver = dragOverSlot === itemNumber;
+              const isEmpty = !assignedFile;
+              
+              // Check if this specific slot can accept drops
+              const canAcceptDrop = isEmpty && window.currentDraggedFile && 
+                canTransferFile(window.currentDraggedFile.id);
+
               console.log(assignedFile, "assignedFileassignedFile");
               return (
                 <div
                   key={itemNumber}
                   className="grid grid-cols-2 items-center border-b border-gray-200 last:border-b-0"
+                  onDragOver={(e) => handleSlotDragOver(e, itemNumber)}
+                  onDragLeave={(e) => handleSlotDragLeave(e, itemNumber)}
+                  onDrop={(e) => handleSlotDrop(e, itemNumber)}
                 >
                   <div className="px-3 py-2 text-xs font-medium text-[#323A70]">
                     {proofUploadView
@@ -1130,10 +1312,20 @@ const UploadTickets = ({
                         </div>
                       </div>
                     ) : (
-                      <div className="text-xs text-gray-400 w-full border-[1px] border-dashed border-[#E0E1EA] bg-white rounded-md px-2 py-1">
-                        {proofUploadView
-                          ? "Waiting for proof document..."
-                          : "Waiting for file..."}
+                      <div 
+                        className={`text-xs w-full border-[1px] border-dashed rounded-md px-2 py-1 transition-all duration-200 ${
+                          isSlotDraggedOver && canAcceptDrop
+                            ? "border-blue-500 bg-blue-50 text-blue-600"
+                            : "border-[#E0E1EA] bg-white text-gray-400"
+                        }`}
+                      >
+                        {isSlotDraggedOver && canAcceptDrop ? (
+                          <span className="animate-pulse">Drop here...</span>
+                        ) : proofUploadView ? (
+                          "Waiting for proof document..."
+                        ) : (
+                          "Waiting for file..."
+                        )}
                       </div>
                     )}
                   </div>
@@ -1151,7 +1343,7 @@ const UploadTickets = ({
       <RightViewModal
         className="!w-[70vw]"
         show={show}
-        onClose={() => onClose()}
+        onClose={() => onClose(false)}
       >
         <div className="w-full h-full bg-white rounded-lg relative flex flex-col">
           {/* Header */}
@@ -1160,7 +1352,7 @@ const UploadTickets = ({
               {getModalTitle()}
               {getModalSubtitle()}
             </h2>
-            <button onClick={() => onClose()} className="text-gray-500">
+            <button onClick={() => onClose(false)} className="text-gray-500">
               <X className="w-5 h-5 cursor-pointer" />
             </button>
           </div>
@@ -1179,8 +1371,8 @@ const UploadTickets = ({
             TicketDetails={TicketDetails}
             QRLinksConfigSection={QRLinksConfigSection}
             PaperTicketCourierDetailsSection={PaperTicketCourierDetailsSection}
-            FileUploadSection={FileUploadSection} // Add this
-            TicketAssignmentSection={TicketAssignmentSection} // Add this
+            FileUploadSection={FileUploadSection} // Enhanced with drag functionality
+            TicketAssignmentSection={TicketAssignmentSection} // Enhanced with drop functionality
             existingUploadedTickets={existingUploadedTickets}
             additionalTemplateFile={additionalTemplateFile}
           />
@@ -1189,7 +1381,7 @@ const UploadTickets = ({
           <div className="flex justify-between items-center p-3 bg-gray-50 border-t border-gray-200 flex-shrink-0">
             <div className="flex gap-4 justify-end w-full">
               <button
-                onClick={() => onClose()}
+                onClick={() => onClose(false)}
                 className="px-4 py-2 border border-gray-300 rounded text-gray-700 text-sm hover:bg-gray-50"
               >
                 Cancel

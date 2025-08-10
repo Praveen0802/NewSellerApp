@@ -234,6 +234,7 @@ const AddInventoryPage = (props) => {
       label: "Quantity",
       mandatory: true,
       value: filtersApplied?.add_qty_addlist,
+      increasedWidth:'min-w-[100px]',
       options: [
         { value: "1", label: "1" },
         { value: "2", label: "2" },
@@ -257,6 +258,7 @@ const AddInventoryPage = (props) => {
       type: "select",
       name: "split_type",
       label: "Split Type",
+      increasedWidth:'min-w-[120px]',
       mandatory: true,
       value: filtersApplied?.split_type,
       options: [
@@ -716,9 +718,7 @@ const AddInventoryPage = (props) => {
       toast.error("Please select rows to edit");
       return;
     }
-
-    // For multiple rows, set all selected rows as editable
-    setEditingRowIndex(selectedRows); // Now this will be an array for bulk edit
+    setEditingRowIndex(selectedRows);
     setIsEditMode(true);
 
     if (selectedRows.length === 1) {
@@ -1020,11 +1020,11 @@ const AddInventoryPage = (props) => {
       );
       if (publishingData?.additional_info?.templateFile) {
         // Debug: Check what you're actually trying to append
-        
+
         formData.append(
           `data[${index}][additional_file]`,
           publishingData?.additional_info?.templateFile,
-          'additional_file'
+          "additional_file"
         );
       }
 

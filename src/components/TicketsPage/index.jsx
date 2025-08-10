@@ -748,6 +748,13 @@ const TicketsPage = (props) => {
         editable: true,
         iconHandling: true,
         type: "number",
+        iconBefore: (rowValue) => (
+          <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
+            <p className="text-xs sm:text-[10px] lg:text-xs">
+              {rowValue?.price_type}
+            </p>
+          </div>
+        ),
       },
       {
         key: "price",
@@ -755,6 +762,13 @@ const TicketsPage = (props) => {
         editable: true,
         iconHandling: true,
         type: "number",
+        iconBefore: (rowValue) => (
+          <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
+            <p className="text-xs sm:text-[10px] lg:text-xs">
+              {rowValue?.price_type}
+            </p>
+          </div>
+        ),
       },
       {
         key: "price_type",
@@ -1883,9 +1897,11 @@ const TicketsPage = (props) => {
         handleConfirmClick={handleConfirmClick}
         myListingPage={true}
         rowIndex={showUploadPopup?.rowIndex}
-        onClose={() => {
+        onClose={(showShimmer = true) => {
           setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
-          fetchData({ ...filtersApplied, page: currentPage });
+          if (showShimmer) {
+            fetchData({ ...filtersApplied, page: currentPage });
+          }
         }}
       />
       {viewDetailsPopup?.show && (
