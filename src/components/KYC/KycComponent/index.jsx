@@ -216,11 +216,34 @@ const KycComponent = ({
 
   const getFileType = (url) => {
     if (!url) return "unknown";
-    const extension = url.split(".").pop()?.toLowerCase();
-    if (["pdf"].includes(extension)) return "pdf";
-    if (["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(extension))
-      return "image";
-    return "unknown";
+    
+    const lowerUrl = url.toLowerCase();
+    const hasExplicitExtension = url.includes('.');
+    
+    // First try to get the extension the standard way if it exists
+    if (hasExplicitExtension) {
+      const extension = url.split('.').pop()?.toLowerCase();
+      if (extension === 'pdf') return 'pdf';
+      if (["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(extension)) {
+        return 'image';
+      }
+    }
+    
+    // If no explicit extension or not recognized, check last few characters
+    const lastChars = lowerUrl.slice(-5); // Check last 5 characters
+    
+    // Check for PDF in last few chars (e.g., '123pdf')
+    if (/pdf$/.test(lastChars) || /pdf[^a-z0-9]*$/.test(lastChars)) {
+      return 'pdf';
+    }
+    
+    // Check for image extensions in last few chars
+    const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp"];
+    for (const ext of imageExtensions) {
+      if (new RegExp(`${ext}[^a-z0-9]*$`).test(lastChars)) {
+        return 'image';
+      }
+    }
   };
 
   // Handle contract generation
