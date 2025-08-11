@@ -28,7 +28,8 @@ const OrderInfo = ({
   type = "",
   showShimmer = false,
   ticketTypesList = [],
-  mySalesPage=false
+  hideExpand = false,
+  mySalesPage = false,
 } = {}) => {
   const [expandedVersion, setExpandedVersion] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -466,17 +467,19 @@ const OrderInfo = ({
                   isTransitioning ? "opacity-50" : "opacity-100"
                 }`}
               >
-                {expandedVersion ? (
-                  <Shrink
-                    className="w-4 h-4 text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-200"
-                    onClick={handleCollapseModal}
-                  />
-                ) : (
-                  <Expand
-                    className="w-4 h-4 text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-200"
-                    onClick={handleCollapseModal}
-                  />
-                )}
+                {!hideExpand ? (
+                  expandedVersion ? (
+                    <Shrink
+                      className="w-4 h-4 text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-200"
+                      onClick={handleCollapseModal}
+                    />
+                  ) : (
+                    <Expand
+                      className="w-4 h-4 text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-200"
+                      onClick={handleCollapseModal}
+                    />
+                  )
+                ) : null}
               </div>
 
               <X
@@ -541,7 +544,11 @@ const OrderInfo = ({
             {/* Add AttendeeDetails component */}
             {attendee_details && attendee_details.length > 0 && (
               <div className="transition-all duration-300 ease-in-out">
-                <AttendeeDetails attendee_details={attendee_details} mySalesPage={mySalesPage} expandedVersion={expandedVersion}/>
+                <AttendeeDetails
+                  attendee_details={attendee_details}
+                  mySalesPage={mySalesPage}
+                  expandedVersion={expandedVersion}
+                />
               </div>
             )}
           </div>
