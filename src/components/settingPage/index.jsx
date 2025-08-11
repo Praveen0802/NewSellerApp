@@ -57,7 +57,7 @@ const SettingsPage = (props) => {
       //   title: "Overview",
       //   key: "overview",
       // },
-      ...(kycStatus?.kyc_status == 0 && userRoles?.user_type == "sellers"
+      ...((kycStatus?.kyc_status === 0 || kycStatus?.kyc_status === 2) && userRoles?.user_type == "sellers"
         ? [
             {
               icon: <ShieldCheck className={IconclassName} />,

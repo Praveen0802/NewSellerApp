@@ -160,5 +160,6 @@ export const API_ROUTES = {
   MY_SALES_UPLOAD_TICKETS:"/sales/upload-tickets",
   MY_SALES_UPLOAD_MOBILE_TICKETS:"/sales/upload-mobile-tickets",
   UPLOAD_POD_TICKETS:"/sales/upload-pod",
-  INSTRUCTION_FILE_UPLOAD:"/sales/upload-instruction-file"
+  INSTRUCTION_FILE_UPLOAD:"/sales/upload-instruction-file",
+  SUBMIT_KYC: "/auth/submit-kyc-for-approval"
 };

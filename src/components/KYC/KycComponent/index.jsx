@@ -7,6 +7,7 @@ import {
   savePhotoId,
   saveSellerBusinessDocuments,
   saveSellerContract,
+  submitKycForApproval,
 } from "@/utils/apiHandler/request";
 import { getCookie } from "@/utils/helperFunctions/cookie";
 import {
@@ -21,7 +22,7 @@ import {
   RefreshCcw,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import DocumentUpload from "../DocumentUpload";
@@ -46,7 +47,12 @@ const KycComponent = ({
     title: "",
     fileType: "",
   });
-
+  const [submitForApproval, setSubmitForApproval] = useState(false);
+  useEffect(() => {
+      if (kycStatus?.kyc_status !== undefined) {
+        setSubmitForApproval(kycStatus.kyc_status);
+      }
+    }, [kycStatus]);
   // New state for contract generation modal
   const [contractModal, setContractModal] = useState({
     open: false,
@@ -689,19 +695,72 @@ const KycComponent = ({
   ).length;
   const totalDocuments = Object.keys(documentConfig).length;
   const progressPercentage = (approvedDocuments / totalDocuments) * 100;
+  const hasNotUploaded = Object.keys(documentConfig).some(
+    (docType) => getDocumentStatus(docType) === "not uploaded"
+  );
+
+  const handleSubmitForApproval = async () => {
+    if (hasNotUploaded) {
+      console.log("Please upload all required documents before submitting.");
+      return; // stop here
+    }
+    try {
+      const token = getCookie("auth_token") || currentUser?.token;
+      const userId = getCookie("user_token");
+      console.log("User ID from cookie:", userId);
+      const body = {
+        user_id: userId
+      }
+      const response = await submitKycForApproval(token,body);
+      setSubmitForApproval(2); // Set to "Waiting for Approval"
+      toast.success("KYC submitted for approval successfully!");
+      
+    } catch (error) {
+      console.error("KYC submission failed", error);
+    }
+  };
 
   return (
     <div className="w-full h-full">
-      <h2 className="pb-2 sm:pb-4 text-base sm:text-lg md:text-xl p-3 sm:p-4 font-semibold">
-        KYC Documents
-      </h2>
+      <div className="flex items-center justify-between p-3 sm:p-4">
+        <h2 className="pb-2 sm:pb-4 text-base sm:text-lg md:text-xl font-semibold">
+          KYC Documents
+        </h2>
+        {submitForApproval === 0 && (
+        <div
+          type="button"
+          onClick={handleSubmitForApproval}
+          disabled={hasNotUploaded}
+          className={`px-4 py-2 text-sm sm:text-base rounded-lg transition ${
+            hasNotUploaded
+              ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+              : "bg-gray-900 text-white hover:bg-gray-700 cursor-pointer"
+          }`}
+        >
+          Submit for Approval
+        </div>
+      )}
+
+      {submitForApproval === 1 && (
+        <span className="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
+          Approved
+        </span>
+      )}
+
+      {submitForApproval === 2 && (
+        <span className="px-3 py-1 text-sm font-medium text-yellow-700 bg-yellow-100 rounded-full">
+          Waiting for Approval
+        </span>
+      )}
+      </div>
+
 
       <div className="p-6 sm:p-4 bg-white border-[1px] flex flex-col gap-3 sm:gap-4 border-[#eaeaf1] w-full h-full">
         <div className="flex justify-between items-center">
           <p className="text-gray-600">
             Upload required verification documents
           </p>
-          {renderOverallStatusBadge()}
+          {/* {renderOverallStatusBadge()} */}
         </div>
 
         {/* Progress Bar */}

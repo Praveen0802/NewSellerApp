@@ -2705,3 +2705,18 @@ export const getPayoutOrderDetails = async (token, params) => {
     throw error;
   }
 };
+
+export const submitKycForApproval = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.SUBMIT_KYC,
+      method: "POST",
+      ...(token && { token: token }),
+      data: data,
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in submitKycForApproval", error);
+    throw error;
+  }
+}
