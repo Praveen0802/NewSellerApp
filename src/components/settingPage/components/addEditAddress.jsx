@@ -446,11 +446,11 @@ const AddEditAddress = ({
         mandatory: true,
         name: "city",
         disabled: !formFieldValues?.country,
-        value: formFieldValues?.city,
+        value: Number(formFieldValues?.city),
         onChange: (e) => handleChange(e, "city", "select"),
         className: `!py-2 !px-4 ${fieldStyle}`,
         labelClassName: "text-sm text-gray-600 mb-1 block",
-        placeholder: "Dubai",
+        placeholder: "Select city",
         options: cityOptions,
         rightIcon: formFieldValues?.city
           ? () => (
