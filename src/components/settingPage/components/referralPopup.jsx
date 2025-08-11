@@ -54,7 +54,7 @@ const ReferralPopup = ({ show, onClose, data = {}, isLoading = false, error = fa
             <thead>
               <tr className="border-b-2 border-gray-200">
                 <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                  Booking
+                  Order ID
                 </th>
                 <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
                   Match Details
@@ -65,14 +65,14 @@ const ReferralPopup = ({ show, onClose, data = {}, isLoading = false, error = fa
                 <th className="text-right py-3 px-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
                   Earned
                 </th>
-                <th className="text-right py-3 px-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                {/* <th className="text-right py-3 px-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
                   Total
-                </th>
+                </th> */}
               </tr>
             </thead>
             <tbody>
               {/* Render 5 shimmer rows */}
-              {Array.from({ length: 5 }).map((_, index) => (
+              {Array.from({ length: 4 }).map((_, index) => (
                 <ShimmerRow key={index} />
               ))}
             </tbody>
@@ -113,7 +113,7 @@ const ReferralPopup = ({ show, onClose, data = {}, isLoading = false, error = fa
           <thead>
             <tr className="border-b-2 border-gray-200">
               <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
-                Booking
+                Order ID
               </th>
               <th className="text-left py-3 px-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
                 Match Details
@@ -124,9 +124,9 @@ const ReferralPopup = ({ show, onClose, data = {}, isLoading = false, error = fa
               <th className="text-right py-3 px-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
                 Earned
               </th>
-              <th className="text-right py-3 px-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
+              {/* <th className="text-right py-3 px-2 text-sm font-semibold text-gray-700 uppercase tracking-wide">
                 Total
-              </th>
+              </th> */}
             </tr>
           </thead>
           <tbody>
@@ -167,11 +167,11 @@ const ReferralPopup = ({ show, onClose, data = {}, isLoading = false, error = fa
                     +{booking.earned_amount_with_currency}
                   </div>
                 </td>
-                <td className="py-4 px-2 text-right">
+                {/* <td className="py-4 px-2 text-right">
                   <div className="font-semibold text-gray-900 text-sm">
                     {booking.amount_with_currency}
                   </div>
-                </td>
+                </td> */}
               </tr>
             ))}
           </tbody>
