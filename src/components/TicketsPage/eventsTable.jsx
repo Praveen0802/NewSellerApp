@@ -314,7 +314,9 @@ const EventsTable = ({ events, headers, selectedRows, setSelectedRows, loader })
                       ) : header.key === "match_date" ? (
                         new Date(event[header.key]).toLocaleDateString()
                       ) : (
-                        event[header.key]
+                        header.key === "match_time"
+                          ? event[header.key]?.slice(0, 5) // keeps only HH:MM
+                          : event[header.key]
                       )}
                     </td>
                   ))}

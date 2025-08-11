@@ -107,10 +107,10 @@ const BulkListings = (props) => {
 
   const headers = [
     { title: "Event Name", key: "match_name" },
-    { title: "Match Date", key: "match_date" },
-    { title: "Match Time", key: "match_time" },
+    { title: "Event Date", key: "match_date" },
+    { title: "Event Time", key: "match_time" },
     { title: "Stadium", key: "stadium" },
-    { title: "Total Ticket", key: "total_ticket" },
+    { title: "Total Tickets", key: "total_ticket" },
     { title: "Total Fare", key: "ticket_fare_from" },
   ];
 
