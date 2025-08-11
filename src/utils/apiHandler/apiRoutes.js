@@ -81,6 +81,7 @@ export const API_ROUTES = {
   GET_ADD_LISTING_FILTERS: `/add-listing/get-listing-event`,
   LMT_PAY_OVERVIEW: `/lmt-pay/overview`,
   GET_DEPOSIT_DETAILS: `/lmt-pay/get-deposit-details`,
+  REQUEST_MATCH_EVENT:`/match/request-event`,
   GET_TRANSACTION_DETAILS: `/lmt-pay/transaction-details`,
   SEND_DEPOSIT_REQUEST: `/lmt-pay/deposit-request`,
   REFRESH_AUTH_TOKEN: `/auth/refresh-token`,

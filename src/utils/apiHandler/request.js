@@ -914,6 +914,22 @@ export const getDepositDetails = async (token, params) => {
   }
 };
 
+
+export const requestMatchEvent = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.REQUEST_MATCH_EVENT,
+      method: "POST",
+      ...(data && { data: data }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getDepositDetails", error);
+    // throw error;
+  }
+};
+
 export const getTransactionDetails = async (token, params) => {
   try {
     const response = await makeRequest({
