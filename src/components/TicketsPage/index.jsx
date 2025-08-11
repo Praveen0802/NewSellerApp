@@ -29,6 +29,7 @@ import {
   X,
   SearchIcon,
   HardDriveUpload,
+  SquareCheck,
 } from "lucide-react";
 import {
   FetchEventSearch,
@@ -285,7 +286,7 @@ const Pagination = ({
 
 const TicketsPage = (props) => {
   const { success = "", response } = props;
-
+console.log(response,'responseresponseresponse')
   // Memoize the overview data to prevent unnecessary re-renders
   const overViewData = useMemo(
     () => response?.overview || {},
@@ -613,6 +614,9 @@ const TicketsPage = (props) => {
     }
   }, [globalSelectedTickets, getAllTicketsFromMatches, filtersApplied]);
 
+  const [pendingEdits, setPendingEdits] = useState({}); // { "matchIndex_rowIndex": { field1: value1, field2: value2 } }
+  const [originalValues, setOriginalValues] = useState({}); // Store original values for reset
+
   const handleGlobalClone = useCallback(() => {
     if (globalSelectedTickets.length === 0) {
       toast.error("Please select tickets to clone");
@@ -770,12 +774,12 @@ const TicketsPage = (props) => {
           </div>
         ),
       },
-      {
-        key: "price_type",
-        label: "Price Currency",
-        editable: false,
-        type: "text",
-      },
+      // {
+      //   key: "price_type",
+      //   label: "Price Currency",
+      //   editable: false,
+      //   type: "text",
+      // },
       {
         key: "listing_note",
         label: "Listing Note",
@@ -917,111 +921,6 @@ const TicketsPage = (props) => {
   }, [mockListingHistory]);
 
   // Enhanced handleCellEdit to work with ticketsByMatch
-  const handleCellEdit = useCallback(
-    (rowIndex, columnKey, value, ticket, matchIndexParam) => {
-      console.log("Cell edited:", {
-        rowIndex,
-        columnKey,
-        value,
-        matchIndex: matchIndexParam,
-      });
-
-      const matchIndex = matchIndexParam.toString();
-
-      // Find header config
-      const headerConfig = constructHeadersFromListingHistory.find(
-        (h) => h.key === columnKey
-      );
-
-      let processedValue = value;
-      if (headerConfig?.type === "select" && headerConfig?.options) {
-        const isValidValue = headerConfig.options.some(
-          (opt) => opt.value === value
-        );
-        if (!isValidValue) {
-          const optionByLabel = headerConfig.options.find(
-            (opt) => opt.label === value
-          );
-          if (optionByLabel) {
-            processedValue = optionByLabel.value;
-          }
-        }
-      }
-
-      if (isGlobalEditMode && globalEditingTickets.length > 0) {
-        // Update all selected tickets across matches
-        setTicketsByMatch((prevData) => {
-          const newData = { ...prevData };
-
-          // Group editing tickets by match
-          const ticketsByMatchIndex = {};
-          globalEditingTickets.forEach((uniqueId) => {
-            const [ticketMatchIndex, originalIndex] = uniqueId.split("_");
-            if (!ticketsByMatchIndex[ticketMatchIndex]) {
-              ticketsByMatchIndex[ticketMatchIndex] = [];
-            }
-            ticketsByMatchIndex[ticketMatchIndex].push(parseInt(originalIndex));
-          });
-
-          // Update only affected matches
-          Object.entries(ticketsByMatchIndex).forEach(
-            ([editMatchIndex, indices]) => {
-              if (newData[editMatchIndex]) {
-                newData[editMatchIndex] = {
-                  ...newData[editMatchIndex],
-                  tickets: newData[editMatchIndex].tickets.map(
-                    (ticketItem, index) => {
-                      if (indices.includes(index)) {
-                        return { ...ticketItem, [columnKey]: processedValue };
-                      }
-                      return ticketItem;
-                    }
-                  ),
-                };
-              }
-            }
-          );
-
-          return newData;
-        });
-
-        // Update all selected tickets via API
-        const allTickets = getAllTicketsFromMatches();
-        const selectedTickets = allTickets.filter((t) =>
-          globalEditingTickets.includes(t.uniqueId)
-        );
-        const updateParams = { [columnKey]: processedValue };
-
-        selectedTickets.forEach((selectedTicket) => {
-          updateCellValues(updateParams, selectedTicket?.rawTicketData?.s_no);
-        });
-      } else {
-        // Single ticket edit - only update specific match
-        setTicketsByMatch((prevData) => ({
-          ...prevData,
-          [matchIndex]: {
-            ...prevData[matchIndex],
-            tickets: prevData[matchIndex].tickets.map((ticketItem, index) => {
-              if (index === rowIndex) {
-                return { ...ticketItem, [columnKey]: processedValue };
-              }
-              return ticketItem;
-            }),
-          },
-        }));
-
-        // API call logic
-        const updateParams = { [columnKey]: processedValue };
-        updateCellValues(updateParams, ticket?.rawTicketData?.s_no);
-      }
-    },
-    [
-      isGlobalEditMode,
-      globalEditingTickets,
-      constructHeadersFromListingHistory,
-      getAllTicketsFromMatches,
-    ]
-  );
 
   // Enhanced updateCellValues function with better error handling
   const updateCellValues = async (updatedParams, id) => {
@@ -1062,6 +961,250 @@ const TicketsPage = (props) => {
     }
   };
 
+  const handleCellEdit = useCallback(
+    (rowIndex, columnKey, value, ticket, matchIndexParam) => {
+      console.log("Cell edited:", {
+        rowIndex,
+        columnKey,
+        value,
+        matchIndex: matchIndexParam,
+      });
+
+      const matchIndex = matchIndexParam.toString();
+      const rowKey = `${matchIndex}_${rowIndex}`;
+
+      // Find header config
+      const headerConfig = constructHeadersFromListingHistory.find(
+        (h) => h.key === columnKey
+      );
+
+      let processedValue = value;
+      if (headerConfig?.type === "select" && headerConfig?.options) {
+        const isValidValue = headerConfig.options.some(
+          (opt) => opt.value === value
+        );
+        if (!isValidValue) {
+          const optionByLabel = headerConfig.options.find(
+            (opt) => opt.label === value
+          );
+          if (optionByLabel) {
+            processedValue = optionByLabel.value;
+          }
+        }
+      }
+
+      if (isGlobalEditMode && globalEditingTickets.length > 0) {
+        // EXISTING BULK EDIT LOGIC - unchanged
+        setTicketsByMatch((prevData) => {
+          const newData = { ...prevData };
+
+          const ticketsByMatchIndex = {};
+          globalEditingTickets.forEach((uniqueId) => {
+            const [ticketMatchIndex, originalIndex] = uniqueId.split("_");
+            if (!ticketsByMatchIndex[ticketMatchIndex]) {
+              ticketsByMatchIndex[ticketMatchIndex] = [];
+            }
+            ticketsByMatchIndex[ticketMatchIndex].push(parseInt(originalIndex));
+          });
+
+          Object.entries(ticketsByMatchIndex).forEach(
+            ([editMatchIndex, indices]) => {
+              if (newData[editMatchIndex]) {
+                newData[editMatchIndex] = {
+                  ...newData[editMatchIndex],
+                  tickets: newData[editMatchIndex].tickets.map(
+                    (ticketItem, index) => {
+                      if (indices.includes(index)) {
+                        return { ...ticketItem, [columnKey]: processedValue };
+                      }
+                      return ticketItem;
+                    }
+                  ),
+                };
+              }
+            }
+          );
+
+          return newData;
+        });
+
+        const allTickets = getAllTicketsFromMatches();
+        const selectedTickets = allTickets.filter((t) =>
+          globalEditingTickets.includes(t.uniqueId)
+        );
+        const updateParams = { [columnKey]: processedValue };
+
+        selectedTickets.forEach((selectedTicket) => {
+          updateCellValues(updateParams, selectedTicket?.rawTicketData?.s_no);
+        });
+      } else {
+        // NEW: SINGLE EDIT MODE - Store pending changes instead of immediate update
+
+        // Store original value if not already stored
+        if (!originalValues[rowKey]) {
+          const currentTicket = ticketsByMatch[matchIndex]?.tickets[rowIndex];
+          if (currentTicket) {
+            setOriginalValues((prev) => ({
+              ...prev,
+              [rowKey]: { ...currentTicket },
+            }));
+          }
+        }
+
+        // Store the pending edit
+        setPendingEdits((prev) => ({
+          ...prev,
+          [rowKey]: {
+            ...prev[rowKey],
+            [columnKey]: processedValue,
+          },
+        }));
+
+        // Update the UI immediately to show the change (optimistic update)
+        setTicketsByMatch((prevData) => ({
+          ...prevData,
+          [matchIndex]: {
+            ...prevData[matchIndex],
+            tickets: prevData[matchIndex].tickets.map((ticketItem, index) => {
+              if (index === rowIndex) {
+                return { ...ticketItem, [columnKey]: processedValue };
+              }
+              return ticketItem;
+            }),
+          },
+        }));
+      }
+    },
+    [
+      isGlobalEditMode,
+      globalEditingTickets,
+      constructHeadersFromListingHistory,
+      getAllTicketsFromMatches,
+      ticketsByMatch,
+      originalValues,
+    ]
+  );
+
+  // NEW: Handle cancel edit (cross icon clicked)
+  const handleCancelEdit = useCallback(
+    (matchIndex, rowIndex) => {
+      const rowKey = `${matchIndex}_${rowIndex}`;
+      const originalRowValues = originalValues[rowKey];
+
+      if (!originalRowValues) return;
+
+      // Revert the UI changes
+      setTicketsByMatch((prevData) => ({
+        ...prevData,
+        [matchIndex]: {
+          ...prevData[matchIndex],
+          tickets: prevData[matchIndex].tickets.map((ticketItem, index) => {
+            if (index === rowIndex) {
+              return originalRowValues;
+            }
+            return ticketItem;
+          }),
+        },
+      }));
+
+      // Clear pending edits and original values for this row
+      setPendingEdits((prev) => {
+        const newPending = { ...prev };
+        delete newPending[rowKey];
+        return newPending;
+      });
+
+      setOriginalValues((prev) => {
+        const newOriginal = { ...prev };
+        delete newOriginal[rowKey];
+        return newOriginal;
+      });
+
+      toast.info("Changes discarded");
+    },
+    [originalValues]
+  );
+
+  const handleConfirmEdit = useCallback(
+    async (matchIndex, rowIndex) => {
+      const rowKey = `${matchIndex}_${rowIndex}`;
+      const pendingChanges = pendingEdits[rowKey];
+
+      if (!pendingChanges || Object.keys(pendingChanges).length === 0) return;
+
+      try {
+        const ticket = ticketsByMatch[matchIndex]?.tickets[rowIndex];
+        if (!ticket) return;
+
+        // Transform field keys for API (ticket_type_id -> ticket_type, etc.)
+        const transformedParams = {};
+        Object.entries(pendingChanges).forEach(([key, value]) => {
+          const transformedKey =
+            key === "ticket_type_id"
+              ? "ticket_type"
+              : key === "ticket_category_id"
+              ? "ticket_category"
+              : key === "split_type_id"
+              ? "split_type"
+              : key;
+          transformedParams[transformedKey] = value;
+        });
+
+        // Make single API call with all transformed parameters
+        const update = await updateMyListing(
+          "",
+          ticket?.rawTicketData?.s_no,
+          transformedParams
+        );
+
+        if (update?.success) {
+          // Clear pending edits and original values for this row
+          setPendingEdits((prev) => {
+            const newPending = { ...prev };
+            delete newPending[rowKey];
+            return newPending;
+          });
+
+          setOriginalValues((prev) => {
+            const newOriginal = { ...prev };
+            delete newOriginal[rowKey];
+            return newOriginal;
+          });
+
+          toast.success(
+            Object.keys(pendingChanges).length > 1
+              ? `${
+                  Object.keys(pendingChanges).length
+                } fields updated successfully`
+              : "Field updated successfully"
+          );
+        } else {
+          console.error("Update failed:", update);
+          toast.error("Failed to update field(s)");
+          // Revert the changes on error
+          handleCancelEdit(matchIndex, rowIndex);
+        }
+      } catch (error) {
+        console.error("Error confirming edit:", error);
+        toast.error("Error updating field(s)");
+        // Revert the changes on error
+        handleCancelEdit(matchIndex, rowIndex);
+      }
+    },
+    [pendingEdits, ticketsByMatch, handleCancelEdit]
+  );
+
+  // NEW: Check if a row has pending edits
+  const hasPendingEdits = useCallback(
+    (matchIndex, rowIndex) => {
+      const rowKey = `${matchIndex}_${rowIndex}`;
+      return (
+        pendingEdits[rowKey] && Object.keys(pendingEdits[rowKey]).length > 0
+      );
+    },
+    [pendingEdits]
+  );
+
   const handleHandAction = useCallback(
     (rowData, rowIndex) => {
       console.log("Hand action clicked for row:", rowData, rowIndex);
@@ -1081,8 +1224,10 @@ const TicketsPage = (props) => {
     (rowData, rowIndex) => {
       const isBulkEditMode =
         isGlobalEditMode && globalEditingTickets.length > 1;
+      const hasEdits = hasPendingEdits(rowData?.matchIndex, rowIndex);
 
-      return [
+      // Base columns
+      const baseColumns = [
         {
           key: "hand",
           icon: (
@@ -1125,7 +1270,7 @@ const TicketsPage = (props) => {
           },
         },
         {
-          key: "",
+          key: "upload_pop",
           toolTipContent: isBulkEditMode ? "Not Available" : "Upload Pop",
           icon: (
             <Tooltip content={isBulkEditMode ? "Not Available" : "Upload Pop"}>
@@ -1167,8 +1312,60 @@ const TicketsPage = (props) => {
           onClick: () => handleViewDetails(rowData),
         },
       ];
+
+      // NEW: Add confirm/cancel buttons if there are pending edits and not in bulk mode
+      if (hasEdits && !isBulkEditMode) {
+        return [
+          // Replace the last two columns with confirm/cancel buttons
+          ...baseColumns.slice(0, 2),
+         
+          {
+            key: "cancel",
+            icon: (
+              <Tooltip content="Cancel Changes">
+                <div
+                  className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-red-600 transition-colors"
+                  onClick={() =>
+                    handleCancelEdit(rowData?.matchIndex, rowIndex)
+                  }
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="white">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                  </svg>
+                </div>
+              </Tooltip>
+            ),
+            className: "py-2 text-center",
+          },
+          {
+            key: "confirm",
+            icon: (
+              <Tooltip content="Confirm Changes">
+                <div
+                  className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-green-600 transition-colors"
+                  onClick={() =>
+                    handleConfirmEdit(rowData?.matchIndex, rowIndex)
+                  }
+                >
+                  <SquareCheck className="w-4 h-4 text-white" />
+                </div>
+              </Tooltip>
+            ),
+            className: "py-2 text-center border-r border-[#E0E1EA]",
+          },
+        ];
+      }
+
+      return baseColumns;
     },
-    [isGlobalEditMode, globalEditingTickets, handleHandAction]
+    [
+      isGlobalEditMode,
+      globalEditingTickets,
+      handleHandAction,
+      hasPendingEdits,
+      handleConfirmEdit,
+      handleCancelEdit,
+    ]
   );
 
   // Action handlers for sticky columns
@@ -1744,6 +1941,8 @@ const TicketsPage = (props) => {
               city_name: matchData.matchInfo?.city_name,
               match_id: matchData.matchInfo?.m_id,
               tournament_name: matchData.matchInfo?.tournament_name,
+              publishedTickets:`${matchData?.matchInfo?.published}`,
+              unPublishedTickets:`${matchData?.matchInfo?.unpublished}`
             }}
             filters={matchData.filters}
             isEditMode={isGlobalEditMode}
@@ -1758,14 +1957,16 @@ const TicketsPage = (props) => {
             }
             mode="multiple"
             showAccordion={true}
-            // isCollapsed={isCollapsed}
-            // onToggleCollapse={handleToggleCollapse}
             matchIndex={matchIndex}
             totalTicketsCount={matchData.tickets.length}
             getStickyColumnsForRow={getStickyColumnsForRow}
             stickyHeaders={["", "", "", ""]}
             myListingPage={true}
             stickyColumnsWidth={140}
+            // NEW: Pass the pending edits and handlers
+            pendingEdits={pendingEdits}
+            onConfirmEdit={handleConfirmEdit}
+            onCancelEdit={handleCancelEdit}
           />
         </div>
       );
@@ -1784,6 +1985,11 @@ const TicketsPage = (props) => {
     isGlobalEditMode,
     isTicketInEditMode,
     getStickyColumnsForRow,
+
+    // NEW: Add dependencies for pending edits
+    pendingEdits,
+    handleConfirmEdit,
+    handleCancelEdit,
   ]);
 
   const handleCheckBoxChange = async (key, value) => {

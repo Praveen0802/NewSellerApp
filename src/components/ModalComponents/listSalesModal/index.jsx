@@ -269,7 +269,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
   return (
     <div className="p-4">
       <CustomModal show={show} onClose={() => onClose()}>
-        <div className="bg-white w-full max-w-4xl rounded-md">
+        <div className="bg-white w-4xl rounded-md">
           {/* Header with match details */}
           <div className="px-4 pt-4 flex justify-between items-center">
             <h2 className="text-lg font-medium text-[#323A70]">

@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import { debounce } from "lodash";
 import CustomSelectEditableCell from "./customSimpleEditableCell";
+import FloatingDateRange from "../commonComponents/dateRangeInput";
 
 const MultiSelectEditableCell = ({
   value,
@@ -486,14 +487,151 @@ const SimpleEditableCell = ({
   iconBefore = null,
   rowValue = {},
   alwaysShowAsEditable = false,
+  // Date range specific props
+  dateRangeProps = {},
 }) => {
+  // All hooks must be defined at the top level
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef(null);
   const [shouldFocusInput, setShouldFocusInput] = useState(false);
 
-  // Helper functions for date formatting (keep existing ones)
+  useEffect(() => {
+    setEditValue(value);
+  }, [value, type]);
+
+  const handleClick = useCallback((e) => {
+    if (disabled) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setIsEditing(true);
+    setShouldFocusInput(true);
+  }, [disabled]);
+
+  const handleDateInputClick = useCallback((e) => {
+    e.stopPropagation();
+    
+    if (disabled) return;
+    
+    if (!isEditing) {
+      setIsEditing(true);
+      setShouldFocusInput(true);
+    }
+    
+    if (inputRef.current && type === "date") {
+      setTimeout(() => {
+        if (inputRef.current?.showPicker) {
+          inputRef.current.showPicker();
+        }
+      }, 0);
+    }
+  }, [disabled, isEditing, type]);
+
+  useEffect(() => {
+    if (isEditing && shouldFocusInput && inputRef.current) {
+      setShouldFocusInput(false);
+      
+      if (type === "date") {
+        inputRef.current.focus();
+        setTimeout(() => {
+          if (inputRef.current?.showPicker) {
+            inputRef.current.showPicker();
+          }
+        }, 0);
+      } else {
+        inputRef.current.focus();
+        if (inputRef.current.select) {
+          inputRef.current.select();
+        }
+      }
+    }
+  }, [isEditing, type, shouldFocusInput]);
+
+  // Helper functions that need to be defined early
+  const getInputPadding = () => {
+    return iconBefore ? "pl-10 pr-2" : "px-2";
+  };
+
+  const renderIconBefore = () => {
+    if (!iconBefore) return null;
+
+    return (
+      <div className="absolute left-2 top-1/2 transform -translate-y-1/2 pointer-events-none z-10">
+        {typeof iconBefore === "function" ? iconBefore(rowValue) : iconBefore}
+      </div>
+    );
+  };
+
+  const handleSave = () => {
+    let valueToSave = editValue;
+    
+    if (type === "date") {
+      valueToSave = formatDateForSave(editValue);
+    }
+    
+    if (valueToSave !== value) {
+      onSave(valueToSave);
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditValue(value);
+    setIsEditing(false);
+  };
+
+  const handleChange = (newValue) => {
+    setEditValue(newValue);
+
+    if (saveOnChange && newValue !== value) {
+      let valueToSave = newValue;
+      
+      if (type === "date") {
+        valueToSave = formatDateForSave(newValue);
+      }
+      
+      onSave(valueToSave);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSave();
+    } else if (e.key === "Escape") {
+      handleCancel();
+    }
+  };
+
+  const handleBlur = () => {
+    if (!saveOnChange) {
+      handleSave();
+    } else {
+      setIsEditing(false);
+    }
+  };
+
+  const getDisplayValue = () => {
+    if (type === "checkbox") {
+      return value ? "Yes" : "No";
+    }
+    if (type === "date") {
+      return value ? formatDateForDisplay(value) : placeholder;
+    }
+    return value || placeholder;
+  };
+
+  const hasValue = () => {
+    if (type === "checkbox") return true;
+    if (type === "date") {
+      return !!(value && value.toString().trim());
+    }
+    return !!(value && value.toString().trim());
+  };
+
+  // Helper functions for date formatting (keep existing ones for backward compatibility)
   const formatDateForDisplay = (dateString) => {
     if (!dateString) return "";
     
@@ -564,10 +702,6 @@ const SimpleEditableCell = ({
     }
   };
 
-  useEffect(() => {
-    setEditValue(value);
-  }, [value, type]);
-
   // For multiselect type, use the MultiSelectEditableCell
   if (type === "multiselect") {
     return (
@@ -604,141 +738,159 @@ const SimpleEditableCell = ({
     );
   }
 
-  // For all other types, continue with existing logic
-  const handleClick = useCallback((e) => {
-    if (disabled) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    setIsEditing(true);
-    setShouldFocusInput(true);
-  }, [disabled]);
-
-  const handleDateInputClick = useCallback((e) => {
-    e.stopPropagation();
-    
-    if (disabled) return;
-    
-    if (!isEditing) {
-      setIsEditing(true);
-      setShouldFocusInput(true);
-    }
-    
-    if (inputRef.current && type === "date") {
-      setTimeout(() => {
-        if (inputRef.current?.showPicker) {
-          inputRef.current.showPicker();
-        }
-      }, 0);
-    }
-  }, [disabled, isEditing, type]);
-
-  const handleSave = () => {
-    let valueToSave = editValue;
-    
-    if (type === "date") {
-      valueToSave = formatDateForSave(editValue);
-    }
-    
-    if (valueToSave !== value) {
-      onSave(valueToSave);
-    }
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setEditValue(value);
-    setIsEditing(false);
-  };
-
-  const handleChange = (newValue) => {
-    setEditValue(newValue);
-
-    if (saveOnChange && newValue !== value) {
-      let valueToSave = newValue;
+  // For date-range type, use the FloatingDateRange component
+  if (type === "date") {
+    // Convert string value to dateRange format if needed
+    const convertToDateRangeFormat = (val) => {
+      if (!val) return { startDate: "", endDate: "" };
       
-      if (type === "date") {
-        valueToSave = formatDateForSave(newValue);
+      // If it's already in the right format
+      if (typeof val === 'object' && val.startDate !== undefined) {
+        return val;
       }
       
-      onSave(valueToSave);
-    }
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSave();
-    } else if (e.key === "Escape") {
-      handleCancel();
-    }
-  };
-
-  const handleBlur = () => {
-    if (!saveOnChange) {
-      handleSave();
-    } else {
-      setIsEditing(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isEditing && shouldFocusInput && inputRef.current) {
-      setShouldFocusInput(false);
-      
-      if (type === "date") {
-        inputRef.current.focus();
-        setTimeout(() => {
-          if (inputRef.current?.showPicker) {
-            inputRef.current.showPicker();
-          }
-        }, 0);
-      } else {
-        inputRef.current.focus();
-        if (inputRef.current.select) {
-          inputRef.current.select();
-        }
+      // If it's a string, use it as startDate (for single date mode)
+      if (typeof val === 'string') {
+        return { startDate: val, endDate: val };
       }
+      
+      return { startDate: "", endDate: "" };
+    };
+
+    // Convert dateRange format back to string if needed
+    const convertFromDateRangeFormat = (dateRangeValue) => {
+      if (!dateRangeValue) return "";
+      
+      // Return just the startDate if both dates are the same (single date mode)
+      if (dateRangeValue.startDate === dateRangeValue.endDate) {
+        return dateRangeValue.startDate;
+      }
+      
+      // Return the entire object if different dates
+      return dateRangeValue;
+    };
+
+    const handleDateRangeChange = (newDateRange) => {
+      const valueToSave = convertFromDateRangeFormat(newDateRange);
+      onSave(valueToSave);
+    };
+
+    const getDateRangeDisplayValue = () => {
+      const dateRangeValue = convertToDateRangeFormat(value);
+      
+      if (!dateRangeValue.startDate) return placeholder;
+      
+      if (dateRangeValue.startDate === dateRangeValue.endDate || !dateRangeValue.endDate) {
+        return formatDateForDisplay(dateRangeValue.startDate);
+      }
+      
+      return `${formatDateForDisplay(dateRangeValue.startDate)} - ${formatDateForDisplay(dateRangeValue.endDate)}`;
+    };
+
+    const hasDateRangeValue = () => {
+      const dateRangeValue = convertToDateRangeFormat(value);
+      return !!(dateRangeValue.startDate && dateRangeValue.startDate.toString().trim());
+    };
+
+    // Editing mode for date-range
+    // if (isEditing || (alwaysShowAsEditable || isRowHovered) && !disabled) {
+      return (
+        <div className="w-full">
+          <FloatingDateRange
+            label={'select Date'}
+            value={convertToDateRangeFormat(isEditing ? editValue : value)}
+            onChange={handleDateRangeChange}
+            singleDateMode={true}
+            // hideLabel={true}
+            hideFloatingLabel={true}
+            saveOnChange={saveOnChange}
+            readOnly={false}
+            autoOpen={isEditing && shouldFocusInput} // Auto-open when entering edit mode
+            {...dateRangeProps}
+          />
+        </div>
+      );
+    // }
+
+    // Hover/clickable mode for date-range
+    if ((alwaysShowAsEditable || isRowHovered) && !disabled) {
+      return (
+        <div className={`cursor-pointer ${className}`} onClick={() => setIsEditing(true)}>
+          <div className="relative">
+            {iconBefore && (
+              <div className="absolute left-2 top-1/2 transform -translate-y-1/2 pointer-events-none z-10">
+                {typeof iconBefore === "function" ? iconBefore(rowValue) : iconBefore}
+              </div>
+            )}
+            <input
+              type="text"
+              value={getDateRangeDisplayValue()}
+              placeholder={placeholder}
+              className={`border border-[#DADBE5] rounded ${iconBefore ? "pl-10 pr-2" : "px-2"} py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors placeholder:text-gray-400`}
+              readOnly
+            />
+          </div>
+        </div>
+      );
     }
-  }, [isEditing, type, shouldFocusInput]);
 
-  const getDisplayValue = () => {
-    if (type === "checkbox") {
-      return value ? "Yes" : "No";
-    }
-    if (type === "date") {
-      return value ? formatDateForDisplay(value) : placeholder;
-    }
-    return value || placeholder;
-  };
-
-  const hasValue = () => {
-    if (type === "checkbox") return true;
-    if (type === "date") {
-      return !!(value && value.toString().trim());
-    }
-    return !!(value && value.toString().trim());
-  };
-
-  const getInputPadding = () => {
-    return iconBefore ? "pl-10 pr-2" : "px-2";
-  };
-
-  const renderIconBefore = () => {
-    if (!iconBefore) return null;
-
+    // Default display mode for date-range
     return (
-      <div className="absolute left-2 top-1/2 transform -translate-y-1/2 pointer-events-none z-10">
-        {typeof iconBefore === "function" ? iconBefore(rowValue) : iconBefore}
+      <div
+        className={`${
+          disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+        } ${className} relative`}
+        onClick={() => !disabled && setIsEditing(true)}
+      >
+        {iconBefore && (
+          <div className="inline-flex items-center">
+            <span className="mr-1">
+              {typeof iconBefore === "function" ? iconBefore() : iconBefore}
+            </span>
+            <span
+              className={`text-xs ${
+                disabled
+                  ? "text-gray-400"
+                  : hasDateRangeValue()
+                  ? "text-[#323A70]"
+                  : "text-gray-400"
+              }`}
+            >
+              {getDateRangeDisplayValue()}
+            </span>
+          </div>
+        )}
+        {!iconBefore && (
+          <span
+            className={`text-xs ${
+              disabled
+                ? "text-gray-400"
+                : hasDateRangeValue()
+                ? "text-[#323A70]"
+                : "text-gray-400"
+            }`}
+          >
+            {getDateRangeDisplayValue()}
+          </span>
+        )}
       </div>
     );
-  };
+  }
+
+  // For all other types, continue with existing logic
+  // (no additional hooks after this point)
+
+  
 
   // Editing mode (for non-select types)
   if (isEditing && !disabled) {
     return (
       <div className="w-full relative">
-        {renderIconBefore()}
+        {iconBefore && (
+          <div className="absolute left-2 top-1/2 transform -translate-y-1/2 pointer-events-none z-10">
+            {typeof iconBefore === "function" ? iconBefore(rowValue) : iconBefore}
+          </div>
+        )}
         {type === "checkbox" ? (
           <div className="flex items-center">
             <input
@@ -766,7 +918,7 @@ const SimpleEditableCell = ({
             onBlur={handleBlur}
             onFocus={() => setIsFocused(true)}
             onClick={handleDateInputClick}
-            className={`border rounded ${getInputPadding()} py-1 text-xs focus:outline-none w-full bg-white text-[#323A70] transition-colors ${
+            className={`border rounded ${iconBefore ? "pl-10 pr-2" : "px-2"} py-1 text-xs focus:outline-none w-full bg-white text-[#323A70] transition-colors ${
               isFocused
                 ? "border-green-500 ring-2 ring-green-500"
                 : "border-[#DADBE5] hover:border-green-400"
@@ -782,7 +934,7 @@ const SimpleEditableCell = ({
             onKeyDown={handleKeyPress}
             onBlur={handleBlur}
             onFocus={() => setIsFocused(true)}
-            className={`border rounded ${getInputPadding()} py-1 text-xs focus:outline-none w-full bg-white text-[#323A70] transition-colors placeholder:text-gray-400 ${
+            className={`border rounded ${iconBefore ? "pl-10 pr-2" : "px-2"} py-1 text-xs focus:outline-none w-full bg-white text-[#323A70] transition-colors placeholder:text-gray-400 ${
               isFocused
                 ? "border-green-500 ring-2 ring-green-500"
                 : "border-[#DADBE5] hover:border-green-400"
@@ -798,7 +950,11 @@ const SimpleEditableCell = ({
     return (
       <div className={`cursor-pointer ${className}`} onClick={handleClick}>
         <div className="relative">
-          {renderIconBefore()}
+          {iconBefore && (
+            <div className="absolute left-2 top-1/2 transform -translate-y-1/2 pointer-events-none z-10">
+              {typeof iconBefore === "function" ? iconBefore(rowValue) : iconBefore}
+            </div>
+          )}
           {type === "checkbox" ? (
             <div className="flex items-center">
               <input
@@ -813,7 +969,7 @@ const SimpleEditableCell = ({
               type={type === "date" ? "text" : type}
               value={type === "date" ? formatDateForDisplay(editValue) : (editValue || "")}
               placeholder={placeholder}
-              className={`border border-[#DADBE5] rounded ${getInputPadding()} py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors placeholder:text-gray-400`}
+              className={`border border-[#DADBE5] rounded ${iconBefore ? "pl-10 pr-2" : "px-2"} py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors placeholder:text-gray-400`}
               readOnly
             />
           )}

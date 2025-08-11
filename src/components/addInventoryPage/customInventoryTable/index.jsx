@@ -1,3 +1,5 @@
+// Complete updated CommonInventoryTable.js with enhanced sticky columns
+
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import {
@@ -7,9 +9,14 @@ import {
   Clock,
   MapPin,
   ChartLine,
+  SquareCheck,
 } from "lucide-react";
 import ChevronRight from "@/components/commonComponents/filledChevron/chevronRight";
 import oneHand from "../../../../public/oneHand.svg";
+import successTick from "../../../../public/success-tick-circle.svg";
+import listUnpublished from "../../../../public/linkedMenuBar.svg";
+import listPublished from "../../../../public/circleTickValue.svg";
+import successWrong from "../../../../public/success-wrong.svg";
 import greenHand from "../../../../public/greenHand.svg";
 import uploadListing from "../../../../public/uploadListing.svg";
 import { MultiSelectEditableCell, SimpleEditableCell } from "../selectCell";
@@ -35,7 +42,6 @@ const CommonInventoryTable = ({
   mode = "single", // "single" for AddInventory, "multiple" for TicketsPage
   showAccordion = true,
   defaultOpen = false,
-  // isCollapsed = false,
   onToggleCollapse,
   filters = {},
   // For multiple matches mode
@@ -45,8 +51,12 @@ const CommonInventoryTable = ({
   getStickyColumnsForRow,
   stickyHeaders = ["", ""],
   stickyColumnsWidth = 100,
-  // NEW: Hide chevron down arrow
+  // Hide chevron down arrow
   hideChevronDown = false,
+  // NEW: Props for edit confirmation
+  pendingEdits = {}, // Object containing pending edits
+  onConfirmEdit, // Function to handle confirm
+  onCancelEdit, // Function to handle cancel
 }) => {
   const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
   const [hasScrolledLeft, setHasScrolledLeft] = useState(false);
@@ -56,7 +66,7 @@ const CommonInventoryTable = ({
   const [showMarketPlaceModal, setShowMarketPlaceModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(defaultOpen ? false : true); // FIXED: Start with accordions closed
+  const [isCollapsed, setIsCollapsed] = useState(defaultOpen ? false : true);
 
   // OPTIMIZED: Dynamic options state with better structure
   const [dynamicOptions, setDynamicOptions] = useState({});
@@ -76,6 +86,48 @@ const CommonInventoryTable = ({
   const mainTableRef = useRef(null);
   const stickyTableRef = useRef(null);
 
+  // NEW: Function to check if row has pending edits
+  const hasPendingEdits = useCallback(
+    (matchIdx, rowIndex) => {
+      const rowKey = `${matchIdx}_${rowIndex}`;
+      return (
+        pendingEdits[rowKey] && Object.keys(pendingEdits[rowKey]).length > 0
+      );
+    },
+    [pendingEdits]
+  );
+
+  // NEW: Dynamic sticky columns width calculation
+  const calculateStickyWidth = useCallback(() => {
+    // Check if any row has pending edits
+    const hasAnyPendingEdits = inventoryData.some((_, rowIndex) =>
+      hasPendingEdits(matchIndex, rowIndex)
+    );
+
+    // If in bulk edit mode, return normal width
+    const isBulkEditMode =
+      isEditMode &&
+      (Array.isArray(editingRowIndex) ? editingRowIndex.length > 1 : false);
+
+    if (isBulkEditMode) {
+      return stickyColumnsWidth;
+    }
+
+    // If any row has pending edits, increase width for confirm/cancel buttons
+    return hasAnyPendingEdits
+      ? Math.max(stickyColumnsWidth, 160)
+      : stickyColumnsWidth;
+  }, [
+    inventoryData,
+    matchIndex,
+    hasPendingEdits,
+    isEditMode,
+    editingRowIndex,
+    stickyColumnsWidth,
+  ]);
+
+  const dynamicStickyWidth = calculateStickyWidth();
+
   // Responsive breakpoint detection
   useEffect(() => {
     const checkScreenSize = () => {
@@ -89,16 +141,14 @@ const CommonInventoryTable = ({
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  // NEW: Handle accordion toggle with smooth animation
+  // Handle accordion toggle with smooth animation
   const handleAccordionToggle = useCallback(() => {
-    if (isAnimating) return; // Prevent multiple rapid clicks during animation
+    if (isAnimating) return;
 
     setIsAnimating(true);
 
     if (isCollapsed) {
-      // Opening accordion
       setIsCollapsed(false);
-      // Set height immediately for measurement
       setTimeout(() => {
         if (contentRef.current) {
           const height = contentRef.current.scrollHeight;
@@ -106,20 +156,17 @@ const CommonInventoryTable = ({
         }
       }, 0);
     } else {
-      // Closing accordion
       if (contentRef.current) {
         setContentHeight(contentRef.current.scrollHeight);
-        // Force reflow
         contentRef.current.offsetHeight;
         setContentHeight(0);
       }
 
       setTimeout(() => {
         setIsCollapsed(true);
-      }, 300); // Match transition duration
+      }, 300);
     }
 
-    // Reset animation state after transition
     setTimeout(() => {
       setIsAnimating(false);
       if (!isCollapsed) {
@@ -128,7 +175,7 @@ const CommonInventoryTable = ({
     }, 300);
   }, [isCollapsed, isAnimating]);
 
-  // NEW: Effect to calculate content height when data changes (only when expanded)
+  // Effect to calculate content height when data changes
   useEffect(() => {
     if (!isCollapsed && contentRef.current) {
       const height = contentRef.current.scrollHeight;
@@ -136,7 +183,7 @@ const CommonInventoryTable = ({
     }
   }, [inventoryData, isCollapsed]);
 
-  // Default sticky columns configuration for single mode (AddInventory)
+  // Default sticky columns configuration for single mode
   const getDefaultStickyColumnsForRow = (rowData, rowIndex) => {
     return [
       {
@@ -172,11 +219,10 @@ const CommonInventoryTable = ({
     ];
   };
 
-  // Use provided getStickyColumnsForRow or default one
   const getStickyColumns =
     getStickyColumnsForRow || getDefaultStickyColumnsForRow;
 
-  // HEAVILY OPTIMIZED: fetchDynamicOptions with better caching and duplicate prevention
+  // HEAVILY OPTIMIZED: fetchDynamicOptions with better caching
   const fetchDynamicOptions = useCallback(
     async (row, header) => {
       if (!header.dynamicOptions) return;
@@ -186,14 +232,10 @@ const CommonInventoryTable = ({
           const matchId = row.rawTicketData?.match_id;
           const categoryId = row.ticket_category_id;
 
-          if (!matchId || !categoryId) {
-            return;
-          }
+          if (!matchId || !categoryId) return;
 
-          // Create a unique cache key for this combination
           const cacheKey = `${header.key}-${matchId}-${categoryId}`;
 
-          // IMPROVED: Check multiple conditions to prevent duplicate calls
           if (
             fetchedOptionsCache.has(cacheKey) ||
             isFetchingOptions.has(cacheKey) ||
@@ -204,7 +246,6 @@ const CommonInventoryTable = ({
             return;
           }
 
-          // Mark as currently being fetched
           setIsFetchingOptions((prev) => new Set([...prev, cacheKey]));
 
           try {
@@ -217,19 +258,15 @@ const CommonInventoryTable = ({
                 : []
             );
 
-            // Update dynamic options
             setDynamicOptions((prev) => ({
               ...prev,
               [header.key]: { matchId, categoryId, options },
             }));
 
-            // Mark as successfully fetched
             setFetchedOptionsCache((prev) => new Set([...prev, cacheKey]));
           } catch (error) {
             console.error("Error fetching dynamic options:", error);
-            // Don't add to cache on error so it can be retried
           } finally {
-            // Remove from currently fetching set
             setIsFetchingOptions((prev) => {
               const newSet = new Set(prev);
               newSet.delete(cacheKey);
@@ -244,19 +281,16 @@ const CommonInventoryTable = ({
     [dynamicOptions, fetchedOptionsCache, isFetchingOptions]
   );
 
-  // HEAVILY OPTIMIZED: Only fetch when accordion opens and only once per unique combination
+  // Effect to fetch dynamic options when accordion opens
   useEffect(() => {
-    // CRITICAL: Only fetch when accordion is open (not collapsed)
     if (isCollapsed || inventoryData.length === 0 || headers.length === 0) {
       return;
     }
 
     const fetchAllDynamicOptions = async () => {
-      // Get unique combinations to avoid duplicate API calls
       const uniqueCombinations = new Map();
       const dynamicHeaders = headers.filter((header) => header.dynamicOptions);
 
-      // Only process if we have dynamic headers
       if (dynamicHeaders.length === 0) return;
 
       for (const row of inventoryData) {
@@ -269,7 +303,6 @@ const CommonInventoryTable = ({
               const uniqueKey = `${matchId}-${categoryId}`;
               const cacheKey = `${header.key}-${matchId}-${categoryId}`;
 
-              // Only add if not already fetched or currently fetching
               if (
                 !fetchedOptionsCache.has(cacheKey) &&
                 !isFetchingOptions.has(cacheKey) &&
@@ -282,18 +315,15 @@ const CommonInventoryTable = ({
         }
       }
 
-      // Fetch options for unique combinations only
       const fetchPromises = Array.from(uniqueCombinations.values()).map(
         ({ row, header }) => fetchDynamicOptions(row, header)
       );
 
-      // Wait for all fetches to complete
       if (fetchPromises.length > 0) {
         await Promise.allSettled(fetchPromises);
       }
     };
 
-    // IMPROVED: Add a small delay to prevent rapid successive calls
     const timeoutId = setTimeout(() => {
       fetchAllDynamicOptions();
     }, 100);
@@ -302,22 +332,22 @@ const CommonInventoryTable = ({
   }, [
     inventoryData,
     headers,
-    isCollapsed, // KEY: Only fetch when not collapsed
+    isCollapsed,
     fetchDynamicOptions,
     fetchedOptionsCache,
     isFetchingOptions,
   ]);
 
-  // OPTIMIZED: Clear cache when component unmounts or data significantly changes
+  // Clear cache when component unmounts or data changes
   useEffect(() => {
     return () => {
       setFetchedOptionsCache(new Set());
       setIsFetchingOptions(new Set());
       setDynamicOptions({});
     };
-  }, [matchDetails?.match_id]); // Reset when match changes
+  }, [matchDetails?.match_id]);
 
-  // Function to check scroll capabilities and update state
+  // Function to check scroll capabilities
   const checkScrollCapabilities = () => {
     if (!scrollContainerRef.current) return;
 
@@ -360,7 +390,7 @@ const CommonInventoryTable = ({
     });
   };
 
-  // Set up scroll event listener
+  // Set up scroll event listeners
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -385,7 +415,7 @@ const CommonInventoryTable = ({
     };
   }, [inventoryData]);
 
-  // Check scroll capabilities when table data changes
+  // Check scroll capabilities when data changes
   useEffect(() => {
     const timer = setTimeout(() => {
       checkScrollCapabilities();
@@ -404,11 +434,9 @@ const CommonInventoryTable = ({
 
       if (mainRows.length !== stickyRows.length) return;
 
-      // Reset heights first
       mainRows.forEach((row) => (row.style.height = "auto"));
       stickyRows.forEach((row) => (row.style.height = "auto"));
 
-      // Sync header heights
       const mainHeaderRow = mainTableRef.current.querySelector("thead tr");
       const stickyHeaderRow = stickyTableRef.current.querySelector("thead tr");
 
@@ -417,7 +445,6 @@ const CommonInventoryTable = ({
         stickyHeaderRow.style.height = `${headerHeight}px`;
       }
 
-      // Sync body row heights
       requestAnimationFrame(() => {
         mainRows.forEach((row, index) => {
           if (index < stickyRows.length) {
@@ -455,7 +482,7 @@ const CommonInventoryTable = ({
     };
   }, [inventoryData]);
 
-  // FIXED: Render editable cell function - removed useState and useEffect hooks
+  // Render editable cell function
   const renderEditableCell = (
     row,
     header,
@@ -463,7 +490,6 @@ const CommonInventoryTable = ({
     isRowHovered,
     isDisabled = false
   ) => {
-    // Check if this row is editable
     const isRowEditable =
       !isEditMode ||
       (Array.isArray(editingRowIndex)
@@ -471,7 +497,6 @@ const CommonInventoryTable = ({
         : editingRowIndex === rowIndex);
     const shouldShowAsEditable = isRowEditable && !isDisabled;
 
-    // Get placeholder text based on header type and label
     const getPlaceholder = () => {
       if (header.type === "select" || header.type === "multiselect") {
         return "Select...";
@@ -514,10 +539,10 @@ const CommonInventoryTable = ({
             handleCellEdit(rowIndex, header.key, value, row, matchIndex)
           }
           className={header.className || ""}
-          isRowHovered={shouldShowAsEditable} // CHANGED: Always true when editable
+          isRowHovered={shouldShowAsEditable}
           disabled={!isRowEditable || isDisabled}
           placeholder="Select options..."
-          alwaysShowAsEditable={true} // NEW: Add this prop
+          alwaysShowAsEditable={true}
         />
       );
     }
@@ -532,11 +557,11 @@ const CommonInventoryTable = ({
           handleCellEdit(rowIndex, header.key, value, row, matchIndex)
         }
         className={header.className || ""}
-        isRowHovered={shouldShowAsEditable} // CHANGED: Always true when editable
+        isRowHovered={shouldShowAsEditable}
         disabled={!isRowEditable || isDisabled}
         placeholder={getPlaceholder()}
         iconBefore={header.iconBefore || null}
-        alwaysShowAsEditable={true} // NEW: Add this prop
+        alwaysShowAsEditable={true}
       />
     );
   };
@@ -566,7 +591,7 @@ const CommonInventoryTable = ({
       ref={containerRef}
       className="border border-gray-200 rounded-lg overflow-hidden relative shadow-sm"
     >
-      {/* Accordion Header - Always show when showAccordion is true */}
+      {/* Accordion Header */}
       {showAccordion && (
         <div
           className="bg-[#343432] cursor-pointer"
@@ -574,7 +599,6 @@ const CommonInventoryTable = ({
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6">
-              {/* Radio button for single mode, chevron for multiple mode */}
               {mode === "single" ? (
                 <div
                   className={`flex ${
@@ -597,7 +621,6 @@ const CommonInventoryTable = ({
                 </div>
               ) : null}
 
-              {/* Match name with pipe separator */}
               <div
                 className={`flex items-center space-x-2 sm:space-x-4 ${
                   isMobile
@@ -619,7 +642,6 @@ const CommonInventoryTable = ({
                 </h3>
               </div>
 
-              {/* Match details with pipe separators and more spacing */}
               <div
                 className={`flex items-center ${
                   isMobile ? "space-x-2" : "space-x-4 sm:space-x-6"
@@ -676,8 +698,35 @@ const CommonInventoryTable = ({
                 isMobile ? "space-x-2 pr-2" : "space-x-4 pr-4"
               }`}
             >
+              {matchDetails?.unPublishedTickets && (
+                <div className="flex w-[30px] gap-1 items-center">
+                  <Image
+                    src={listUnpublished}
+                    width={20}
+                    height={20}
+                    alt="logo"
+                  />
+                  <span className={`text-white  text-[12px] text-right`}>
+                    {matchDetails?.unPublishedTickets}
+                  </span>
+                </div>
+              )}
+              {matchDetails?.publishedTickets && (
+                <div className="flex gap-1 w-[30px] items-center">
+                  <Image
+                    src={listPublished}
+                    width={20}
+                    height={20}
+                    alt="logo"
+                  />
+                  <span className={`text-white text-[12px] text-right`}>
+                    {matchDetails?.publishedTickets}
+                  </span>
+                </div>
+              )}
+
               {mode === "multiple" && totalTicketsCount && (
-                <div className="flex gap-1 items-center">
+                <div className="flex gap-1 w-[30px] items-center">
                   <Image
                     src={ticketService}
                     width={16}
@@ -702,8 +751,6 @@ const CommonInventoryTable = ({
                 </button>
               )}
 
-              {/* Show ticket count for multiple mode */}
-
               <div
                 className={`bg-[#FFFFFF26] ${
                   isMobile ? "p-1.5" : "p-2"
@@ -723,7 +770,7 @@ const CommonInventoryTable = ({
         </div>
       )}
 
-      {/* NEW: Animated Table Content Container */}
+      {/* Animated Table Content Container */}
       <div
         ref={contentRef}
         className="overflow-hidden transition-all duration-300 ease-in-out"
@@ -799,10 +846,6 @@ const CommonInventoryTable = ({
                             ? "bg-[#EEF1FD]"
                             : "bg-white hover:bg-gray-50"
                         } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
-                        // onMouseEnter={() =>
-                        //   !isRowDisabled && setHoveredRowIndex(rowIndex)
-                        // }
-                        // onMouseLeave={() => setHoveredRowIndex(null)}
                       >
                         <td
                           className={`${
@@ -848,7 +891,7 @@ const CommonInventoryTable = ({
             className="w-full overflow-x-auto hideScrollbar"
             style={{
               paddingLeft: isMobile ? `40px` : `50px`,
-              paddingRight: `${stickyColumnsWidth}px`,
+              paddingRight: `${dynamicStickyWidth}px`,
             }}
           >
             <table
@@ -897,10 +940,6 @@ const CommonInventoryTable = ({
                           ? "bg-[#EEF1FD]"
                           : "bg-white hover:bg-gray-50"
                       } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
-                      // onMouseEnter={() =>
-                      //   !isRowDisabled && setHoveredRowIndex(rowIndex)
-                      // }
-                      // onMouseLeave={() => setHoveredRowIndex(null)}
                     >
                       {headers.map((header) => (
                         <td
@@ -952,7 +991,7 @@ const CommonInventoryTable = ({
             className={`absolute top-0 right-0 h-full bg-white border-l border-[#DADBE5] z-20 transition-shadow duration-200 ${
               hasScrolled ? "shadow-md" : ""
             }`}
-            style={{ width: `${stickyColumnsWidth}px` }}
+            style={{ width: `${dynamicStickyWidth}px` }}
           >
             <div className="h-full">
               <table
@@ -961,6 +1000,7 @@ const CommonInventoryTable = ({
               >
                 <thead>
                   <tr className="bg-gray-50 border-b border-[#DADBE5]">
+                    {/* Always show 4 headers for consistency */}
                     {stickyHeaders.map((header, index) => (
                       <th
                         key={`sticky-header-${index}`}
@@ -968,24 +1008,23 @@ const CommonInventoryTable = ({
                           isMobile ? "py-1.5 px-1" : "py-2 px-2"
                         } text-left text-[#7D82A4] ${
                           isMobile ? "text-[10px]" : "text-xs"
-                        }  whitespace-nowrap text-center`}
+                        } whitespace-nowrap text-center`}
                         style={{
                           width: `${
-                            stickyColumnsWidth / stickyHeaders.length
+                            dynamicStickyWidth / stickyHeaders.length
                           }px`,
                           minWidth: `${
-                            stickyColumnsWidth / stickyHeaders.length
+                            dynamicStickyWidth / stickyHeaders.length
                           }px`,
                           maxWidth: `${
-                            stickyColumnsWidth / stickyHeaders.length
+                            dynamicStickyWidth / stickyHeaders.length
                           }px`,
                         }}
                       >
                         <div className="flex items-center justify-center">
-                          {/* CONDITIONAL: Only show scroll buttons if not hiding chevron down */}
                           {!hideChevronDown &&
                             index === stickyHeaders.length - 1 && (
-                              <div className="flex items-center justify-center ">
+                              <div className="flex items-center justify-center">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -1042,6 +1081,19 @@ const CommonInventoryTable = ({
                         ? !editingRowIndex.includes(rowIndex)
                         : editingRowIndex !== rowIndex);
                     const isSelected = selectedRows.includes(rowIndex);
+
+                    // Check if this specific row has pending edits
+                    const hasRowPendingEdits = hasPendingEdits(
+                      matchIndex,
+                      rowIndex
+                    );
+                    const isBulkEditMode =
+                      isEditMode &&
+                      (Array.isArray(editingRowIndex)
+                        ? editingRowIndex.length > 1
+                        : false);
+
+                    // Get sticky columns (always the original 4 columns)
                     const stickyColumns = getStickyColumns(row, rowIndex);
 
                     return (
@@ -1051,38 +1103,89 @@ const CommonInventoryTable = ({
                           isSelected
                             ? "bg-[#EEF1FD]"
                             : "bg-white hover:bg-gray-50"
-                        } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
+                        } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""} `}
                       >
-                        {stickyColumns.map((column, colIndex) => (
-                          <td
-                            key={`sticky-${rowIndex}-${colIndex}`}
-                            className={`${
-                              isMobile ? "py-1.5 text-xs" : "py-2 text-sm"
-                            } align-middle text-center ${
-                              colIndex < stickyColumns.length - 1
-                                ? "border-r border-[#DADBE5]"
-                                : ""
-                            } ${isRowDisabled ? "pointer-events-none" : ""} ${
-                              isSelected ? "bg-[#EEF1FD]" : ""
-                            } ${column.className || ""}`}
-                            style={{
-                              width: `${
-                                stickyColumnsWidth / stickyHeaders.length
-                              }px`,
-                              minWidth: `${
-                                stickyColumnsWidth / stickyHeaders.length
-                              }px`,
-                              maxWidth: `${
-                                stickyColumnsWidth / stickyHeaders.length
-                              }px`,
-                            }}
-                            onClick={column.onClick}
-                          >
-                            <div className="flex justify-center items-center h-full">
-                              {column.icon}
-                            </div>
-                          </td>
-                        ))}
+                        {hasRowPendingEdits && !isBulkEditMode ? (
+                          // For rows with pending edits: show 2 columns with colspan=2 each (centered)
+                          <>
+                            <td
+                              colSpan={2}
+                              className={`${
+                                isMobile ? " text-xs" : " text-sm"
+                              } align-middle text-left ${
+                                isRowDisabled ? "pointer-events-none" : ""
+                              } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
+                            >
+                              <div className="flex justify-end pr-2 items-center h-full">
+                                <div
+                                  onClick={() =>
+                                    onCancelEdit(matchIndex, rowIndex)
+                                  }
+                                  title="Cancel Changes"
+                                >
+                                  <Image
+                                    src={successWrong}
+                                    width={24}
+                                    height={24}
+                                    alt="tick"
+                                    className="cursor-pointer  transition-colors"
+                                  />
+                                </div>
+                              </div>
+                            </td>
+                            <td colSpan={2} className={``}>
+                              <div className="flex justify-start pl-2 items-center h-full">
+                                <div
+                                  className=""
+                                  onClick={() =>
+                                    onConfirmEdit(matchIndex, rowIndex)
+                                  }
+                                  title="Confirm Changes"
+                                >
+                                  <Image
+                                    src={successTick}
+                                    width={24}
+                                    height={24}
+                                    alt="tick"
+                                    className="cursor-pointer  transition-colors"
+                                  />
+                                </div>
+                              </div>
+                            </td>
+                          </>
+                        ) : (
+                          // For normal rows: show original 4 columns
+                          stickyColumns.map((column, colIndex) => (
+                            <td
+                              key={`sticky-${rowIndex}-${colIndex}`}
+                              className={`${
+                                isMobile ? "py-1.5 text-xs" : "py-2 text-sm"
+                              } align-middle text-center ${
+                                colIndex < stickyColumns.length - 1
+                                  ? "border-r border-[#DADBE5]"
+                                  : ""
+                              } ${isRowDisabled ? "pointer-events-none" : ""} ${
+                                isSelected ? "bg-[#EEF1FD]" : ""
+                              } ${column.className || ""}`}
+                              style={{
+                                width: `${
+                                  dynamicStickyWidth / stickyColumns.length
+                                }px`,
+                                minWidth: `${
+                                  dynamicStickyWidth / stickyColumns.length
+                                }px`,
+                                maxWidth: `${
+                                  dynamicStickyWidth / stickyColumns.length
+                                }px`,
+                              }}
+                              onClick={column.onClick}
+                            >
+                              <div className="flex justify-center items-center h-full">
+                                {column.icon}
+                              </div>
+                            </td>
+                          ))
+                        )}
                       </tr>
                     );
                   })}
