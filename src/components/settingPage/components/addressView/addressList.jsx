@@ -18,7 +18,7 @@ const AddressList = ({ handleEditClick, handleDeleteClick, item, index }) => {
             }}
             className="cursor-pointer"
           >
-            <IconStore.pencilEdit className="size-4 stroke-2 cursor-pointer stroke-[#130061]" />
+            <IconStore.pencilEdit className="size-4 stroke-2 cursor-pointer stroke-[#000000]" />
           </div>
           <div
             onClick={() => {
@@ -26,7 +26,7 @@ const AddressList = ({ handleEditClick, handleDeleteClick, item, index }) => {
             }}
             className="cursor-pointer"
           >
-            <IconStore.trash className="size-4 stroke-2 cursor-pointer stroke-[#130061]" />
+            <IconStore.trash className="size-4 stroke-2 cursor-pointer stroke-[#000000]" />
           </div>
         </div>
       </div>
