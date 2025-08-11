@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 import FooterButton from "@/components/footerButton";
 import { InfoIcon } from "lucide-react";
 import useCountryCodes from "@/Hooks/useCountryCodes";
+import { getCookie } from "@/utils/helperFunctions/cookie";
 
 const AddEditUser = ({
   onClose,
@@ -35,6 +36,7 @@ const AddEditUser = ({
   const [loader, setLoader] = useState(false);
   const [phoneCodeOptions, setPhoneCodeOptions] = useState([]);
   const [permissionValues, setPermissionValues] = useState([]);
+  const [showPermissions, setShowPermissions] = useState(true);
 
   // Convert existing permissions string to array for edit mode
   const existingPermissions = permissions;
@@ -72,6 +74,7 @@ const AddEditUser = ({
   };
 
   const getPermission = async () => {
+    const user_token = getCookie("user_token") || "";
     try {
       const permission = await getAllPermissions();
       const permissionKeys = permission?.permissions?.map((item) => {
@@ -81,6 +84,9 @@ const AddEditUser = ({
         };
       });
       setPermissionValues(permissionKeys || []);
+      if(userDetails.id == user_token){
+        setShowPermissions(false);
+      }
     } catch (error) {
       console.error("Error fetching permissions:", error);
       toast.error("Failed to load permissions");
@@ -329,9 +335,20 @@ const AddEditUser = ({
     setLoader(true);
 
     // Convert permissions array to comma-separated string
-    const permissionsString = Array.isArray(formFieldValues.permissions)
-      ? formFieldValues.permissions.join(",")
-      : "";
+    // const permissionsString = Array.isArray(formFieldValues.permissions)
+    //   ? formFieldValues.permissions.join(",")
+    //   : "";
+
+    let permissionsArray;
+    if (!showPermissions && userFormFields[6]?.[0]?.options) {
+      permissionsArray = userFormFields[6][0].options.map(opt => opt.value);
+    } else {
+      permissionsArray = Array.isArray(formFieldValues.permissions)
+        ? formFieldValues.permissions
+        : [];
+    }
+
+    const permissionsString = permissionsArray.join(",");
 
     const payload = {
       ...(editType && { user_id: id }),
@@ -412,10 +429,11 @@ const AddEditUser = ({
           <FormFields formFields={[userFormFields[5][0]]} />
         </div>
 
-        {/* Permissions */}
-        <div className="w-full">
+          {/* Permissions */}
+        <div className={`w-full ${showPermissions ? "block" : "hidden"}`}>
           <FormFields formFields={[userFormFields[6][0]]} />
         </div>
+        
       </div>
 
       <FooterButton
