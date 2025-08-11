@@ -28,6 +28,7 @@ const OrderInfo = ({
   type = "",
   showShimmer = false,
   ticketTypesList = [],
+  hideExpand = false,
 } = {}) => {
   const [expandedVersion, setExpandedVersion] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -465,17 +466,19 @@ const OrderInfo = ({
                   isTransitioning ? "opacity-50" : "opacity-100"
                 }`}
               >
-                {expandedVersion ? (
-                  <Shrink
-                    className="w-4 h-4 text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-200"
-                    onClick={handleCollapseModal}
-                  />
-                ) : (
-                  <Expand
-                    className="w-4 h-4 text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-200"
-                    onClick={handleCollapseModal}
-                  />
-                )}
+                {!hideExpand ? (
+                  expandedVersion ? (
+                    <Shrink
+                      className="w-4 h-4 text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-200"
+                      onClick={handleCollapseModal}
+                    />
+                  ) : (
+                    <Expand
+                      className="w-4 h-4 text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-200"
+                      onClick={handleCollapseModal}
+                    />
+                  )
+                ) : null}
               </div>
 
               <X

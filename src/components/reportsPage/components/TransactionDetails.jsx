@@ -441,6 +441,7 @@ const TransactionDetailsPopup = ({
         refreshPopupData={refreshPopupData}
         type="sales"
         showShimmer={eyeViewPopup?.isLoading}
+        hideExpand={true}
       />
     </RightViewModal>
   );
