@@ -28,6 +28,7 @@ const OrderInfo = ({
   type = "",
   showShimmer = false,
   ticketTypesList = [],
+  mySalesPage=false
 } = {}) => {
   const [expandedVersion, setExpandedVersion] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -540,7 +541,7 @@ const OrderInfo = ({
             {/* Add AttendeeDetails component */}
             {attendee_details && attendee_details.length > 0 && (
               <div className="transition-all duration-300 ease-in-out">
-                <AttendeeDetails attendee_details={attendee_details} />
+                <AttendeeDetails attendee_details={attendee_details} mySalesPage={mySalesPage} expandedVersion={expandedVersion}/>
               </div>
             )}
           </div>

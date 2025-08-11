@@ -1,6 +1,10 @@
 import React from "react";
 
-const AttendeeDetails = ({ attendee_details = [] }) => {
+const AttendeeDetails = ({
+  attendee_details = [],
+  mySalesPage,
+  expandedVersion,
+}) => {
   if (!attendee_details || attendee_details.length === 0) {
     return (
       <div className="border border-gray-200 rounded-lg p-4">
@@ -45,13 +49,17 @@ const AttendeeDetails = ({ attendee_details = [] }) => {
               <th className="text-left py-2 px-2 font-medium text-gray-700">
                 Date of Birth
               </th>
-
               <th className="text-left py-2 px-2 font-medium text-gray-700">
                 Nationality
               </th>
               <th className="text-left py-2 px-2 font-medium text-gray-700">
                 City
               </th>
+              {expandedVersion && (
+                <th className="text-left py-2 px-2 font-medium text-gray-700">
+                  Status
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>

@@ -911,6 +911,7 @@ const SalesPage = (props) => {
         refreshPopupData={refreshPopupData}
         type="sales"
         showShimmer={showInfoPopup?.isLoading}
+        mySalesPage={true}
       />
 
       {showUploadPopup?.show && (
