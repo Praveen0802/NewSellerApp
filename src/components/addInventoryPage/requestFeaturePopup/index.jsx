@@ -49,6 +49,7 @@ const RequestEvent = ({ show, onClose }) => {
     {
       type: "date",
       value: values?.eventDate,
+      singleDateMode: true,
       onChange: (e) => {
         setValues({ ...values, eventDate: e });
         // Clear error when user selects date
@@ -58,7 +59,7 @@ const RequestEvent = ({ show, onClose }) => {
       },
       name: "eventDate",
       label: "Event Date",
-      className: "!py-[7px] !px-[12px] !text-[#343432] !text-[14px]",
+      className: "!py-[10px] !px-[12px] !text-[#343432] !text-[14px]",
       error: errors.eventDate,
     },
   ];
@@ -94,7 +95,9 @@ const RequestEvent = ({ show, onClose }) => {
 
   const handleSubmitClick = async () => {
     if (!validateFields()) {
-      toast.error('Please fill in all required fields', { position: 'top-center' });
+      toast.error("Please fill in all required fields", {
+        position: "top-center",
+      });
       return;
     }
 
@@ -105,10 +108,12 @@ const RequestEvent = ({ show, onClose }) => {
         event_date: values?.eventDate?.startDate,
         event_location: values?.matchLocation,
       };
-      
+
       const response = await requestMatchEvent("", payload);
-      toast.success('Event request submitted successfully!', { position: 'top-center' });
-      
+      toast.success("Event request submitted successfully!", {
+        position: "top-center",
+      });
+
       // Reset form after successful submission
       setValues({
         matchName: "",
@@ -116,10 +121,12 @@ const RequestEvent = ({ show, onClose }) => {
         eventDate: "",
       });
       setErrors({});
-      
+
       onClose();
     } catch (error) {
-      toast.error('Failed to submit event request. Please try again.', { position: 'top-center' });
+      toast.error("Failed to submit event request. Please try again.", {
+        position: "top-center",
+      });
     } finally {
       setLoader(false);
     }
@@ -152,7 +159,7 @@ const RequestEvent = ({ show, onClose }) => {
             disabled={!isFormValid() || loader}
             loading={loader}
           >
-            {loader ? 'Submitting...' : 'Confirm'}
+            {loader ? "Submitting..." : "Confirm"}
           </Button>
         </div>
       </div>
