@@ -37,6 +37,7 @@ const CommonInventoryTable = ({
   defaultOpen = false,
   // isCollapsed = false,
   onToggleCollapse,
+  filters={},
   // For multiple matches mode
   matchIndex,
   totalTicketsCount,
@@ -1098,6 +1099,7 @@ const CommonInventoryTable = ({
           show={showMarketPlaceModal}
           onClose={() => setShowMarketPlaceModal(false)}
           matchInfo={matchDetails}
+          filters={filters}
         />
       )}
     </div>

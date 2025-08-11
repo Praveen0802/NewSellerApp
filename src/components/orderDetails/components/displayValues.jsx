@@ -62,8 +62,8 @@ const DisplayValues = ({
 
     // Get the current ticket type to display
     const currentTicketType = ticketTypesList.find(
-      (ticket) => 
-        ticket.label === ticketType || 
+      (ticket) =>
+        ticket.label === ticketType ||
         ticket.value === ticketType ||
         ticket.value === orderObject?.ticket_type_id
     );
@@ -76,8 +76,34 @@ const DisplayValues = ({
       displayTicketType,
       ticketTypesList,
       showEditIcon,
-      ticketTypesListLength: ticketTypesList?.length
+      ticketTypesListLength: ticketTypesList?.length,
     });
+
+    const getStatusBadgeColor = () => {
+      const lowerCaseValue = value?.toLowerCase();
+      if (["delivered", "active", "confirmed"].includes(lowerCaseValue)) {
+        return "bg-[#03BA8A]";
+      } else if (["paid"].includes(lowerCaseValue)) {
+        return "bg-[#00A3ED]";
+      } else if (["cancelled"].includes(lowerCaseValue)) {
+        return "bg-[#F3024B]";
+      } else {
+        return "bg-[#F57B1B]";
+      }
+    };
+
+    const getTicketTypeBadgeColor = () => {
+      const lowerCaseValue = value?.toLowerCase();
+      if (["delivered", "active", "confirmed"].includes(lowerCaseValue)) {
+        return "bg-[#E6F9F4]";
+      } else if (["paid"].includes(lowerCaseValue)) {
+        return "bg-[#E6F6FE]";
+      } else if (["cancelled"].includes(lowerCaseValue)) {
+        return "bg-[#FDEFF2]";
+      } else {
+        return "bg-[#FFF4EC]";
+      }
+    };
 
     return (
       <div className="flex flex-col gap-1">
@@ -86,12 +112,7 @@ const DisplayValues = ({
           <div className="flex items-center">
             {/* Order Status Badge */}
             <span
-              className={`${
-                value?.toLowerCase() === "delivered" ||
-                value?.toLowerCase() === "active"
-                  ? "bg-green-600"
-                  : "bg-[#F57B1B]"
-              } text-white px-2 py-1 rounded-l-md text-sm font-normal`}
+              className={`${getStatusBadgeColor()} text-white px-2 py-1 rounded-l-md text-sm font-normal`}
             >
               {value}
             </span>
@@ -100,20 +121,15 @@ const DisplayValues = ({
             {ticketType && (
               <div className="flex items-center gap-2 w-full">
                 <span
-                  className={`${
-                    value?.toLowerCase() === "delivered" ||
-                    value?.toLowerCase() === "active"
-                      ? "bg-[#E6F9F4]"
-                      : "bg-[#FFF4EC]"
-                  } text-[#343432] px-2 w-full py-1 text-sm font-normal ${
+                  className={`${getTicketTypeBadgeColor()} text-[#343432] px-2 w-full py-1 text-sm font-normal ${
                     showEditIcon ? "" : "rounded-r-md"
                   }`}
                 >
                   {/* Find the current ticket type label from the list */}
                   {showEditIcon
                     ? ticketTypesList.find(
-                        (ticket) => 
-                          ticket.label === ticketType || 
+                        (ticket) =>
+                          ticket.label === ticketType ||
                           ticket.value === ticketType ||
                           ticket.value === orderObject?.ticket_type_id
                       )?.label || ticketType
@@ -124,7 +140,7 @@ const DisplayValues = ({
                 {showEditIcon && (
                   <button
                     onClick={handleEditClick}
-                    className={`p-2 bg-[#0137D5] rounded-md transition-colors border-l border-gray-200`}
+                    className={`p-2 bg-[#343432] rounded-md transition-colors border-l border-gray-200`}
                     title="Edit ticket type"
                   >
                     <SquarePen className="size-3 text-white " />
@@ -139,11 +155,11 @@ const DisplayValues = ({
             <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
               <div className="py-1">
                 {ticketTypesList.map((ticketTypeOption) => {
-                  const isCurrentType = 
-                    ticketTypeOption.label === ticketType || 
+                  const isCurrentType =
+                    ticketTypeOption.label === ticketType ||
                     ticketTypeOption.value === ticketType ||
                     ticketTypeOption.value === orderObject?.ticket_type_id;
-                  
+
                   return (
                     <button
                       key={ticketTypeOption.value}

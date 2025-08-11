@@ -86,10 +86,11 @@ const EmptyState = () => {
   );
 };
 
-const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
+const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
   const [listValueData, setListvalueData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  console.log(filters,'filtersfilters')
   const getInsightsData = async () => {
     try {
       setIsLoading(true);
@@ -165,13 +166,12 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
   const handlePriceChange = (ticketId, value) => {
     // Allow only numbers and decimal point
     const cleanValue = value.replace(/[^0-9.]/g, "");
-    
+
     // Prevent multiple decimal points
-    const parts = cleanValue.split('.');
-    const formattedValue = parts.length > 2 
-      ? parts[0] + '.' + parts.slice(1).join('')
-      : cleanValue;
-    
+    const parts = cleanValue.split(".");
+    const formattedValue =
+      parts.length > 2 ? parts[0] + "." + parts.slice(1).join("") : cleanValue;
+
     setEditPrices({
       ...editPrices,
       [ticketId]: formattedValue,
@@ -351,14 +351,20 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
                       key={item.ticket_id || index}
                       className="flex border-b border-gray-200 hover:bg-gray-50"
                     >
-                      <div className="p-3 text-sm w-32 truncate" title={item.block_id}>
+                      <div
+                        className="p-3 text-sm w-32 truncate"
+                        title={item.block_id}
+                      >
                         {item.block_id || "-"}
                       </div>
                       <div className="p-3 text-sm w-20">-</div>
                       <div className="p-3 text-sm w-24">
                         {item.quantity || "-"}
                       </div>
-                      <div className="p-3 text-sm w-24 truncate" title={item.ticket_category}>
+                      <div
+                        className="p-3 text-sm w-24 truncate"
+                        title={item.ticket_category}
+                      >
                         {item.ticket_category || "-"}
                       </div>
                       <div className="p-3 text-sm w-32">
@@ -401,15 +407,19 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
                           <div className="flex items-center justify-between group">
                             <span
                               className={`${
-                                item.flag === 1 
-                                  ? "cursor-pointer hover:text-blue-600 transition-colors" 
+                                item.flag === 1
+                                  ? "cursor-pointer hover:text-blue-600 transition-colors"
                                   : "text-gray-700"
                               }`}
                               onClick={() =>
                                 item.flag === 1 &&
                                 startEditPrice(item.ticket_id, item.price)
                               }
-                              title={item.flag === 1 ? "Click to edit price" : "Price not editable"}
+                              title={
+                                item.flag === 1
+                                  ? "Click to edit price"
+                                  : "Price not editable"
+                              }
                             >
                               {item.price || "-"}
                             </span>
@@ -428,7 +438,10 @@ const ListingsMarketplace = ({ show, onClose, matchInfo }) => {
                         )}
                       </div>
                       <div className="p-3 text-sm flex-1 flex items-center justify-between">
-                        <span className="truncate pr-2" title={getBenefitsText(item.ticket_details)}>
+                        <span
+                          className="truncate pr-2"
+                          title={getBenefitsText(item.ticket_details)}
+                        >
                           {getBenefitsText(item.ticket_details)}
                         </span>
                         <button className="text-gray-400 flex-shrink-0">

@@ -304,7 +304,7 @@ const TicketsPage = (props) => {
 
   // MAIN STATE: Using ticketsByMatch instead of ticketsData
   const [ticketsByMatch, setTicketsByMatch] = useState({});
-
+  console.log(ticketsByMatch, "ticketsByMatchticketsByMatch");
   // Mock data based on your JSON structure
   const mockListingHistory = useMemo(
     () => listingHistoryData?.data || listingHistoryData || [],
@@ -1731,6 +1731,7 @@ const TicketsPage = (props) => {
               match_id: matchData.matchInfo?.m_id,
               tournament_name: matchData.matchInfo?.tournament_name,
             }}
+            filters={matchData.filters}
             isEditMode={isGlobalEditMode}
             editingRowIndex={
               isGlobalEditMode
