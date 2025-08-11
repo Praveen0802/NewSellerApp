@@ -153,47 +153,14 @@ const TableView = (props) => {
                         onClick={() => handleEditClick(user)}
                         className="text-[#343432] cursor-pointer hover:text-[#130061]"
                       >
-                        <IconStore.pencilEdit className="size-4 stroke-[#130061]" />
+                        <IconStore.pencilEdit className="size-4 stroke-2 stroke-[#000000]" />
                       </button>
                       {user?.is_primary != 1 && (
                         <button
                           onClick={() => handleDeleteClick(user)}
                           className="text-[#343432] hover:text-red-600 cursor-pointer"
                         >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="10"
-                            height="12.5"
-                            viewBox="0 0 10 12.5"
-                            className="w-2.5 h-[.8125rem]"
-                          >
-                            <g
-                              id="Group_24"
-                              data-name="Group 24"
-                              transform="translate(-433.5 -128.5)"
-                            >
-                              <path
-                                id="Rectangle_71"
-                                data-name="Rectangle 71"
-                                d="M0,0H9A0,0,0,0,1,9,0V8A1,1,0,0,1,8,9H1A1,1,0,0,1,0,8V0A0,0,0,0,1,0,0Z"
-                                transform="translate(434 132)"
-                              ></path>
-                              <rect
-                                id="Rectangle_72"
-                                data-name="Rectangle 72"
-                                width="10"
-                                height="1.5"
-                                transform="translate(433.5 129.5)"
-                              ></rect>
-                              <rect
-                                id="Rectangle_73"
-                                data-name="Rectangle 73"
-                                width="5"
-                                height="2"
-                                transform="translate(436 128.5)"
-                              ></rect>
-                            </g>
-                          </svg>
+                          <IconStore.trash className="size-4 stroke-2 stroke-[#000000]" />
                         </button>
                       )}
                     </div>

@@ -104,20 +104,19 @@ const AddEditUser = ({
       "email",
       "phone_number",
       "country_code",
-      "password",
-      "confirm_password",
     ];
 
     // Check if all required fields are filled
     const fieldsValid = requiredFields.every((field) => formFieldValues[field]);
 
     // Check password validations
-    const passwordMinLength =
-      formFieldValues.password && formFieldValues.password.length >= 8;
-    const passwordsMatch =
-      formFieldValues.password === formFieldValues.confirm_password;
+    // const passwordMinLength =
+    //   formFieldValues.password && formFieldValues.password.length >= 8;
+    // const passwordsMatch =
+    //   formFieldValues.password === formFieldValues.confirm_password;
 
-    return fieldsValid && passwordMinLength && passwordsMatch;
+    // return fieldsValid && passwordMinLength && passwordsMatch;
+    return fieldsValid;
   };
 
   // Helper function to get password error message
@@ -265,7 +264,7 @@ const AddEditUser = ({
         label: "Password",
         type: "password",
         id: "password",
-        mandatory: true,
+        mandatory: false,
         name: "password",
         value: formFieldValues?.password,
         onChange: (e) => handleChange(e, "password"),
@@ -288,7 +287,7 @@ const AddEditUser = ({
         label: "Confirm Password",
         type: "password",
         id: "confirm_password",
-        mandatory: true,
+        mandatory: false,
         name: "confirm_password",
         value: formFieldValues?.confirm_password,
         onChange: (e) => handleChange(e, "confirm_password"),
