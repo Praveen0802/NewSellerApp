@@ -297,24 +297,32 @@ const OrderInfo = ({
     return date.toLocaleDateString("en-US", options);
   }
 
+  function getOrderStatus() {
+    const { order_status_label = null, order_status = null } =
+      order_details ?? {};
+    if (order_status_label) {
+      return order_status_label;
+    }
+    return order_status === 1
+      ? "Active"
+      : order_status === null
+      ? "Pending"
+      : "Inactive";
+  }
+
   // Format order object for OrderValues component
   const orderObject = {
     order_id: order_details?.booking_no || order_details?.order_id,
     order_date: order_details?.order_date
       ? formatTimestamp(order_details?.order_date)
       : "-",
-    order_status:
-      order_details?.order_status === 1
-        ? "Active"
-        : order_details?.order_status === null
-        ? "Pending"
-        : "Inactive",
+    order_status: getOrderStatus?.(),
     delivered_by: order_details?.delivered_by || "Not specified",
-    delivery_details:order_details?.delivery_status_label,
+    delivery_details: order_details?.delivery_status_label,
     days_to_event: order_details?.days_in_event,
     ticket_type: ticket_details?.[0]?.ticket_types,
   };
-console.log(orderObject,'orderObjectorderObject')
+  console.log(orderObject, "orderObjectorderObject");
   // Format customer details - prioritize attendee details, then user address, then address
   const attendee = attendee_details?.[0];
 
