@@ -37,7 +37,7 @@ const CommonInventoryTable = ({
   defaultOpen = false,
   // isCollapsed = false,
   onToggleCollapse,
-  filters={},
+  filters = {},
   // For multiple matches mode
   matchIndex,
   totalTicketsCount,
@@ -48,7 +48,6 @@ const CommonInventoryTable = ({
   // NEW: Hide chevron down arrow
   hideChevronDown = false,
 }) => {
-  console.log(matchDetails, "matchDetailsmatchDetails");
   const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
   const [hasScrolledLeft, setHasScrolledLeft] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -466,11 +465,11 @@ const CommonInventoryTable = ({
   ) => {
     // Check if this row is editable
     const isRowEditable =
-    !isEditMode ||
-    (Array.isArray(editingRowIndex)
-      ? editingRowIndex.includes(rowIndex)
-      : editingRowIndex === rowIndex);
-      const shouldShowAsEditable = isRowEditable && !isDisabled;
+      !isEditMode ||
+      (Array.isArray(editingRowIndex)
+        ? editingRowIndex.includes(rowIndex)
+        : editingRowIndex === rowIndex);
+    const shouldShowAsEditable = isRowEditable && !isDisabled;
 
     // Get placeholder text based on header type and label
     const getPlaceholder = () => {
@@ -506,41 +505,41 @@ const CommonInventoryTable = ({
         ? dynamicOptions[header.key]?.options
         : header.options) || [];
 
-        if (header.type === "multiselect") {
-          return (
-            <MultiSelectEditableCell
-              value={row[header.key]}
-              options={header.options || []}
-              onSave={(value) =>
-                handleCellEdit(rowIndex, header.key, value, row, matchIndex)
-              }
-              className={header.className || ""}
-              isRowHovered={shouldShowAsEditable} // CHANGED: Always true when editable
-              disabled={!isRowEditable || isDisabled}
-              placeholder="Select options..."
-              alwaysShowAsEditable={true} // NEW: Add this prop
-            />
-          );
+    if (header.type === "multiselect") {
+      return (
+        <MultiSelectEditableCell
+          value={row[header.key]}
+          options={header.options || []}
+          onSave={(value) =>
+            handleCellEdit(rowIndex, header.key, value, row, matchIndex)
+          }
+          className={header.className || ""}
+          isRowHovered={shouldShowAsEditable} // CHANGED: Always true when editable
+          disabled={!isRowEditable || isDisabled}
+          placeholder="Select options..."
+          alwaysShowAsEditable={true} // NEW: Add this prop
+        />
+      );
+    }
+
+    return (
+      <SimpleEditableCell
+        rowValue={row}
+        value={row[header.key]}
+        type={header.type || "text"}
+        options={fetchOptions()}
+        onSave={(value) =>
+          handleCellEdit(rowIndex, header.key, value, row, matchIndex)
         }
-      
-        return (
-          <SimpleEditableCell
-            rowValue={row}
-            value={row[header.key]}
-            type={header.type || "text"}
-            options={fetchOptions()}
-            onSave={(value) =>
-              handleCellEdit(rowIndex, header.key, value, row, matchIndex)
-            }
-            className={header.className || ""}
-            isRowHovered={shouldShowAsEditable} // CHANGED: Always true when editable
-            disabled={!isRowEditable || isDisabled}
-            placeholder={getPlaceholder()}
-            iconBefore={header.iconBefore || null}
-            alwaysShowAsEditable={true} // NEW: Add this prop
-          />
-        );
-      };
+        className={header.className || ""}
+        isRowHovered={shouldShowAsEditable} // CHANGED: Always true when editable
+        disabled={!isRowEditable || isDisabled}
+        placeholder={getPlaceholder()}
+        iconBefore={header.iconBefore || null}
+        alwaysShowAsEditable={true} // NEW: Add this prop
+      />
+    );
+  };
 
   const renderMatchLocation = (matchDetails) => {
     if (!matchDetails) return null;

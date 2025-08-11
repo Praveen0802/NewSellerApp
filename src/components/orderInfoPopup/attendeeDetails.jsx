@@ -1,6 +1,7 @@
 import React from "react";
 import Button from "../commonComponents/button";
 import { Download, Upload } from "lucide-react";
+import useS3Download from "@/Hooks/useS3Download";
 
 const AttendeeDetails = ({
   attendee_details = [],
@@ -9,8 +10,9 @@ const AttendeeDetails = ({
   showAttendeeUpload,
   rowData,
   handleUploadClick,
-  currentOrderObject
+  currentOrderObject,
 }) => {
+  const { downloadFile } = useS3Download();
   if (!attendee_details || attendee_details.length === 0) {
     return (
       <div className="border border-gray-200 rounded-lg p-4">
@@ -27,7 +29,9 @@ const AttendeeDetails = ({
     return dateString;
   };
 
-  const ticketType = !isNaN(parseInt(currentOrderObject?.ticket_type_id)) ? currentOrderObject?.ticket_type_id : rowData?.ticket_type
+  const ticketType = !isNaN(parseInt(currentOrderObject?.ticket_type_id))
+    ? currentOrderObject?.ticket_type_id
+    : rowData?.ticket_type;
 
   const getTicketStatusLabel = (status) => {
     switch (status) {
@@ -46,28 +50,50 @@ const AttendeeDetails = ({
         align="center"
         className="py-3 px-2 flex justify-center text-gray-600 text-xs text-center"
       >
-        <Button
-          type="primary"
-          classNames={{
-            root: "px-3 py-1 bg-[#343432] flex justify-center items-center",
-            label_: "text-white pl-0",
-          }}
-          onClick={() => {
-            if (showAttendeeUpload) {
-              handleUploadClick({ ...rowData, quantity: 1 }, attendee);
-            }
-          }}
-        >
-          {showAttendeeUpload ? (
-            <>
-              <Upload className="size-4" /> <span>Upload</span>
-            </>
-          ) : (
-            <>
-              <Download className="size-4" /> <span>Download</span>
-            </>
-          )}
-        </Button>
+        {showAttendeeUpload ? (
+          <Button
+            type="primary"
+            classNames={{
+              root: "px-3 py-1 bg-[#343432] flex justify-center items-center",
+              label_: "text-white pl-0",
+            }}
+            onClick={() => {
+              if (showAttendeeUpload) {
+                handleUploadClick({ ...rowData, quantity: 1 }, attendee);
+              }
+            }}
+          >
+            <Upload className="size-4" /> <span>Upload</span>
+          </Button>
+        ) : (
+          <>
+            {" "}
+            {!attendee?.ticket_file_url ? (
+              <>-</>
+            ) : (
+              <Button
+                type="primary"
+                classNames={{
+                  root: "px-3 py-1 bg-[#343432] flex justify-center items-center",
+                  label_: "text-white pl-0",
+                }}
+                onClick={() => {
+                  downloadFile(attendee?.ticket_file_url, "ticket");
+                }}
+              >
+                {showAttendeeUpload ? (
+                  <>
+                    <Upload className="size-4" /> <span>Upload</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="size-4" /> <span>Download</span>
+                  </>
+                )}
+              </Button>
+            )}
+          </>
+        )}
       </td>
     );
   };

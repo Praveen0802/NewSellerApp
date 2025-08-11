@@ -1474,6 +1474,7 @@ const BulkInventory = (props) => {
                     setSelectedRows={(newSelectedRows) =>
                       handleSetSelectedRowsForMatch(matchId, newSelectedRows)
                     }
+                     filters={response}
                     handleCellEdit={(rowIndex, columnKey, value, row) =>
                       handleGlobalCellEdit(
                         matchId,

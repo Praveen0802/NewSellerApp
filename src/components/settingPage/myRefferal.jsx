@@ -1,18 +1,24 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Copy, Users, Check, X } from "lucide-react";
+import { Copy, Users, Check, X, Eye } from "lucide-react";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import CustomSelect from "../commonComponents/customSelect";
 import Button from "../commonComponents/button";
 import useCopyToClipboard from "@/Hooks/useCopyClipboard";
 import reloadIcon from "../../../public/reload.svg";
 import FloatingSelect from "../floatinginputFields/floatingSelect";
-import { getReferralHistory } from "@/utils/apiHandler/request";
+import {
+  getReferralBookings,
+  getReferralHistory,
+} from "@/utils/apiHandler/request";
 import FloatingDateRange from "../commonComponents/dateRangeInput";
+
+// Add this import at the top of your MyReferrals component
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
+import ReferralPopup from "./components/referralPopup";
 
 const MyReferrals = (props) => {
   const { copyToClipboard, isCopied } = useCopyToClipboard();
-
   // Memoize destructured values to prevent unnecessary re-renders
   const referCodeData = useMemo(() => {
     return props?.referralCode?.data?.refer_code || "";
@@ -39,6 +45,10 @@ const MyReferrals = (props) => {
   const [itemsPerPage, setItemsPerPage] = useState(metaDetails?.per_page || 10);
   const [totalPages, setTotalPages] = useState(metaDetails?.last_page || 1);
   const [isLoading, setIsLoading] = useState(false);
+  const [showReferralPopup, setShowReferralPopup] = useState({
+    show: false,
+    data: "",
+  });
 
   // Set domain only on client side to prevent hydration mismatch
   useEffect(() => {
@@ -60,9 +70,8 @@ const MyReferrals = (props) => {
   const handleApiCall = async (params) => {
     setIsLoading(true);
     try {
-      console.log(params, "paramsparams");
       const response = await getReferralHistory("", params);
-      console.log(response, "responseresponseresponseresponse");
+
       setReferralUsers(response?.data?.referral_users || []);
       // Update meta details if returned by API
       if (response?.meta) {
@@ -99,23 +108,33 @@ const MyReferrals = (props) => {
   }, [currentPage, itemsPerPage]);
 
   // Handle search text change with debounce
-  const handleSearchChange = useCallback((e) => {
-    const newSearchText = e.target.value;
-    setSearchText(newSearchText);
-    
-    // Debounce the API call by 300ms to avoid excessive requests
-    debouncedSearch(() => {
-      handleApiCall({
-        page: 1,
-        per_page: itemsPerPage,
-        keyword: newSearchText,
-        ...(statusFilter && { status: statusFilter }),
-        ...(startDate?.startDate && { start_date: startDate?.startDate }),
-        ...(endDate?.startDate && { end_date: endDate?.startDate }),
-      });
-      setCurrentPage(1);
-    }, 300);
-  }, [itemsPerPage, statusFilter, startDate, endDate, debouncedSearch, handleApiCall]);
+  const handleSearchChange = useCallback(
+    (e) => {
+      const newSearchText = e.target.value;
+      setSearchText(newSearchText);
+
+      // Debounce the API call by 300ms to avoid excessive requests
+      debouncedSearch(() => {
+        handleApiCall({
+          page: 1,
+          per_page: itemsPerPage,
+          keyword: newSearchText,
+          ...(statusFilter && { status: statusFilter }),
+          ...(startDate?.startDate && { start_date: startDate?.startDate }),
+          ...(endDate?.startDate && { end_date: endDate?.startDate }),
+        });
+        setCurrentPage(1);
+      }, 300);
+    },
+    [
+      itemsPerPage,
+      statusFilter,
+      startDate,
+      endDate,
+      debouncedSearch,
+      handleApiCall,
+    ]
+  );
 
   // Memoize options objects
   const viewOptions = useMemo(
@@ -198,6 +217,14 @@ const MyReferrals = (props) => {
 
   const values = [
     {
+      name: "Referral earnings",
+      value:
+        props?.referralHistory?.data?.overview?.total_amounts?.map(
+          (item) => item?.amount_with_currency
+        ) || 0,
+      key: "referral_earnings",
+    },
+    {
       name: "Total Users",
       key: "total_user",
       value: props?.referralHistory?.data?.overview?.total_user || 0,
@@ -229,6 +256,27 @@ const MyReferrals = (props) => {
       day: "numeric",
     });
   }, []);
+  const [earningsIndex, setEarningsIndex] = useState(0);
+
+  const handleEarningsNext = useCallback(() => {
+    const earningsArray =
+      values.find((v) => v.key === "referral_earnings")?.value || [];
+    if (Array.isArray(earningsArray) && earningsArray.length > 0) {
+      setEarningsIndex((prevIndex) =>
+        prevIndex === earningsArray.length - 1 ? 0 : prevIndex + 1
+      );
+    }
+  }, [values]);
+
+  const handleEarningsPrev = useCallback(() => {
+    const earningsArray =
+      values.find((v) => v.key === "referral_earnings")?.value || [];
+    if (Array.isArray(earningsArray) && earningsArray.length > 0) {
+      setEarningsIndex((prevIndex) =>
+        prevIndex === 0 ? earningsArray.length - 1 : prevIndex - 1
+      );
+    }
+  }, [values]);
 
   // Memoize class names
   const headerClassName = useMemo(
@@ -290,6 +338,30 @@ const MyReferrals = (props) => {
     );
   }, [referralUsers, formatDate, isLoading]);
 
+  // In MyReferrals component, update the handleEyeIconClick function:
+
+  const handleEyeIconClick = async (user) => {
+    console.log(user, "useruseruser");
+
+    // Show popup immediately with loading state
+    setShowReferralPopup({ show: true, data: null, isLoading: true });
+
+    try {
+      const values = await getReferralBookings("", { user_id: user.id });
+      // Update popup with actual data and remove loading state
+      setShowReferralPopup({ show: true, data: values, isLoading: false });
+    } catch (error) {
+      console.error("Error fetching referral bookings:", error);
+      // Handle error state
+      setShowReferralPopup({
+        show: true,
+        data: null,
+        isLoading: false,
+        error: true,
+      });
+    }
+  };
+
   // Table view component - memoized
   const TableView = useMemo(() => {
     return (
@@ -301,6 +373,7 @@ const MyReferrals = (props) => {
               <th className={headerClassName}>Refer Code</th>
               <th className={headerClassName}>Status</th>
               <th className={headerClassName}>Joined Date</th>
+              <th className={headerClassName}>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -312,10 +385,7 @@ const MyReferrals = (props) => {
               </tr>
             ) : referralUsers && referralUsers.length > 0 ? (
               referralUsers.map((user, index) => (
-                <tr
-                  key={user.refer_code || index}
-                  className="hover:bg-gray-100"
-                >
+                <tr key={user.refer_code || index} className="">
                   <td className={rowClassName}>
                     <span className="capitalize">
                       {user.first_name} {user.last_name}
@@ -339,6 +409,14 @@ const MyReferrals = (props) => {
                   </td>
                   <td className={rowClassName}>
                     {formatDate(user.created_at)}
+                  </td>
+                  <td className={`${rowClassName} text-center`}>
+                    <Eye
+                      onClick={() => {
+                        handleEyeIconClick(user);
+                      }}
+                      className="size-5 cursor-pointer"
+                    />
                   </td>
                 </tr>
               ))
@@ -393,10 +471,80 @@ const MyReferrals = (props) => {
         </div>
         <div className="flex gap-4 items-center w-full">
           {values?.map((list, index) => {
+            // Special handling for referral earnings
+            if (list.key === "referral_earnings" && Array.isArray(list.value)) {
+              const earningsArray = list.value;
+
+              // If no earnings data, show default
+              if (earningsArray.length === 0) {
+                return (
+                  <div
+                    key={index}
+                    className="border-[1px] w-full rounded-md border-[#eaeaf1] p-3 flex flex-col gap-3"
+                  >
+                    <p className="font-semibold text-sm">0</p>
+                    <p className="text-xs">{list.name}</p>
+                  </div>
+                );
+              }
+
+              // If only one currency, show without navigation
+              if (earningsArray.length === 1) {
+                return (
+                  <div
+                    key={index}
+                    className="border-[1px] w-full rounded-md border-[#eaeaf1] p-3 flex flex-col gap-3"
+                  >
+                    <p className="font-semibold text-sm">{earningsArray[0]}</p>
+                    <p className="text-xs">{list.name}</p>
+                  </div>
+                );
+              }
+
+              // Multiple currencies - show with slider
+              return (
+                <div
+                  key={index}
+                  className="border-[1px] w-full rounded-md border-[#eaeaf1] p-3 flex flex-col gap-3 relative"
+                >
+                  {/* Navigation buttons */}
+                  <div className="absolute top-1 right-1 flex gap-1">
+                    <button
+                      onClick={handleEarningsPrev}
+                      className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      aria-label="Previous currency"
+                    >
+                      <ChevronLeft size={12} className="text-gray-600" />
+                    </button>
+                    <button
+                      onClick={handleEarningsNext}
+                      className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      aria-label="Next currency"
+                    >
+                      <ChevronRight size={12} className="text-gray-600" />
+                    </button>
+                  </div>
+
+                  {/* Current earning value */}
+                  <p className="font-semibold text-sm pr-12">
+                    {earningsArray[earningsIndex] || earningsArray[0]}
+                  </p>
+
+                  {/* Label and indicators */}
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs">{list.name}</p>
+
+                    {/* Dot indicators */}
+                  </div>
+                </div>
+              );
+            }
+
+            // Regular handling for other values
             return (
               <div
                 key={index}
-                className="border-[1px] w-full rounded-md border-[#eaeaf1] p-3 flex flex-col gap-1"
+                className="border-[1px] w-full rounded-md border-[#eaeaf1] p-3 flex flex-col gap-3"
               >
                 <p className="font-semibold text-sm">{list?.value}</p>
                 <p className="text-xs">{list?.name}</p>
@@ -672,6 +820,17 @@ const MyReferrals = (props) => {
           </div>
         </div>
       </div>
+      {showReferralPopup?.show && (
+        <ReferralPopup
+          show={showReferralPopup.show}
+          onClose={() =>
+            setShowReferralPopup({ show: false, data: null, isLoading: false })
+          }
+          data={showReferralPopup.data}
+          isLoading={showReferralPopup.isLoading}
+          error={showReferralPopup.error}
+        />
+      )}
     </div>
   );
 };

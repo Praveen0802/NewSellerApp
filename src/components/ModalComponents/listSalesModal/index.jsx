@@ -90,14 +90,14 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
   const [listValueData, setListvalueData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  console.log(filters,'filtersfilters')
-  const getInsightsData = async () => {
+  const getInsightsData = async (params = {}) => {
     try {
       setIsLoading(true);
       setError(null);
 
       const res = await getmarketingInsights("", {
         match_id: matchInfo?.match_id,
+        ...params,
       });
 
       setListvalueData(res);
@@ -125,7 +125,11 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
   const [sections, setSections] = useState("All Sections");
   const [venues, setVenues] = useState("All Venue Areas");
   const [quantities, setQuantities] = useState("All Quantities");
-  console.log(matchInfo, "matchInfomatchInfomatchInfo");
+
+  const [filtersApplied, setFiltersApplied] = useState({
+    ticket_category: "",
+    quantity: "",
+  });
   const matchDetails = {
     title: matchInfo?.match_name || "Match Details",
     date: matchInfo?.match_date || matchInfo?.match_date_format || "Date TBD",
@@ -135,23 +139,25 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
   };
 
   const filterOptions = [
-    { value: "all", label: "All Sections" },
-    { value: "vip", label: "VIP" },
-    { value: "standard", label: "Standard" },
+    ...Object.entries(filters?.block_data || {}).map(([key, value]) => ({
+      value: key,
+      label: value,
+    })),
   ];
 
-  const venueOptions = [
-    { value: "all", label: "All Venue Areas" },
-    { value: "home", label: "Home" },
-    { value: "away", label: "Away" },
-  ];
+  // const venueOptions = [
+  //   { value: "all", label: "All Venue Areas" },
+  //   { value: "home", label: "Home" },
+  //   { value: "away", label: "Away" },
+  // ];
+  const generateQuantityOptions = (max = 50) => {
+  return Array.from({ length: max }, (_, i) => ({
+    value: (i + 1).toString(),
+    label: (i + 1).toString()
+  }));
+};
 
-  const quantityOptions = [
-    { value: "all", label: "All Quantities" },
-    { value: "1", label: "1" },
-    { value: "2", label: "2" },
-    { value: "4", label: "4" },
-  ];
+  const quantityOptions = generateQuantityOptions();
 
   // Function to handle price edit initialization
   const startEditPrice = (ticketId, currentPrice) => {
@@ -251,6 +257,15 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
     console.log("New price:", newPrice);
   };
 
+  const handleSelectChange = async (value, key) => {
+    const updatedFilters = {
+      ...filtersApplied,
+      [key]: value,
+    };
+    getInsightsData(updatedFilters);
+    setFiltersApplied(updatedFilters);
+  };
+
   return (
     <div className="p-4">
       <CustomModal show={show} onClose={() => onClose()}>
@@ -283,6 +298,60 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                 <MapPin className="w-4 h-4 text-[#00A3ED]" />
               </span>
               <span className="text-sm ">{matchDetails.venue}</span>
+            </div>
+          </div>
+
+          <div className="px-4 py-2 border-b border-gray-200 flex justify-between items-center">
+            <div className="flex">
+              {/* {["Listings", "Sales"].map((tab) => (
+                <button
+                  key={tab}
+                  className={`px-6 py-2 text-sm cursor-pointer ${
+                    selectedTab === tab
+                      ? "border-b-2 border-[#130061] text-[#130061] font-medium"
+                      : "text-[#323A70]"
+                  }`}
+                  onClick={() => setSelectedTab(tab)}
+                >
+                  {tab}
+                </button>
+              ))} */}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-[#323A70]">Filter by:</span>
+              <div className="flex gap-2">
+                <CustomSelect
+                  selectedValue={filtersApplied?.ticket_category}
+                  options={filterOptions}
+                  onSelect={(e) => {
+                    handleSelectChange(e, "ticket_category");
+                  }}
+                  placeholder="All Sections"
+                  textSize="text-xs"
+                  buttonPadding="px-2 py-1"
+                  className="!w-[120px]"
+                />
+                {/* <CustomSelect
+                  selectedValue={venues}
+                  options={venueOptions}
+                  onSelect={setVenues}
+                  placeholder="All Venue Areas"
+                  textSize="text-xs"
+                  buttonPadding="px-2 py-1"
+                /> */}
+                <CustomSelect
+                  selectedValue={filtersApplied?.quantity}
+                  options={quantityOptions}
+                  onSelect={(e) => {
+                    handleSelectChange(e, "quantity");
+                  }}
+                  placeholder="All Quantities"
+                  textSize="text-xs"
+                  buttonPadding="px-2 py-1 !w-full"
+                     className="!w-[120px]"
+                />
+              </div>
             </div>
           </div>
 
@@ -349,25 +418,25 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                   return (
                     <div
                       key={item.ticket_id || index}
-                      className="flex border-b border-gray-200 hover:bg-gray-50"
+                      className="flex border-b border-gray-200 hover:bg-gray-50 text-[#323A70]"
                     >
                       <div
-                        className="p-3 text-sm w-32 truncate"
+                        className="p-3 text-[12px] w-32 truncate"
                         title={item.block_id}
                       >
                         {item.block_id || "-"}
                       </div>
-                      <div className="p-3 text-sm w-20">-</div>
-                      <div className="p-3 text-sm w-24">
+                      <div className="p-3 text-[12px] w-20">-</div>
+                      <div className="p-3 text-[12px] w-24">
                         {item.quantity || "-"}
                       </div>
                       <div
-                        className="p-3 text-sm w-24 truncate"
+                        className="p-3 text-[12px] w-24 truncate"
                         title={item.ticket_category}
                       >
                         {item.ticket_category || "-"}
                       </div>
-                      <div className="p-3 text-sm w-32">
+                      <div className="p-3 text-[12px] w-32">
                         {editingRow === item.ticket_id ? (
                           // Edit Mode - Show input field with save/cancel buttons
                           <div className="flex items-center gap-1">
@@ -381,7 +450,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                                   e.target.value.replace(/[^0-9.]/g, "")
                                 )
                               }
-                              className="border border-blue-500 rounded w-16 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              className="border border-blue-500 rounded w-16 px-2 py-1 text-[12px] focus:outline-none focus:ring-1 focus:ring-blue-500"
                               placeholder="0.00"
                               autoFocus
                             />
@@ -437,7 +506,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                           </div>
                         )}
                       </div>
-                      <div className="p-3 text-sm flex-1 flex items-center justify-between">
+                      <div className="p-3 text-[12px] flex-1 flex items-center justify-between">
                         <span
                           className="truncate pr-2"
                           title={getBenefitsText(item.ticket_details)}

@@ -95,6 +95,7 @@ export const API_ROUTES = {
   REMOVE_SAVED_CARDS: "/settings/lmt-pay/remove-card",
   ADD_SAVED_CARDS:"/settings/lmt-pay/add-card",
   PAYMENT_CONFIG: `/settings/lmt-pay/payment-config`,
+  REFERRAL_BOOKINGS: `/settings/referral-bookings`,
   GET_CURRENCY: "/currencies",
   GET_SALES_TICKET_DETAILS:`/sales/ticket-details`,
   GET_DIALING_CODE: "/settings/dialing-code",

@@ -234,7 +234,7 @@ const AddInventoryPage = (props) => {
       label: "Quantity",
       mandatory: true,
       value: filtersApplied?.add_qty_addlist,
-      increasedWidth:'min-w-[100px]',
+      increasedWidth: "min-w-[100px]",
       options: [
         { value: "1", label: "1" },
         { value: "2", label: "2" },
@@ -258,7 +258,7 @@ const AddInventoryPage = (props) => {
       type: "select",
       name: "split_type",
       label: "Split Type",
-      increasedWidth:'min-w-[120px]',
+      increasedWidth: "min-w-[120px]",
       mandatory: true,
       value: filtersApplied?.split_type,
       options: [
@@ -1602,6 +1602,7 @@ const AddInventoryPage = (props) => {
               handleDeselectAll={handleDeselectAll}
               matchDetails={matchDetails}
               isEditMode={isEditMode}
+              filters={response}
               editingRowIndex={editingRowIndex}
               mode="single"
               defaultOpen={true}

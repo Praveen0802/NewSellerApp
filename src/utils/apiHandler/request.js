@@ -914,6 +914,20 @@ export const getDepositDetails = async (token, params) => {
   }
 };
 
+export const getReferralBookings = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.REFERRAL_BOOKINGS,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getDepositDetails", error);
+    throw error;
+  }
+};
 
 export const requestMatchEvent = async (token, data) => {
   try {
@@ -1530,7 +1544,7 @@ export const fetchSalesOrderDetails = async (token, params) => {
   }
 };
 
-export const getTicketTypes = async(token, params) => {
+export const getTicketTypes = async (token, params) => {
   try {
     const response = await makeRequest({
       url: API_ROUTES.GET_TICKET_TYPES,
@@ -1543,9 +1557,9 @@ export const getTicketTypes = async(token, params) => {
     console.log("ERROR in getTicketTypes", error);
     throw error;
   }
-}
+};
 
-export const updateTicketTypes = async(token, data) => {
+export const updateTicketTypes = async (token, data) => {
   try {
     const response = await makeRequest({
       url: API_ROUTES.UPDATE_TICKET_TYPES,
@@ -1557,9 +1571,9 @@ export const updateTicketTypes = async(token, data) => {
   } catch (error) {
     console.log("ERROR in updateTicketTypes", error);
     // throw error;
-    return error?.response?.data
+    return error?.response?.data;
   }
-}
+};
 
 export const fetchSalesOrderLogs = async (token, params) => {
   try {
@@ -2407,8 +2421,7 @@ export const deleteSaleTicket = async (token, data) => {
   }
 };
 
-
-export const downloadSaleAction = async (token, id,params) => {
+export const downloadSaleAction = async (token, id, params) => {
   try {
     const response = await makeRequest({
       url: `${API_ROUTES.DOWNLOAD_SALES_TICKET}/${id}`,
@@ -2430,7 +2443,7 @@ export const saveSalesUploadedTickets = async (data, id) => {
       method: "POST",
       data: data,
     });
-    console.log(response,'responseresponse')
+    console.log(response, "responseresponse");
     return response ? response : {};
   } catch (error) {
     console.log("ERROR in savePhotoId", error);
@@ -2445,14 +2458,13 @@ export const savePaperTicketsUpload = async (data, id) => {
       method: "POST",
       data: data,
     });
-    console.log(response,'responseresponse')
+    console.log(response, "responseresponse");
     return response ? response : {};
   } catch (error) {
     console.log("ERROR in savePhotoId", error);
     // throw error;
   }
 };
-
 
 export const saveMobileTickets = async (data, id) => {
   try {
@@ -2461,7 +2473,7 @@ export const saveMobileTickets = async (data, id) => {
       method: "POST",
       data: data,
     });
-    console.log(response,'responseresponse')
+    console.log(response, "responseresponse");
     return response ? response : {};
   } catch (error) {
     console.log("ERROR in savePhotoId", error);
@@ -2476,7 +2488,7 @@ export const saveAdditionalInstructionFile = async (data, id) => {
       method: "POST",
       data: data,
     });
-    console.log(response,'responseresponse')
+    console.log(response, "responseresponse");
     return response ? response : {};
   } catch (error) {
     console.log("ERROR in savePhotoId", error);
@@ -2719,4 +2731,4 @@ export const submitKycForApproval = async (token, data) => {
     console.log("ERROR in submitKycForApproval", error);
     throw error;
   }
-}
+};
