@@ -1184,13 +1184,27 @@ const TicketsPage = (props) => {
 
   const handleViewDetails = useCallback(async (item) => {
     console.log("View details:", item?.rawTicketData?.s_no);
-    const fetchViewDetailsPopup = await getViewDetailsPopup("", {
-      ticket_id: item?.rawTicketData?.s_no,
-    });
     setViewDetailsPopup({
       show: true,
-      rowData: fetchViewDetailsPopup,
+      isLoading: true,
     });
+    try {
+      const fetchViewDetailsPopup = await getViewDetailsPopup("", {
+        ticket_id: item?.rawTicketData?.s_no,
+      });
+      setViewDetailsPopup({
+        show: true,
+        rowData: fetchViewDetailsPopup,
+      });
+    } catch (error) {
+      console.error("Error fetching view details:", error);
+      toast.error("Error fetching view details");
+    } finally {
+      setViewDetailsPopup((prev) => ({
+        ...prev,
+        isLoading: false,
+      }));
+    }
   }, []);
 
   const createInitialVisibleColumns = useCallback(() => {
@@ -1910,6 +1924,7 @@ const TicketsPage = (props) => {
           show={viewDetailsPopup?.show}
           data={viewDetailsPopup?.rowData}
           onClose={() => setViewDetailsPopup({ show: false, rowData: null })}
+          isLoading={viewDetailsPopup?.isLoading}
         />
       )}
     </div>
