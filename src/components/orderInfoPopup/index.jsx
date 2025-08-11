@@ -28,14 +28,16 @@ const OrderInfo = ({
   type = "",
   showShimmer = false,
   ticketTypesList = [],
-  mySalesPage=false
+  mySalesPage = false,
+  showAttendeeUpload = false,
+  rowData,
+  handleUploadClick,
 } = {}) => {
   const [expandedVersion, setExpandedVersion] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [downloadLoader, setDownloadLoader] = useState(false);
 
   const { downloadFile } = useS3Download();
-  console.log(orderData, ticketTypesList, "orderDataorderData");
   // Handle new array format data
   const data = orderData && orderData.length > 0 ? orderData[0] : null;
   const [updatedOrderObject, setUpdatedOrderObject] = useState(null);
@@ -438,7 +440,7 @@ const OrderInfo = ({
   };
 
   const currentOrderObject = updatedOrderObject || orderObject;
-
+  console.log(currentOrderObject, "currentOrderObjectcurrentOrderObject");
   return (
     <RightViewModal
       className={`transition-all duration-300 ease-in-out ${
@@ -541,7 +543,17 @@ const OrderInfo = ({
             {/* Add AttendeeDetails component */}
             {attendee_details && attendee_details.length > 0 && (
               <div className="transition-all duration-300 ease-in-out">
-                <AttendeeDetails attendee_details={attendee_details} mySalesPage={mySalesPage} expandedVersion={expandedVersion}/>
+                <AttendeeDetails
+                  attendee_details={attendee_details}
+                  mySalesPage={mySalesPage}
+                  expandedVersion={expandedVersion}
+                  showAttendeeUpload={showAttendeeUpload}
+                  rowData={{
+                    ...rowData,
+                  }}
+                  handleUploadClick={handleUploadClick}
+                  currentOrderObject={currentOrderObject}
+                />
               </div>
             )}
           </div>

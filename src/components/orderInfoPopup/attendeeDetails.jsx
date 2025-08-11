@@ -1,9 +1,15 @@
 import React from "react";
+import Button from "../commonComponents/button";
+import { Download, Upload } from "lucide-react";
 
 const AttendeeDetails = ({
   attendee_details = [],
   mySalesPage,
   expandedVersion,
+  showAttendeeUpload,
+  rowData,
+  handleUploadClick,
+  currentOrderObject
 }) => {
   if (!attendee_details || attendee_details.length === 0) {
     return (
@@ -21,6 +27,8 @@ const AttendeeDetails = ({
     return dateString;
   };
 
+  const ticketType = !isNaN(parseInt(currentOrderObject?.ticket_type_id)) ? currentOrderObject?.ticket_type_id : rowData?.ticket_type
+
   const getTicketStatusLabel = (status) => {
     switch (status) {
       case 1:
@@ -30,6 +38,38 @@ const AttendeeDetails = ({
       default:
         return { label: "Unknown", color: "bg-gray-100 text-gray-800" };
     }
+  };
+
+  const uploadDownLoadTicket = (attendee) => {
+    return (
+      <td
+        align="center"
+        className="py-3 px-2 flex justify-center text-gray-600 text-xs text-center"
+      >
+        <Button
+          type="primary"
+          classNames={{
+            root: "px-3 py-1 bg-[#343432] flex justify-center items-center",
+            label_: "text-white pl-0",
+          }}
+          onClick={() => {
+            if (showAttendeeUpload) {
+              handleUploadClick({ ...rowData, quantity: 1 }, attendee);
+            }
+          }}
+        >
+          {showAttendeeUpload ? (
+            <>
+              <Upload className="size-4" /> <span>Upload</span>
+            </>
+          ) : (
+            <>
+              <Download className="size-4" /> <span>Download</span>
+            </>
+          )}
+        </Button>
+      </td>
+    );
   };
 
   return (
@@ -55,9 +95,9 @@ const AttendeeDetails = ({
               <th className="text-left py-2 px-2 font-medium text-gray-700">
                 City
               </th>
-              {expandedVersion && (
-                <th className="text-left py-2 px-2 font-medium text-gray-700">
-                  Status
+              {expandedVersion && mySalesPage && (
+                <th className="text-center py-2 px-2 font-medium text-gray-700">
+                  Action
                 </th>
               )}
             </tr>
@@ -88,6 +128,19 @@ const AttendeeDetails = ({
                   <td className="py-3 px-2 text-gray-600 text-xs">
                     {attendee.city || "-"}
                   </td>
+                  {expandedVersion && mySalesPage && (
+                    <>
+                      {ticketType == 3 ? (
+                        index == 0 ? (
+                          uploadDownLoadTicket(attendee)
+                        ) : (
+                          <td className="py-3 px-2 text-gray-600 text-xs">-</td>
+                        )
+                      ) : (
+                        <>{uploadDownLoadTicket(attendee)}</>
+                      )}
+                    </>
+                  )}
                 </tr>
               );
             })}

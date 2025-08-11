@@ -55,6 +55,7 @@ const MySalesUploadTickets = ({
   myListingPage = false,
   mySalesPage = false,
 }) => {
+
   if (loading || !rowData) {
     return (
       <div>
@@ -69,7 +70,6 @@ const MySalesUploadTickets = ({
     );
   }
 
-  console.log(rowData, "rowDatarowData");
   const proofUploadView = rowData?.handleProofUpload || false;
   const ticketTypes = !isNaN(parseInt(rowData?.ticket_type))
     ? rowData?.ticket_type
