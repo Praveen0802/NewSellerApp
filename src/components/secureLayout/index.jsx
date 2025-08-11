@@ -59,7 +59,7 @@ const SecureLayout = ({ children }) => {
     dispatch(updateRoleAccess(response));
     dispatch(updatedKYCStatus(kycResponse));
     if (
-      kycResponse?.kyc_status == 0 &&
+      (kycResponse?.kyc_status == 0 || kycResponse?.kyc_status == 2) &&
       !["/settings/kyc"]?.includes(window.location.pathname) &&
       response?.user_type == "sellers"
     ) {
