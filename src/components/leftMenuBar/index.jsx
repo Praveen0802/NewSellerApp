@@ -1105,7 +1105,8 @@ const LeftMenuBar = () => {
   );
 
   const leftPaneValues =
-    (kycStatus?.kyc_status === 0 || kycStatus?.kyc_status === 2) && userRoles?.user_type == "sellers"
+    (kycStatus?.kyc_status === 0 || kycStatus?.kyc_status === 2) &&
+    userRoles?.user_type == "sellers"
       ? []
       : leftValues;
 

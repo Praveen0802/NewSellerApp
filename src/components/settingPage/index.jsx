@@ -30,6 +30,8 @@ const LoadingSpinner = () => (
 const SettingsPage = (props) => {
   const { profile, apiData } = props;
   const [activeTab, setActiveTab] = useState(profile);
+  const [activeSubTab, setActiveSubTab] = useState(profile);
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSubjectDescriptionPopup, setShowSubjectDescriptionPopup] =
     useState(false);
@@ -57,7 +59,8 @@ const SettingsPage = (props) => {
       //   title: "Overview",
       //   key: "overview",
       // },
-      ...((kycStatus?.kyc_status === 0 || kycStatus?.kyc_status === 2) && userRoles?.user_type == "sellers"
+      ...((kycStatus?.kyc_status === 0 || kycStatus?.kyc_status === 2) &&
+      userRoles?.user_type == "sellers"
         ? [
             {
               icon: <ShieldCheck className={IconclassName} />,
@@ -121,6 +124,7 @@ const SettingsPage = (props) => {
   }, [kycStatus, userRoles, IconclassName, isDataLoaded]);
 
   const handleTabClick = (tab) => {
+    setActiveSubTab(tab);
     if (tab === "featureRequest") {
       setShowSubjectDescriptionPopup(true);
       return;
@@ -181,7 +185,7 @@ const SettingsPage = (props) => {
                   <li
                     key={index}
                     className={`flex items-center gap-3 cursor-pointer rounded-lg px-3 py-2 transition-all duration-200 ${
-                      activeTab == value?.key
+                      activeSubTab == value?.key
                         ? "text-[#130061] font-semibold bg-[#343432]/10"
                         : "text-gray-600 hover:text-[#130061] hover:bg-gray-50"
                     }`}
@@ -215,7 +219,7 @@ const SettingsPage = (props) => {
               <div
                 key={index}
                 className={`flex flex-col min-w-[80px] w-[110px] justify-center items-center p-2 rounded-lg transition-all duration-200 ${
-                  activeTab === value?.key
+                  activeSubTab === value?.key
                     ? "text-[#130061] bg-[#343432]/10"
                     : "text-gray-500 hover:text-[#130061] hover:bg-gray-50"
                 }`}
@@ -240,7 +244,7 @@ const SettingsPage = (props) => {
                 <li
                   key={index}
                   className={`flex items-center gap-3 cursor-pointer rounded-lg px-3 py-3 transition-all duration-200 ${
-                    activeTab == value?.key
+                    activeSubTab == value?.key
                       ? "text-[#130061] font-semibold bg-[#343432]/10"
                       : "text-gray-600 hover:text-[#130061] hover:bg-gray-50"
                   }`}
@@ -262,7 +266,9 @@ const SettingsPage = (props) => {
 
       <SubjectDescriptionPopup
         show={showSubjectDescriptionPopup}
-        onClose={() => setShowSubjectDescriptionPopup(false)}
+        onClose={() => {
+          setShowSubjectDescriptionPopup(false), setActiveSubTab(activeTab);
+        }}
       />
     </div>
   );

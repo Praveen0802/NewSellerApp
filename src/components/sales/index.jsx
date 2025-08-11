@@ -33,10 +33,9 @@ import Tooltip from "../addInventoryPage/simmpleTooltip";
 import UploadTickets from "../ModalComponents/uploadTickets";
 import MySalesUploadTickets from "../ModalComponents/uploadTickets/mySalesUploadTickets";
 
-
 const SalesPage = (props) => {
   const { profile, response = {} } = props;
-  console.log(response,'responseresponse')
+  console.log(response, "responseresponse");
   const { tournamentList } = response;
   const tournamentOptions = tournamentList?.map((item) => ({
     value: item.tournament_id,
@@ -215,6 +214,8 @@ const SalesPage = (props) => {
       label: list?.name,
       value: list?.id,
     }));
+    console.log("salesData", salesData);
+
     setShowInfoPopup({
       flag: true,
       data: salesData?.map((list) => ({
@@ -540,16 +541,16 @@ const SalesPage = (props) => {
         className: "!py-[8px] !px-[16px] mobile:text-xs",
       },
 
-      {
-        type: "select",
-        name: "tournament",
-        label: "Tournament",
-        value: filtersApplied?.tournament,
-        options: tournamentOptions,
-        parentClassName: "!w-[15%]",
-        className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
-        labelClassName: "!text-[11px]",
-      },
+      // {
+      //   type: "select",
+      //   name: "tournament",
+      //   label: "Tournament",
+      //   value: filtersApplied?.tournament,
+      //   options: tournamentOptions,
+      //   parentClassName: "!w-[15%]",
+      //   className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
+      //   labelClassName: "!text-[11px]",
+      // },
 
       // {
       //   type: "select",
@@ -904,7 +905,7 @@ const SalesPage = (props) => {
         data={showInfoPopup?.data}
         onClose={() => {
           setShowInfoPopup({ flag: false, data: [] });
-          apiCall({page:1});
+          apiCall({ page: 1 });
         }}
         ticketTypesList={showInfoPopup?.ticketTypesList}
         refreshPopupData={refreshPopupData}
