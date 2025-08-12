@@ -149,9 +149,9 @@ const SecureLayout = ({ children }) => {
       text: name,
       name: userName,
       key: "name",
-      isName: true,
+      // isName: true,
       canAccessKey: "settings",
-      // route: "settings/myAccount",
+      route: "settings/myAccount",
       allowedRoutes: ["settings"],
     },
     {

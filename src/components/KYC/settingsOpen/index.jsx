@@ -53,12 +53,12 @@ const SettingsOpen = ({ isOpen = false, onClose, showFullDisplay,handleLogout } 
             <h1 className="text-md font-semibold capitalize text-gray-900">
               {currentUser?.first_name} {currentUser?.last_name}
             </h1>
-            <p class="flex items-baseline w-full text-sm text-gray-500">Seller Level 3
+            {/* <p class="flex items-baseline w-full text-sm text-gray-500">Seller Level 3
                 <span class="ml-[0.2rem] first:ml-2 w-[0.65rem] h-[0.65rem] rounded-sm bg-green-600 border-green-600"></span>
                 <span class="ml-[0.2rem] first:ml-2 w-[0.65rem] h-[0.65rem] rounded-sm bg-green-600/25 border-green-600/25"></span>
                 <span class="ml-[0.2rem] first:ml-2 w-[0.65rem] h-[0.65rem] rounded-sm bg-green-600/25 border-green-600/25"></span>
                 <span class="ml-[0.2rem] first:ml-2 w-[0.65rem] h-[0.65rem] rounded-sm bg-yellow-100/25 border-yellow-100/25"></span>
-            </p>
+            </p> */}
             </div>
             {/* Menu Items */}
             <div className="space-y-4 ">

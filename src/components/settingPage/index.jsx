@@ -249,8 +249,8 @@ console.log(userRoles, "userRoles");
                   key={index}
                   className={`flex items-center gap-3 cursor-pointer rounded-lg px-3 py-3 transition-all duration-200 ${
                     activeSubTab == value?.key
-                      ? "text-[#130061] font-semibold bg-[#343432]/10"
-                      : "text-gray-600 hover:text-[#130061] hover:bg-gray-50"
+                      ? " font-medium  bg-[#343432]/10"
+                      : "text-gray-600  hover:bg-gray-50"
                   }`}
                   onClick={() => handleTabClick(value?.key)}
                 >
