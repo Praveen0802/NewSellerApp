@@ -401,7 +401,7 @@ const QRLinksSection = React.forwardRef(
     ).length;
 
     // Render input field - now all fields are editable
-    const renderLinkField = (ticketIndex, linkType, label, placeholder) => {
+    const renderLinkField = (ticketIndex, linkType, label, placeholder,isComplete) => {
       const link = ticketLinks[ticketIndex] || {
         qr_link_android: "",
         qr_link_ios: "",
@@ -418,7 +418,7 @@ const QRLinksSection = React.forwardRef(
 
       return (
         <div>
-          <label className="block text-xs font-medium text-[#323A70] mb-1 flex items-center gap-2">
+          <label className="text-xs font-medium text-[#323A70] mb-1 flex items-center gap-2 pl-1">
             {label}
           </label>
           <div className="relative">
@@ -429,7 +429,7 @@ const QRLinksSection = React.forwardRef(
               onChange={(e) =>
                 handleLinkChange(ticketIndex, linkType, e.target.value)
               }
-              className={`w-full px-3 py-2 pr-10 text-xs border rounded-md text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent ${"border-[#E0E1EA] bg-white"}`}
+              className={`w-full px-3 py-1 pr-10 text-xs border rounded-md text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent ${"border-[#E0E1EA] bg-white"} ${isComplete ? "!border-[#03BA8A] bg-[#F2FBF9]":""} `}
             />
             {value && (
               <button
@@ -437,7 +437,7 @@ const QRLinksSection = React.forwardRef(
                 onClick={() =>
                   handleCopyToClipboard(value, ticketIndex, linkType)
                 }
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-[#343432] transition-colors"
+                className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-[#343432] transition-colors`}
                 title={isCopied ? "Copied!" : "Copy to clipboard"}
               >
                 {isCopied ? (
@@ -465,13 +465,13 @@ const QRLinksSection = React.forwardRef(
           </h4>
         </div>
 
-        <div className="p-3 max-h-96 overflow-y-auto">
+        <div className="p-3 max-h-96 overflow-y-auto bg-[#F9F9FB]">
           {maxQuantity === 0 ? (
             <div className="p-4 text-center text-gray-500 text-sm border border-gray-200 rounded">
               No quantity specified
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {Array.from({ length: maxQuantity }, (_, index) => {
                 const ticketNumber = index + 1;
                 const link = ticketLinks[index];
@@ -484,26 +484,28 @@ const QRLinksSection = React.forwardRef(
                 return (
                   <div
                     key={`ticket-${ticketNumber}`}
-                    className={`border rounded-md p-3 ${"border-[#E0E1EA] bg-white"}`}
+                    // border-[#E0E1EA]
+                    className={`rounded-md flex items-center gap-3`}
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      <h5 className="text-sm font-medium text-[#323A70] flex items-center gap-2">
-                        Ticket {ticketNumber}
+                    <div className="flex items-center justify-between">
+                      <h5 className="text-xs font-medium text-[#323A70] flex items-end gap-2 pt-4">
+                        T{ticketNumber}
                       </h5>
                       <div className="flex items-center gap-1">
-                        {isComplete && (
+                        {/* {isComplete && (
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        )}
+                        )} */}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3 flex-1">
                       {/* Android Link Input */}
                       {renderLinkField(
                         index,
                         "qr_link_android",
                         "Android QR Link",
-                        "Enter Android app/web link"
+                        "Enter Android app/web link",
+                        isComplete
                       )}
 
                       {/* iOS Link Input */}
@@ -511,7 +513,8 @@ const QRLinksSection = React.forwardRef(
                         index,
                         "qr_link_ios",
                         "iOS QR Link",
-                        "Enter iOS app/web link"
+                        "Enter iOS app/web link",
+                        isComplete
                       )}
                     </div>
                   </div>
