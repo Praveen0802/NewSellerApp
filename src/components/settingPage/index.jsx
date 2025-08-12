@@ -104,11 +104,15 @@ const SettingsPage = (props) => {
               title: "Linked Cards",
               key: "linkedCards",
             },
-            {
-              icon: <ShieldCheck className={IconclassName} />,
-              title: "KYC",
-              key: "kyc",
-            },
+            ...(userRoles?.user_type == "sellers"
+              ? [
+                  {
+                    icon: <ShieldCheck className={IconclassName} />,
+                    title: "KYC",
+                    key: "kyc",
+                  },
+                ]
+              : []),
             {
               icon: <IconStore.referral className={IconclassName} />,
               title: "My Referral",

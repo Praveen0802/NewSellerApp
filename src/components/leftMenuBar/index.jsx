@@ -899,15 +899,20 @@ const LeftMenuBar = () => {
 
   // Use the custom hook for hydration-safe user display name
   const { userDisplayName } = useUserDisplayName(currentUser);
-  const { notificationCountData, showFullDisplay, userRoles, kycStatus } =
-    useSelector((state) => state.common);
+  const {
+    notificationCountData,
+    showFullDisplay,
+    userRoles,
+    kycStatus,
+    leftPanelValues: leftPaneValues,
+  } = useSelector((state) => state.common);
   const [salesCount, setSalesCount] = useState([]);
-
+  console.log(leftPaneValues, "leftPaneValues");
   const name = currentUser?.first_name?.slice(0, 2).toUpperCase();
   const userName = currentUser?.first_name;
 
   const dispatch = useDispatch();
-  console.log(userRoles, "kycStatus");
+
   // Fetch notification count for badge
   const fetchNotificationCountForBadge = async () => {
     try {
@@ -1104,11 +1109,11 @@ const LeftMenuBar = () => {
     userRoles?.permission
   );
 
-  const leftPaneValues =
-    (kycStatus?.kyc_status === 0 || kycStatus?.kyc_status === 2) &&
-    userRoles?.user_type == "sellers"
-      ? []
-      : leftValues;
+  // const leftPaneValues =
+  //   (kycStatus?.kyc_status === 0 || kycStatus?.kyc_status === 2) &&
+  //   userRoles?.user_type == "sellers"
+  //     ? []
+  //     : leftValues;
 
   const router = useRouter();
   const isMobile = useIsMobile();
@@ -1123,7 +1128,6 @@ const LeftMenuBar = () => {
     }
     return null;
   };
-
   // Update active state when route changes for sales pages
   useEffect(() => {
     const currentPath = router?.pathname?.replace("/", "");
@@ -1140,7 +1144,7 @@ const LeftMenuBar = () => {
     }
   }, [router?.pathname]);
   const handleSelectedClick = (index, item) => {
-    if (index === 0 && !isMobile) {
+    if (index ==0 &&!isMobile) {
       dispatch(updateLeftMenuDisplay(!showFullDisplay));
       return;
     }

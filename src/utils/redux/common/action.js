@@ -1,8 +1,10 @@
 import {
   ADD_WALLET_POPUP,
+  ALLOWED_ROUTES,
   CONFIRM_PURCHASE_POPUP,
   FETCH_USER_ROLES,
   GET_KYC_STATUS,
+  LEFT_PANEL_VALUES,
   SHOW_FULL_DISPLAY,
   UPDATE_NOTIFICATION_COUNT,
   USER_ACCESS_ROUTES,
@@ -53,6 +55,20 @@ export const getUserAccessRoutes = (payload) => {
 export const updatedKYCStatus = (payload) => {
   return {
     type: GET_KYC_STATUS,
+    payload,
+  };
+};
+
+export const updatedLeftPanelValues = (payload) => {
+  return {
+    type: LEFT_PANEL_VALUES,
+    payload,
+  };
+};
+
+export const allowedRoutValues = (payload) => {
+  return {
+    type: ALLOWED_ROUTES,
     payload,
   };
 };

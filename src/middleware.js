@@ -28,7 +28,7 @@ export async function middleware(request) {
     response.cookies.set("auth_token_validity", "");
     return response;
   }
-
+  
   if (
     nonAuthRequiredPages.some((path) => pathname.includes(path)) &&
     !validateAuthToken
@@ -84,28 +84,27 @@ export async function middleware(request) {
     response.cookies.set("user_token", "");
     return response;
   } else if (validateAuthToken) {
-  if (validateAuthToken?.token) {
-   
-  const response = NextResponse.next();
-  response.cookies.set(
-  "auth_token",
-  decodeURIComponent(validateAuthToken?.token),
-  {
-httpOnly: true,
-  // secure: process.env.NODE_ENV === 'production',
-  sameSite: "strict",
-  // maxAge: 3600 // Optional: set expiration
+    if (validateAuthToken?.token) {
+      const response = NextResponse.next();
+      response.cookies.set(
+        "auth_token",
+        decodeURIComponent(validateAuthToken?.token),
+        {
+          httpOnly: true,
+          // secure: process.env.NODE_ENV === 'production',
+          sameSite: "strict",
+          // maxAge: 3600 // Optional: set expiration
+        }
+      );
+      response.cookies.set(
+        "auth_token_validity",
+        currentTimeEpochTimeInMilliseconds().toString()
+      );
+      return response;
+    } else {
+      return;
+    }
   }
-);
-  response.cookies.set(
-  "auth_token_validity",
-  currentTimeEpochTimeInMilliseconds().toString()
-  );
-  return response;
-  } else {
-  return;
-  }
-}
 }
 
 export const config = {

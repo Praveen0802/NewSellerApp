@@ -1,8 +1,10 @@
 import {
   ADD_WALLET_POPUP,
+  ALLOWED_ROUTES,
   CONFIRM_PURCHASE_POPUP,
   FETCH_USER_ROLES,
   GET_KYC_STATUS,
+  LEFT_PANEL_VALUES,
   SHOW_FULL_DISPLAY,
   UPDATE_NOTIFICATION_COUNT,
   USER_ACCESS_ROUTES,
@@ -20,9 +22,12 @@ const initalState = {
     isLoaded: false,
   },
   showFullDisplay: false,
-  userRoles: [],
+  userRoles: null, // Changed from [] to null to indicate not loaded
   userAccessableRoutes: [],
   kycStatus: {},
+  leftPanelValues: [],
+  allowedRoutes: null, // Changed from [] to null to indicate not loaded
+  isPermissionsLoaded: false, // Added explicit loading flag
 };
 
 const CommonReducers = (state = initalState, action) => {
@@ -55,6 +60,8 @@ const CommonReducers = (state = initalState, action) => {
       return {
         ...state,
         userRoles: action.payload,
+        // Set loading flag to true when user roles are fetched
+        isPermissionsLoaded: true,
       };
     case USER_ACCESS_ROUTES:
       return {
@@ -65,6 +72,16 @@ const CommonReducers = (state = initalState, action) => {
       return {
         ...state,
         kycStatus: action.payload,
+      };
+    case LEFT_PANEL_VALUES:
+      return {
+        ...state,
+        leftPanelValues: action.payload,
+      };
+    case ALLOWED_ROUTES:
+      return {
+        ...state,
+        allowedRoutes: action.payload,
       };
     default:
       return state;

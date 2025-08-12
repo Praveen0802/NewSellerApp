@@ -103,7 +103,9 @@ const LoginForm = () => {
             );
             setCookie("user_token", response?.user_id);
             let redirectPath =
-              kyc_status != 1 ? "/settings/kyc?handle=true" : "/dashboard";
+              kyc_status != 1 && response?.role == "sellers"
+                ? "/settings/kyc?handle=true"
+                : "/dashboard";
             //TODO : add check for kyc status
             router.push(`${redirectPath}`);
           } else {
