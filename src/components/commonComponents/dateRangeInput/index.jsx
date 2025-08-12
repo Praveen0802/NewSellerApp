@@ -26,8 +26,8 @@ const FloatingDateRange = ({
   openUpward = false,
   showYear = false,
   showMonth = false,
+  parentClassNameUpdate=''
 }) => {
-  console.log(maxDate, 'maxDatemaxDatemaxDate')
   const [isFocused, setIsFocused] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [startDate, setStartDate] = useState(value.startDate || "");
@@ -227,7 +227,7 @@ const FloatingDateRange = ({
   // Enhanced date range check function
   const isDateInRange = (date) => {
     if (!date) return false;
-    
+
     const dateToCheck = new Date(date);
     dateToCheck.setHours(0, 0, 0, 0);
 
@@ -235,7 +235,7 @@ const FloatingDateRange = ({
       const minDateCheck = new Date(minDateObj);
       minDateCheck.setHours(0, 0, 0, 0);
       if (dateToCheck < minDateCheck) {
-        console.log('Date is before minDate:', dateToCheck, minDateCheck);
+        console.log("Date is before minDate:", dateToCheck, minDateCheck);
         return false;
       }
     }
@@ -244,7 +244,7 @@ const FloatingDateRange = ({
       const maxDateCheck = new Date(maxDateObj);
       maxDateCheck.setHours(0, 0, 0, 0);
       if (dateToCheck > maxDateCheck) {
-        console.log('Date is after maxDate:', dateToCheck, maxDateCheck);
+        console.log("Date is after maxDate:", dateToCheck, maxDateCheck);
         return false;
       }
     }
@@ -320,8 +320,8 @@ const FloatingDateRange = ({
   };
 
   const handleDateClick = (date) => {
-    console.log('Clicked date:', date, 'Is in range:', isDateInRange(date));
-    
+    console.log("Clicked date:", date, "Is in range:", isDateInRange(date));
+
     if (!isDateInRange(date)) {
       return;
     }
@@ -361,28 +361,44 @@ const FloatingDateRange = ({
   const navigateMonth = (direction) => {
     const newMonth = new Date(currentMonth);
     newMonth.setMonth(newMonth.getMonth() + direction);
-    
+
     // Check if the new month would be outside allowed range
     if (direction > 0 && maxDateObj) {
       // Moving forward - check if new month exceeds maxDate
-      const firstDayOfNewMonth = new Date(newMonth.getFullYear(), newMonth.getMonth(), 1);
-      const lastDayOfMaxMonth = new Date(maxDateObj.getFullYear(), maxDateObj.getMonth() + 1, 0);
-      
+      const firstDayOfNewMonth = new Date(
+        newMonth.getFullYear(),
+        newMonth.getMonth(),
+        1
+      );
+      const lastDayOfMaxMonth = new Date(
+        maxDateObj.getFullYear(),
+        maxDateObj.getMonth() + 1,
+        0
+      );
+
       if (firstDayOfNewMonth > lastDayOfMaxMonth) {
         return; // Don't navigate beyond maxDate month
       }
     }
-    
+
     if (direction < 0 && minDateObj) {
       // Moving backward - check if new month is before minDate
-      const lastDayOfNewMonth = new Date(newMonth.getFullYear(), newMonth.getMonth() + 1, 0);
-      const firstDayOfMinMonth = new Date(minDateObj.getFullYear(), minDateObj.getMonth(), 1);
-      
+      const lastDayOfNewMonth = new Date(
+        newMonth.getFullYear(),
+        newMonth.getMonth() + 1,
+        0
+      );
+      const firstDayOfMinMonth = new Date(
+        minDateObj.getFullYear(),
+        minDateObj.getMonth(),
+        1
+      );
+
       if (lastDayOfNewMonth < firstDayOfMinMonth) {
         return; // Don't navigate before minDate month
       }
     }
-    
+
     setCurrentMonth(newMonth);
   };
 
@@ -535,126 +551,132 @@ const FloatingDateRange = ({
     today.setHours(0, 0, 0, 0);
 
     // Check if navigation buttons should be disabled
-    const canNavigateBackward = !minDateObj || 
-      new Date(year, month - 1, 1) >= new Date(minDateObj.getFullYear(), minDateObj.getMonth(), 1);
-      
-    const canNavigateForward = !maxDateObj || 
-      new Date(year, month + 1, 1) <= new Date(maxDateObj.getFullYear(), maxDateObj.getMonth(), 1);
+    const canNavigateBackward =
+      !minDateObj ||
+      new Date(year, month - 1, 1) >=
+        new Date(minDateObj.getFullYear(), minDateObj.getMonth(), 1);
+
+    const canNavigateForward =
+      !maxDateObj ||
+      new Date(year, month + 1, 1) <=
+        new Date(maxDateObj.getFullYear(), maxDateObj.getMonth(), 1);
 
     return (
       <>
-      <div className={`w-full relative`}>
-        <div className="flex justify-between items-center mb-1 relative">
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              navigateMonth(-1);
-            }}
-            disabled={!canNavigateBackward}
-            className={`p-0.5 text-xs rounded flex-shrink-0 ${
-              canNavigateBackward 
-                ? "cursor-pointer hover:bg-gray-100" 
-                : "cursor-not-allowed text-gray-300"
-            }`}
-          >
-            &lt;
-          </button>
+        <div className={`w-full relative ${parentClassNameUpdate}`}>
+          <div className="flex justify-between items-center mb-1 relative">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigateMonth(-1);
+              }}
+              disabled={!canNavigateBackward}
+              className={`p-0.5 text-xs rounded flex-shrink-0 ${
+                canNavigateBackward
+                  ? "cursor-pointer hover:bg-gray-100"
+                  : "cursor-not-allowed text-gray-300"
+              }`}
+            >
+              &lt;
+            </button>
 
-          <div className="flex items-center gap-1 flex-1 justify-center">
-            {showMonth && (
-              <div className="relative flex-1 max-w-[120px]">
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowMonthDropdown(!showMonthDropdown);
-                    setShowYearDropdown(false);
-                  }}
-                  className="w-full text-xs font-medium hover:bg-gray-100 px-2 py-0.5 rounded cursor-pointer flex items-center justify-center"
-                >
-                  <span className="truncate">
-                    {currentMonth.toLocaleDateString("default", {
-                      month: "short",
-                    })}
-                  </span>
-                  <span className="ml-1 flex-shrink-0">▼</span>
-                </button>
-                {showMonthDropdown && renderMonthDropdown()}
-              </div>
-            )}
+            <div className="flex items-center gap-1 flex-1 justify-center">
+              {showMonth && (
+                <div className="relative flex-1 max-w-[120px]">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowMonthDropdown(!showMonthDropdown);
+                      setShowYearDropdown(false);
+                    }}
+                    className="w-full text-xs font-medium hover:bg-gray-100 px-2 py-0.5 rounded cursor-pointer flex items-center justify-center"
+                  >
+                    <span className="truncate">
+                      {currentMonth.toLocaleDateString("default", {
+                        month: "short",
+                      })}
+                    </span>
+                    <span className="ml-1 flex-shrink-0">▼</span>
+                  </button>
+                  {showMonthDropdown && renderMonthDropdown()}
+                </div>
+              )}
 
-            {showYear && (
-              <div className="relative flex-1 max-w-[80px]">
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowYearDropdown(!showYearDropdown);
-                    setShowMonthDropdown(false);
-                  }}
-                  className="w-full text-xs font-medium hover:bg-gray-100 px-2 py-0.5 rounded cursor-pointer flex items-center justify-center"
-                >
-                  <span className="truncate">{currentMonth.getFullYear()}</span>
-                  <span className="ml-1 flex-shrink-0">▼</span>
-                </button>
-                {showYearDropdown && renderYearDropdown()}
-              </div>
-            )}
+              {showYear && (
+                <div className="relative flex-1 max-w-[80px]">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowYearDropdown(!showYearDropdown);
+                      setShowMonthDropdown(false);
+                    }}
+                    className="w-full text-xs font-medium hover:bg-gray-100 px-2 py-0.5 rounded cursor-pointer flex items-center justify-center"
+                  >
+                    <span className="truncate">
+                      {currentMonth.getFullYear()}
+                    </span>
+                    <span className="ml-1 flex-shrink-0">▼</span>
+                  </button>
+                  {showYearDropdown && renderYearDropdown()}
+                </div>
+              )}
 
-            {!showMonth && !showYear && (
-              <div className="text-xs font-medium text-center">
-                {currentMonth.toLocaleDateString("default", {
-                  month: "short",
-                  year: "numeric",
-                })}
-              </div>
-            )}
+              {!showMonth && !showYear && (
+                <div className="text-xs font-medium text-center">
+                  {currentMonth.toLocaleDateString("default", {
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigateMonth(1);
+              }}
+              disabled={!canNavigateForward}
+              className={`p-0.5 text-xs rounded flex-shrink-0 ${
+                canNavigateForward
+                  ? "cursor-pointer hover:bg-gray-100"
+                  : "cursor-not-allowed text-gray-300"
+              }`}
+            >
+              &gt;
+            </button>
           </div>
 
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              navigateMonth(1);
-            }}
-            disabled={!canNavigateForward}
-            className={`p-0.5 text-xs rounded flex-shrink-0 ${
-              canNavigateForward 
-                ? "cursor-pointer hover:bg-gray-100" 
-                : "cursor-not-allowed text-gray-300"
-            }`}
-          >
-            &gt;
-          </button>
-        </div>
+          <div className="grid grid-cols-7 gap-0.5 text-[10px] text-center mb-1">
+            {["M", "T", "W", "T", "F", "S", "S"].map((day) => (
+              <div key={day} className="font-medium text-gray-500 py-0.5">
+                {day}
+              </div>
+            ))}
+          </div>
 
-        <div className="grid grid-cols-7 gap-0.5 text-[10px] text-center mb-1">
-          {["M", "T", "W", "T", "F", "S", "S"].map((day) => (
-            <div key={day} className="font-medium text-gray-500 py-0.5">
-              {day}
-            </div>
-          ))}
-        </div>
+          <div className="grid grid-cols-7 gap-0.5">
+            {days.map((dayObj, index) => {
+              const isSelected = dayObj.isSelected;
+              const isInRange = dayObj.isInRange;
+              const isDisabled = dayObj.isDisabled;
 
-        <div className="grid grid-cols-7 gap-0.5">
-          {days.map((dayObj, index) => {
-            const isSelected = dayObj.isSelected;
-            const isInRange = dayObj.isInRange;
-            const isDisabled = dayObj.isDisabled;
+              const dayDate = new Date(dayObj.date);
+              dayDate.setHours(0, 0, 0, 0);
+              const isToday =
+                dayDate.getDate() === today.getDate() &&
+                dayDate.getMonth() === today.getMonth() &&
+                dayDate.getFullYear() === today.getFullYear();
 
-            const dayDate = new Date(dayObj.date);
-            dayDate.setHours(0, 0, 0, 0);
-            const isToday =
-              dayDate.getDate() === today.getDate() &&
-              dayDate.getMonth() === today.getMonth() &&
-              dayDate.getFullYear() === today.getFullYear();
-
-            return (
-              <button
-                key={index}
-                onClick={() => !isDisabled && handleDateClick(dayObj.date)}
-                className={`h-6 rounded text-[10px]
+              return (
+                <button
+                  key={index}
+                  onClick={() => !isDisabled && handleDateClick(dayObj.date)}
+                  className={`h-6 rounded text-[10px]
                   ${dayObj.isCurrentMonth ? "text-gray-800" : "text-gray-400"}
                   ${isSelected && !isDisabled ? "bg-green-500 text-white" : ""}
                   ${isInRange && !isDisabled ? "bg-gray-100" : ""}
@@ -665,14 +687,14 @@ const FloatingDateRange = ({
                       : "cursor-pointer hover:bg-green-200"
                   }
                 `}
-                disabled={isDisabled}
-              >
-                {dayObj.day}
-              </button>
-            );
-          })}
+                  disabled={isDisabled}
+                >
+                  {dayObj.day}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
       </>
     );
   };
@@ -691,131 +713,133 @@ const FloatingDateRange = ({
 
   return (
     <>
-    {staticLabel && (
-      <div className="mb-2">
-        <label className="text-[14px] font-medium text-gray-800">{label}</label>
-      </div>
-    )}
-    <div className={`${parentClassName} relative w-full`} ref={dropdownRef}>
-      {!hideLabel && (
-        <FloatingPlaceholder
-          className={`${labelClassName} ${!hideCalendarIcon && "!pl-5"} ${
-            readOnly && "bg-gray-100 "
-          }`}
-          isFocused={isFocused}
-          hasError={shouldShowError}
-        >
-          <span
-            style={{ fontSize: isFocused ? "10px" : "11px" }}
-            className={`${labelClassName} ${readOnly && "bg-gray-100"} ${
-              shouldShowError ? "text-red-500" : "text-[#808082]"
-            }`}
-          >
+      {staticLabel && (
+        <div className="mb-2">
+          <label className="text-[14px] font-medium text-gray-800">
             {label}
-            {mandatory ? "*" : ""}
-          </span>
-        </FloatingPlaceholder>
-      )}
-
-      <div className={`${subParentClassName} relative`} ref={inputRef}>
-        {!hideCalendarIcon && (
-          <div
-            className="absolute left-2 z-10 bg-white top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
-            onClick={handleInputClick}
-          >
-            <IconStore.calendar className="size-3" />
-          </div>
-        )}
-
-        <input
-          id={id}
-          type="text"
-          name={name}
-          value={displayValue}
-          readOnly
-          onClick={handleInputClick}
-          className={`${!hideCalendarIcon && "!pl-8"} ${baseClasses} ${
-            readOnly && "bg-gray-100"
-          }  cursor-pointer ${className}`}
-          placeholder=""
-          required={required}
-        />
-      </div>
-
-      {shouldShowError && (
-        <p className="mt-0.5 text-xs text-red-500">{error}</p>
-      )}
-
-      {isOpen && (
-        <div
-          className={`fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-xl p-2 min-w-[280px]`}
-          style={{
-            top: dropdownPosition.top
-              ? `${
-                  inputRef.current?.getBoundingClientRect().bottom +
-                  window.scrollY
-                }px`
-              : `${
-                  inputRef.current?.getBoundingClientRect().top +
-                  window.scrollY -
-                  350
-                }px`,
-            left: `${
-              inputRef.current?.getBoundingClientRect().left +
-              window.scrollX +
-              dropdownPosition.left
-            }px`,
-            width: `${inputRef.current?.getBoundingClientRect().width}px`,
-            maxWidth: "95vw",
-          }}
-        >
-          <div className="space-y-2">
-            <div className="text-xs font-medium text-gray-700">
-              {singleDateMode
-                ? tempStartDate
-                  ? `${formatDate(toLocalDateString(tempStartDate))}`
-                  : "Select date"
-                : tempStartDate && tempEndDate
-                ? `${formatDate(
-                    toLocalDateString(tempStartDate)
-                  )} - ${formatDate(toLocalDateString(tempEndDate))}`
-                : tempStartDate
-                ? `${formatDate(
-                    toLocalDateString(tempStartDate)
-                  )} - Select end date`
-                : "Select start date"}
-            </div>
-
-            {renderCalendar()}
-
-            <div className="flex justify-between pt-2">
-              <button
-                onClick={handleClear}
-                className="px-2 py-1 cursor-pointer text-xs text-gray-700 hover:bg-gray-100 rounded"
-              >
-                Reset
-              </button>
-              {!singleDateMode && (
-                <div className="flex gap-1">
-                  <button
-                    onClick={handleApply}
-                    className="px-2 py-1 text-xs cursor-pointer bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    disabled={
-                      !tempStartDate ||
-                      !tempEndDate ||
-                      !isDateInRange(tempStartDate) ||
-                      !isDateInRange(tempEndDate)
-                    }
-                  >
-                    Confirm
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+          </label>
         </div>
       )}
-    </div>
+      <div className={`${parentClassName} relative w-full`} ref={dropdownRef}>
+        {!hideLabel && (
+          <FloatingPlaceholder
+            className={`${labelClassName} ${!hideCalendarIcon && "!pl-5"} ${
+              readOnly && "bg-gray-100 "
+            }`}
+            isFocused={isFocused}
+            hasError={shouldShowError}
+          >
+            <span
+              style={{ fontSize: isFocused ? "10px" : "11px" }}
+              className={`${labelClassName} ${readOnly && "bg-gray-100"} ${
+                shouldShowError ? "text-red-500" : "text-[#808082]"
+              }`}
+            >
+              {label}
+              {mandatory ? "*" : ""}
+            </span>
+          </FloatingPlaceholder>
+        )}
+
+        <div className={`${subParentClassName} relative`} ref={inputRef}>
+          {!hideCalendarIcon && (
+            <div
+              className="absolute left-2 z-10 bg-white top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+              onClick={handleInputClick}
+            >
+              <IconStore.calendar className="size-2" />
+            </div>
+          )}
+
+          <input
+            id={id}
+            type="text"
+            name={name}
+            value={displayValue}
+            readOnly
+            onClick={handleInputClick}
+            className={`${!hideCalendarIcon && "!pl-8"} ${baseClasses} ${
+              readOnly && "bg-gray-100"
+            }  cursor-pointer ${className}`}
+            placeholder=""
+            required={required}
+          />
+        </div>
+
+        {shouldShowError && (
+          <p className="mt-0.5 text-xs text-red-500">{error}</p>
+        )}
+
+        {isOpen && (
+          <div
+            className={`fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-xl p-2 min-w-[280px]`}
+            style={{
+              top: dropdownPosition.top
+                ? `${
+                    inputRef.current?.getBoundingClientRect().bottom +
+                    window.scrollY
+                  }px`
+                : `${
+                    inputRef.current?.getBoundingClientRect().top +
+                    window.scrollY -
+                    350 +60
+                  }px`,
+              left: `${
+                inputRef.current?.getBoundingClientRect().left +
+                window.scrollX +
+                dropdownPosition.left -40
+              }px`,
+              width: `${inputRef.current?.getBoundingClientRect().width}px`,
+              maxWidth: "95vw",
+            }}
+          >
+            <div className="space-y-2">
+              <div className="text-xs font-medium text-gray-700">
+                {singleDateMode
+                  ? tempStartDate
+                    ? `${formatDate(toLocalDateString(tempStartDate))}`
+                    : "Select date"
+                  : tempStartDate && tempEndDate
+                  ? `${formatDate(
+                      toLocalDateString(tempStartDate)
+                    )} - ${formatDate(toLocalDateString(tempEndDate))}`
+                  : tempStartDate
+                  ? `${formatDate(
+                      toLocalDateString(tempStartDate)
+                    )} - Select end date`
+                  : "Select start date"}
+              </div>
+
+              {renderCalendar()}
+
+              <div className="flex justify-between pt-2">
+                <button
+                  onClick={handleClear}
+                  className="px-2 py-1 cursor-pointer text-xs text-gray-700 hover:bg-gray-100 rounded"
+                >
+                  Reset
+                </button>
+                {!singleDateMode && (
+                  <div className="flex gap-1">
+                    <button
+                      onClick={handleApply}
+                      className="px-2 py-1 text-xs cursor-pointer bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      disabled={
+                        !tempStartDate ||
+                        !tempEndDate ||
+                        !isDateInRange(tempStartDate) ||
+                        !isDateInRange(tempEndDate)
+                      }
+                    >
+                      Confirm
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 };

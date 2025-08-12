@@ -1175,7 +1175,7 @@ const TicketsPage = (props) => {
               : "Field updated successfully"
           );
         } else {
-          console.error("Update failed:", update);
+          console.error("Update failed:");
           toast.error("Failed to update field(s)");
           // Revert the changes on error
           handleCancelEdit(matchIndex, rowIndex);

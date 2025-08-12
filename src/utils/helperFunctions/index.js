@@ -74,8 +74,8 @@ export const checkAuthTokenValidationMiddleWare = async (
   if (!authToken || !timeValidity) return false;
   const currentTimeEpoch = currentTimeEpochTimeInMilliseconds();
   const tokenTimeEpoch = Number(timeValidity);
-  // Changed from 3600000 (1 hour) to 60000 (1 minute)
-  const timeDiffBolean = tokenTimeEpoch > currentTimeEpoch - 3600000;
+  // Changed from 3600000 (1 hour) to 60000 (1 minute) 86400000 for 1 day
+  const timeDiffBolean = tokenTimeEpoch > currentTimeEpoch - 86400000;
   if (timeDiffBolean) {
     return true;
   } else {
@@ -99,7 +99,7 @@ export const checkValidAuthToken = (context = null, authToken) => {
   // if (!token) return false;
   const currentTimeEpoch = currentTimeEpochTimeInMilliseconds();
   const tokenTimeEpoch = Number(fetchAuthTokenTime);
-  const timeDiffBolean = tokenTimeEpoch > currentTimeEpoch - 3600000;
+  const timeDiffBolean = tokenTimeEpoch > currentTimeEpoch - 86400000;
   return timeDiffBolean;
   return true;
 };

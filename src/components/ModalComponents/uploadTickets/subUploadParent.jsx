@@ -565,7 +565,7 @@ const SubUploadParent = React.forwardRef(
 
             {/* Show additional info section when not in proof upload view */}
             {!proofUploadView && (
-              <div className="border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1 bg-[#F9F9FB]">
+              <div className="border-[1px] border-[#E0E1EA] rounded-md mt-4 h-fit flex-1 bg-[#F9F9FB]">
                 <div className=" p-3 flex items-center gap-2">
                   <h4 className="text-sm font-medium text-[#323A70]">
                     Additional Information

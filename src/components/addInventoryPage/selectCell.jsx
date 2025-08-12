@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import { debounce } from "lodash";
 import CustomSelectEditableCell from "./customSimpleEditableCell";
+import FloatingDateRange from "../commonComponents/dateRangeInput";
 
 const MultiSelectEditableCell = ({
   value,
@@ -493,15 +494,22 @@ const SimpleEditableCell = ({
   const inputRef = useRef(null);
   const [shouldFocusInput, setShouldFocusInput] = useState(false);
 
-  // Helper functions for date formatting (keep existing ones)
+  // Date formatting helper functions
   const formatDateForDisplay = (dateString) => {
     if (!dateString) return "";
     
     try {
+      // If already in DD/MM/YYYY format
       if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
         return dateString;
       }
       
+      // If in DD-MM-YYYY format, convert to DD/MM/YYYY
+      if (dateString.match(/^\d{2}-\d{2}-\d{4}$/)) {
+        return dateString.replace(/-/g, '/');
+      }
+      
+      // If in YYYY-MM-DD format
       if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const [year, month, day] = dateString.split('-');
         return `${day}/${month}/${year}`;
@@ -523,45 +531,56 @@ const SimpleEditableCell = ({
     }
   };
 
-  const formatDateForInput = (dateString) => {
-    if (!dateString) return "";
+  // Convert date string to FloatingDateRange format (startDate/endDate object)
+  const convertToDateRangeFormat = (dateString) => {
+    if (!dateString) return { startDate: "", endDate: "" };
     
-    try {
-      if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        return dateString;
+    // Convert to YYYY-MM-DD format for FloatingDateRange
+    let formattedDate = "";
+    
+    if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+      // DD/MM/YYYY format
+      const [day, month, year] = dateString.split('/');
+      formattedDate = `${year}-${month}-${day}`;
+    } else if (dateString.match(/^\d{2}-\d{2}-\d{4}$/)) {
+      // DD-MM-YYYY format
+      const [day, month, year] = dateString.split('-');
+      formattedDate = `${year}-${month}-${day}`;
+    } else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      // Already in YYYY-MM-DD format
+      formattedDate = dateString;
+    } else {
+      // Try to parse as Date and convert
+      try {
+        const date = new Date(dateString);
+        if (!isNaN(date.getTime())) {
+          const year = date.getFullYear();
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+          const day = date.getDate().toString().padStart(2, '0');
+          formattedDate = `${year}-${month}-${day}`;
+        }
+      } catch (error) {
+        console.error('Error parsing date:', error);
+        return { startDate: "", endDate: "" };
       }
-      
-      if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-        const [day, month, year] = dateString.split('/');
-        return `${year}-${month}-${day}`;
-      }
-      
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        return "";
-      }
-      
-      return date.toISOString().split('T')[0];
-    } catch (error) {
-      console.error('Error formatting date for input:', error);
-      return "";
     }
+    
+    return { startDate: formattedDate, endDate: formattedDate };
   };
 
-  const formatDateForSave = (dateString) => {
-    if (!dateString) return "";
+  // Convert FloatingDateRange format back to DD-MM-YYYY
+  const convertFromDateRangeFormat = (dateRangeValue) => {
+    if (!dateRangeValue || !dateRangeValue.startDate) return "";
     
-    try {
-      if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        const [year, month, day] = dateString.split('-');
-        return `${day}/${month}/${year}`;
-      }
-      
-      return dateString;
-    } catch (error) {
-      console.error('Error formatting date for save:', error);
-      return dateString;
+    const dateString = dateRangeValue.startDate;
+    
+    // Convert YYYY-MM-DD to DD-MM-YYYY
+    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const [year, month, day] = dateString.split('-');
+      return `${day}-${month}-${year}`;
     }
+    
+    return dateString;
   };
 
   useEffect(() => {
@@ -604,6 +623,43 @@ const SimpleEditableCell = ({
     );
   }
 
+  // For date type, use FloatingDateRange - ALWAYS SHOW AS EDITABLE BY DEFAULT
+  if (type === "date") {
+    const handleDateChange = (dateRangeValue) => {
+      const convertedValue = convertFromDateRangeFormat(dateRangeValue);
+      if (convertedValue !== value) {
+        onSave(convertedValue);
+      }
+    };
+
+    // Date fields are ALWAYS rendered as editable (FloatingDateRange) unless disabled
+    if (!disabled) {
+      return (
+        <div className="w-full">
+          <FloatingDateRange
+            value={convertToDateRangeFormat(value)}
+            onChange={handleDateChange}
+            singleDateMode={true}
+            hideLabel={true}
+            saveOnChange={true}
+            placeholder={placeholder}
+            className="text-xs !py-1.5 bg-white"
+            parentClassNameUpdate="bg-white"
+          />
+        </div>
+      );
+    }
+
+    // Only show as read-only display when disabled
+    return (
+      <div className={`cursor-not-allowed opacity-60 ${className}`}>
+        <span className="text-xs text-gray-400">
+          {value ? formatDateForDisplay(value) : placeholder}
+        </span>
+      </div>
+    );
+  }
+
   // For all other types, continue with existing logic
   const handleClick = useCallback((e) => {
     if (disabled) return;
@@ -615,34 +671,9 @@ const SimpleEditableCell = ({
     setShouldFocusInput(true);
   }, [disabled]);
 
-  const handleDateInputClick = useCallback((e) => {
-    e.stopPropagation();
-    
-    if (disabled) return;
-    
-    if (!isEditing) {
-      setIsEditing(true);
-      setShouldFocusInput(true);
-    }
-    
-    if (inputRef.current && type === "date") {
-      setTimeout(() => {
-        if (inputRef.current?.showPicker) {
-          inputRef.current.showPicker();
-        }
-      }, 0);
-    }
-  }, [disabled, isEditing, type]);
-
   const handleSave = () => {
-    let valueToSave = editValue;
-    
-    if (type === "date") {
-      valueToSave = formatDateForSave(editValue);
-    }
-    
-    if (valueToSave !== value) {
-      onSave(valueToSave);
+    if (editValue !== value) {
+      onSave(editValue);
     }
     setIsEditing(false);
   };
@@ -656,13 +687,7 @@ const SimpleEditableCell = ({
     setEditValue(newValue);
 
     if (saveOnChange && newValue !== value) {
-      let valueToSave = newValue;
-      
-      if (type === "date") {
-        valueToSave = formatDateForSave(newValue);
-      }
-      
-      onSave(valueToSave);
+      onSave(newValue);
     }
   };
 
@@ -685,19 +710,9 @@ const SimpleEditableCell = ({
   useEffect(() => {
     if (isEditing && shouldFocusInput && inputRef.current) {
       setShouldFocusInput(false);
-      
-      if (type === "date") {
-        inputRef.current.focus();
-        setTimeout(() => {
-          if (inputRef.current?.showPicker) {
-            inputRef.current.showPicker();
-          }
-        }, 0);
-      } else {
-        inputRef.current.focus();
-        if (inputRef.current.select) {
-          inputRef.current.select();
-        }
+      inputRef.current.focus();
+      if (inputRef.current.select) {
+        inputRef.current.select();
       }
     }
   }, [isEditing, type, shouldFocusInput]);
@@ -706,17 +721,11 @@ const SimpleEditableCell = ({
     if (type === "checkbox") {
       return value ? "Yes" : "No";
     }
-    if (type === "date") {
-      return value ? formatDateForDisplay(value) : placeholder;
-    }
     return value || placeholder;
   };
 
   const hasValue = () => {
     if (type === "checkbox") return true;
-    if (type === "date") {
-      return !!(value && value.toString().trim());
-    }
     return !!(value && value.toString().trim());
   };
 
@@ -734,7 +743,7 @@ const SimpleEditableCell = ({
     );
   };
 
-  // Editing mode (for non-select types)
+  // Editing mode (for non-select, non-date types)
   if (isEditing && !disabled) {
     return (
       <div className="w-full relative">
@@ -756,22 +765,6 @@ const SimpleEditableCell = ({
               }`}
             />
           </div>
-        ) : type === "date" ? (
-          <input 
-            ref={inputRef} 
-            type="date" 
-            value={formatDateForInput(editValue) || ""}
-            onChange={(e) => handleChange(e.target.value)}
-            onKeyDown={handleKeyPress}
-            onBlur={handleBlur}
-            onFocus={() => setIsFocused(true)}
-            onClick={handleDateInputClick}
-            className={`border rounded ${getInputPadding()} py-1 text-xs focus:outline-none w-full bg-white text-[#323A70] transition-colors ${
-              isFocused
-                ? "border-green-500 ring-2 ring-green-500"
-                : "border-[#DADBE5] hover:border-green-400"
-            }`}
-          />
         ) : (
           <input
             ref={inputRef}
@@ -810,8 +803,8 @@ const SimpleEditableCell = ({
             </div>
           ) : (
             <input
-              type={type === "date" ? "text" : type}
-              value={type === "date" ? formatDateForDisplay(editValue) : (editValue || "")}
+              type={type}
+              value={editValue || ""}
               placeholder={placeholder}
               className={`border border-[#DADBE5] rounded ${getInputPadding()} py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors placeholder:text-gray-400`}
               readOnly

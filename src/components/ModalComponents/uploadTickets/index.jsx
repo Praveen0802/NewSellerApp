@@ -300,11 +300,15 @@ const UploadTickets = ({
 
         if (fileToTransfer) {
           // NEW: If targetSlot is specified and valid, insert at that position
-          if (targetSlot !== null && targetSlot >= 1 && targetSlot <= maxQuantity) {
+          if (
+            targetSlot !== null &&
+            targetSlot >= 1 &&
+            targetSlot <= maxQuantity
+          ) {
             setTransferredFiles((prev) => {
               const newTransferred = [...prev];
               const targetIndex = targetSlot - 1;
-              
+
               // If target slot is empty or beyond current length, add at that position
               if (targetIndex >= newTransferred.length) {
                 // Fill gaps with nulls if necessary
@@ -319,14 +323,14 @@ const UploadTickets = ({
                 // Target slot is occupied, add at end
                 newTransferred.push(fileToTransfer);
               }
-              
-              return newTransferred.filter(file => file !== null);
+
+              return newTransferred.filter((file) => file !== null);
             });
           } else {
             // Original behavior - add at end
             setTransferredFiles((prev) => [...prev, fileToTransfer]);
           }
-          
+
           setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
         }
       }
@@ -406,10 +410,10 @@ const UploadTickets = ({
   const MatchHeader = () => (
     <div className="bg-[#343432] text-xs rounded-t-md text-white px-4 flex items-center justify-between min-w-0">
       <div className="grid grid-cols-4 gap-2">
-      <h3 className="font-medium truncate py-3 flex-shrink-0 max-w-[200px] border-r border-[#51428E]">
-        {matchDetails?.match_name}
-      </h3>
-      <div className="flex items-center gap-1 py-3 border-r border-[#51428E]">
+        <h3 className="font-medium truncate py-3 flex-shrink-0 max-w-[200px] border-r border-[#51428E]">
+          {matchDetails?.match_name}
+        </h3>
+        <div className="flex items-center gap-1 py-3 border-r border-[#51428E]">
           <Calendar className="w-4 h-4 flex-shrink-0" />
           <span className="text-xs whitespace-nowrap">
             {matchDetails?.match_date_format ||
@@ -474,7 +478,13 @@ const UploadTickets = ({
           ) : paperTicketFlow ? (
             "Paper Ticket"
           ) : proofUploadView ? (
-            <span className="text-orange-600">Pending Upload</span>
+            <>
+              {existingProofTickets ? (
+                <span className="text-green-600">{"Confirmed"}</span>
+              ) : (
+                <span className="text-orange-600">{"Pending"}</span>
+              )}
+            </>
           ) : (
             <div className="flex gap-5 items-center justify-end">
               <span>{rowData?.row || "0"} (0)</span>
@@ -1102,7 +1112,7 @@ const UploadTickets = ({
   };
 
   console.log(transferredFiles, "transferredFiles");
-  
+
   // NEW: Enhanced Ticket Assignment Section Component with Drag Drop Support
   const TicketAssignmentSection = () => {
     // Use the appropriate state variables based on proof upload view
@@ -1232,7 +1242,7 @@ const UploadTickets = ({
     };
 
     return (
-      <div 
+      <div
         className={`p-3 transition-all duration-200 ${
           dragOver ? "bg-blue-50 border-l-4 border-l-blue-500" : ""
         }`}
@@ -1264,9 +1274,11 @@ const UploadTickets = ({
               const assignedFile = currentTransferredFiles[index];
               const isSlotDraggedOver = dragOverSlot === itemNumber;
               const isEmpty = !assignedFile;
-              
+
               // Check if this specific slot can accept drops
-              const canAcceptDrop = isEmpty && window.currentDraggedFile && 
+              const canAcceptDrop =
+                isEmpty &&
+                window.currentDraggedFile &&
                 canTransferFile(window.currentDraggedFile.id);
 
               console.log(assignedFile, "assignedFileassignedFile");
@@ -1314,7 +1326,7 @@ const UploadTickets = ({
                         </div>
                       </div>
                     ) : (
-                      <div 
+                      <div
                         className={`text-xs w-full border-[1px] border-dashed rounded-md px-2 py-1 transition-all duration-200 ${
                           isSlotDraggedOver && canAcceptDrop
                             ? "border-blue-500 bg-blue-50 text-blue-600"
