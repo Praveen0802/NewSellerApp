@@ -62,6 +62,7 @@ const TrackingPage = (props) => {
     { key: "category", label: "Category" },
     { key: "ticketType", label: "Ticket Type" },
     { key: "qty", label: "Qty" },
+    { key: "price_with_currency", label: "Ticket Price" },
     ...(isMobile
       ? [
           { key: "price", label: "Price" },
@@ -119,6 +120,7 @@ const TrackingPage = (props) => {
       category: item?.Category,
       ticketType: item?.ticket_type,
       qty: item?.quantity,
+      price_with_currency: item?.price_with_currency,
       ...(isMobile && {
         price: item?.price_with_currency,
         attachment: (
@@ -180,17 +182,17 @@ const TrackingPage = (props) => {
     setFIlterApplied(params);
   };
 
-  const rightStickyHeaders = isMobile ? [] : ["Ticket Price"];
+  const rightStickyHeaders = isMobile ? [] : [];
   const rightStickyColumns = selectedTicketDetails?.map((item) => {
     return [
       ...(isMobile
         ? []
         : [
-            {
-              icon: <p>{item?.price_with_currency}</p>,
-              className:
-                "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
-            },
+            // {
+            //   icon: <p>{item?.price_with_currency}</p>,
+            //   className:
+            //     "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
+            // },
             {
               icon: (
                 <Image

@@ -31,34 +31,31 @@ const CustomSelectEditableCell = ({
     setEditValue(value);
   }, [value]);
 
-  // Calculate dropdown position
+  // Calculate dropdown position with fixed smaller width
   const calculateDropdownPosition = useCallback(() => {
     if (!dropdownRef.current) return;
 
     const rect = dropdownRef.current.getBoundingClientRect();
-    const dropdownHeight = Math.min(options.length * 36 + 8, 200); // Dynamic height based on options
+    const dropdownHeight = Math.min(options.length * 40 + 8, 200); // Slightly increased row height for wrapped text
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
     const spaceBelow = viewportHeight - rect.bottom;
     const spaceAbove = rect.top;
 
-    // Calculate optimal width
-    const maxOptionLength = Math.max(
-      ...options.map((opt) => opt.label?.length || 0),
-      placeholder.length
-    );
-    const minWidthFromContent = Math.max(maxOptionLength * 8 + 60, 150);
-    const maxAllowedWidth = Math.min(viewportWidth - rect.left - 20, 300);
-    const optimalWidth = Math.min(minWidthFromContent, maxAllowedWidth);
+    // Set a fixed, smaller width for the dropdown
+    const fixedWidth = 200; // Reduced from dynamic calculation
+    const maxAllowedWidth = Math.min(viewportWidth - rect.left - 20, fixedWidth);
 
+    // Decide whether to show above or below
     const showAbove = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
 
     const position = {
       left: rect.left + window.scrollX,
-      width: Math.max(optimalWidth, rect.width),
+      width: Math.max(maxAllowedWidth, 180), // Minimum width of 180px
       showAbove,
     };
 
+    // Adjust left position if dropdown would go off-screen
     if (position.left + position.width > viewportWidth) {
       position.left = Math.max(10, viewportWidth - position.width - 10);
     }
@@ -70,7 +67,7 @@ const CustomSelectEditableCell = ({
     }
 
     setDropdownPosition(position);
-  }, [options, placeholder]);
+  }, [options]);
 
   // Update position when dropdown opens
   useEffect(() => {
@@ -260,20 +257,7 @@ const CustomSelectEditableCell = ({
               e.stopPropagation();
             }}
           >
-            {/* Placeholder option */}
-            {/* <div
-              className={`px-3 py-2 cursor-pointer hover:bg-gray-100 transition-colors ${
-                !editValue ? "bg-blue-50 text-blue-700" : "text-gray-700"
-              }`}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleOptionSelect("");
-              }}
-            >
-              <span className="text-xs">{placeholder}</span>
-            </div> */}
-
-            {/* Options */}
+            {/* Options with text wrapping */}
             {options.map((option) => {
               const isSelected = editValue === option.value;
               return (
@@ -287,14 +271,16 @@ const CustomSelectEditableCell = ({
                     handleOptionSelect(option.value);
                   }}
                 >
-                  <span className="text-xs">{option.label}</span>
+                  <span className="text-xs leading-tight break-words whitespace-normal">
+                    {option.label}
+                  </span>
                 </div>
               );
             })}
 
             {/* Save/Cancel buttons for non-saveOnChange mode */}
             {!saveOnChange && (
-              <div className="border-t border-[#DADBE5] p-2 flex justify-end space-x-2 bg-gray-50">
+              <div className="border-t border-[#DADBE5] p-2 flex justify-end space-x-2 bg-gray-50 sticky bottom-0">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
