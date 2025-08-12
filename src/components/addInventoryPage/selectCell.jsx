@@ -761,9 +761,9 @@ const SimpleEditableCell = ({
             />
           </div>
         ) : type === "date" ? (
-          <input
-            ref={inputRef}
-            type="date"
+          <input 
+            ref={inputRef} 
+            type="date" 
             value={formatDateForInput(editValue) || ""}
             onChange={(e) => handleChange(e.target.value)}
             onKeyDown={handleKeyPress}

@@ -17,7 +17,7 @@ import {
   Trash,
 } from "lucide-react";
 import CustomModal from "@/components/commonComponents/customModal";
-import uploadImage from "../../../../../public/uploadView.svg";
+import uploadImage from "../../../../../public/uploadIconNew.svg";
 import Image from "next/image";
 import Button from "@/components/commonComponents/button";
 import RightViewContainer from "@/components/dashboardPage/reportViewContainer/rightViewContainer";
@@ -60,7 +60,7 @@ const MySalesUploadTickets = ({
     return (
       <div>
         <RightViewModal
-          className="!w-[70vw]"
+          className="!w-[80vw]"
           show={show}
           onClose={() => onClose()}
         >
@@ -69,6 +69,7 @@ const MySalesUploadTickets = ({
       </div>
     );
   }
+
 
   const proofUploadView = rowData?.handleProofUpload || false;
   const ticketTypes = !isNaN(parseInt(rowData?.ticket_type))
@@ -485,13 +486,13 @@ const MySalesUploadTickets = ({
   );
 
   // Common Match Header Component
-  const MatchHeader = () => (
-    <div className="bg-[#343432] text-xs py-3 rounded-t-md text-white px-4 flex items-center justify-between min-w-0">
-      <h3 className="font-medium truncate flex-shrink-0 max-w-[200px]">
+const MatchHeader = () => (
+    <div className="bg-[#343432] text-xs rounded-t-md text-white px-4 flex items-center justify-between min-w-0">
+      <div className="grid grid-cols-4 gap-2">
+      <h3 className="font-medium truncate py-3 flex-shrink-0 max-w-[200px] border-r border-[#51428E]">
         {matchDetails?.match_name}
       </h3>
-      <div className="flex items-center gap-4 flex-shrink-0">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 py-3 border-r border-[#51428E]">
           <Calendar className="w-4 h-4 flex-shrink-0" />
           <span className="text-xs whitespace-nowrap">
             {matchDetails?.match_date_format ||
@@ -499,7 +500,7 @@ const MySalesUploadTickets = ({
               separateDateTime(matchDetails?.match_date)?.date}
           </span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 border-r border-[#51428E]">
           <Clock className="w-4 h-4 flex-shrink-0" />
           <span className="text-xs whitespace-nowrap">
             {matchDetails?.match_time || rowData?.matchTime}
@@ -511,13 +512,14 @@ const MySalesUploadTickets = ({
             {matchDetails?.stadium_name || rowData?.venue}
           </span>
         </div>
+      </div>
+      <div className="flex items-center gap-4 flex-shrink-0">
         <button className="flex-shrink-0">
           <ChevronUp className="w-4 h-4" />
         </button>
       </div>
     </div>
   );
-
   // Common Ticket Details Component
   const TicketDetails = () => (
     <div className="border-[1px] border-[#E0E1EA] rounded-b-md flex-shrink-0">
@@ -1504,7 +1506,7 @@ const MySalesUploadTickets = ({
               return (
                 <div
                   key={slotNumber}
-                  className="grid grid-cols-2 items-center border-b border-gray-200 last:border-b-0"
+                  className="flex items-center border-b border-gray-200 last:border-b-0"
                   onDragOver={(e) => handleSlotDragOver(e, slotNumber)}
                   onDragLeave={(e) => handleSlotDragLeave(e, slotNumber)}
                   onDrop={(e) => handleSlotDrop(e, slotNumber)}
@@ -1514,7 +1516,7 @@ const MySalesUploadTickets = ({
                       ? `Proof Document`
                       : `Ticket ${slotNumber}`}
                   </div>
-                  <div className="px-3 py-2 flex items-center">
+                  <div className="px-3 py-2 flex items-center flex-1">
                     {assignedFile ? (
                       <div className="flex bg-[#F2FBF9] border border-[#03BA8A] rounded px-2 py-1 items-center justify-between w-full">
                         <div className="flex items-center gap-2 flex-1">
@@ -1574,7 +1576,7 @@ console.log(isConfirmDisabled,'isConfirmDisabledisConfirmDisabled')
   return (
     <div>
       <RightViewModal
-        className="!w-[70vw]"
+        className="!w-[80vw]"
         show={show}
         onClose={() => onClose()}
       >

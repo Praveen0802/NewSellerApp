@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import TemplateContentRenderer from "./templateContent";
 import { Eye, FileText, ReceiptIcon } from "lucide-react";
+import FloatingSelect from "@/components/floatinginputFields/floatingSelect";
 
 const SubUploadParent = React.forwardRef(
   (
@@ -479,7 +480,7 @@ const SubUploadParent = React.forwardRef(
 
     // Left Panel Content
     const LeftPanelContent = () => (
-      <div className="w-1/2 border-r border-[#E0E1EA] flex flex-col">
+      <div className="w-[45%] border-r border-[#E0E1EA] flex flex-col">
         <div className="p-3 m-4 flex flex-col gap-4 overflow-y-auto  flex-1 max-h-[calc(100vh-150px)]">
           {showPopupView && selectedTemplateContent ? (
             <TemplateContentRenderer
@@ -528,10 +529,14 @@ const SubUploadParent = React.forwardRef(
       </div>
     );
 
+    const templateOptions = additionalTemplateData.map((template) => ({
+      value: template.id,
+      label: template.template_name,
+    }))
     return (
       <div className="flex flex-1 overflow-hidden">
         <LeftPanelContent />
-        <div className="w-1/2 flex flex-col">
+        <div className="w-[55%] flex flex-col">
           <div className="m-4 flex flex-col overflow-y-auto hideScrollbar flex-1 max-h-[calc(100vh-150px)]">
             {MatchHeader && <MatchHeader />}
             {TicketDetails && <TicketDetails />}
@@ -560,38 +565,35 @@ const SubUploadParent = React.forwardRef(
 
             {/* Show additional info section when not in proof upload view */}
             {!proofUploadView && (
-              <div className="border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1">
-                <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA]">
+              <div className="border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1 bg-[#F9F9FB]">
+                <div className=" p-3 flex items-center gap-2">
                   <h4 className="text-sm font-medium text-[#323A70]">
                     Additional Information
                   </h4>
+                  <span className="flex-grow flex-shrink basis-[40px] max-w-[18rem]">
+                  <FloatingSelect
+                    label={"Template"}
+                    // id={id}
+                    name={"Template"}
+                    // keyValue={}
+                    options={templateOptions || []}
+                    // mandatory={mandatory}
+                    selectedValue={additionalInfo.templateId}
+                    // multiselect={multiselect}
+                    // labelClassName={labelClassName}
+                    // searchable={searchable}
+                    disabled={loading}
+                    onSelect={handleTemplateChange}
+                    placeholder={"Template"}
+                    // error={error}
+                    paddingClassName={"w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"}
+                    // hideLabel={hideLabel}
+                    // className={parentClassName}
+                  />
+                  </span>
                 </div>
 
-                <div className="p-3">
-                  {/* Template Dropdown - now using template ID as value */}
-                  <div className="mb-4">
-                    <label className="block text-xs font-medium text-[#323A70] mb-2">
-                      Template
-                    </label>
-                    <select
-                      value={additionalInfo.templateId}
-                      onChange={(e) => handleTemplateChange(e.target.value)}
-                      className="w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md bg-white text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent"
-                      disabled={loading}
-                    >
-                      <option value="">Select a template...</option>
-                      {additionalTemplateData.map((template) => (
-                        <option key={template.id} value={template.id}>
-                          {template.template_name}
-                        </option>
-                      ))}
-                    </select>
-                    {loading && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        Loading templates...
-                      </p>
-                    )}
-                  </div>
+                <div className="px-3">
 
                   {/* Dynamic Content Area */}
                   <div className="mb-4">

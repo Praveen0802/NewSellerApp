@@ -297,6 +297,38 @@ export const downloadSalesCSVReport = async (token, params = {}) => {
   }
 };
 
+export const getSellerTickets = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_SELLER_TICKETS,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in reportEventSearch", error);
+    return {};
+  }
+};
+
+
+
+export const getSellerLevel = async (token, params = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.GET_SELLER_LEVEL,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in reportEventSearch", error);
+    return {};
+  }
+};
+
 export const loginUser = async (token, data) => {
   try {
     const response = await makeRequest({

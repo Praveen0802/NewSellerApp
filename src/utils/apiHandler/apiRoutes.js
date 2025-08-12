@@ -62,6 +62,8 @@ export const API_ROUTES = {
   EXPORT_REPORTS: `/reports/export`,
   DELETE_TICKET: `/my-listings/delete-ticket`,
   EXPORT_SALES: `/sales/export-reports`,
+  GET_SELLER_TICKETS:`/settings/seller-level-list`,
+  GET_SELLER_LEVEL:`/settings/seller-level`,
   GET_ORDER_HISTORY: `/wallet/get-order-history`,
   SEND_RESET_REQUEST: `/auth/password/reset-request`,
   PAYOUT_OVERVIEW: `/payouts/overview`,
