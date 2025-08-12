@@ -373,7 +373,7 @@ const MyReferrals = (props) => {
               <th className={headerClassName}>Refer Code</th>
               <th className={headerClassName}>Status</th>
               <th className={headerClassName}>Joined Date</th>
-              <th className={headerClassName}>View Booking</th>
+              <th className={headerClassName}>View Bookings</th>
             </tr>
           </thead>
           <tbody>
