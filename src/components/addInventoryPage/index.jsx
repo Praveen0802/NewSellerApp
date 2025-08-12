@@ -75,7 +75,6 @@ const AddInventoryPage = (props) => {
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-
   // Extract the original response structure (KEEP EXACTLY THE SAME)
   const {
     block_data = {},

@@ -30,7 +30,7 @@ const OrderValues = ({
               deliveryKey={deliveryKey}
               ticketTypesList={ticketTypesList}
               onTicketTypeChange={onTicketTypeChange}
-              value={key === "order_id" ? order_id_label || value : value}
+              value={ value}
               key={index}
             />
           );

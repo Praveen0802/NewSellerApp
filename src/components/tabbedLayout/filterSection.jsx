@@ -36,7 +36,12 @@ const FilterSection = ({
     value:
       filterValues[filter.name] || filter.defaultValue || filter?.value || "",
     onChange: (e) => {
-      const value = e?.target?.value !== undefined ? e.target.value : e;
+      const value =
+        filter?.type == "checkbox"
+          ? e?.target?.checked
+          : e?.target?.value !== undefined
+          ? e.target.value
+          : e;
       handleFilterChange(filter.name, value);
     },
   }));

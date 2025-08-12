@@ -11,6 +11,7 @@ import CtaValues from "./components/ctaValues";
 import AttendeeDetails from "./components/attendeeDetails";
 import PaymentOrderDetails from "./components/paymentOrderDetails";
 import DownLoadYourTickets from "./components/downLoadYourTickets";
+import RightViewModal from "../commonComponents/rightViewModal";
 
 const OrderDetails = ({ show, onClose, data = {} }) => {
   const {
@@ -76,16 +77,16 @@ const OrderDetails = ({ show, onClose, data = {} }) => {
         }
       `}</style>
 
-      <CustomModal
+      <RightViewModal
         className={`transition-custom ${
-          expandedVersion ? "w-full" : "w-full sm:w-[700px]"
+          expandedVersion ? "w-full" : "w-full sm:w-[650px]"
         }`}
         show={show}
         onClose={onClose}
       >
         <div
           className={`transition-custom ${
-            expandedVersion ? "w-full h-full" : "m-2 sm:m-4 "
+            expandedVersion ? "w-full h-full" : " "
           }`}
         >
           <div
@@ -94,7 +95,7 @@ const OrderDetails = ({ show, onClose, data = {} }) => {
               ${
                 expandedVersion
                   ? "w-full h-full"
-                  : "max-w-[676px] max-md:h-[500px] md:max-h-[90vh]"
+                  : "max-w-[676px] max-md:h-[500px] "
               }
               ${isTransitioning ? "scale-transition" : ""}
             `}
@@ -102,7 +103,7 @@ const OrderDetails = ({ show, onClose, data = {} }) => {
               transformOrigin: "center",
             }}
           >
-            <div className="flex items-center border-b-[1px] border-[#E0E1EA] justify-between py-[13px] px-[16px] sm:px-[24px]">
+            <div className="flex items-center border-b-[1px] p-3 border-[#E0E1EA] justify-between">
               <p className="text-[16px] sm:text-[18px] text-[#343432]">
                 Order ID: {orderId}
               </p>
@@ -174,7 +175,7 @@ const OrderDetails = ({ show, onClose, data = {} }) => {
             </div>
           </div>
         </div>
-      </CustomModal>
+      </RightViewModal>
     </>
   );
 };

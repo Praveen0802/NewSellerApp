@@ -28,6 +28,7 @@ import AdyenDropIn from "./adyenPurchaseNewCard";
 import { useRouter } from "next/router";
 import GuestDetails from "./guestDetails";
 import useCountryCodes from "@/Hooks/useCountryCodes";
+import { allCountryCodes } from "@/utils/constants/allContryCodes";
 
 const ConfirmPurchasePopup = ({ onClose }) => {
   const { confirmPurchasePopupFields } = useSelector((state) => state?.common);
@@ -85,13 +86,13 @@ const ConfirmPurchasePopup = ({ onClose }) => {
 
   const fetchAddressPaymentDetails = async () => {
     try {
-      const [addressDetails, paymentDetails, dialingCode, countryList] =
+      const [addressDetails, paymentDetails, countryList] =
         await Promise.allSettled([
           fetchAddressBookDetails(),
           paymentPurchaseDetails("", {
             currency: data?.purchase?.price_breakdown?.currency,
           }),
-          getDialingCode(),
+
           fetchCountrieList(),
         ]);
       setCountryOptions(
@@ -99,14 +100,14 @@ const ConfirmPurchasePopup = ({ onClose }) => {
           return { label: item?.name, value: item?.id };
         })
       );
-      // setPhoneCodeOptions(
-      //   dialingCode?.value?.data?.map((item) => {
-      //     return {
-      //       value: item?.phone_code,
-      //       label: `${item?.country_short_name} ${item?.country_code}`,
-      //     };
-      //   })
-      // );
+      setPhoneCodeOptions(
+        allCountryCodes?.data?.map((item) => {
+          return {
+            value: item?.phone_code,
+            label: `${item?.country_short_name} ${item?.country_code}`,
+          };
+        })
+      );
       setPhoneCodeOptions(allCountryCodeOptions);
       setAddressDetails(addressDetails?.value);
       setPaymentDetails(paymentDetails?.value?.payment_methods);

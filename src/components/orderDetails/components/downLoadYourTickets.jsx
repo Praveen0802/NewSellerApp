@@ -13,13 +13,15 @@ const DownloadYourTickets = ({ tickets, bookingId }) => {
 
   // Define available tabs based on data
   const availableTabs = [];
+ 
   if (tickets?.etickets?.length > 0)
     availableTabs.push({ id: "etickets", label: "E-Tickets" });
   if (tickets?.links?.length > 0)
     availableTabs.push({ id: "links", label: "Links" });
   if (!isEmptyObject(tickets?.pod))
     availableTabs.push({ id: "pods", label: "Pods" });
-  availableTabs.push({ id: "instructionFile", label: "Instruction File" });
+  if (isEmptyObject(tickets?.instruction_file))
+    availableTabs.push({ id: "instructionFile", label: "Instruction File" });
 
   // Set default active tab if current one isn't available
   React.useEffect(() => {

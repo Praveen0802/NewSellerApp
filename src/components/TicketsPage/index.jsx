@@ -286,7 +286,7 @@ const Pagination = ({
 
 const TicketsPage = (props) => {
   const { success = "", response } = props;
-console.log(response,'responseresponseresponse')
+  console.log(response, "responseresponseresponse");
   // Memoize the overview data to prevent unnecessary re-renders
   const overViewData = useMemo(
     () => response?.overview || {},
@@ -376,6 +376,7 @@ console.log(response,'responseresponseresponse')
         quantity: ticket.quantity || 0,
         price: ticket.price || 0,
         price_type: ticket.price_type || "GBP",
+        currency_symbol: ticket.currency_symbol || "",
         status:
           ticket.status === 1
             ? "Active"
@@ -755,7 +756,7 @@ console.log(response,'responseresponseresponse')
         iconBefore: (rowValue) => (
           <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
             <p className="text-xs sm:text-[10px] lg:text-xs">
-              {rowValue?.price_type}
+              {rowValue?.currency_symbol}
             </p>
           </div>
         ),
@@ -766,13 +767,15 @@ console.log(response,'responseresponseresponse')
         editable: true,
         iconHandling: true,
         type: "number",
-        iconBefore: (rowValue) => (
-          <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
-            <p className="text-xs sm:text-[10px] lg:text-xs">
-              {rowValue?.price_type}
-            </p>
-          </div>
-        ),
+        iconBefore: (rowValue) => {
+          return (
+            <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
+              <p className="text-xs sm:text-[10px] lg:text-xs">
+                {rowValue?.currency_symbol}
+              </p>
+            </div>
+          );
+        },
       },
       // {
       //   key: "price_type",
@@ -963,13 +966,6 @@ console.log(response,'responseresponseresponse')
 
   const handleCellEdit = useCallback(
     (rowIndex, columnKey, value, ticket, matchIndexParam) => {
-      console.log("Cell edited:", {
-        rowIndex,
-        columnKey,
-        value,
-        matchIndex: matchIndexParam,
-      });
-
       const matchIndex = matchIndexParam.toString();
       const rowKey = `${matchIndex}_${rowIndex}`;
 
@@ -1318,7 +1314,7 @@ console.log(response,'responseresponseresponse')
         return [
           // Replace the last two columns with confirm/cancel buttons
           ...baseColumns.slice(0, 2),
-         
+
           {
             key: "cancel",
             icon: (
@@ -1941,8 +1937,10 @@ console.log(response,'responseresponseresponse')
               city_name: matchData.matchInfo?.city_name,
               match_id: matchData.matchInfo?.m_id,
               tournament_name: matchData.matchInfo?.tournament_name,
-              publishedTickets:`${matchData?.matchInfo?.published}`,
-              unPublishedTickets:`${matchData?.matchInfo?.unpublished}`
+              publishedTickets: `${matchData?.matchInfo?.published}`,
+              listingTickets: `${matchData?.matchInfo?.listings}`,
+              totalTickets: `${matchData?.matchInfo?.tickets}`,
+              unPublishedTickets: matchData?.matchInfo?.unpublished,
             }}
             filters={matchData.filters}
             isEditMode={isGlobalEditMode}
@@ -1958,7 +1956,7 @@ console.log(response,'responseresponseresponse')
             mode="multiple"
             showAccordion={true}
             matchIndex={matchIndex}
-            totalTicketsCount={matchData.tickets.length}
+            // totalTicketsCount={matchData.tickets.length}
             getStickyColumnsForRow={getStickyColumnsForRow}
             stickyHeaders={["", "", "", ""]}
             myListingPage={true}

@@ -16,6 +16,7 @@ import oneHand from "../../../../public/oneHand.svg";
 import successTick from "../../../../public/success-tick-circle.svg";
 import listUnpublished from "../../../../public/linkedMenuBar.svg";
 import listPublished from "../../../../public/circleTickValue.svg";
+import unpublishedListingValue from "../../../../public/unpublishedListingValue.svg";
 import successWrong from "../../../../public/success-wrong.svg";
 import greenHand from "../../../../public/greenHand.svg";
 import uploadListing from "../../../../public/uploadListing.svg";
@@ -24,6 +25,7 @@ import { fetchBlockDetails } from "@/utils/apiHandler/request";
 import ListingsMarketplace from "@/components/ModalComponents/listSalesModal";
 import { dayOfWeek } from "@/utils/helperFunctions";
 import ticketService from "../../../../public/ticketService.svg";
+import Tooltip from "../simmpleTooltip";
 
 const CommonInventoryTable = ({
   inventoryData,
@@ -38,6 +40,7 @@ const CommonInventoryTable = ({
   matchDetails,
   isEditMode = false,
   editingRowIndex = null,
+  totalTickets = 0,
   // New props for different modes
   mode = "single", // "single" for AddInventory, "multiple" for TicketsPage
   showAccordion = true,
@@ -698,45 +701,68 @@ const CommonInventoryTable = ({
                 isMobile ? "space-x-2 pr-2" : "space-x-4 pr-4"
               }`}
             >
-              {matchDetails?.unPublishedTickets && (
-                <div className="flex w-[30px] gap-1 items-center">
-                  <Image
-                    src={listUnpublished}
-                    width={20}
-                    height={20}
-                    alt="logo"
-                  />
-                  <span className={`text-white  text-[12px] text-right`}>
-                    {matchDetails?.unPublishedTickets}
-                  </span>
-                </div>
+              {matchDetails?.listingTickets && (
+                <Tooltip content={`${matchDetails?.listingTickets} Listing`}>
+                  <div className="flex w-[30px] gap-1 items-center">
+                    <Image
+                      src={listUnpublished}
+                      width={20}
+                      height={20}
+                      alt="logo"
+                    />
+                    <span className={`text-white  text-[12px] text-right`}>
+                      {matchDetails?.listingTickets}
+                    </span>
+                  </div>
+                </Tooltip>
+              )}
+               {matchDetails?.unPublishedTickets >0 && (
+                <Tooltip content={`${matchDetails?.unPublishedTickets} Un Published`}>
+                  <div className="flex w-[30px] gap-1 items-center">
+                    <Image
+                      src={unpublishedListingValue}
+                      width={20}
+                      height={20}
+                      alt="logo"
+                    />
+                    <span className={`text-white  text-[12px] text-right`}>
+                      {matchDetails?.unPublishedTickets}
+                    </span>
+                  </div>
+                </Tooltip>
               )}
               {matchDetails?.publishedTickets && (
-                <div className="flex gap-1 w-[30px] items-center">
-                  <Image
-                    src={listPublished}
-                    width={20}
-                    height={20}
-                    alt="logo"
-                  />
-                  <span className={`text-white text-[12px] text-right`}>
-                    {matchDetails?.publishedTickets}
-                  </span>
-                </div>
+                <Tooltip
+                  content={`${matchDetails?.publishedTickets} Published`}
+                >
+                  <div className="flex gap-1 w-[30px] items-center">
+                    <Image
+                      src={listPublished}
+                      width={20}
+                      height={20}
+                      alt="logo"
+                    />
+                    <span className={`text-white text-[12px] text-right`}>
+                      {matchDetails?.publishedTickets}
+                    </span>
+                  </div>
+                </Tooltip>
               )}
 
-              {mode === "multiple" && totalTicketsCount && (
-                <div className="flex gap-1 w-[30px] items-center">
-                  <Image
-                    src={ticketService}
-                    width={16}
-                    height={16}
-                    alt="logo"
-                  />
-                  <span className={`text-white text-[12px] text-right`}>
-                    {totalTicketsCount}
-                  </span>
-                </div>
+              {matchDetails?.totalTickets && (
+                <Tooltip content={`${matchDetails?.totalTickets} Tickets`}>
+                  <div className="flex gap-1 w-[30px] items-center">
+                    <Image
+                      src={ticketService}
+                      width={16}
+                      height={16}
+                      alt="logo"
+                    />
+                    <span className={`text-white text-[12px] text-right`}>
+                      {matchDetails?.totalTickets}
+                    </span>
+                  </div>
+                </Tooltip>
               )}
               {!isMobile && (
                 <button

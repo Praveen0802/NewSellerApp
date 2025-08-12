@@ -1,10 +1,11 @@
-import React, { useState, useMemo, memo, useCallback } from "react";
-import { X, ChevronDown, ChevronUp, CreditCard, FileText } from "lucide-react";
+import React, { useState, useMemo, memo, useCallback, useEffect } from "react";
+import { X, ChevronDown, ChevronUp, CreditCard, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import RightViewModal from "@/components/commonComponents/rightViewModal";
 import {
   getDepositDetails,
   getPayoutDetails,
   getTransactionDetails,
+  getPayoutOrderDetails, // Add this import
 } from "@/utils/apiHandler/request";
 import { getAuthToken } from "@/utils/helperFunctions";
 import OrderInfo from "@/components/orderInfoPopup";
@@ -54,14 +55,14 @@ const ShimmerLoader = memo(() => (
         ))}
       </div>
 
-      {/* Table Shimmer - Updated for 5 columns */}
+      {/* Table Shimmer */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
           <div className="h-6 bg-slate-200 rounded w-40 animate-pulse"></div>
         </div>
         <div className="p-6">
-          <div className="grid grid-cols-5 gap-6 mb-6">
-            {Array.from({ length: 5 }, (_, i) => (
+          <div className="grid grid-cols-4 gap-6 mb-6">
+            {Array.from({ length: 4 }, (_, i) => (
               <div
                 key={i}
                 className="h-4 bg-slate-200 rounded animate-pulse"
@@ -71,9 +72,9 @@ const ShimmerLoader = memo(() => (
           {Array.from({ length: 4 }, (_, row) => (
             <div
               key={row}
-              className="grid grid-cols-5 gap-6 mb-4 p-4 bg-slate-50 rounded-lg"
+              className="grid grid-cols-4 gap-6 mb-4 p-4 bg-slate-50 rounded-lg"
             >
-              {Array.from({ length: 5 }, (_, col) => (
+              {Array.from({ length: 4 }, (_, col) => (
                 <div
                   key={col}
                   className="h-4 bg-slate-200 rounded animate-pulse"
@@ -87,7 +88,7 @@ const ShimmerLoader = memo(() => (
   </div>
 ));
 
-// Simple transaction details row component (back to original style)
+// Simple transaction details row component
 const TransactionDetailRow = memo(({ label, value }) => (
   <div className="flex justify-between items-center py-3 border-b border-gray-200">
     <span className="text-sm font-medium text-gray-600">{label}</span>
@@ -95,7 +96,7 @@ const TransactionDetailRow = memo(({ label, value }) => (
   </div>
 ));
 
-// Enhanced booking table row component - Updated for 5 columns
+// Enhanced booking table row component
 const BookingRow = memo(({ booking, index, onClick = () => {} } = {}) => (
   <div
     key={booking.booking_id || index}
@@ -125,6 +126,92 @@ const BookingRow = memo(({ booking, index, onClick = () => {} } = {}) => (
     </div>
   </div>
 ));
+
+// Pagination Component
+const PaginationControls = memo(({ meta, onPageChange, isLoading }) => {
+  if (!meta || meta.total <= meta.per_page) return null;
+
+  const { current_page, last_page, total, per_page } = meta;
+  
+  // Calculate range of items being shown
+  const startItem = (current_page - 1) * per_page + 1;
+  const endItem = Math.min(current_page * per_page, total);
+
+  const handlePrevious = () => {
+    if (current_page > 1 && !isLoading) {
+      onPageChange(current_page - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (current_page < last_page && !isLoading) {
+      onPageChange(current_page + 1);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-t border-slate-200">
+      <div className="flex items-center text-sm text-slate-600">
+        <span>
+          Showing {startItem} to {endItem} of {total} entries
+        </span>
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <button
+          onClick={handlePrevious}
+          disabled={current_page <= 1 || isLoading}
+          className="flex items-center px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors duration-200"
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          Previous
+        </button>
+        
+        <div className="flex items-center space-x-1">
+          {/* Show page numbers */}
+          {Array.from({ length: Math.min(5, last_page) }, (_, i) => {
+            let pageNum;
+            if (last_page <= 5) {
+              pageNum = i + 1;
+            } else if (current_page <= 3) {
+              pageNum = i + 1;
+            } else if (current_page >= last_page - 2) {
+              pageNum = last_page - 4 + i;
+            } else {
+              pageNum = current_page - 2 + i;
+            }
+
+            const isActive = pageNum === current_page;
+            
+            return (
+              <button
+                key={pageNum}
+                onClick={() => !isLoading && onPageChange(pageNum)}
+                disabled={isLoading}
+                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+                  isActive
+                    ? "bg-blue-600 text-white"
+                    : "text-slate-600 bg-white border border-slate-300 hover:bg-slate-50"
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+        </div>
+        
+        <button
+          onClick={handleNext}
+          disabled={current_page >= last_page || isLoading}
+          className="flex items-center px-3 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-md hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors duration-200"
+        >
+          Next
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </button>
+      </div>
+    </div>
+  );
+});
 
 // Enhanced accordion section component
 const AccordionSection = memo(
@@ -181,15 +268,26 @@ const TransactionDetailsPopup = ({
   showShimmer = false,
   show = false,
 }) => {
+  console.log(data, "datadata");
   const [isTransactionOpen, setIsTransactionOpen] = useState(true);
   const [isBookingOpen, setIsBookingOpen] = useState(true);
+  const [isPaginationLoading, setIsPaginationLoading] = useState(false);
+  const [paginatedData, setPaginatedData] = useState(null);
+
+  // Initialize paginated data when data changes
+  useEffect(() => {
+    if (data?.payoutTableData) {
+      setPaginatedData(data.payoutTableData);
+    }
+  }, [data]);
 
   // Memoize expensive computations
-  const { transactionData, bookings, formattedDates } = useMemo(() => {
-    if (!data) return { transactionData: {}, bookings: [], formattedDates: {} };
+  const { transactionData, bookings, formattedDates, meta } = useMemo(() => {
+    if (!paginatedData && !data) return { transactionData: {}, bookings: [], formattedDates: {}, meta: null };
 
-    const transactionData = data;
-    const bookings = data?.payoutTableData?.payout_orders || [];
+    const transactionData = data || {};
+    const bookings = paginatedData?.payout_orders || data?.payoutTableData?.payout_orders || [];
+    const meta = paginatedData?.meta || data?.payoutTableData?.meta || null;
 
     const formatDate = (dateString) => {
       if (!dateString) return "—";
@@ -206,14 +304,33 @@ const TransactionDetailsPopup = ({
       expectedDate: formatDate(transactionData.expected_date),
     };
 
-    return { transactionData, bookings, formattedDates };
-  }, [data]);
+    return { transactionData, bookings, formattedDates, meta };
+  }, [paginatedData, data]);
 
   const [eyeViewPopup, setEyeViewPopup] = useState({
     flag: false,
     data: {},
     isLoading: false,
   });
+
+  // Handle pagination
+  const handlePageChange = async (page) => {
+    if (isPaginationLoading || !data?.id) return;
+
+    setIsPaginationLoading(true);
+    try {
+      const payoutOrderDetails = await getPayoutOrderDetails("", {
+        payout_id: data.id,
+        page: page,
+      });
+      setPaginatedData(payoutOrderDetails);
+    } catch (error) {
+      console.error("Error fetching paginated data:", error);
+      // You might want to show a toast error here
+    } finally {
+      setIsPaginationLoading(false);
+    }
+  };
 
   const handleEyeClick = async (item, transactionType) => {
     const { booking_id = null } = item ?? {};
@@ -248,7 +365,7 @@ const TransactionDetailsPopup = ({
     }
   };
 
-  // Simple transaction details configuration (back to original)
+  // Simple transaction details configuration
   const transactionDetails = useMemo(
     () => [
       [
@@ -261,18 +378,17 @@ const TransactionDetailsPopup = ({
         { label: "Payout Date", value: formattedDates.payoutDate },
         { label: "Expected Date", value: formattedDates.expectedDate },
         { label: "To Account", value: transactionData.to_account },
-        // { label: "Transaction ID", value: transactionData.id },
       ],
     ],
     [transactionData, formattedDates]
   );
 
-  // Updated table headers for 5 columns
+  // Table headers
   const tableHeaders = useMemo(
     () => ["Booking ID", "Match Name", "Qty", "Amount"],
     []
   );
-  console.log(transactionDetails, "transactionDetailstransactionDetails");
+
   // Callback handlers to prevent unnecessary re-renders
   const handleTransactionToggle = useCallback(() => {
     setIsTransactionOpen((prev) => !prev);
@@ -284,6 +400,8 @@ const TransactionDetailsPopup = ({
 
   const handleClose = useCallback(() => {
     onClose?.();
+    // Reset pagination data when closing
+    setPaginatedData(null);
   }, [onClose]);
 
   // Early return for shimmer state
@@ -324,7 +442,7 @@ const TransactionDetailsPopup = ({
           </button>
         </div>
 
-        <div className="overflow-y-auto hideScrollbar max-h-[calc(90vh-80px)] m-2">
+        <div className="overflow-y-auto hideScrollbar max-h-[calc(90vh-40px)] m-2">
           {/* Transaction Information Accordion */}
           <AccordionSection
             title=""
@@ -378,23 +496,28 @@ const TransactionDetailsPopup = ({
             icon={FileText}
             isOpen={isBookingOpen}
             onToggle={handleBookingToggle}
-            itemCount={bookings.length}
+            itemCount={meta?.total || bookings.length}
           >
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
               <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
                 <h4 className="text-lg font-semibold text-slate-900">
                   Order Information
+                  {meta && (
+                    <span className="text-sm font-normal text-slate-600 ml-2">
+                      (Page {meta.current_page} of {meta.last_page})
+                    </span>
+                  )}
                 </h4>
               </div>
 
               <div className="p-6">
-                {/* Updated Table Header for 5 columns */}
+                {/* Table Header */}
                 <div className="grid grid-cols-4 gap-6 mb-6 pb-4 border-b-2 border-slate-200">
                   {tableHeaders.map((header, index) => (
                     <div
                       key={index}
                       className={`text-xs font-bold text-slate-700 uppercase tracking-wider ${
-                        index === 2 || index === 4
+                        index === 2
                           ? "text-center"
                           : index === 3
                           ? "text-right"
@@ -406,9 +529,24 @@ const TransactionDetailsPopup = ({
                   ))}
                 </div>
 
-                {/* Enhanced Table Body */}
+                {/* Table Body with Loading State */}
                 <div className="space-y-3">
-                  {bookings.length > 0 ? (
+                  {isPaginationLoading ? (
+                    // Show loading shimmer for pagination
+                    Array.from({ length: 5 }, (_, index) => (
+                      <div
+                        key={index}
+                        className="grid grid-cols-4 gap-6 p-4 bg-slate-50 rounded-lg"
+                      >
+                        {Array.from({ length: 4 }, (_, col) => (
+                          <div
+                            key={col}
+                            className="h-4 bg-slate-200 rounded animate-pulse"
+                          ></div>
+                        ))}
+                      </div>
+                    ))
+                  ) : bookings.length > 0 ? (
                     bookings.map((booking, index) => (
                       <BookingRow
                         key={booking.booking_id || index}
@@ -430,6 +568,13 @@ const TransactionDetailsPopup = ({
                   )}
                 </div>
               </div>
+
+              {/* Pagination Controls */}
+              <PaginationControls
+                meta={meta}
+                onPageChange={handlePageChange}
+                isLoading={isPaginationLoading}
+              />
             </div>
           </AccordionSection>
         </div>

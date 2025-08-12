@@ -3,8 +3,17 @@ import { useState } from "react";
 import RightViewModal from "../commonComponents/rightViewModal";
 import InventoryLogsShimmer from "./InventoryLogsShimmer.jsx"; // Import the shimmer component
 
-const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
+const InventoryLogsInfo = ({
+  show,
+  onClose,
+  data = [], // Original prop - for backward compatibility (tickets page)
+  orderLogs = [], // New prop for order logs (sales page)
+  inventoryLogs = [], // New prop for inventory logs (sales page)
+  isLoading = false,
+  showTabs = false, // New prop to enable tab functionality (sales page)
+}) => {
   const [expandedLogs, setExpandedLogs] = useState(new Set());
+  const [activeTab, setActiveTab] = useState("order"); // "order" or "inventory"
 
   // Function to clean and format key names
   const formatKeyName = (key) => {
@@ -29,9 +38,19 @@ const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
     return String(value);
   };
 
+  // Get the current data based on active tab or single data prop (backward compatibility)
+  const getCurrentData = () => {
+    if (showTabs) {
+      return activeTab === "order" ? orderLogs : inventoryLogs;
+    }
+    // Original functionality - use data prop for tickets page
+    return data;
+  };
+
   // Get the first complete json_payload as reference
   const getReferencePayload = () => {
-    const firstEntry = data.find(
+    const currentData = getCurrentData();
+    const firstEntry = currentData.find(
       (entry) =>
         entry.json_payload && Object.keys(entry.json_payload).length > 1
     );
@@ -40,8 +59,9 @@ const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
 
   // Get all unique fields across all logs
   const getAllFields = () => {
+    const currentData = getCurrentData();
     const allFields = new Set();
-    data.forEach((entry) => {
+    currentData.forEach((entry) => {
       if (entry.json_payload) {
         Object.keys(entry.json_payload).forEach((key) => allFields.add(key));
       }
@@ -53,11 +73,12 @@ const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
   const getCurrentFieldValues = (upToIndex) => {
     const referencePayload = getReferencePayload();
     const currentValues = { ...referencePayload };
+    const currentData = getCurrentData();
 
     // Apply changes from logs up to the specified index
     for (let i = 0; i <= upToIndex; i++) {
-      const logEntry = data[i];
-      if (logEntry.json_payload) {
+      const logEntry = currentData[i];
+      if (logEntry && logEntry.json_payload) {
         Object.entries(logEntry.json_payload).forEach(([key, value]) => {
           currentValues[key] = value;
         });
@@ -85,12 +106,19 @@ const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
     setExpandedLogs(newExpanded);
   };
 
-  const displayData = data;
+  // Handle tab change
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setExpandedLogs(new Set()); // Reset expanded logs when switching tabs
+  };
+
+  const displayData = getCurrentData();
   const allFields = getAllFields();
 
   return (
     <RightViewModal className="!w-[800px]" show={show} onClose={onClose}>
       <div className="w-full bg-white rounded-lg">
+        {/* Header */}
         <div className="flex justify-between items-center p-3 border-b border-gray-200 sticky top-0 bg-white z-999">
           <p className="text-lg font-medium text-gray-800">Log Details</p>
           <div
@@ -100,6 +128,32 @@ const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
             <X className="w-5 h-5" />
           </div>
         </div>
+
+        {/* Tab Navigation - Only show if showTabs is true (for sales page) */}
+        {showTabs && (
+          <div className="flex border-b border-gray-200 bg-gray-50">
+            <button
+              onClick={() => handleTabChange("order")}
+              className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                activeTab === "order"
+                  ? "text-blue-600 border-b-2 border-blue-600 bg-white"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Order Logs ({orderLogs.length})
+            </button>
+            <button
+              onClick={() => handleTabChange("inventory")}
+              className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                activeTab === "inventory"
+                  ? "text-blue-600 border-b-2 border-blue-600 bg-white"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Inventory Logs ({inventoryLogs.length})
+            </button>
+          </div>
+        )}
 
         {/* Conditional Rendering: Shimmer or Content */}
         {isLoading ? (
@@ -117,6 +171,7 @@ const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
                   key={index}
                   className="mb-3 border border-[#E0E1EA] rounded-lg overflow-hidden"
                 >
+                  {/* Log Header */}
                   <div
                     onClick={() => toggleLog(index)}
                     className={`${
@@ -132,9 +187,11 @@ const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
                         >
                           Log #{index + 1}
                         </span>
-                        <span className="text-xs text-white px-2 py-1 rounded-full">
-                          Ticket ID: {logEntry.ticket_id}
-                        </span>
+                        {logEntry.ticket_id && (
+                          <span className="text-xs text-white px-2 py-1 rounded-full">
+                            Ticket ID: {logEntry.ticket_id}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -339,6 +396,7 @@ const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
               );
             })}
 
+            {/* No Data Message */}
             {displayData.length === 0 && (
               <div className="p-6 text-center text-gray-500">
                 <p>No log entries found</p>

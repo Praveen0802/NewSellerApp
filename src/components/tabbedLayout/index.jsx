@@ -408,6 +408,12 @@ const TabbedLayout = ({
   };
 
   const handleFilterChange = (filterKey, value, allFilters, currentTab) => {
+    console.log("Filter changed:", {
+      filterKey,
+      value,
+      allFilters,
+      currentTab,
+    })
     onFilterChange?.(filterKey, value, allFilters, currentTab);
   };
 

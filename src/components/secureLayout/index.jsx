@@ -224,7 +224,7 @@ const SecureLayout = ({ children }) => {
       image: Bulkticket,
       name: "SB Trade",
       canAccessKey: "lmt-trade",
-      key: "tx-trade",
+      key: "sb-trade",
       route: "trade/home",
       allowedRoutes: ["trade"],
     },

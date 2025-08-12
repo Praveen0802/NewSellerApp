@@ -14,7 +14,7 @@ import TicketDelivery from "./ticketDelivery";
 import MyRefferal from "./myRefferal";
 import SubjectDescriptionPopup from "./subjectDescriptionPopup";
 import KYC from "../KYC";
-import { ShieldCheck, WalletMinimal } from "lucide-react";
+import { CircleUser, ShieldCheck, User2Icon, UserPlus, Users, WalletMinimal } from "lucide-react";
 import { useSelector } from "react-redux";
 
 // Loading component
@@ -39,7 +39,7 @@ const SettingsPage = (props) => {
 
   const router = useRouter();
   const isMobile = useIsMobile();
-  const IconclassName = "size-6";
+  const IconclassName = "size-5";
 
   // Check if required data is loaded
   const isDataLoaded = useMemo(() => {
@@ -48,7 +48,7 @@ const SettingsPage = (props) => {
       kycStatus?.kyc_status !== undefined && userRoles?.user_type !== undefined
     );
   }, [kycStatus, userRoles]);
-
+console.log(userRoles, "userRoles");
   // Memoize profileValues to prevent recalculation on every render
   const profileValues = useMemo(() => {
     if (!isDataLoaded) return []; // Return empty array while loading
@@ -70,7 +70,7 @@ const SettingsPage = (props) => {
           ]
         : [
             {
-              icon: <IconStore.myaccount className={IconclassName} />,
+              icon: <CircleUser className={IconclassName} />,
               title: "My Account",
               key: "myAccount",
             },
@@ -90,7 +90,7 @@ const SettingsPage = (props) => {
               key: "sbPay",
             },
             {
-              icon: <IconStore.myTeams className={IconclassName} />,
+              icon: <Users className={IconclassName} />,
               title: "My Team",
               key: "myTeam",
             },
@@ -114,7 +114,7 @@ const SettingsPage = (props) => {
                 ]
               : []),
             {
-              icon: <IconStore.referral className={IconclassName} />,
+              icon: <UserPlus className={IconclassName} />,
               title: "My Referral",
               key: "myRefferal",
             },

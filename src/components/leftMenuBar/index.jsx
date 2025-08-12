@@ -32,6 +32,7 @@ import {
 } from "@/utils/redux/common/action";
 
 // Custom Tooltip Component with Portal Support
+// Fixed Tooltip Component with better z-index handling and portal
 const Tooltip = ({ children, content, position = "right" }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
@@ -118,27 +119,52 @@ const Tooltip = ({ children, content, position = "right" }) => {
     }
   };
 
-  return (
-    <>
-      <div ref={triggerRef} className="w-full">
-        {children}
-      </div>
+  // Create portal element if it doesn't exist
+  const createTooltipPortal = () => {
+    let portalRoot = document.getElementById('tooltip-portal');
+    if (!portalRoot) {
+      portalRoot = document.createElement('div');
+      portalRoot.id = 'tooltip-portal';
+      portalRoot.style.position = 'fixed';
+      portalRoot.style.top = '0';
+      portalRoot.style.left = '0';
+      portalRoot.style.width = '100%';
+      portalRoot.style.height = '100%';
+      portalRoot.style.pointerEvents = 'none';
+      portalRoot.style.zIndex = '999999'; // Very high z-index
+      document.body.appendChild(portalRoot);
+    }
+    return portalRoot;
+  };
 
-      {/* Portal-like tooltip rendered at document body level */}
-      {isVisible && content && typeof document !== "undefined" && (
-        <div
-          ref={tooltipRef}
-          className={`fixed z-[99999] px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap pointer-events-none ${getTransformClass()}`}
-          style={{
-            left: `${tooltipPosition.x}px`,
-            top: `${tooltipPosition.y}px`,
-          }}
-        >
-          {content}
-          <div className={getArrowClass()}></div>
-        </div>
-      )}
-    </>
+  useEffect(() => {
+    if (isVisible && content && typeof document !== "undefined") {
+      const portalRoot = createTooltipPortal();
+      
+      const tooltipElement = document.createElement('div');
+      tooltipElement.className = `absolute px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap pointer-events-none ${getTransformClass()}`;
+      tooltipElement.style.left = `${tooltipPosition.x}px`;
+      tooltipElement.style.top = `${tooltipPosition.y}px`;
+      tooltipElement.style.zIndex = '999999';
+      tooltipElement.innerHTML = `
+        ${content}
+        <div class="${getArrowClass()}"></div>
+      `;
+      
+      portalRoot.appendChild(tooltipElement);
+      
+      return () => {
+        if (portalRoot.contains(tooltipElement)) {
+          portalRoot.removeChild(tooltipElement);
+        }
+      };
+    }
+  }, [isVisible, content, tooltipPosition, position]);
+
+  return (
+    <div ref={triggerRef} className="w-full">
+      {children}
+    </div>
   );
 };
 
@@ -246,7 +272,7 @@ const NotificationsPopup = ({
   const [activityPage, setActivityPage] = useState(1);
   const [allNotificationsLoaded, setAllNotificationsLoaded] = useState(false);
   const [allActivitiesLoaded, setAllActivitiesLoaded] = useState(false);
-
+console.log(activeTab,'activeTab')
   // Refs for scroll containers
   const notificationScrollRef = useRef(null);
   const activityScrollRef = useRef(null);
@@ -987,127 +1013,6 @@ const LeftMenuBar = () => {
     },
   ];
 
-  const leftFullPaneValues = [
-    {
-      image: showFullDisplay ? "" : arrowRight,
-      icon: <LeftArrowIcon className="size-4 stroke-white" />,
-      name: "Minimise",
-    },
-    {
-      text: name,
-      name: userName,
-      key: "name",
-      canAccessKey: "user",
-      route: "settings/myAccount",
-    },
-    {
-      image: category,
-      name: "Dashboard",
-      route: "dashboard",
-      key: "dashboard",
-      canAccessKey: "dashboard",
-    },
-    {
-      icon: <Bell className="size-6 w-[23px] text-white" />,
-      name: "Notifications",
-      key: "notifications",
-      isNotification: true,
-      badge: getUnReadNotificationCount(notificationCountData),
-      canAccessKey: "notification",
-    },
-    {
-      image: addSquare,
-      name: "Add Listings",
-      key: "add-listings",
-      route: "add-listings",
-      canAccessKey: "event",
-    },
-    {
-      image: listing,
-      name: "My Listings",
-      key: "my-listings",
-      route: "my-listings",
-      canAccessKey: "event",
-    },
-    {
-      image: Bulkticket,
-      name: "Bulk Listings",
-      key: "bulk-listings",
-      route: "bulk-listings",
-      canAccessKey: "event",
-    },
-    {
-      image: shopping,
-      name: "Sales",
-      key: "sales",
-      canAccessKey: "sales",
-      hasSubItems: true,
-      route: "sales/pending",
-      subItems: salesSubItems,
-    },
-    {
-      image: leftMenuTicket,
-      name: "Reports",
-      key: "report-history",
-      canAccessKey: "reports",
-      route: "report-history",
-    },
-    {
-      image: diagram,
-      name: "Wallet",
-      key: "reports",
-      canAccessKey: "lmt-pay",
-      route: "reports/wallet",
-    },
-    {
-      image: Bulkticket,
-      name: "SB Trade",
-      canAccessKey: "lmt-trade",
-      key: "tx-trade",
-      route: "trade/home",
-    },
-  ];
-
-  function filterLeftPaneByAccess(leftPaneValues, userRoles = []) {
-    // Handle null/undefined inputs
-    if (!leftPaneValues || !Array.isArray(leftPaneValues)) {
-      return [];
-    }
-
-    if (!userRoles || !Array.isArray(userRoles)) {
-      userRoles = [];
-    }
-
-    // Create a lookup object for faster access checking
-    const accessLookup = userRoles.reduce((acc, role) => {
-      // Handle null/undefined role or role.name
-      if (role && role.name) {
-        acc[role.name] = role.is_can_access === 1;
-      }
-      return acc;
-    }, {});
-
-    // Filter the left pane values
-    return leftPaneValues.filter((item) => {
-      // Handle null/undefined item
-      if (!item) {
-        return false;
-      }
-
-      // If no canAccessKey is specified, include the item
-      if (!item.canAccessKey) {
-        return true;
-      }
-
-      // Check if user has access to this item
-      return accessLookup[item.canAccessKey] === true;
-    });
-  }
-
-  const leftValues = filterLeftPaneByAccess(
-    leftFullPaneValues,
-    userRoles?.permission
-  );
 
   // const leftPaneValues =
   //   (kycStatus?.kyc_status === 0 || kycStatus?.kyc_status === 2) &&
@@ -1130,14 +1035,18 @@ const LeftMenuBar = () => {
   };
   // Update active state when route changes for sales pages
   useEffect(() => {
-    const currentPath = router?.pathname?.replace("/", "");
+    const path = router?.pathname?.replace("/", "");
+    const currentPath = path.split("/")[0];
     if (currentPath.startsWith("sales/")) {
       const salesActiveKey = getSalesActiveState();
       if (salesActiveKey) {
         setActive(salesActiveKey);
         setSalesExpanded(true); // Always expand sales menu when on a sales page
       }
-    } else {
+    }if(currentPath?.includes("trade")){
+      setActive("sb-trade");
+    }
+     else {
       setActive(currentPath);
       // Optionally collapse sales menu when not on sales pages
       // setSalesExpanded(false);

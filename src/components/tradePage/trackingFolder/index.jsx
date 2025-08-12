@@ -33,6 +33,7 @@ import { IconStore } from "@/utils/helperFunctions/iconStore";
 
 const TrackingPage = (props) => {
   const { response = {} } = props;
+  console.log(response, "responseresponseresponse");
   const [selectedMatch, setSelectedMatch] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTicketDetails, setSelectedTicketDetails] = useState(
@@ -60,6 +61,7 @@ const TrackingPage = (props) => {
     { key: "venue", label: "Venue" },
     { key: "eventDate", label: "Event Date" },
     { key: "category", label: "Category" },
+    { key: "ticket_block", label: "Section / Block" },
     { key: "ticketType", label: "Ticket Type" },
     { key: "qty", label: "Qty" },
     { key: "price_with_currency", label: "Ticket Price" },
@@ -121,6 +123,8 @@ const TrackingPage = (props) => {
       ticketType: item?.ticket_type,
       qty: item?.quantity,
       price_with_currency: item?.price_with_currency,
+      ticket_block: item?.ticket_block,
+      ...item,
       ...(isMobile && {
         price: item?.price_with_currency,
         attachment: (
@@ -188,11 +192,6 @@ const TrackingPage = (props) => {
       ...(isMobile
         ? []
         : [
-            // {
-            //   icon: <p>{item?.price_with_currency}</p>,
-            //   className:
-            //     "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
-            // },
             {
               icon: (
                 <Image
@@ -212,7 +211,14 @@ const TrackingPage = (props) => {
                   alt="attach"
                 />
               ),
-              className: "cursor-pointer pl-2",
+              tooltipComponent: (
+                <p className="text-center">
+                 
+                  {item?.ticket_type}
+                </p>
+              ),
+              tooltipPosition: "top",
+              className: "cursor-pointer ",
               key: "attach",
             },
             {
@@ -237,7 +243,7 @@ const TrackingPage = (props) => {
                   alt="document"
                 />
               ),
-              className: "cursor-pointer pr-2",
+              className: "cursor-pointer ",
               key: "document",
               tooltipComponent:
                 item?.listing_note?.length > 0 &&
@@ -272,6 +278,13 @@ const TrackingPage = (props) => {
             alt="star"
           />
         ),
+        tooltipComponent: (
+          <p className="text-center">
+           
+            Remove
+          </p>
+        ),
+        tooltipPosition: "top",
         className: "border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer",
         key: "star",
       },
@@ -297,13 +310,13 @@ const TrackingPage = (props) => {
     { name: "Tracking", value: availableTypes?.tracking, showCheckbox: false },
     {
       name: "Available",
-      value: availableTypes?.available,
+      value: availableTypes?.available || 0,
       showCheckbox: true,
       isChecked: false,
     },
     {
       name: "Sold",
-      value: availableTypes?.sold,
+      value: availableTypes?.sold || 0,
       showCheckbox: false,
       isChecked: false,
     },

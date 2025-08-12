@@ -131,6 +131,7 @@ const PayoutPage = (props) => {
           booking_id,
         };
         const salesData = await getPayoutDetails("", params);
+        console.log(salesData, "salesDatasalesData");
         setEyeViewPopup({
           flag: true,
           data: salesData?.map((list) => ({
@@ -155,6 +156,7 @@ const PayoutPage = (props) => {
         const payoutOrderDetails = await getPayoutOrderDetails("", {
           payout_id: id,
         });
+        console.log(payoutOrderDetails, "payoutOrderDetailspayoutOrderDetails");
         setEyeViewPopup({
           flag: true,
           data: {
@@ -484,7 +486,12 @@ const PayoutPage = (props) => {
         : await getPayoutHistoryReport();
 
       if (response) {
-        downloadCSV(response);
+        downloadCSV(
+          response,
+          `Seller_${isOrderTab ? "PayoutOrders" : "PayoutReports"}_${new Date()
+            .toISOString()
+            .slice(0, 10)}.csv`
+        );
         toast.success(`${isOrderTab ? "Order" : "Payout"} report downloaded`);
       } else {
         console.error("No data received from server");

@@ -32,10 +32,10 @@ import Image from "next/image";
 import Tooltip from "../addInventoryPage/simmpleTooltip";
 import UploadTickets from "../ModalComponents/uploadTickets";
 import MySalesUploadTickets from "../ModalComponents/uploadTickets/mySalesUploadTickets";
+import InventoryLogsInfo from "../inventoryLogsInfo";
 
 const SalesPage = (props) => {
   const { profile, response = {} } = props;
-  console.log(response, "responseresponse");
   const { tournamentList } = response;
   const tournamentOptions = tournamentList?.map((item) => ({
     value: item.tournament_id,
@@ -116,8 +116,18 @@ const SalesPage = (props) => {
     setFiltersApplied(updatedFilters);
 
     try {
-      const salesDataResponse = await fetchSalesPageData("", updatedFilters);
-      const history = await fetchSalesHistory("", updatedFilters);
+      const salesDataResponse = await fetchSalesPageData("", {
+        ...updatedFilters,
+        ...(updatedFilters?.ticket_type_value
+          ? { ticket_type: updatedFilters?.ticket_type_value }
+          : {}),
+      });
+      const history = await fetchSalesHistory("", {
+        ...updatedFilters,
+        ...(updatedFilters?.ticket_type_value
+          ? { ticket_type: updatedFilters?.ticket_type_value }
+          : {}),
+      });
 
       if (handleCountApiCall) {
         const count = await getSalesCount("", params);
@@ -601,10 +611,17 @@ const SalesPage = (props) => {
         value: overViewData?.orders,
         smallTooptip: `${overViewData.ticket_count} Tickets`,
       },
-      { name: "E-Ticket", value: overViewData?.e_tickets_count },
+      {
+        name: "E-Ticket",
+        value: overViewData?.e_tickets_count,
+        showCheckbox: true,
+        key: "ticket_type_1",
+      },
       {
         name: "External Transfer",
         value: overViewData?.external_transfer_count,
+        showCheckbox: true,
+        key: "ticket_type_2",
       },
       { name: "Mobile Link/PKPASS", value: overViewData?.mobile_ticket_count },
       { name: "Paper Ticket", value: overViewData?.paper_ticket_count },
@@ -775,6 +792,12 @@ const SalesPage = (props) => {
         event_date_to: value?.endDate,
         page: 1, // Reset to first page on filter change
       };
+    } else if (filterKey == "ticket_in_hand") {
+      params = {
+        ...params,
+        [filterKey]: value ? 1 : 0,
+        page: 1, // Reset to first page on filter change
+      };
     } else {
       params = {
         ...params,
@@ -792,18 +815,28 @@ const SalesPage = (props) => {
   };
 
   const handleCheckboxToggle = (checkboxKey, isChecked, allCheckboxValues) => {
-    const params = {
-      ...filtersApplied,
-      [checkboxKey]: isChecked ? 1 : 0,
-      page: 1,
-    };
+    let params = {};
+    if (checkboxKey == "ticket_type_1") {
+      params = {
+        ...filtersApplied,
+        ticket_type_value: isChecked ? "2" : "",
+        page: 1,
+      };
+    } else if (checkboxKey == "ticket_type_2") {
+      params = {
+        ...filtersApplied,
+        ticket_type_value: isChecked ? "6" : "",
+        page: 1,
+      };
+    } else {
+      params = {
+        ...filtersApplied,
+        [checkboxKey]: isChecked ? 1 : 0,
+        page: 1,
+      };
+    }
 
-    // Reset pagination state
-    setCurrentPage(1);
-    setHasNextPage(true);
-    setSalesData([]);
-
-    setFiltersApplied(params);
+    apiCall(params);
   };
 
   // Handle column toggle
@@ -938,7 +971,10 @@ const SalesPage = (props) => {
       });
       // Check if response is successful
       if (response) {
-        downloadCSV(response);
+        downloadCSV(
+          response,
+          `Sales_${profile}_${new Date().toISOString().slice(0, 10)}.csv`
+        );
         toast.success("Report downloaded");
       } else {
         console.error("No data received from server");
@@ -1026,7 +1062,7 @@ const SalesPage = (props) => {
         showTabFullWidth={true}
         currentFilterValues={{ ...filtersApplied, order_status: "" }}
         loading={pageLoader}
-        excludedKeys={["currency", "page"]}
+        excludedKeys={["currency", "page","ticket_type_value"]}
         customTableComponent={customTableComponent}
         showCustomTable={true}
         // NEW PROPS FOR SCROLL HANDLING
@@ -1036,7 +1072,7 @@ const SalesPage = (props) => {
         scrollThreshold={100}
         onClearAllFilters={handleClearAllFilters}
       />
-      <LogDetailsModal
+      <InventoryLogsInfo
         show={showLogDetailsModal?.flag}
         onClose={() =>
           setShowLogDetailsModal({
@@ -1047,14 +1083,17 @@ const SalesPage = (props) => {
         }
         orderLogs={showLogDetailsModal?.orderLogs}
         inventoryLogs={showLogDetailsModal?.inventoryLogs}
-        showShimmer={showLogDetailsModal?.isLoading}
+        isLoading={showLogDetailsModal?.isLoading}
+        showTabs={true} // Enable tab functionality
       />
       <OrderInfo
         show={showInfoPopup?.flag}
         data={showInfoPopup?.data}
-        onClose={() => {
+        onClose={(showOutsideLoader) => {
           setShowInfoPopup({ flag: false, data: [] });
-          apiCall({ page: 1 });
+          if (showOutsideLoader) {
+            apiCall({ page: 1 });
+          }
         }}
         ticketTypesList={showInfoPopup?.ticketTypesList}
         rowData={showInfoPopup?.rowData}

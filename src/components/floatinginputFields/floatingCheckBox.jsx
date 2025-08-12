@@ -21,15 +21,24 @@ const FloatingCheckbox = ({
 }) => {
   // Handle single checkbox change
   const handleSingleChange = (e) => {
+    // Stop propagation to prevent the parent div's onClick from firing
+    e.stopPropagation();
+
     if (onChange) {
+      console.log(keyValue, "Checkbox changed:", e.target.checked);
       onChange(e, keyValue);
     }
   };
 
   // Handle single checkbox box click
-  const handleSingleBoxClick = () => {
+  const handleSingleBoxClick = (e) => {
     if (disabled) return;
-    
+
+    // Check if the click came from the checkbox input itself
+    if (e.target.type === "checkbox") {
+      return; // Let the input's onChange handle it
+    }
+
     // Create a synthetic event-like object
     const syntheticEvent = {
       target: {
@@ -38,14 +47,19 @@ const FloatingCheckbox = ({
         value: !checked,
       },
     };
-    
+
     if (onChange) {
       onChange(syntheticEvent, keyValue);
     }
   };
 
   // Handle multi-option checkbox change
-  const handleMultiChange = (optionValue, optionKey) => {
+  const handleMultiChange = (optionValue, optionKey, e) => {
+    // Stop propagation to prevent the parent div's onClick from firing
+    if (e) {
+      e.stopPropagation();
+    }
+
     if (onChange) {
       const isSelected = Array.isArray(value)
         ? value.includes(optionValue)
@@ -79,8 +93,14 @@ const FloatingCheckbox = ({
   };
 
   // Handle multi-option box click
-  const handleMultiBoxClick = (optionValue, optionKey) => {
+  const handleMultiBoxClick = (optionValue, optionKey, e) => {
     if (disabled) return;
+
+    // Check if the click came from the checkbox input itself
+    if (e.target.type === "checkbox") {
+      return; // Let the input's onChange handle it
+    }
+
     handleMultiChange(optionValue, optionKey);
   };
 
@@ -90,8 +110,8 @@ const FloatingCheckbox = ({
       className={`flex border-[1px] w-full ${
         error ? "border-red-500" : "border-[#DADBE5]"
       } rounded-[6px] items-center ${
-        disabled 
-          ? "opacity-50 cursor-not-allowed" 
+        disabled
+          ? "opacity-50 cursor-not-allowed"
           : "cursor-pointer hover:bg-gray-50"
       } transition-colors ${
         checked ? "bg-green-50 border-green-300" : ""
@@ -122,7 +142,6 @@ const FloatingCheckbox = ({
           name={name}
           checked={checked}
           onChange={handleSingleChange}
-          onClick={(e) => e.stopPropagation()} // Prevent double triggering
           className={`border-[1px] ${
             error ? "border-red-500" : "border-[#DADBE5]"
           } w-[16px] h-[16px] cursor-pointer ${
@@ -167,13 +186,13 @@ const FloatingCheckbox = ({
               className={`flex border-[1px] w-full ${
                 error ? "border-red-500" : "border-[#DADBE5]"
               } rounded-[6px] items-center ${
-                disabled 
-                  ? "opacity-50 cursor-not-allowed" 
+                disabled
+                  ? "opacity-50 cursor-not-allowed"
                   : "cursor-pointer hover:bg-gray-50"
               } transition-colors ${
                 isSelected ? "bg-blue-50 border-blue-300" : ""
               }`}
-              onClick={() => handleMultiBoxClick(optionValue, optionKey)}
+              onClick={(e) => handleMultiBoxClick(optionValue, optionKey, e)}
             >
               {optionIcon && (
                 <div className="p-[8px] border-r-[1px] border-[#DADBE5]">
@@ -196,8 +215,7 @@ const FloatingCheckbox = ({
                   id={`${id || name}_${index}`}
                   name={`${name}_${index}`}
                   checked={isSelected}
-                  onChange={() => handleMultiChange(optionValue, optionKey)}
-                  onClick={(e) => e.stopPropagation()} // Prevent double triggering
+                  onChange={(e) => handleMultiChange(optionValue, optionKey, e)}
                   className={`border-[1px] ${
                     error ? "border-red-500" : "border-[#DADBE5]"
                   } w-[16px] h-[16px] cursor-pointer ${

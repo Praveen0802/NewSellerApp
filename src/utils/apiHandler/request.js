@@ -1584,10 +1584,10 @@ export const fetchSalesOrderLogs = async (token, params) => {
       ...(params && { params: params }),
     });
     return response?.data?.success
-      ? response?.data?.data?.length > 0
+      // ? response?.data?.data?.length > 0
         ? response?.data?.data
-        : orderLog
-      : orderLog;
+        : []
+      // : orderLog;
   } catch (error) {
     console.log("ERROR in fetchSalesPageData", error);
     
@@ -1603,10 +1603,10 @@ export const fetchSalesInventoryLogs = async (token, params) => {
       ...(params && { params: params }),
     });
     return response?.data?.success
-      ? response?.data?.data?.length > 0
+      // ? response?.data?.data?.length > 0
         ? response?.data?.data
-        : inventoryLog
-      : inventoryLog;
+        : []
+      // : inventoryLog;
   } catch (error) {
     console.log("ERROR in fetchSalesPageData", error);
     
@@ -1622,10 +1622,10 @@ export const fetchReportsOrderDetails = async (token, params) => {
       ...(params && { params: params }),
     });
     return response?.data?.success
-      ? response?.data?.data?.length > 0
+      // ? response?.data?.data?.length > 0
         ? response?.data?.data
-        : orderDetails
-      : orderDetails;
+        : []
+      // : orderDetails;
   } catch (error) {
     // console.log("ERROR in fetchSalesPageData", error);
     // 
@@ -1642,10 +1642,10 @@ export const fetchReportsOrderLogs = async (token, params) => {
       ...(params && { params: params }),
     });
     return response?.data?.success
-      ? response?.data?.data?.length > 0
+      // ? response?.data?.data?.length > 0
         ? response?.data?.data
-        : orderLog
-      : orderLog;
+        : []
+      // : orderLog;
   } catch (error) {
     return orderLog;
     console.log("ERROR in fetchReportsPageData", error);

@@ -19,6 +19,7 @@ import useTeamMembersDetails from "@/Hooks/useTeamMembersDetails";
 import { toast } from "react-toastify";
 import useCSVDownload from "@/Hooks/useCsvDownload";
 import { SearchIcon } from "lucide-react";
+import InventoryLogsInfo from "../inventoryLogsInfo";
 
 // Currency Slider Component
 const CurrencySlider = ({
@@ -901,7 +902,7 @@ const RportHistory = (props) => {
         />
       </div>
 
-      <LogDetailsModal
+      <InventoryLogsInfo
         show={showLogDetailsModal?.flag}
         onClose={() =>
           setShowLogDetailsModal({
@@ -912,7 +913,8 @@ const RportHistory = (props) => {
         }
         orderLogs={showLogDetailsModal?.orderLogs}
         inventoryLogs={showLogDetailsModal?.inventoryLogs}
-        showShimmer={showLogDetailsModal?.isLoading}
+        isLoading={showLogDetailsModal?.isLoading}
+        showTabs={true} // Enable tab functionality
       />
       <OrderInfo
         show={showInfoPopup?.flag}

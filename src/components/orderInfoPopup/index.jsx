@@ -34,9 +34,11 @@ const OrderInfo = ({
   handleUploadClick,
     hideExpand = false,
 } = {}) => {
+  console.log(orderData,'orderDataorderData')
   const [expandedVersion, setExpandedVersion] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [downloadLoader, setDownloadLoader] = useState(false);
+  const [showOutsideLoader, setShowOutsideLoader] = useState(false);
 
   const { downloadFile } = useS3Download();
   // Handle new array format data
@@ -257,7 +259,6 @@ const OrderInfo = ({
     attendee_details,
     order_id_label,
   } = data;
-
   // Extract order notes from ticket details
   const order_notes = ticket_details?.[0]?.order_notes || "";
   // const order_notes = "";
@@ -417,6 +418,7 @@ const OrderInfo = ({
 
       const response = await updateTicketTypes("", payload);
       if (response?.success) {
+        setShowOutsideLoader(true);
         toast.success("Ticket type updated successfully", {
           position: "top-center",
         });
@@ -441,7 +443,7 @@ const OrderInfo = ({
   };
 
   const currentOrderObject = updatedOrderObject || orderObject;
-  console.log(currentOrderObject, "currentOrderObjectcurrentOrderObject");
+ 
   return (
     <RightViewModal
       className={`transition-all duration-300 ease-in-out ${
@@ -459,7 +461,7 @@ const OrderInfo = ({
           <div className="flex items-center border-b-[1px] border-[#E0E1EA] justify-between py-[13px] px-[24px]">
             <p className="text-[18px] text-[#323A70]">
               Order ID:
-              {order_id_label ||
+              {
                 order_details?.booking_no ||
                 order_details?.order_id}
             </p>
@@ -485,7 +487,7 @@ const OrderInfo = ({
               </div>
 
               <X
-                onClick={onClose}
+                onClick={()=>{onClose(showOutsideLoader)}}
                 className="size-4 cursor-pointer stroke-[#130061] hover:stroke-[#1a0080] transition-colors  duration-200"
               />
             </div>

@@ -151,7 +151,8 @@ const CustomSelectEditableCell = ({
   }, [isDropdownOpen]);
 
   const handleSave = () => {
-    if (editValue !== value) {
+    // FIXED: Use loose equality to handle type differences
+    if (editValue != value) {
       onSave(editValue);
     }
     setIsEditing(false);
@@ -179,6 +180,7 @@ const CustomSelectEditableCell = ({
 
   const getDisplayValue = () => {
     if (options.length > 0) {
+      // FIXED: Use loose equality to handle type differences
       const option = options.find((opt) => opt.value == value);
       return option ? option.label : !value ? placeholder : value;
     }
@@ -187,6 +189,7 @@ const CustomSelectEditableCell = ({
 
   const getEditDisplayValue = () => {
     if (options.length > 0) {
+      // FIXED: Use loose equality to handle type differences
       const option = options.find((opt) => opt.value == editValue);
       return option ? option.label : !editValue ? placeholder : editValue;
     }
@@ -194,7 +197,8 @@ const CustomSelectEditableCell = ({
   };
 
   const hasValue = () => {
-    const option = options.find((opt) => opt.value === value);
+    // FIXED: Use loose equality to handle type differences
+    const option = options.find((opt) => opt.value == value);
     return !!option;
   };
 
@@ -257,9 +261,10 @@ const CustomSelectEditableCell = ({
               e.stopPropagation();
             }}
           >
-            {/* Options with text wrapping */}
+            {/* FIXED: Options with proper type-safe comparison */}
             {options.map((option) => {
-              const isSelected = editValue === option.value;
+              // FIXED: Use loose equality to handle type differences (number vs string)
+              const isSelected = editValue == option.value;
               return (
                 <div
                   key={option.value}
