@@ -225,7 +225,7 @@ const CommonInventoryTable = ({
   const getStickyColumns =
     getStickyColumnsForRow || getDefaultStickyColumnsForRow;
 
-  // HEAVILY OPTIMIZED: fetchDynamicOptions with better caching
+  // OPTIMIZED: fetchDynamicOptions function with caching
   const fetchDynamicOptions = useCallback(
     async (row, header) => {
       if (!header.dynamicOptions) return;
@@ -235,21 +235,24 @@ const CommonInventoryTable = ({
           const matchId = row.rawTicketData?.match_id;
           const categoryId = row.ticket_category_id;
 
-          if (!matchId || !categoryId) return;
+          if (!matchId || !categoryId) {
+            return;
+          }
 
+          // Create a unique cache key for this combination
           const cacheKey = `${header.key}-${matchId}-${categoryId}`;
 
+          // Check if we already have this data or are currently fetching it
           if (
             fetchedOptionsCache.has(cacheKey) ||
-            isFetchingOptions.has(cacheKey) ||
             (dynamicOptions?.block?.categoryId === categoryId &&
-              dynamicOptions?.block?.matchId === matchId &&
-              dynamicOptions?.block?.options?.length > 0)
+              dynamicOptions?.block?.matchId === matchId)
           ) {
             return;
           }
 
-          setIsFetchingOptions((prev) => new Set([...prev, cacheKey]));
+          // Mark as being fetched to prevent duplicate calls
+          setFetchedOptionsCache((prev) => new Set([...prev, cacheKey]));
 
           try {
             const options = await fetchBlockDetails("", {
@@ -263,14 +266,12 @@ const CommonInventoryTable = ({
 
             setDynamicOptions((prev) => ({
               ...prev,
-              [header.key]: { matchId, categoryId, options },
+              [cacheKey]: { matchId, categoryId, options },
             }));
-
-            setFetchedOptionsCache((prev) => new Set([...prev, cacheKey]));
           } catch (error) {
             console.error("Error fetching dynamic options:", error);
-          } finally {
-            setIsFetchingOptions((prev) => {
+            // Remove from cache on error so it can be retried
+            setFetchedOptionsCache((prev) => {
               const newSet = new Set(prev);
               newSet.delete(cacheKey);
               return newSet;
@@ -281,76 +282,53 @@ const CommonInventoryTable = ({
           break;
       }
     },
-    [dynamicOptions, fetchedOptionsCache, isFetchingOptions]
+    [dynamicOptions, fetchedOptionsCache]
   );
 
-  // Effect to fetch dynamic options when accordion opens
+  // OPTIMIZED: Effect to fetch dynamic options only when accordion is open and data is available
   useEffect(() => {
+    // Only fetch when accordion is open (not collapsed)
     if (isCollapsed || inventoryData.length === 0 || headers.length === 0) {
       return;
     }
 
     const fetchAllDynamicOptions = async () => {
+      // Get unique combinations to avoid duplicate API calls
       const uniqueCombinations = new Map();
-      const dynamicHeaders = headers.filter((header) => header.dynamicOptions);
-
-      if (dynamicHeaders.length === 0) return;
 
       for (const row of inventoryData) {
-        for (const header of dynamicHeaders) {
-          if (header.key === "block") {
+        for (const header of headers) {
+          if (header.dynamicOptions && header.key === "block") {
             const matchId = row.rawTicketData?.match_id;
             const categoryId = row.ticket_category_id;
 
             if (matchId && categoryId) {
-              const uniqueKey = `${matchId}-${categoryId}`;
-              const cacheKey = `${header.key}-${matchId}-${categoryId}`;
-
-              if (
-                !fetchedOptionsCache.has(cacheKey) &&
-                !isFetchingOptions.has(cacheKey) &&
-                !uniqueCombinations.has(uniqueKey)
-              ) {
-                uniqueCombinations.set(uniqueKey, { row, header });
+              const key = `${matchId}-${categoryId}`;
+              if (!uniqueCombinations.has(key)) {
+                uniqueCombinations.set(key, { row, header });
               }
             }
           }
         }
       }
 
-      const fetchPromises = Array.from(uniqueCombinations.values()).map(
-        ({ row, header }) => fetchDynamicOptions(row, header)
-      );
-
-      if (fetchPromises.length > 0) {
-        await Promise.allSettled(fetchPromises);
+      // Fetch options for unique combinations only
+      for (const [key, { row, header }] of uniqueCombinations) {
+        await fetchDynamicOptions(row, header);
       }
     };
 
-    const timeoutId = setTimeout(() => {
-      fetchAllDynamicOptions();
-    }, 100);
+    fetchAllDynamicOptions();
+  }, [inventoryData, headers, isCollapsed, fetchDynamicOptions]);
 
-    return () => clearTimeout(timeoutId);
-  }, [
-    inventoryData,
-    headers,
-    isCollapsed,
-    fetchDynamicOptions,
-    fetchedOptionsCache,
-    isFetchingOptions,
-  ]);
-
-  // Clear cache when component unmounts or data changes
   useEffect(() => {
     return () => {
-      setFetchedOptionsCache(new Set());
-      setIsFetchingOptions(new Set());
+      setIsFetchingOptions({});
       setDynamicOptions({});
     };
   }, [matchDetails?.match_id]);
 
-  // Function to check scroll capabilities
+  // Function to check scroll capabilities and update state
   const checkScrollCapabilities = () => {
     if (!scrollContainerRef.current) return;
 
@@ -528,9 +506,11 @@ const CommonInventoryTable = ({
       return "Enter...";
     };
 
+    const fieldKey = `${header?.key}-${row?.rawTicketData?.match_id}-${row?.ticket_category_id}`;
+
     const fetchOptions = () =>
       (header.dynamicOptions
-        ? dynamicOptions[header.key]?.options
+        ? dynamicOptions[fieldKey]?.options
         : header.options) || [];
 
     if (header.type === "multiselect") {
