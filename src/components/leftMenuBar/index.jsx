@@ -30,6 +30,7 @@ import {
   updateLeftMenuDisplay,
   updateNotificationCount,
 } from "@/utils/redux/common/action";
+import SettingsOpen from "../KYC/settingsOpen";
 
 // Custom Tooltip Component with Portal Support
 // Fixed Tooltip Component with better z-index handling and portal
@@ -272,7 +273,6 @@ const NotificationsPopup = ({
   const [activityPage, setActivityPage] = useState(1);
   const [allNotificationsLoaded, setAllNotificationsLoaded] = useState(false);
   const [allActivitiesLoaded, setAllActivitiesLoaded] = useState(false);
-console.log(activeTab,'activeTab')
   // Refs for scroll containers
   const notificationScrollRef = useRef(null);
   const activityScrollRef = useRef(null);
@@ -282,7 +282,6 @@ console.log(activeTab,'activeTab')
   const { currentUser } = useSelector((state) => state.currentUser);
   const { notificationCountData } = useSelector((state) => state.common);
   const dispatch = useDispatch();
-  console.log(notificationCountData, "notificationCountData");
   // API functions using your actual API calls
   const fetchNotificationHistoryData = async (page = 1, append = false) => {
     try {
@@ -919,6 +918,7 @@ const LeftMenuBar = () => {
   // const [showFullDisplay, setShowFullDisplay] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [salesExpanded, setSalesExpanded] = useState(false);
 
   const { currentUser } = useSelector((state) => state.currentUser);
@@ -1061,6 +1061,9 @@ const LeftMenuBar = () => {
     if (item?.isNotification) {
       setNotificationsOpen(true);
       return;
+    }
+    if(item?.isName){
+      setSettingsOpen(true);
     }
 
     if (item?.hasSubItems) {
@@ -1453,6 +1456,13 @@ const LeftMenuBar = () => {
           )}
         </div>
       </div>
+      <SettingsOpen
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        showFullDisplay={showFullDisplay}
+                handleLogout={handleLogout}
+
+      />
 
       {/* Notifications Popup */}
       <NotificationsPopup
