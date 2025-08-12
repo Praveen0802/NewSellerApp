@@ -485,26 +485,27 @@ const MyQRLinksSection = React.forwardRef(
                 return (
                   <div
                     key={`ticket-${ticketNumber}`}
-                    className={`border rounded-md p-3 ${"border-[#E0E1EA] bg-white"}`}
+                    className={`rounded-md flex items-center gap-3`}
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      <h5 className="text-sm font-medium text-[#323A70] flex items-center gap-2">
-                        Ticket {ticketNumber}
+                    <div className="flex items-center justify-between">
+                      <h5 className="text-xs font-medium text-[#323A70] flex items-end gap-2 pt-4">
+                        T{ticketNumber}
                       </h5>
                       <div className="flex items-center gap-1">
-                        {isComplete && (
+                        {/* {isComplete && (
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        )}
+                        )} */}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3 flex-1">
                       {/* Android Link Input */}
                       {renderLinkField(
                         index,
                         "qr_link_android",
                         "Android QR Link",
-                        "Enter Android app/web link"
+                        "Enter Android app/web link",
+                        isComplete
                       )}
 
                       {/* iOS Link Input */}
@@ -512,7 +513,8 @@ const MyQRLinksSection = React.forwardRef(
                         index,
                         "qr_link_ios",
                         "iOS QR Link",
-                        "Enter iOS app/web link"
+                        "Enter iOS app/web link",
+                        isComplete
                       )}
                     </div>
                   </div>

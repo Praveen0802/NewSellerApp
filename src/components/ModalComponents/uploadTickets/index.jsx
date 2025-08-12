@@ -17,7 +17,7 @@ import {
   Trash,
 } from "lucide-react";
 import CustomModal from "@/components/commonComponents/customModal";
-import uploadImage from "../../../../public/uploadView.svg";
+import uploadImage from "../../../../public/uploadIconNew.svg";
 import Image from "next/image";
 import Button from "@/components/commonComponents/button";
 import RightViewContainer from "@/components/dashboardPage/reportViewContainer/rightViewContainer";
@@ -404,12 +404,12 @@ const UploadTickets = ({
 
   // Common Match Header Component
   const MatchHeader = () => (
-    <div className="bg-[#343432] text-xs py-3 rounded-t-md text-white px-4 flex items-center justify-between min-w-0">
-      <h3 className="font-medium truncate flex-shrink-0 max-w-[200px]">
+    <div className="bg-[#343432] text-xs rounded-t-md text-white px-4 flex items-center justify-between min-w-0">
+      <div className="grid grid-cols-4 gap-2">
+      <h3 className="font-medium truncate py-3 flex-shrink-0 max-w-[200px] border-r border-[#51428E]">
         {matchDetails?.match_name}
       </h3>
-      <div className="flex items-center gap-4 flex-shrink-0">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 py-3 border-r border-[#51428E]">
           <Calendar className="w-4 h-4 flex-shrink-0" />
           <span className="text-xs whitespace-nowrap">
             {matchDetails?.match_date_format ||
@@ -417,7 +417,7 @@ const UploadTickets = ({
               separateDateTime(matchDetails?.match_date)?.date}
           </span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 border-r border-[#51428E]">
           <Clock className="w-4 h-4 flex-shrink-0" />
           <span className="text-xs whitespace-nowrap">
             {matchDetails?.match_time || rowData?.matchTime}
@@ -429,6 +429,8 @@ const UploadTickets = ({
             {matchDetails?.stadium_name || rowData?.venue}
           </span>
         </div>
+      </div>
+      <div className="flex items-center gap-4 flex-shrink-0">
         <button className="flex-shrink-0">
           <ChevronUp className="w-4 h-4" />
         </button>
@@ -1341,7 +1343,7 @@ const UploadTickets = ({
   return (
     <div>
       <RightViewModal
-        className="!w-[70vw]"
+        className="!w-[80vw]"
         show={show}
         onClose={() => onClose(false)}
       >

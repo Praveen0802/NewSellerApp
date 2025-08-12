@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { Trash2, Lock } from "lucide-react";
+import Image from "next/image";
+import uploadIcon from "../../../../public/uploadIconNew.svg";
 
 const PaperTicketCourierSection = React.forwardRef(
   ({ maxQuantity = 0, initialData = null, onChange, rowData }, ref) => {
@@ -404,9 +406,9 @@ const PaperTicketCourierSection = React.forwardRef(
 
           {/* File Upload Section */}
           {!isDisabled && (
-            <div className="border-2 border-dashed border-[#0137D5] rounded-lg p-6 bg-[#F9F9FB]">
-              <div className="flex flex-col items-center justify-center text-center">
-                <div className="w-12 h-12 bg-[#343432] rounded-lg flex items-center justify-center mb-3">
+            <div className="border-2 border-dashed border-[#0137D5] rounded-lg p-3 bg-[#F9F9FB]">
+              <div className="flex items-center text-center">
+                {/* <div className="w-12 h-12 bg-[#343432] rounded-lg flex items-center justify-center mb-3">
                   <svg
                     className="w-6 h-6 text-white"
                     fill="none"
@@ -420,11 +422,13 @@ const PaperTicketCourierSection = React.forwardRef(
                       d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                     />
                   </svg>
-                </div>
-                <p className="text-sm text-[#323A70] mb-1">
+                </div> */}
+                <Image src={uploadIcon} alt="Upload Icon" width={42} height={42}/>
+
+                <p className="text-sm text-[#323A70]">
                   Drag your file(s) or{" "}
                   <span
-                    className="text-[#343432] font-medium cursor-pointer"
+                    className="text-[#2F343A] font-bold text-sm cursor-pointer"
                     onClick={handleBrowseFiles}
                   >
                     Browse files
