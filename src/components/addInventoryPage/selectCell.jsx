@@ -604,11 +604,15 @@ const SimpleEditableCell = ({
     );
   }
 
+  const fetchValue = (val, opts) => {
+    return opts.find((o) => o?.value == val || o?.label == val)?.value ?? val;
+  };
+
   // For select type, use the custom select component
   if (type === "select") {
     return (
       <CustomSelectEditableCell
-        value={value}
+        value={fetchValue(value, options)}
         options={options}
         onSave={onSave}
         className={className}

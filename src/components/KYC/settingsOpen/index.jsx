@@ -30,7 +30,6 @@ const SettingsOpen = ({ isOpen = false, onClose, showFullDisplay,handleLogout } 
     (level) => level.is_active === 1
   );
   const currentLevelData = sellerLevelData.seller_level;
-
   // Desktop layout
   return (
     <div className="fixed inset-0 z-[9999]">
@@ -50,10 +49,17 @@ const SettingsOpen = ({ isOpen = false, onClose, showFullDisplay,handleLogout } 
       >
         <div>
           <div className="flex flex-col gap-4 p-4 pb-2 border-b border-[#E0E1EA]">
-            <h1 className="text-xl font-semibold capitalize text-gray-900 ">
+            <div className="flex flex-col gap-1">
+            <h1 className="text-md font-semibold capitalize text-gray-900">
               {currentUser?.first_name} {currentUser?.last_name}
             </h1>
-
+            <p class="flex items-baseline w-full text-sm text-gray-500">Seller Level 3
+                <span class="ml-[0.2rem] first:ml-2 w-[0.65rem] h-[0.65rem] rounded-sm bg-green-600 border-green-600"></span>
+                <span class="ml-[0.2rem] first:ml-2 w-[0.65rem] h-[0.65rem] rounded-sm bg-green-600/25 border-green-600/25"></span>
+                <span class="ml-[0.2rem] first:ml-2 w-[0.65rem] h-[0.65rem] rounded-sm bg-green-600/25 border-green-600/25"></span>
+                <span class="ml-[0.2rem] first:ml-2 w-[0.65rem] h-[0.65rem] rounded-sm bg-yellow-100/25 border-yellow-100/25"></span>
+            </p>
+            </div>
             {/* Menu Items */}
             <div className="space-y-4 ">
               <div onClick={() => router.push("/settings/myAccount")} className="flex items-center gap-3 text-gray-700 cursor-pointer hover:text-gray-500">
@@ -67,7 +73,13 @@ const SettingsOpen = ({ isOpen = false, onClose, showFullDisplay,handleLogout } 
               </div>
             </div>
           </div>
-          <div className="p-4">
+          <div className="p-4 flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
+              <h4 class="w-full  text-md font-medium ">You are not on track to maintain Level 3 status for next quarter</h4>
+              <p class="w-full text-sm font-normal text-gray-500">Your GTV (Gross Transactional Value) activity during the current calendar quarter will determine your Seller Level in the next calendar quarter.&nbsp;
+                {/* <a class="font-medium text-violet-800 hover:text-indigo-500" href="" target="_blank">Learn more</a> */}
+              </p>
+            </div>
          <GTVLevelCard data={currentLevelData} />
          </div>
         </div>
