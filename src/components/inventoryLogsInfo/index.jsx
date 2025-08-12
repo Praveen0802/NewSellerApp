@@ -38,9 +38,38 @@ const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
     return firstEntry?.json_payload || {};
   };
 
-  // Check if a field has changed from reference
-  const isFieldChanged = (key, currentPayload) => {
-    return currentPayload.hasOwnProperty(key);
+  // Get all unique fields across all logs
+  const getAllFields = () => {
+    const allFields = new Set();
+    data.forEach((entry) => {
+      if (entry.json_payload) {
+        Object.keys(entry.json_payload).forEach((key) => allFields.add(key));
+      }
+    });
+    return Array.from(allFields);
+  };
+
+  // Get current state of all fields up to a specific log index
+  const getCurrentFieldValues = (upToIndex) => {
+    const referencePayload = getReferencePayload();
+    const currentValues = { ...referencePayload };
+
+    // Apply changes from logs up to the specified index
+    for (let i = 0; i <= upToIndex; i++) {
+      const logEntry = data[i];
+      if (logEntry.json_payload) {
+        Object.entries(logEntry.json_payload).forEach(([key, value]) => {
+          currentValues[key] = value;
+        });
+      }
+    }
+
+    return currentValues;
+  };
+
+  // Check if a field was changed in the current log
+  const isFieldChangedInCurrentLog = (key, logEntry) => {
+    return logEntry.json_payload && logEntry.json_payload.hasOwnProperty(key);
   };
 
   // Toggle accordion expansion
@@ -57,7 +86,7 @@ const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
   };
 
   const displayData = data;
-  const referencePayload = getReferencePayload();
+  const allFields = getAllFields();
 
   return (
     <RightViewModal className="!w-[800px]" show={show} onClose={onClose}>
@@ -80,9 +109,8 @@ const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
             {displayData.map((logEntry, index) => {
               const isExpanded = expandedLogs.has(index);
               const payloadKeys = Object.keys(logEntry.json_payload || {});
-              console.log("payloadKeys", payloadKeys);
-
               const hasPayload = payloadKeys.length > 0;
+              const currentFieldValues = getCurrentFieldValues(index);
 
               return (
                 <div
@@ -145,39 +173,38 @@ const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
                   {/* Accordion Content */}
                   {isExpanded && (
                     <div className="p-3 bg-white">
-                      {hasPayload ? (
+                      {allFields.length > 0 ? (
                         <div className="w-full">
                           <h4 className="text-sm font-medium text-gray-700 mb-2">
-                            Changes Made:
+                            Current State:
                           </h4>
                           <div className="flex flex-wrap -mx-2">
                             {/* First Table */}
                             <div className="w-full md:w-1/2 px-2 mb-4">
                               <table className="min-w-full border border-gray-200">
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                  {Object.entries(referencePayload)
-                                    .slice(
-                                      0,
-                                      Math.ceil(
-                                        Object.keys(referencePayload).length / 2
-                                      )
-                                    )
-                                    .map(([key, refValue], payloadIndex) => {
-                                      const isChanged =
+                                  {allFields
+                                    .slice(0, Math.ceil(allFields.length / 2))
+                                    .map((key, fieldIndex) => {
+                                      const isChangedInCurrentLog =
                                         index > 0 &&
-                                        isFieldChanged(
+                                        isFieldChangedInCurrentLog(
                                           key,
-                                          logEntry.json_payload
+                                          logEntry
                                         );
-                                      const currentValue = isChanged
-                                        ? logEntry.json_payload[key]
-                                        : refValue;
+                                      const currentValue =
+                                        currentFieldValues[key];
+                                      const hasValue =
+                                        currentValue !== undefined &&
+                                        currentValue !== null;
 
                                       return (
                                         <tr
-                                          key={payloadIndex}
+                                          key={fieldIndex}
                                           className={`hover:bg-gray-50 ${
-                                            isChanged ? "bg-yellow-100" : ""
+                                            isChangedInCurrentLog
+                                              ? "bg-yellow-100"
+                                              : ""
                                           }`}
                                         >
                                           <td
@@ -187,29 +214,35 @@ const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
                                             {formatKeyName(key)}
                                           </td>
                                           <td className="px-4 py-2 text-sm text-gray-800 max-w-[200px] overflow-hidden">
-                                            {key
-                                              ?.toLowerCase()
-                                              .includes("link") ? (
-                                              <a
-                                                href={currentValue}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-blue-600 hover:underline"
-                                              >
-                                                Click here
-                                              </a>
+                                            {hasValue ? (
+                                              key
+                                                ?.toLowerCase()
+                                                .includes("link") ? (
+                                                <a
+                                                  href={currentValue}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="text-blue-600 hover:underline"
+                                                >
+                                                  Click here
+                                                </a>
+                                              ) : (
+                                                <span
+                                                  className={`inline-flex items-center px-2 py-1 rounded text-xs max-w-full truncate ${
+                                                    isChangedInCurrentLog
+                                                      ? "bg-yellow-200 text-yellow-800 font-semibold"
+                                                      : "bg-gray-100"
+                                                  }`}
+                                                  title={formatValue(
+                                                    currentValue
+                                                  )}
+                                                >
+                                                  {formatValue(currentValue)}
+                                                </span>
+                                              )
                                             ) : (
-                                              <span
-                                                className={`inline-flex items-center px-2 py-1 rounded text-xs max-w-full truncate ${
-                                                  isChanged
-                                                    ? "bg-yellow-200 text-yellow-800 font-semibold"
-                                                    : "bg-gray-100"
-                                                }`}
-                                                title={formatValue(
-                                                  currentValue
-                                                )}
-                                              >
-                                                {formatValue(currentValue)}
+                                              <span className="text-gray-400 italic text-xs">
+                                                Not set
                                               </span>
                                             )}
                                           </td>
@@ -224,28 +257,28 @@ const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
                             <div className="w-full md:w-1/2 px-2 mb-4">
                               <table className="min-w-full border border-gray-200">
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                  {Object.entries(referencePayload)
-                                    .slice(
-                                      Math.ceil(
-                                        Object.keys(referencePayload).length / 2
-                                      )
-                                    )
-                                    .map(([key, refValue], payloadIndex) => {
-                                      const isChanged =
+                                  {allFields
+                                    .slice(Math.ceil(allFields.length / 2))
+                                    .map((key, fieldIndex) => {
+                                      const isChangedInCurrentLog =
                                         index > 0 &&
-                                        isFieldChanged(
+                                        isFieldChangedInCurrentLog(
                                           key,
-                                          logEntry.json_payload
+                                          logEntry
                                         );
-                                      const currentValue = isChanged
-                                        ? logEntry.json_payload[key]
-                                        : refValue;
+                                      const currentValue =
+                                        currentFieldValues[key];
+                                      const hasValue =
+                                        currentValue !== undefined &&
+                                        currentValue !== null;
 
                                       return (
                                         <tr
-                                          key={payloadIndex}
+                                          key={fieldIndex}
                                           className={`hover:bg-gray-50 ${
-                                            isChanged ? "bg-yellow-100" : ""
+                                            isChangedInCurrentLog
+                                              ? "bg-yellow-100"
+                                              : ""
                                           }`}
                                         >
                                           <td
@@ -255,29 +288,35 @@ const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
                                             {formatKeyName(key)}
                                           </td>
                                           <td className="px-4 py-2 text-sm text-gray-800 max-w-[200px] overflow-hidden">
-                                            {key
-                                              ?.toLowerCase()
-                                              .includes("link") ? (
-                                              <a
-                                                href={currentValue}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-blue-600 hover:underline"
-                                              >
-                                                Click here
-                                              </a>
+                                            {hasValue ? (
+                                              key
+                                                ?.toLowerCase()
+                                                .includes("link") ? (
+                                                <a
+                                                  href={currentValue}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="text-blue-600 hover:underline"
+                                                >
+                                                  Click here
+                                                </a>
+                                              ) : (
+                                                <span
+                                                  className={`inline-flex items-center px-2 py-1 rounded text-xs max-w-full truncate ${
+                                                    isChangedInCurrentLog
+                                                      ? "bg-yellow-200 text-yellow-800 font-semibold"
+                                                      : "bg-gray-100"
+                                                  }`}
+                                                  title={formatValue(
+                                                    currentValue
+                                                  )}
+                                                >
+                                                  {formatValue(currentValue)}
+                                                </span>
+                                              )
                                             ) : (
-                                              <span
-                                                className={`inline-flex items-center px-2 py-1 rounded text-xs max-w-full truncate ${
-                                                  isChanged
-                                                    ? "bg-yellow-200 text-yellow-800 font-semibold"
-                                                    : "bg-gray-100"
-                                                }`}
-                                                title={formatValue(
-                                                  currentValue
-                                                )}
-                                              >
-                                                {formatValue(currentValue)}
+                                              <span className="text-gray-400 italic text-xs">
+                                                Not set
                                               </span>
                                             )}
                                           </td>
@@ -288,47 +327,6 @@ const InventoryLogsInfo = ({ show, onClose, data = [], isLoading = false }) => {
                               </table>
                             </div>
                           </div>
-
-                          {/* Show any new fields that weren't in reference */}
-                          {Object.entries(logEntry.json_payload).filter(
-                            ([key]) => !referencePayload.hasOwnProperty(key)
-                          ).length > 0 && (
-                            <div className="mt-4">
-                              <h4 className="text-sm font-medium text-gray-700 mb-2">
-                                New Fields Added:
-                              </h4>
-                              <table className="min-w-full border border-gray-200">
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                  {Object.entries(logEntry.json_payload)
-                                    .filter(
-                                      ([key]) =>
-                                        !referencePayload.hasOwnProperty(key)
-                                    )
-                                    .map(([key, value], newFieldIndex) => (
-                                      <tr
-                                        key={newFieldIndex}
-                                        className="hover:bg-gray-50 bg-blue-50"
-                                      >
-                                        <td
-                                          className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-600 border-r border-gray-100 max-w-[150px] truncate"
-                                          title={formatKeyName(key)}
-                                        >
-                                          {formatKeyName(key)}
-                                        </td>
-                                        <td className="px-4 py-2 text-sm text-gray-800 max-w-[200px] overflow-hidden">
-                                          <span
-                                            className="inline-flex items-center px-2 py-1 rounded text-xs max-w-full truncate bg-blue-200 text-blue-800 font-semibold"
-                                            title={formatValue(value)}
-                                          >
-                                            {formatValue(value)}
-                                          </span>
-                                        </td>
-                                      </tr>
-                                    ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
                         </div>
                       ) : (
                         <div className="text-sm text-gray-500 italic py-3 text-center border border-blue-100 rounded-md">
