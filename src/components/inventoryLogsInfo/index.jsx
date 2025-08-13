@@ -15,6 +15,22 @@ const InventoryLogsInfo = ({
   const [expandedLogs, setExpandedLogs] = useState(new Set());
   const [activeTab, setActiveTab] = useState("order"); // "order" or "inventory"
 
+  function convertTimestamp(isoTimestamp) {
+    const date = new Date(isoTimestamp);
+
+    // Get date components
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Month is 0-indexed
+    const day = String(date.getDate()).padStart(2, "0");
+    const year = date.getFullYear();
+
+    // Get time components
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+
+    return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
+  }
+
   // Function to clean and format key names
   const formatKeyName = (key) => {
     return key
@@ -195,14 +211,13 @@ const InventoryLogsInfo = ({
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      {hasPayload && (
+                      {hasPayload &&  (
                         <div
                           className={`mt-1 text-xs py-3 ${
                             isExpanded ? "text-white" : "text-[#ffff]"
                           }`}
                         >
-                          {payloadKeys.length} change
-                          {payloadKeys.length !== 1 ? "s" : ""} recorded
+                          {convertTimestamp(logEntry.created_at)}
                         </div>
                       )}
                       <div
@@ -254,7 +269,6 @@ const InventoryLogsInfo = ({
                                       const hasValue =
                                         currentValue !== undefined &&
                                         currentValue !== null;
-
                                       return (
                                         <tr
                                           key={fieldIndex}
@@ -265,12 +279,12 @@ const InventoryLogsInfo = ({
                                           }`}
                                         >
                                           <td
-                                            className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-600 border-r border-gray-100 max-w-[150px] truncate"
+                                            className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-600 border-r border-gray-100 max-w-[150px] truncate align-top"
                                             title={formatKeyName(key)}
                                           >
                                             {formatKeyName(key)}
                                           </td>
-                                          <td className="px-4 py-2 text-sm text-gray-800 max-w-[200px] overflow-hidden">
+                                          <td className="px-4 py-2 text-sm text-gray-800 break-words">
                                             {hasValue ? (
                                               key
                                                 ?.toLowerCase()
@@ -279,20 +293,17 @@ const InventoryLogsInfo = ({
                                                   href={currentValue}
                                                   target="_blank"
                                                   rel="noopener noreferrer"
-                                                  className="text-blue-600 hover:underline"
+                                                  className="text-blue-600 hover:underline break-all"
                                                 >
                                                   Click here
                                                 </a>
                                               ) : (
                                                 <span
-                                                  className={`inline-flex items-center px-2 py-1 rounded text-xs max-w-full truncate ${
+                                                  className={`inline-block px-2 py-1 rounded text-xs break-words ${
                                                     isChangedInCurrentLog
                                                       ? "bg-yellow-200 text-yellow-800 font-semibold"
                                                       : "bg-gray-100"
                                                   }`}
-                                                  title={formatValue(
-                                                    currentValue
-                                                  )}
                                                 >
                                                   {formatValue(currentValue)}
                                                 </span>
@@ -328,7 +339,6 @@ const InventoryLogsInfo = ({
                                       const hasValue =
                                         currentValue !== undefined &&
                                         currentValue !== null;
-
                                       return (
                                         <tr
                                           key={fieldIndex}
@@ -339,12 +349,12 @@ const InventoryLogsInfo = ({
                                           }`}
                                         >
                                           <td
-                                            className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-600 border-r border-gray-100 max-w-[150px] truncate"
+                                            className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-600 border-r border-gray-100 max-w-[150px] truncate align-top"
                                             title={formatKeyName(key)}
                                           >
                                             {formatKeyName(key)}
                                           </td>
-                                          <td className="px-4 py-2 text-sm text-gray-800 max-w-[200px] overflow-hidden">
+                                          <td className="px-4 py-2 text-sm text-gray-800 break-words">
                                             {hasValue ? (
                                               key
                                                 ?.toLowerCase()
@@ -353,20 +363,17 @@ const InventoryLogsInfo = ({
                                                   href={currentValue}
                                                   target="_blank"
                                                   rel="noopener noreferrer"
-                                                  className="text-blue-600 hover:underline"
+                                                  className="text-blue-600 hover:underline break-all"
                                                 >
                                                   Click here
                                                 </a>
                                               ) : (
                                                 <span
-                                                  className={`inline-flex items-center px-2 py-1 rounded text-xs max-w-full truncate ${
+                                                  className={`inline-block px-2 py-1 rounded text-xs break-words ${
                                                     isChangedInCurrentLog
                                                       ? "bg-yellow-200 text-yellow-800 font-semibold"
                                                       : "bg-gray-100"
                                                   }`}
-                                                  title={formatValue(
-                                                    currentValue
-                                                  )}
                                                 >
                                                   {formatValue(currentValue)}
                                                 </span>

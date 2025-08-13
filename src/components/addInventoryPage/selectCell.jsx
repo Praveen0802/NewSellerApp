@@ -31,57 +31,60 @@ const MultiSelectEditableCell = ({
   // Enhanced function to convert various value formats to array
   const normalizeValue = (val) => {
     if (!val) return [];
-    
+
     // If it's already an array, handle each item
     if (Array.isArray(val)) {
-      return val.map(item => {
-        if (typeof item === 'object' && item !== null) {
+      return val.map((item) => {
+        if (typeof item === "object" && item !== null) {
           // Handle object with value property
           return item.value || item.id || item.key || String(item);
         }
         return item;
       });
     }
-    
+
     // If it's an object, extract the value
-    if (typeof val === 'object' && val !== null) {
+    if (typeof val === "object" && val !== null) {
       if (val.value !== undefined) return [val.value];
       if (val.id !== undefined) return [val.id];
       if (val.key !== undefined) return [val.key];
       // If object doesn't have expected properties, convert to string
       return [String(val)];
     }
-    
+
     // If it's a string, handle comma-separated values
     if (typeof val === "string") {
       if (val === "[object Object]") {
-        console.warn("Received [object Object] as value, returning empty array");
+        console.warn(
+          "Received [object Object] as value, returning empty array"
+        );
         return [];
       }
       return val.includes(",") ? val.split(",").map((v) => v.trim()) : [val];
     }
-    
+
     return [val];
   };
 
   // Function to convert normalized array back to the expected format
   const denormalizeValue = (normalizedArray) => {
     if (!normalizedArray || normalizedArray.length === 0) return [];
-    
+
     // Check what format the original options use
     const sampleOption = options[0];
-    if (sampleOption && typeof sampleOption.value === 'object') {
+    if (sampleOption && typeof sampleOption.value === "object") {
       // If options have object values, return objects
-      return normalizedArray.map(val => {
-        const matchingOption = options.find(opt => 
-          (opt.value && opt.value.value === val) || 
-          (opt.value && opt.value.id === val) ||
-          opt.value === val
+      return normalizedArray.map((val) => {
+        const matchingOption = options.find(
+          (opt) =>
+            (opt.value && opt.value.value === val) ||
+            (opt.value && opt.value.id === val) ||
+            opt.value === val
         );
         return matchingOption ? matchingOption.value : val;
       });
     }
-    
+
     // Otherwise return simple array
     return normalizedArray;
   };
@@ -104,7 +107,10 @@ const MultiSelectEditableCell = ({
 
     // Set a fixed, smaller width for the dropdown
     const fixedWidth = 240;
-    const maxAllowedWidth = Math.min(viewportWidth - rect.left - 20, fixedWidth);
+    const maxAllowedWidth = Math.min(
+      viewportWidth - rect.left - 20,
+      fixedWidth
+    );
 
     // Decide whether to show above or below
     const showAbove = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
@@ -148,33 +154,42 @@ const MultiSelectEditableCell = ({
     }
   }, [isDropdownOpen, calculateDropdownPosition]);
 
-  const handleClick = useCallback((e) => {
-    if (disabled) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    setIsEditing(true);
-    setIsDropdownOpen(true);
-  }, [disabled]);
+  const handleClick = useCallback(
+    (e) => {
+      if (disabled) return;
 
-  const handleInputClick = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (disabled) return;
-    
-    setIsDropdownOpen(prev => !prev);
-    
-    if (!isEditing) {
+      e.preventDefault();
+      e.stopPropagation();
+
       setIsEditing(true);
-    }
-  }, [disabled, isEditing]);
+      setIsDropdownOpen(true);
+    },
+    [disabled]
+  );
+
+  const handleInputClick = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (disabled) return;
+
+      setIsDropdownOpen((prev) => !prev);
+
+      if (!isEditing) {
+        setIsEditing(true);
+      }
+    },
+    [disabled, isEditing]
+  );
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
+      ) {
         const dropdown = document.querySelector("[data-multiselect-dropdown]");
         if (dropdown && dropdown.contains(event.target)) {
           return;
@@ -295,8 +310,13 @@ const MultiSelectEditableCell = ({
 
   // Get option value for comparison - handles both simple values and objects
   const getOptionValue = (option) => {
-    if (typeof option.value === 'object' && option.value !== null) {
-      return option.value.value || option.value.id || option.value.key || String(option.value);
+    if (typeof option.value === "object" && option.value !== null) {
+      return (
+        option.value.value ||
+        option.value.id ||
+        option.value.key ||
+        String(option.value)
+      );
     }
     return option.value;
   };
@@ -372,8 +392,9 @@ const MultiSelectEditableCell = ({
             {/* Options List */}
             {options.map((option) => {
               const optionValue = getOptionValue(option);
-              const isSelected = normalizeValue(editValue).includes(optionValue);
-              
+              const isSelected =
+                normalizeValue(editValue).includes(optionValue);
+
               return (
                 <div
                   key={option.value}
@@ -497,36 +518,36 @@ const SimpleEditableCell = ({
   // Date formatting helper functions
   const formatDateForDisplay = (dateString) => {
     if (!dateString) return "";
-    
+
     try {
       // If already in DD/MM/YYYY format
       if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
         return dateString;
       }
-      
+
       // If in DD-MM-YYYY format, convert to DD/MM/YYYY
       if (dateString.match(/^\d{2}-\d{2}-\d{4}$/)) {
-        return dateString.replace(/-/g, '/');
+        return dateString.replace(/-/g, "/");
       }
-      
-      // If in YYYY-MM-DD format
+
+      // If in YYYY-MM-DD format (NEW ADDITION TO HANDLE YOUR CASE)
       if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        const [year, month, day] = dateString.split('-');
+        const [year, month, day] = dateString.split("-");
         return `${day}/${month}/${year}`;
       }
-      
+
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
         return dateString;
       }
-      
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
       const year = date.getFullYear();
-      
+
       return `${day}/${month}/${year}`;
     } catch (error) {
-      console.error('Error formatting date:', error);
+      console.error("Error formatting date:", error);
       return dateString;
     }
   };
@@ -534,20 +555,20 @@ const SimpleEditableCell = ({
   // Convert date string to FloatingDateRange format (startDate/endDate object)
   const convertToDateRangeFormat = (dateString) => {
     if (!dateString) return { startDate: "", endDate: "" };
-    
+
     // Convert to YYYY-MM-DD format for FloatingDateRange
     let formattedDate = "";
-    
+
     if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
       // DD/MM/YYYY format
-      const [day, month, year] = dateString.split('/');
+      const [day, month, year] = dateString.split("/");
       formattedDate = `${year}-${month}-${day}`;
     } else if (dateString.match(/^\d{2}-\d{2}-\d{4}$/)) {
       // DD-MM-YYYY format
-      const [day, month, year] = dateString.split('-');
+      const [day, month, year] = dateString.split("-");
       formattedDate = `${year}-${month}-${day}`;
     } else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      // Already in YYYY-MM-DD format
+      // YYYY-MM-DD format (ALREADY CORRECT - NO CONVERSION NEEDED)
       formattedDate = dateString;
     } else {
       // Try to parse as Date and convert
@@ -555,31 +576,31 @@ const SimpleEditableCell = ({
         const date = new Date(dateString);
         if (!isNaN(date.getTime())) {
           const year = date.getFullYear();
-          const month = (date.getMonth() + 1).toString().padStart(2, '0');
-          const day = date.getDate().toString().padStart(2, '0');
+          const month = (date.getMonth() + 1).toString().padStart(2, "0");
+          const day = date.getDate().toString().padStart(2, "0");
           formattedDate = `${year}-${month}-${day}`;
         }
       } catch (error) {
-        console.error('Error parsing date:', error);
+        console.error("Error parsing date:", error);
         return { startDate: "", endDate: "" };
       }
     }
-    
+
     return { startDate: formattedDate, endDate: formattedDate };
   };
 
   // Convert FloatingDateRange format back to DD-MM-YYYY
   const convertFromDateRangeFormat = (dateRangeValue) => {
     if (!dateRangeValue || !dateRangeValue.startDate) return "";
-    
+
     const dateString = dateRangeValue.startDate;
-    
+
     // Convert YYYY-MM-DD to DD-MM-YYYY
     if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      const [year, month, day] = dateString.split('-');
+      const [year, month, day] = dateString.split("-");
       return `${day}-${month}-${year}`;
     }
-    
+
     return dateString;
   };
 
@@ -638,6 +659,7 @@ const SimpleEditableCell = ({
 
     // Date fields are ALWAYS rendered as editable (FloatingDateRange) unless disabled
     if (!disabled) {
+      console.log(value, "valuevaluevaluevalue");
       return (
         <div className="w-full">
           <FloatingDateRange
@@ -665,15 +687,18 @@ const SimpleEditableCell = ({
   }
 
   // For all other types, continue with existing logic
-  const handleClick = useCallback((e) => {
-    if (disabled) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    setIsEditing(true);
-    setShouldFocusInput(true);
-  }, [disabled]);
+  const handleClick = useCallback(
+    (e) => {
+      if (disabled) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      setIsEditing(true);
+      setShouldFocusInput(true);
+    },
+    [disabled]
+  );
 
   const handleSave = () => {
     if (editValue !== value) {

@@ -122,17 +122,17 @@ const Tooltip = ({ children, content, position = "right" }) => {
 
   // Create portal element if it doesn't exist
   const createTooltipPortal = () => {
-    let portalRoot = document.getElementById('tooltip-portal');
+    let portalRoot = document.getElementById("tooltip-portal");
     if (!portalRoot) {
-      portalRoot = document.createElement('div');
-      portalRoot.id = 'tooltip-portal';
-      portalRoot.style.position = 'fixed';
-      portalRoot.style.top = '0';
-      portalRoot.style.left = '0';
-      portalRoot.style.width = '100%';
-      portalRoot.style.height = '100%';
-      portalRoot.style.pointerEvents = 'none';
-      portalRoot.style.zIndex = '999999'; // Very high z-index
+      portalRoot = document.createElement("div");
+      portalRoot.id = "tooltip-portal";
+      portalRoot.style.position = "fixed";
+      portalRoot.style.top = "0";
+      portalRoot.style.left = "0";
+      portalRoot.style.width = "100%";
+      portalRoot.style.height = "100%";
+      portalRoot.style.pointerEvents = "none";
+      portalRoot.style.zIndex = "999999"; // Very high z-index
       document.body.appendChild(portalRoot);
     }
     return portalRoot;
@@ -141,19 +141,19 @@ const Tooltip = ({ children, content, position = "right" }) => {
   useEffect(() => {
     if (isVisible && content && typeof document !== "undefined") {
       const portalRoot = createTooltipPortal();
-      
-      const tooltipElement = document.createElement('div');
+
+      const tooltipElement = document.createElement("div");
       tooltipElement.className = `absolute px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg whitespace-nowrap pointer-events-none ${getTransformClass()}`;
       tooltipElement.style.left = `${tooltipPosition.x}px`;
       tooltipElement.style.top = `${tooltipPosition.y}px`;
-      tooltipElement.style.zIndex = '999999';
+      tooltipElement.style.zIndex = "999999";
       tooltipElement.innerHTML = `
         ${content}
         <div class="${getArrowClass()}"></div>
       `;
-      
+
       portalRoot.appendChild(tooltipElement);
-      
+
       return () => {
         if (portalRoot.contains(tooltipElement)) {
           portalRoot.removeChild(tooltipElement);
@@ -1013,7 +1013,6 @@ const LeftMenuBar = () => {
     },
   ];
 
-
   // const leftPaneValues =
   //   (kycStatus?.kyc_status === 0 || kycStatus?.kyc_status === 2) &&
   //   userRoles?.user_type == "sellers"
@@ -1035,25 +1034,27 @@ const LeftMenuBar = () => {
   };
   // Update active state when route changes for sales pages
   useEffect(() => {
-    const path = router?.pathname?.replace("/", "");
+    if (typeof window === "undefined") return;
+    const path = window.location.pathname?.replace("/", "");
     const currentPath = path.split("/")[0];
-    if (currentPath.startsWith("sales/")) {
+    if (currentPath.startsWith("sales")) {
       const salesActiveKey = getSalesActiveState();
       if (salesActiveKey) {
         setActive(salesActiveKey);
         setSalesExpanded(true); // Always expand sales menu when on a sales page
+        return;
       }
-    }if(currentPath?.includes("trade")){
-      setActive("sb-trade");
     }
-     else {
+    if (currentPath?.includes("trade")) {
+      setActive("sb-trade");
+    } else {
       setActive(currentPath);
       // Optionally collapse sales menu when not on sales pages
       // setSalesExpanded(false);
     }
-  }, [router?.pathname]);
+  }, [window.location.pathname]);
   const handleSelectedClick = (index, item) => {
-    if (index ==0 &&!isMobile) {
+    if (index == 0 && !isMobile) {
       dispatch(updateLeftMenuDisplay(!showFullDisplay));
       return;
     }
@@ -1062,7 +1063,7 @@ const LeftMenuBar = () => {
       setNotificationsOpen(true);
       return;
     }
-    if(item?.isName){
+    if (item?.isName) {
       setSettingsOpen(true);
     }
 
@@ -1460,8 +1461,7 @@ const LeftMenuBar = () => {
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         showFullDisplay={showFullDisplay}
-                handleLogout={handleLogout}
-
+        handleLogout={handleLogout}
       />
 
       {/* Notifications Popup */}

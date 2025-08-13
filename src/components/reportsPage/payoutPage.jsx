@@ -484,7 +484,7 @@ const PayoutPage = (props) => {
       const response = isOrderTab
         ? await getPayoutOrderReport()
         : await getPayoutHistoryReport();
-
+      console.log(response, "responseresponseresponse");
       if (response) {
         downloadCSV(
           response,

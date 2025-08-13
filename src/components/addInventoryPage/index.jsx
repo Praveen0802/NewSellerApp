@@ -946,7 +946,7 @@ const AddInventoryPage = (props) => {
         }
       }
       if (!shipDateValue) {
-        shipDateValue = formatDateForInput(matchDetails?.ship_date);
+        shipDateValue = publishingData?.ship_date || matchDetails?.ship_date;
       }
 
       formData.append(`data[${index}][ship_date]`, shipDateValue);
@@ -980,7 +980,7 @@ const AddInventoryPage = (props) => {
       ticketDetails.forEach((detail, detailIndex) => {
         formData.append(
           `data[${index}][ticket_details][${detailIndex}]`,
-          detail
+          detail?.value || detail
         );
       });
       formData.append(
@@ -1013,10 +1013,7 @@ const AddInventoryPage = (props) => {
           publishingData.additional_info.dynamicContent || ""
         );
       }
-      console.log(
-        publishingData?.additional_info?.templateFile,
-        "publishingData?.additional_info?.templateFile"
-      );
+      
       if (publishingData?.additional_info?.templateFile) {
         // Debug: Check what you're actually trying to append
 

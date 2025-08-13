@@ -1894,7 +1894,6 @@ const TicketsPage = (props) => {
       setVisibleColumns(createInitialVisibleColumns());
     }
   }, [constructHeadersFromListingHistory, createInitialVisibleColumns]);
-
   // Calculate total ticket count across all matches - UPDATED FOR ticketsByMatch
   const getTotalTicketCount = useCallback(() => {
     let totalCount = 0;

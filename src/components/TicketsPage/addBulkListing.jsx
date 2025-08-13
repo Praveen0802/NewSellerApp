@@ -64,6 +64,37 @@ import Tooltip from "../addInventoryPage/simmpleTooltip";
 const BulkInventory = (props) => {
   const { matchId, response } = props;
   console.log(response, "responseresponseresponse");
+  if (Object.keys(response) == 0) {
+    return (
+      <div className="bg-[#F5F7FA] w-full max-h-[calc(100vh-100px)] overflow-auto relative min-h-screen">
+        <div className="m-6 bg-white rounded-lg shadow-sm p-12 text-center">
+          <div className="max-w-md mx-auto">
+            <div className="mb-6">
+              <svg
+                className="mx-auto h-16 w-16 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L4.316 15.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              No Data Available
+            </h3>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Unable to load match data. Please try again or contact support.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const matchVenueDetails = response?.match_data[0];
@@ -216,7 +247,6 @@ const BulkInventory = (props) => {
     setGlobalSelectedTickets([]);
     toast.info("Edit cancelled");
   };
-
   // MODIFIED: Check if a specific ticket is in edit mode
   const isTicketInEditMode = (matchId, rowIndex) => {
     const uniqueId = `${matchId}_${rowIndex}`;
@@ -284,7 +314,6 @@ const BulkInventory = (props) => {
 
   // Action handlers for individual match mode
   const handleHandAction = (rowData, rowIndex, matchId) => {
-    console.log("Hand action clicked for row:", rowData, rowIndex, matchId);
     handleGlobalCellEdit(
       matchId,
       rowIndex,
@@ -295,7 +324,6 @@ const BulkInventory = (props) => {
   };
 
   const handleUploadAction = (rowData, rowIndex, matchId) => {
-    console.log("Upload action clicked for row:", rowData, rowIndex, matchId);
     const matchDetails = allMatchDetails.find(
       (m) => m.match_id.toString() === matchId.toString()
     );
@@ -314,10 +342,6 @@ const BulkInventory = (props) => {
       toast.error("Please select tickets to delete");
       return;
     }
-
-    console.log("Deleting selected tickets:", globalSelectedTickets);
-
-    // Group tickets by match for deletion
     const ticketsByMatch = {};
     globalSelectedTickets.forEach((uniqueId) => {
       const [matchId, originalIndex] = uniqueId.split("_");
@@ -353,8 +377,6 @@ const BulkInventory = (props) => {
       toast.error("Please select tickets to clone");
       return;
     }
-
-    console.log("Cloning selected tickets:", globalSelectedTickets);
 
     // Group tickets by match for cloning
     const ticketsByMatch = {};
@@ -453,8 +475,6 @@ const BulkInventory = (props) => {
   const router = useRouter();
 
   const [filtersApplied, setFiltersApplied] = useState({});
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [showColumnDropdown, setShowColumnDropdown] = useState(false);
   const [blockDetailsByCategory, setBlockDetailsByCategory] = useState({});
   const [blockData, setBlockData] = useState([]);
   const filterButtonRef = useRef(null);
@@ -980,6 +1000,7 @@ const BulkInventory = (props) => {
 
   // KEEP ALL ORIGINAL FUNCTIONS (form data construction, validation, etc.)
   const constructFormDataAsFields = (publishingDataArray) => {
+    console.log(publishingDataArray,'publishingDataArraypublishingDataArray')
     const formData = new FormData();
 
     const transformQRLinks = (qrLinks) => {
@@ -1051,14 +1072,7 @@ const BulkInventory = (props) => {
 
       let shipDateValue = "";
       if (publishingData.ship_date) {
-        if (
-          typeof publishingData.ship_date === "object" &&
-          publishingData.ship_date.startDate
-        ) {
-          shipDateValue = publishingData.ship_date.startDate;
-        } else if (typeof publishingData.ship_date === "string") {
-          shipDateValue = formatDateForInput(publishingData.ship_date);
-        }
+         shipDateValue = publishingData.ship_date
       }
       if (!shipDateValue) {
         const matchDetails = allMatchDetails.find(
@@ -1110,7 +1124,7 @@ const BulkInventory = (props) => {
       ticketDetails.forEach((detail, detailIndex) => {
         formData.append(
           `data[${index}][ticket_details][${detailIndex}]`,
-          detail
+          detail?.value || detail
         );
       });
       formData.append(
@@ -1192,14 +1206,14 @@ const BulkInventory = (props) => {
   };
 
   // Function to create inventory item from filter values
-  const createInventoryItemFromFilters = () => {
+  const createInventoryItemFromFilters = (match) => {
     const newItem = {
       id: Date.now() + Math.random(),
     };
 
     filters.forEach((filter) => {
       const filterValue = filtersApplied[filter.name];
-
+      console.log(filterValue, "filterValuefilterValuefilterValue");
       if (
         filterValue !== undefined &&
         filterValue !== null &&
@@ -1212,7 +1226,7 @@ const BulkInventory = (props) => {
         }
       } else {
         if (filter.name === "ship_date") {
-          newItem[filter.name] = filtersApplied?.ship_date?.startDate || "";
+          newItem[filter.name] = filtersApplied?.ship_date || "";
           ("");
         } else {
           newItem[filter.name] = filter.multiselect ? [] : "";
@@ -1225,6 +1239,7 @@ const BulkInventory = (props) => {
     newItem.qr_links = [];
     newItem.upload_tickets = [];
     newItem.paper_ticket_details = {};
+    newItem.ship_date = match?.ship_date || "";
 
     return newItem;
   };
@@ -1258,10 +1273,6 @@ const BulkInventory = (props) => {
       errors: errors,
     };
   };
-  console.log(
-    validateMandatoryFields(),
-    "validateMandatoryFieldsvalidateMandatoryFieldsvalidateMandatoryFields"
-  );
   // Add listings to all matches at once
   const handleAddListings = () => {
     const validation = validateMandatoryFields();
@@ -1291,13 +1302,16 @@ const BulkInventory = (props) => {
     // Add listings to all matches
     const updatedInventoryData = {};
     allMatchDetails.forEach((match) => {
-      const newListing = createInventoryItemFromFilters();
+      const newListing = createInventoryItemFromFilters(match);
       updatedInventoryData[match.match_id] = [
         ...(inventoryDataByMatch[match.match_id] || []),
         newListing,
       ];
     });
-
+    console.log(
+      updatedInventoryData,
+      "updatedInventoryDataupdatedInventoryDataupdatedInventoryData"
+    );
     setInventoryDataByMatch((prev) => ({
       ...prev,
       ...updatedInventoryData,
@@ -1307,6 +1321,7 @@ const BulkInventory = (props) => {
   // Handle confirm click for upload popup
   const handleConfirmClick = (data, index) => {
     const { matchId } = showUploadPopup;
+    console.log(data, "Confirm clicked for matchId:", matchId);
     setInventoryDataByMatch((prev) => ({
       ...prev,
       [matchId]: prev[matchId].map((item, i) =>
@@ -1321,7 +1336,7 @@ const BulkInventory = (props) => {
       matchDetails: null,
     });
   };
-
+console.log(inventoryDataByMatch,'inventoryDataByMatchinventoryDataByMatchinventoryDataByMatch')
   // Calculate total tickets across all matches
   const getTotalTicketCount = () => {
     return Object.values(inventoryDataByMatch).reduce(
@@ -1383,13 +1398,13 @@ const BulkInventory = (props) => {
                   View Map
                 </p>
               )}
-              <CompactInfoCard
+              {/* <CompactInfoCard
                 title="Listing Visibility"
                 progress={20}
                 segments={5}
                 tooltipText="Click to learn more"
                 handleClick={handleOpenTicketInfoPopup}
-              />
+              /> */}
             </div>
           </div>
           {allMatchDetails.length > 0 && (
@@ -1461,7 +1476,7 @@ const BulkInventory = (props) => {
             {allMatchDetails.map((matchDetails) => {
               const matchId = matchDetails.match_id;
               const inventoryData = inventoryDataByMatch[matchId] || [];
-
+              console.log(inventoryData, "inventoryDatainventoryData");
               if (inventoryData.length === 0) return null;
 
               return (
@@ -1474,7 +1489,7 @@ const BulkInventory = (props) => {
                     setSelectedRows={(newSelectedRows) =>
                       handleSetSelectedRowsForMatch(matchId, newSelectedRows)
                     }
-                     filters={response}
+                    filters={response}
                     handleCellEdit={(rowIndex, columnKey, value, row) =>
                       handleGlobalCellEdit(
                         matchId,

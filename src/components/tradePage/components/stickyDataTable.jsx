@@ -716,35 +716,88 @@ const StickyDataTable = ({
       </div>
 
       {/* Sticky right columns with navigation controls */}
-      <div
-        className={`absolute top-0 right-0 h-full bg-white border-l border-[#E0E1EA] ${
-          hasScrolled ? "shadow-md" : ""
-        }`}
-        style={{ width: `${stickyColumnsWidth}px` }}
-      >
-        <div className="h-full">
-          <table
-            ref={stickyTableRef}
-            className="w-full h-full border-collapse table-fixed"
-          >
-            {rightStickyHeaders?.length > 0 ? (
-              <thead>
-                <tr className="bg-white border-b border-[#E0E1EA]">
-                  {rightStickyHeaders?.map((header, idx) => (
-                    <th
-                      key={`sticky-header-${idx}`}
-                      className="py-2 px-2 text-left text-[#7D82A4] text-[13px] border-r-[1px] border-[#E0E1EA] font-medium whitespace-nowrap"
-                    >
-                      {header}
-                    </th>
-                  ))}
-                  {maxStickyColumnsLength > rightStickyHeaders?.length && (
-                    <th
-                      colSpan={
-                        maxStickyColumnsLength - rightStickyHeaders?.length
-                      }
-                      className="py-2 px-2"
-                    >
+      {maxStickyColumnsLength > 0 && (
+        <div
+          className={`absolute top-0 right-0 h-full bg-white border-l border-[#E0E1EA] ${
+            hasScrolled ? "shadow-md" : ""
+          }`}
+          style={{ width: `${stickyColumnsWidth}px` }}
+        >
+          <div className="h-full">
+            <table
+              ref={stickyTableRef}
+              className="w-full h-full border-collapse table-fixed"
+            >
+              {rightStickyHeaders?.length > 0 ? (
+                <thead>
+                  <tr className="bg-white border-b border-[#E0E1EA]">
+                    {rightStickyHeaders?.map((header, idx) => (
+                      <th
+                        key={`sticky-header-${idx}`}
+                        className="py-2 px-2 text-left text-[#7D82A4] text-[13px] border-r-[1px] border-[#E0E1EA] font-medium whitespace-nowrap"
+                      >
+                        {header}
+                      </th>
+                    ))}
+                    {maxStickyColumnsLength > rightStickyHeaders?.length && (
+                      <th
+                        colSpan={
+                          maxStickyColumnsLength - rightStickyHeaders?.length
+                        }
+                        className="py-2 px-2"
+                      >
+                        <div className="flex justify-end items-center">
+                          {/* Left arrow */}
+                          <button
+                            onClick={scrollLeft}
+                            disabled={!canScrollLeft}
+                            className={`p-1 rounded cursor-pointer ${
+                              canScrollLeft
+                                ? "text-[#343432] hover:bg-gray-100"
+                                : "text-gray-300 cursor-not-allowed"
+                            }`}
+                            aria-label="Scroll left"
+                          >
+                            <ChevronRight
+                              className="rotate-180"
+                              color={canScrollLeft ? "" : "#B4B7CB"}
+                            />
+                          </button>
+
+                          {/* Right arrow */}
+                          <button
+                            onClick={scrollRight}
+                            disabled={!canScrollRight}
+                            className={`p-1 rounded cursor-pointer ${
+                              canScrollRight
+                                ? "text-[#343432] hover:bg-gray-100"
+                                : "text-gray-300 cursor-not-allowed"
+                            }`}
+                            aria-label="Scroll right"
+                          >
+                            <ChevronRight
+                              color={canScrollRight ? "" : "#B4B7CB"}
+                            />
+                          </button>
+                        </div>
+                      </th>
+                    )}
+                  </tr>
+                </thead>
+              ) : (
+                <thead>
+                  <tr className="bg-white border-b border-[#E0E1EA]">
+                    {/* Create individual header cells instead of a single spanning cell */}
+                    {Array.from({ length: maxStickyColumnsLength - 1 }).map(
+                      (_, idx) => (
+                        <th
+                          key={`empty-header-${idx}`}
+                          className="py-2 px-2"
+                        ></th>
+                      )
+                    )}
+                    {/* Navigation arrows in the last header cell */}
+                    <th className="py-2 px-2">
                       <div className="flex justify-end items-center">
                         {/* Left arrow */}
                         <button
@@ -780,161 +833,121 @@ const StickyDataTable = ({
                         </button>
                       </div>
                     </th>
-                  )}
-                </tr>
-              </thead>
-            ) : (
-              <thead>
-                <tr className="bg-white border-b border-[#E0E1EA]">
-                  {/* Navigation arrows in header */}
-                  <th colSpan={maxStickyColumnsLength} className="py-2 px-2">
-                    <div className="flex justify-end items-center">
-                      {/* Left arrow */}
-                      <button
-                        onClick={scrollLeft}
-                        disabled={!canScrollLeft}
-                        className={`p-1 rounded cursor-pointer ${
-                          canScrollLeft
-                            ? "text-[#343432] hover:bg-gray-100"
-                            : "text-gray-300 cursor-not-allowed"
-                        }`}
-                        aria-label="Scroll left"
-                      >
-                        <ChevronRight
-                          className="rotate-180"
-                          color={canScrollLeft ? "" : "#B4B7CB"}
-                        />
-                      </button>
+                  </tr>
+                </thead>
+              )}
 
-                      {/* Right arrow */}
-                      <button
-                        onClick={scrollRight}
-                        disabled={!canScrollRight}
-                        className={`p-1 rounded cursor-pointer ${
-                          canScrollRight
-                            ? "text-[#343432] hover:bg-gray-100"
-                            : "text-gray-300 cursor-not-allowed"
-                        }`}
-                        aria-label="Scroll right"
+              <tbody>
+                {displayData?.map((row, rowIndex) => {
+                  // Handle empty state for sticky table
+                  if (row.isEmpty) {
+                    return (
+                      <tr
+                        key="no-records-sticky"
+                        className="border-b border-[#E0E1EA] bg-white"
                       >
-                        <ChevronRight color={canScrollRight ? "" : "#B4B7CB"} />
-                      </button>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-            )}
+                        <td colSpan={maxStickyColumnsLength}></td>
+                      </tr>
+                    );
+                  }
 
-            <tbody>
-              {displayData?.map((row, rowIndex) => {
-                // Handle empty state for sticky table
-                if (row.isEmpty) {
+                  // Get the row-specific sticky columns, or empty array if not defined
+                  const uniqueKey = row.isShimmer
+                    ? `shimmer-sticky-${rowIndex}-${Date.now()}`
+                    : row.id
+                    ? `sticky-${row.id}-${rowIndex}`
+                    : `sticky-${rowIndex}-${JSON.stringify(row).slice(0, 50)}`;
+
+                  const rowStickyColumns =
+                    !loading && Array.isArray(normalizedStickyColumns[rowIndex])
+                      ? normalizedStickyColumns[rowIndex]
+                      : [];
+
                   return (
                     <tr
-                      key="no-records-sticky"
-                      className="border-b border-[#E0E1EA] bg-white"
+                      key={uniqueKey}
+                      className="border-b border-[#E0E1EA] bg-white hover:bg-gray-50"
                     >
-                      <td colSpan={maxStickyColumnsLength}></td>
-                    </tr>
-                  );
-                }
-
-                // Get the row-specific sticky columns, or empty array if not defined
-                const uniqueKey = row.isShimmer
-                  ? `shimmer-sticky-${rowIndex}-${Date.now()}`
-                  : row.id
-                  ? `sticky-${row.id}-${rowIndex}`
-                  : `sticky-${rowIndex}-${JSON.stringify(row).slice(0, 50)}`;
-
-                const rowStickyColumns =
-                  !loading && Array.isArray(normalizedStickyColumns[rowIndex])
-                    ? normalizedStickyColumns[rowIndex]
-                    : [];
-
-                return (
-                  <tr
-                    key={uniqueKey}
-                    className="border-b border-[#E0E1EA] bg-white hover:bg-gray-50"
-                  >
-                    {/* Render shimmer for loading state or actual content */}
-                    {row.isShimmer ? (
-                      // Render shimmer cells for the maximum possible number of sticky columns
-                      Array(maxStickyColumnsLength)
-                        .fill(0)
-                        .map((_, colIndex) => (
-                          <td
-                            key={`shimmer-${rowIndex}-${colIndex}`}
-                            className="py-2 text-sm align-middle text-center"
-                          >
-                            <div className="flex justify-center">
-                              <div className="w-8 h-8">
-                                <ShimmerCell width="32px" />
+                      {/* Render shimmer for loading state or actual content */}
+                      {row.isShimmer ? (
+                        // Render shimmer cells for the maximum possible number of sticky columns
+                        Array(maxStickyColumnsLength)
+                          .fill(0)
+                          .map((_, colIndex) => (
+                            <td
+                              key={`shimmer-${rowIndex}-${colIndex}`}
+                              className="py-2 text-sm align-middle text-center"
+                            >
+                              <div className="flex justify-center">
+                                <div className="w-8 h-8">
+                                  <ShimmerCell width="32px" />
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                        ))
-                    ) : (
-                      // Render actual sticky columns
-                      <>
-                        {rowStickyColumns.map((column, colIndex) => (
-                          <td
-                            key={`sticky-${rowIndex}-${colIndex}`}
-                            className={`text-sm align-middle text-center border-r-[1px] border-[#E0E1EA] ${
-                              column?.className || ""
-                            }`}
-                          >
-                            <div className="flex justify-center">
-                              {column?.icon && column?.tooltipComponent ? (
-                                <TooltipWrapper
-                                  component={column?.tooltipComponent}
-                                  position={column.tooltipPosition || "top"}
-                                  tooltipKey={`${rowIndex}-${column.key}`}
-                                  activeKey={activeTooltipKey}
-                                  setActiveKey={setActiveTooltipKey}
-                                >
-                                  <div
-                                    className="cursor-pointer"
-                                    onMouseEnter={() =>
-                                      handleMouseEnter(
-                                        `${rowIndex}-${column.key}`
-                                      )
-                                    }
-                                    onMouseLeave={handleMouseLeave}
+                            </td>
+                          ))
+                      ) : (
+                        // Render actual sticky columns
+                        <>
+                          {rowStickyColumns.map((column, colIndex) => (
+                            <td
+                              key={`sticky-${rowIndex}-${colIndex}`}
+                              className={`text-sm align-middle text-center border-r-[1px] border-[#E0E1EA] ${
+                                column?.className || ""
+                              }`}
+                            >
+                              <div className="flex justify-center">
+                                {column?.icon && column?.tooltipComponent ? (
+                                  <TooltipWrapper
+                                    component={column?.tooltipComponent}
+                                    position={column.tooltipPosition || "top"}
+                                    tooltipKey={`${rowIndex}-${column.key}`}
+                                    activeKey={activeTooltipKey}
+                                    setActiveKey={setActiveTooltipKey}
                                   >
+                                    <div
+                                      className="cursor-pointer"
+                                      onMouseEnter={() =>
+                                        handleMouseEnter(
+                                          `${rowIndex}-${column.key}`
+                                        )
+                                      }
+                                      onMouseLeave={handleMouseLeave}
+                                    >
+                                      {column.icon}
+                                    </div>
+                                  </TooltipWrapper>
+                                ) : column.icon ? (
+                                  <div className="cursor-pointer">
                                     {column.icon}
                                   </div>
-                                </TooltipWrapper>
-                              ) : column.icon ? (
-                                <div className="cursor-pointer">
-                                  {column.icon}
-                                </div>
-                              ) : null}
-                              {column?.cta && <button>{column?.cta}</button>}
-                            </div>
-                          </td>
-                        ))}
+                                ) : null}
+                                {column?.cta && <button>{column?.cta}</button>}
+                              </div>
+                            </td>
+                          ))}
 
-                        {/* Add empty cells to maintain column count if this row has fewer sticky columns */}
-                        {Array.from({
-                          length: Math.max(
-                            0,
-                            maxStickyColumnsLength - rowStickyColumns.length
-                          ),
-                        }).map((_, i) => (
-                          <td
-                            key={`${rowIndex}-empty-${i}`}
-                            className="py-2 text-sm"
-                          ></td>
-                        ))}
-                      </>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                          {/* Add empty cells to maintain column count if this row has fewer sticky columns */}
+                          {Array.from({
+                            length: Math.max(
+                              0,
+                              maxStickyColumnsLength - rowStickyColumns.length
+                            ),
+                          }).map((_, i) => (
+                            <td
+                              key={`${rowIndex}-empty-${i}`}
+                              className="py-2 text-sm"
+                            ></td>
+                          ))}
+                        </>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

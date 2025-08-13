@@ -2633,8 +2633,8 @@ export const addSalesPendingNotes = async (token, data) => {
   try {
     const { id } = data ?? {};
     const response = await makeRequest({
-      url: `${API_ROUTES.ADD_SALES_PENDING_NOTES}${id ? `/${id}` : ""}`,
-      method: "PUT",
+      url: `${API_ROUTES.ADD_SALES_PENDING_NOTES}`,
+      method: "POST",
       ...(token && { token: token }),
       ...(data && { data: data }),
     });

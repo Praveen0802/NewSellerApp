@@ -810,6 +810,12 @@ const UploadTickets = ({
         if (myListingPage) {
           handleTicketsPageApiCall(updatedObject);
         } else {
+          console.log(
+            "handleConfirmClick(updatedObject, rowIndex, rowData)",
+            updatedObject,
+            rowIndex,
+            rowData
+          );
           handleConfirmClick(updatedObject, rowIndex, rowData);
         }
       } else {

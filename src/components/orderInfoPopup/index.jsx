@@ -32,9 +32,8 @@ const OrderInfo = ({
   showAttendeeUpload = false,
   rowData,
   handleUploadClick,
-    hideExpand = false,
+  hideExpand = false,
 } = {}) => {
-  console.log(orderData,'orderDataorderData')
   const [expandedVersion, setExpandedVersion] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [downloadLoader, setDownloadLoader] = useState(false);
@@ -370,13 +369,13 @@ const OrderInfo = ({
     : null;
 
   const handleSaveNote = async (note) => {
-    const id_key_name = type === "sales" ? "id" : "booking_id";
+    const id_key_name = "booking_id";
     const { order_id } = order_details;
 
     const payload = {
       [id_key_name]: String(order_id),
       order_notes: note,
-    };
+    };  
 
     const resp =
       type === "sales"
@@ -443,7 +442,7 @@ const OrderInfo = ({
   };
 
   const currentOrderObject = updatedOrderObject || orderObject;
- 
+
   return (
     <RightViewModal
       className={`transition-all duration-300 ease-in-out ${
@@ -461,9 +460,7 @@ const OrderInfo = ({
           <div className="flex items-center border-b-[1px] border-[#E0E1EA] justify-between py-[13px] px-[24px]">
             <p className="text-[18px] text-[#323A70]">
               Order ID:
-              {
-                order_details?.booking_no ||
-                order_details?.order_id}
+              {order_details?.booking_no || order_details?.order_id}
             </p>
             <div className="flex items-center gap-2">
               <div
@@ -487,7 +484,9 @@ const OrderInfo = ({
               </div>
 
               <X
-                onClick={()=>{onClose(showOutsideLoader)}}
+                onClick={() => {
+                  onClose(showOutsideLoader);
+                }}
                 className="size-4 cursor-pointer stroke-[#130061] hover:stroke-[#1a0080] transition-colors  duration-200"
               />
             </div>

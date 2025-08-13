@@ -73,23 +73,76 @@ const SalesPage = (props) => {
     data: null,
     type: "",
   });
-
+  const [listTypeChecked, setListTypeChecked] = useState("all");
+  const [selectedTournament, setSelectedTournament] = useState(null);
+  const [selectedTicketType, setSelectedTicketType] = useState("");
+  const [sortState, setSortState] = useState(null);
   // Define table headers - filter based on visible columns
   const allHeaders = [
     { key: "order_id", label: "Order Id" },
-    { key: "order_date", label: "Order Date" },
-    { key: "order_value", label: "Order Value" },
-    { key: "event", label: "Event" },
-    { key: "venue", label: "Venue" },
-    { key: "event_date", label: "Event Date" },
-    { key: "ticket_details", label: "Ticket Details" },
-    { key: "quantity", label: "Quantity" },
-    { key: "ticket_type_label", label: "Ticket Type" },
+    {
+      key: "order_date",
+      label: "Order Date",
+      sortable: true,
+      sortableKey: "order_date",
+    },
+    {
+      key: "order_value",
+      label: "Order Value",
+      sortable: true,
+      sortableKey: "order_value",
+    },
+    {
+      key: "event",
+      label: "Event",
+      sortable: true,
+      sortableKey: "event_name",
+    },
+    {
+      key: "venue",
+      label: "Venue",
+      sortable: true,
+      sortableKey: "venue_name",
+    },
+    {
+      key: "event_date",
+      label: "Event Date",
+      sortable: true,
+      sortableKey: "event_date",
+    },
+    {
+      key: "ticket_details",
+      label: "Ticket Details",
+      sortable: true,
+      sortableKey: "ticket_details",
+    },
+    {
+      key: "quantity",
+      label: "Quantity",
+      sortable: true,
+      sortableKey: "quantity",
+    },
+    {
+      key: "ticket_type_label",
+      label: "Ticket Type",
+      sortable: true,
+      sortableKey: "ticket_type",
+    },
     { key: "category", label: "Category" },
     { key: "order_status_label", label: "Order Status" },
     { key: "delivery_status_label", label: "Delivery Status" },
-    { key: "section", label: "Section" },
-    { key: "row", label: "Row" },
+    {
+      key: "section",
+      label: "Section",
+      sortable: true,
+      sortableKey: "section_block",
+    },
+    {
+      key: "row",
+      label: "Row",
+      sortable: true,
+      sortableKey: "row",
+    },
     { key: "days_to_event", label: "Days to Event" },
   ];
 
@@ -616,16 +669,36 @@ const SalesPage = (props) => {
         value: overViewData?.e_tickets_count,
         showCheckbox: true,
         key: "ticket_type_1",
+        isChecked: selectedTicketType === "ticket_type_1", // Dynamic checked state
       },
       {
         name: "External Transfer",
         value: overViewData?.external_transfer_count,
         showCheckbox: true,
         key: "ticket_type_2",
+        isChecked: selectedTicketType === "ticket_type_2", // Dynamic checked state
       },
-      { name: "Mobile Link/PKPASS", value: overViewData?.mobile_ticket_count },
-      { name: "Paper Ticket", value: overViewData?.paper_ticket_count },
-      { name: "Local Delivery", value: overViewData?.local_delivery_count },
+      {
+        name: "Mobile Link/PKPASS",
+        value: overViewData?.mobile_ticket_count,
+        showCheckbox: true,
+        key: "ticket_type_3",
+        isChecked: selectedTicketType === "ticket_type_3", // Dynamic checked state
+      },
+      {
+        name: "Paper Ticket",
+        value: overViewData?.paper_ticket_count,
+        showCheckbox: true,
+        key: "ticket_type_4",
+        isChecked: selectedTicketType === "ticket_type_4", // Dynamic checked state
+      },
+      {
+        name: "Local Delivery",
+        value: overViewData?.local_delivery_count,
+        showCheckbox: true,
+        key: "ticket_type_5",
+        isChecked: selectedTicketType === "ticket_type_5", // Dynamic checked state
+      },
     ],
   };
 
@@ -763,46 +836,69 @@ const SalesPage = (props) => {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setSelectedItems([]);
+    setSelectedTicketType(""); // Clear ticket type selection when changing tabs
     // Reset pagination when changing tabs
     setCurrentPage(1);
     setHasNextPage(true);
     setSalesData([]);
   };
 
+  useEffect(() => {
+    const currentTicketTypeValue = filtersApplied?.ticket_type_value;
+
+    if (!currentTicketTypeValue) {
+      setSelectedTicketType("");
+    } else {
+      // Map ticket_type_value back to ticket_type key
+      const typeMapping = {
+        2: "ticket_type_1",
+        6: "ticket_type_2",
+        4: "ticket_type_3",
+        3: "ticket_type_4",
+        5: "ticket_type_5",
+      };
+
+      setSelectedTicketType(typeMapping[currentTicketTypeValue] || "");
+    }
+  }, [filtersApplied?.ticket_type_value]);
+
   const handleFilterChange = async (filterKey, value) => {
+    // Reset sort state when filters change (optional)
+    setSortState(null);
+
     let params = {};
     if (filterKey === "orderDate") {
       params = {
         ...params,
         order_date_from: value?.startDate,
         order_date_to: value?.endDate,
-        page: 1, // Reset to first page on filter change
+        page: 1,
       };
     } else if (filterKey === "delivery_date") {
       params = {
         ...params,
         delivery_date_from: value?.startDate,
         delivery_date_to: value?.endDate,
-        page: 1, // Reset to first page on filter change
+        page: 1,
       };
     } else if (filterKey === "event_date") {
       params = {
         ...params,
         event_date_from: value?.startDate,
         event_date_to: value?.endDate,
-        page: 1, // Reset to first page on filter change
+        page: 1,
       };
     } else if (filterKey == "ticket_in_hand") {
       params = {
         ...params,
         [filterKey]: value ? 1 : 0,
-        page: 1, // Reset to first page on filter change
+        page: 1,
       };
     } else {
       params = {
         ...params,
         [filterKey]: value,
-        page: 1, // Reset to first page on filter change
+        page: 1,
       };
     }
 
@@ -815,30 +911,64 @@ const SalesPage = (props) => {
   };
 
   const handleCheckboxToggle = (checkboxKey, isChecked, allCheckboxValues) => {
+    // Reset sort state when filters change (optional)
+    setSortState(null);
+
     let params = {};
-    if (checkboxKey == "ticket_type_1") {
+
+    // If the same checkbox is clicked again, uncheck it
+    if (selectedTicketType === checkboxKey && isChecked) {
+      setSelectedTicketType("");
       params = {
         ...filtersApplied,
-        ticket_type_value: isChecked ? "2" : "",
-        page: 1,
-      };
-    } else if (checkboxKey == "ticket_type_2") {
-      params = {
-        ...filtersApplied,
-        ticket_type_value: isChecked ? "6" : "",
+        ticket_type_value: "",
         page: 1,
       };
     } else {
-      params = {
-        ...filtersApplied,
-        [checkboxKey]: isChecked ? 1 : 0,
-        page: 1,
-      };
+      // Set new selection
+      setSelectedTicketType(checkboxKey);
+
+      if (checkboxKey === "ticket_type_1") {
+        params = {
+          ...filtersApplied,
+          ticket_type_value: "2",
+          page: 1,
+        };
+      } else if (checkboxKey === "ticket_type_2") {
+        params = {
+          ...filtersApplied,
+          ticket_type_value: "6",
+          page: 1,
+        };
+      } else if (checkboxKey === "ticket_type_3") {
+        params = {
+          ...filtersApplied,
+          ticket_type_value: "4",
+          page: 1,
+        };
+      } else if (checkboxKey === "ticket_type_4") {
+        params = {
+          ...filtersApplied,
+          ticket_type_value: "3",
+          page: 1,
+        };
+      } else if (checkboxKey === "ticket_type_5") {
+        params = {
+          ...filtersApplied,
+          ticket_type_value: "5",
+          page: 1,
+        };
+      } else {
+        params = {
+          ...filtersApplied,
+          [checkboxKey]: isChecked ? 1 : 0,
+          page: 1,
+        };
+      }
     }
 
     apiCall(params);
   };
-
   // Handle column toggle
   const handleColumnToggle = (columnKey) => {
     setVisibleColumns((prev) => ({
@@ -993,10 +1123,57 @@ const SalesPage = (props) => {
       getOrderDetails({ bg_id: showInfoPopup?.bg_id });
     }
   };
-
   const handleClearAllFilters = async () => {
+    setSelectedTicketType("");
+    setSortState(null); // Reset sort state
     await apiCall({}, false, false, true);
   };
+
+  const handleSort = async (sortData) => {
+  try {
+    // Set loading state to provide user feedback
+    setPageLoader(true);
+    
+    // Reset pagination-related states when sorting
+    setCurrentPage(1);
+    setHasNextPage(true);
+    setSalesData([]); // Clear existing data
+    
+    // Update sort state immediately for UI feedback
+    setSortState(sortData);
+
+    // Prepare sort parameters for API call
+    const sortParams = sortData
+      ? {
+          order_by: sortData.sortableKey,
+          sort_order: sortData.sort_order,
+        }
+      : {
+          // Clear sorting when sortData is null
+          order_by: undefined,
+          sort_order: undefined,
+        };
+
+    // Call API with sort parameters - remove undefined values
+    const updatedFilters = {
+      ...filtersApplied,
+      ...sortParams,
+      page: 1, // Reset to first page when sorting
+    };
+
+    // Remove undefined/null values from the filters before API call
+    const cleanedFilters = Object.fromEntries(
+      Object.entries(updatedFilters).filter(([_, value]) => value != null)
+    );
+
+    await apiCall(cleanedFilters, false, false, false);
+  } catch (error) {
+    console.error("Sort error:", error);
+    toast.error("Error sorting data");
+  } finally {
+    setPageLoader(false);
+  }
+};
 
   const customTableComponent = () => {
     return (
@@ -1026,14 +1203,20 @@ const SalesPage = (props) => {
             </Button>
           </div>
 
-          {/* StickyDataTable - Removed onScrollEnd since scroll is now handled by TabbedLayout */}
+          {/* StickyDataTable with sorting functionality */}
           <div className="">
             <StickyDataTable
               headers={headers}
               data={listData}
               rightStickyColumns={rightStickyColumns}
               loading={pageLoader}
-              // Removed loadingMore and onScrollEnd props since pagination is handled by parent
+              onSort={handleSort} // Add sort handler
+              currentSort={sortState} // Add current sort state
+              // Add date format config if needed
+              dateFormatConfig={{
+                order_date: "dateOnly",
+                event_date: "dateOnly",
+              }}
             />
           </div>
         </div>
@@ -1062,7 +1245,14 @@ const SalesPage = (props) => {
         showTabFullWidth={true}
         currentFilterValues={{ ...filtersApplied, order_status: "" }}
         loading={pageLoader}
-        excludedKeys={["currency", "page","ticket_type_value"]}
+        excludedKeys={[
+          "currency",
+          "page",
+          "ticket_type_value",
+          "order_by", // Add sorting parameter
+          "sort_order", // Add sorting parameter
+          ...(filtersApplied?.ticket_in_hand == 0 ? ["ticket_in_hand"] : []),
+        ]}
         customTableComponent={customTableComponent}
         showCustomTable={true}
         // NEW PROPS FOR SCROLL HANDLING
