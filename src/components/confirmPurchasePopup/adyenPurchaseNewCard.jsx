@@ -1,32 +1,44 @@
-import React, { useEffect, useRef } from "react";
 import {
-  adyenCreateSession,
-  adyenPaymentSubmit,
-  adyenPaymentUpdate,
+  stripeConfirmPayment,
+  stripeSessionPayment,
 } from "@/utils/apiHandler/request";
+import React, { useEffect, useRef, useState } from "react";
 
-const AdyenDropIn = ({
+const StripeDropIn = ({
   bookingId,
   paymentMethod,
   bookingConfirm,
   setHideCta,
-  bookingNo
+  bookingNo,
+  amount,
+  currency = "usd",
+  formFieldValues
 }) => {
-  const dropinContainerRef = useRef(null);
+  const cardElementRef = useRef(null);
+  const cardErrorsRef = useRef(null);
+  const [stripe, setStripe] = useState(null);
+  const [elements, setElements] = useState(null);
+  const [card, setCard] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Constants - you might want to move these to environment variables
+  const API_BASE_URL = "https://api2.listmyticket.com/b2b/";
+  const DOMAIN_KEY =
+    "jgcvdp9FwDg94kpEQY9yb9nnlOGW39srytB7YTOXHb1jnWfPf1za8Dr0FVqrM0BK";
+  const BEARER_TOKEN = "523|QTvZ1oC4vR3ctPy5YHHMTmW0SO6zRJUussKPz0HW";
+  const STRIPE_PUBLIC_KEY = "pk_test_tKWlLA9GWpGTH9uisqWGpUuw";
 
   useEffect(() => {
-    const loadAdyen = async () => {
+    const loadStripe = async () => {
       try {
-        // Hide CTA as soon as we start loading
         setHideCta(true);
 
-        // First, load the Adyen script manually if using script tags
-        if (!window.AdyenCheckout) {
-          // Load script
+        // Load Stripe script if not already loaded
+        if (!window.Stripe) {
           const script = document.createElement("script");
-          script.src =
-            "https://checkoutshopper-test.adyen.com/checkoutshopper/sdk/5.16.0/adyen.js";
-          script.crossOrigin = "anonymous";
+          script.src = "https://js.stripe.com/v3/";
+          script.async = true;
 
           await new Promise((resolve, reject) => {
             script.onload = resolve;
@@ -35,110 +47,217 @@ const AdyenDropIn = ({
           });
         }
 
-        // Load CSS
-        if (!document.querySelector('link[href*="adyen.css"]')) {
-          const adyenCSS = document.createElement("link");
-          adyenCSS.rel = "stylesheet";
-          adyenCSS.href =
-            "https://checkoutshopper-test.adyen.com/checkoutshopper/sdk/5.16.0/adyen.css";
-          document.head.appendChild(adyenCSS);
-        }
+        // Initialize Stripe
+        const stripeInstance = window.Stripe(STRIPE_PUBLIC_KEY);
+        const elementsInstance = stripeInstance.elements();
 
-        // Create session with backend
-        const data = await adyenCreateSession("", {
-          booking_id: bookingId,
-        });
-
-        console.log("Session data received:", data);
-
-        // Initialize and mount Adyen Checkout using the global variable
-        const checkout = await window.AdyenCheckout({
-          environment: data.environment,
-          clientKey: data.clientKey,
-          session: data.session,
-
-          // Handles both success and failure after final authorization
-          onPaymentCompleted: async (result, component) => {
-            console.log("Payment completed:", result);
-            await adyenPaymentSubmit("", {
-              booking_id: bookingId,
-              payment_method: paymentMethod,
-              resultCode: result?.resultCode,
-              pspReference: result?.pspReference || null,
-              sessionData: result?.sessionData || null,
-              sessionResult: result?.sessionResult || null,
-            })
-              .then((data) => {
-                console.log("Final payment update response:", data);
-                bookingConfirm(true, "Payment successful",bookingNo);
-                // Optionally redirect or show message here
-              })
-              .catch((err) => {
-                console.error("Error during final payment update:", err);
-              });
-          },
-
-          // Handles 3D Secure and other multi-step methods
-          onAdditionalDetails: async (state, component) => {
-            await adyenPaymentUpdate("", {
-              ...state.data,
-              booking_id: bookingId,
-              payment_method: paymentMethod,
-            })
-              .then((data) => {
-                console.log(
-                  "Response from paymentUpdate (additionalDetails):",
-                  data
-                );
-                if (data.action) {
-                  component.handleAction(data.action);
-                }
-              })
-              .catch((err) => {
-                console.error(
-                  "Error in paymentUpdate (additionalDetails):",
-                  err
-                );
-              });
-          },
-
-          onError: (error, component) => {
-            console.error("Payment error:", error);
-            // Show CTA again if there's an error
-            setHideCta(false);
+        // Create card element with custom styling
+        const cardElement = elementsInstance.create("card", {
+          hidePostalCode: true,
+          style: {
+            base: {
+              fontSize: "16px",
+              color: "#424770",
+              "::placeholder": {
+                color: "#aab7c4",
+              },
+              fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+              fontSmoothing: "antialiased",
+            },
+            invalid: {
+              color: "#9e2146",
+            },
           },
         });
 
-        // Mount the Drop-in component
-        if (dropinContainerRef.current) {
-          const dropinComponent = checkout.create("dropin");
-          dropinComponent.mount(dropinContainerRef.current);
-
-          // Show CTA again after successful mounting
-          setHideCta(false);
+        // Mount card element
+        if (cardElementRef.current) {
+          cardElement.mount(cardElementRef.current);
         }
+
+        // Handle card changes
+        cardElement.on("change", (event) => {
+          if (cardErrorsRef.current) {
+            cardErrorsRef.current.textContent = event.error
+              ? event.error.message
+              : "";
+          }
+          setError(event.error ? event.error.message : null);
+        });
+
+        setStripe(stripeInstance);
+        setElements(elementsInstance);
+        setCard(cardElement);
+        // setHideCta(false);
       } catch (error) {
-        console.error("Failed to initialize Adyen:", error);
-        // Show CTA again if there's an error
-        setHideCta(false);
+        console.error("Failed to initialize Stripe:", error);
+        setError("Failed to load payment form");
+        // setHideCta(false);
       }
     };
 
-    loadAdyen();
+    loadStripe();
 
-    // Cleanup function
     return () => {
-      // Remove any lingering DOM elements if needed
-      // Show CTA again when component unmounts
-      setHideCta(false);
+      // Cleanup
+      if (card) {
+        card.destroy();
+      }
+      // setHideCta(false);
     };
-  }, [bookingId, paymentMethod, setHideCta]); // Added setHideCta to dependencies
+  }, [bookingId, paymentMethod, setHideCta]);
+
+  const handlePayment = async () => {
+    if (!stripe || !elements || !card) {
+      setError("Stripe is not loaded yet");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Step 1: Create payment intent on your backend
+      const { data } = await stripeSessionPayment("", {
+        gateway: "stripe",
+        amount: amount * 100, // Convert to cents
+        currency: currency,
+        metadata: {
+          order_id: bookingNo,
+          booking_id: bookingId,
+        },
+      });
+      const paymentData = data;
+      console.log(paymentData, "paymentData");
+
+      if (!paymentData.client_secret) {
+        throw new Error("Failed to create payment intent");
+      }
+
+      // Step 2: Confirm payment with Stripe
+      const result = await stripe.confirmCardPayment(
+        paymentData.client_secret,
+        {
+          payment_method: {
+            card: card,
+            billing_details: {
+              // You can add billing details here if needed
+              name: formFieldValues.first_name + ' ' + formFieldValues.last_name,
+              email: formFieldValues.email,
+            },
+          },
+        }
+      );
+      console.log(result, "result");
+      if (result.error) {
+        setError(result.error.message);
+        bookingConfirm(false, `Payment failed: ${result.error.message}`);
+      }
+      // else if (result.paymentIntent.status === "succeeded") {
+      //   // Step 3: Confirm payment on your backend
+      //   const confirmResponse = await stripeConfirmPayment("", {
+      //     currency: currency,
+      //     payment_intent_id: result.paymentIntent.id,
+      //     order_id: bookingNo,
+      //     booking_id: bookingId,
+      //   });
+
+      //   const confirmData = await confirmResponse.json();
+
+      //   if (confirmData.success) {
+      //     bookingConfirm(
+      //       true,
+      //       "Payment successful & ticket booked!",
+      //       bookingNo
+      //     );
+      //   } else {
+      //     bookingConfirm(false, "Payment succeeded but booking failed!");
+      //   }
+      // }
+    } catch (error) {
+      console.error("Payment error:", error);
+      setError(error.message || "An error occurred during payment");
+      bookingConfirm(false, error.message || "Payment processing failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div>
-      <div id="dropin-container" ref={dropinContainerRef}></div>
+    <div className="stripe-payment-container p-4 bg-white rounded-lg shadow-sm">
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+          Payment Details
+        </h3>
+        <div className="text-sm text-gray-600 mb-4">
+          Amount: {currency.toUpperCase()} {amount}
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Card Information
+        </label>
+        <div
+          ref={cardElementRef}
+          className="p-3 border border-gray-300 rounded-md bg-white focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500"
+        />
+        <div
+          ref={cardErrorsRef}
+          className="text-red-600 text-sm mt-2 min-h-[20px]"
+        />
+      </div>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+          <div className="text-red-800 text-sm">{error}</div>
+        </div>
+      )}
+
+      <div className="flex gap-3">
+        <button
+          onClick={() => setHideCta(false)}
+          disabled={loading}
+          className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handlePayment}
+          disabled={loading || !stripe || !elements}
+          className="flex-1 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center"
+        >
+          {loading ? (
+            <>
+              <svg
+                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Processing...
+            </>
+          ) : (
+            `Pay ${currency.toUpperCase()} ${amount}`
+          )}
+        </button>
+      </div>
     </div>
   );
 };
 
-export default AdyenDropIn;
+export default StripeDropIn;

@@ -26,7 +26,7 @@ const StadiumMap = ({
     }
 
     let stylesApplied = 0;
-    data.forEach((item) => {
+    data?.forEach((item) => {
       const blockSelector = `[data-section="${item.full_block_name}"] .block`;
       const sectionSelector = `[data-section="${item.full_block_name}"]`;
 
@@ -64,7 +64,7 @@ const StadiumMap = ({
     });
 
     // If no styles were applied but we have data, try again after a short delay
-    if (stylesApplied === 0 && data.length > 0) {
+    if (stylesApplied === 0 && data?.length > 0) {
       setTimeout(() => applyCategoryStyles(data), 200);
     } else {
       // We applied some styles, so mark loading as complete

@@ -41,7 +41,6 @@ import ClearChip from "./components/clearChip";
 
 const InventoryFolder = (props) => {
   const { response = {}, matchId } = props;
-
   const {
     match_details = {},
     ticket_details = [],
@@ -177,6 +176,7 @@ const InventoryFolder = (props) => {
     { key: "category", label: "Category" },
     { key: "section", label: "Section/Block" },
     { key: "row", label: "Row" },
+    { key: "price_with_symbol", label: "Ticket Price" },
     ...(isMobile
       ? [
           { key: "price", label: "Price" },
@@ -193,6 +193,8 @@ const InventoryFolder = (props) => {
       category: item?.seat_category,
       section: item?.block_id,
       row: item?.row,
+      price_with_symbol: item?.price_with_symbol,
+      
       ...(isMobile
         ? {
             price: item?.price_with_symbol,
@@ -262,18 +264,18 @@ const InventoryFolder = (props) => {
     fetchAPIDetails({ page: 1 });
   };
 
-  const rightStickyHeaders = isMobile ? [] : ["Ticket Price"];
+  const rightStickyHeaders = isMobile ? [] : [];
 
   const rightStickyColumns = displayTicketDetails?.map((item) => {
     return [
       ...(isMobile
         ? []
         : [
-            {
-              icon: <p>{item?.price_with_symbol}</p>,
-              className:
-                "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
-            },
+            // {
+            //   icon: <p>{item?.price_with_symbol}</p>,
+            //   className:
+            //     "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
+            // },
             {
               icon: (
                 <Image

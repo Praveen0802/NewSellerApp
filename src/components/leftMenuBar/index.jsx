@@ -1104,16 +1104,60 @@ const LeftMenuBar = () => {
   };
 
   const handleLogout = async () => {
-    setCookie("auth_token", "", { expires: new Date(0) });
-    setCookie("auth_token_validity", "", { expires: new Date(0) });
-    setCookie("user_token", "", { expires: new Date(0) });
     try {
+      // Method 1: Clear cookies with different path and domain combinations
+      const cookieNames = ["auth_token", "auth_token_validity", "user_token"];
+      
+      cookieNames.forEach(cookieName => {
+        // Clear with default settings
+        setCookie(cookieName, "", { expires: new Date(0) });
+        
+        // Clear with explicit path
+        setCookie(cookieName, "", { expires: new Date(0), path: "/" });
+        
+        // Clear with domain (if your app uses specific domain)
+        setCookie(cookieName, "", { expires: new Date(0), path: "/", domain: window.location.hostname });
+        
+        // Also try clearing with document.cookie directly for stubborn cookies
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
+        
+        // Handle encoded cookies specifically
+        const encodedCookieName = encodeURIComponent(cookieName);
+        document.cookie = `${encodedCookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      });
+  
+      // Method 2: Additional cleanup for encoded tokens
+      // Get all cookies and clear any that might be encoded versions
+      const allCookies = document.cookie.split(';');
+      allCookies.forEach(cookie => {
+        const [name] = cookie.trim().split('=');
+        const decodedName = decodeURIComponent(name);
+        
+        // If this looks like one of our auth cookies (encoded or not)
+        if (cookieNames.includes(decodedName) || cookieNames.includes(name)) {
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
+        }
+      });
+  
+      // Call logout API
       await LogoutCall();
+      
+      // Additional cleanup - clear localStorage and sessionStorage
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+        sessionStorage.clear();
+      }
+      
+      // Force reload to ensure clean state
+      window.location.href = '/login';
+      
     } catch (error) {
-      console.log("ERROR in myListingUploadTickets", error);
+      console.log("ERROR in logout", error);
+      // Even if API call fails, still redirect to login
+      window.location.href = '/login';
     }
-
-    router.push("/login");
   };
 
   // Mobile view with updated notification handling
@@ -1457,12 +1501,14 @@ const LeftMenuBar = () => {
           )}
         </div>
       </div>
-      <SettingsOpen
-        isOpen={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        showFullDisplay={showFullDisplay}
-        handleLogout={handleLogout}
-      />
+      {settingsOpen && (
+        <SettingsOpen
+          isOpen={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          showFullDisplay={showFullDisplay}
+          handleLogout={handleLogout}
+        />
+      )}
 
       {/* Notifications Popup */}
       <NotificationsPopup

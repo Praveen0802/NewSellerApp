@@ -421,9 +421,9 @@ const SingleDatePicker = ({ value, onChange }) => {
                 onClick={() => handleDateClick(dayObj.date)}
                 className={`h-6 rounded cursor-pointer text-[10px]
                   ${dayObj.isCurrentMonth ? "text-gray-800" : "text-gray-400"}
-                  ${isSelected ? "bg-blue-600 text-white" : ""}
-                  ${isToday ? "border border-blue-400" : ""}
-                  hover:bg-blue-200
+                  ${isSelected ? "bg-green-300 text-white" : ""}
+                  ${isToday ? "border border-green-400" : ""}
+                  hover:bg-green-200
                 `}
                 disabled={!dayObj.isCurrentMonth}
               >
@@ -455,7 +455,7 @@ const SingleDatePicker = ({ value, onChange }) => {
         </button>
         <button
           onClick={handleConfirm}
-          className="px-2 py-1 text-xs cursor-pointer bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="px-2 py-1 text-xs cursor-pointer bg-green-400 text-white rounded hover:bg-green-700"
           disabled={!tempSelectedDate}
         >
           Confirm
@@ -645,10 +645,10 @@ const CustomCalendarPicker = ({ value, onChange }) => {
                 onClick={() => handleDateClick(dayObj.date)}
                 className={`h-6 rounded cursor-pointer text-[10px]
                   ${dayObj.isCurrentMonth ? "text-gray-800" : "text-gray-400"}
-                  ${isSelected ? "bg-blue-600 text-white" : ""}
+                  ${isSelected ? "bg-green-400 text-white" : ""}
                   ${isInRange ? "bg-gray-100" : ""}
-                  ${isToday ? "border border-blue-400" : ""}
-                  hover:bg-blue-200
+                  ${isToday ? "border border-green-400" : ""}
+                  hover:bg-green-200
                 `}
                 disabled={!dayObj.isCurrentMonth}
               >
@@ -684,7 +684,7 @@ const CustomCalendarPicker = ({ value, onChange }) => {
         </button>
         <button
           onClick={handleApply}
-          className="px-2 py-1 text-xs cursor-pointer bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="px-2 py-1 text-xs cursor-pointer bg-green-400 text-white rounded hover:bg-green-700"
           disabled={!tempStartDate || !tempEndDate}
         >
           Confirm

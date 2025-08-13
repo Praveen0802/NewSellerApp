@@ -640,7 +640,7 @@ const StickyDataTable = ({
                 ? `shimmer-${rowIndex}-${Date.now()}`
                 : row.id
                 ? `row-${row.id}-${rowIndex}`
-                : `row-${rowIndex}-${JSON.stringify(row).slice(0, 50)}`;
+                : `row-${rowIndex}-${Object.keys(row).join("-")}`;
 
               return (
                 <tr
@@ -853,10 +853,10 @@ const StickyDataTable = ({
 
                   // Get the row-specific sticky columns, or empty array if not defined
                   const uniqueKey = row.isShimmer
-                    ? `shimmer-sticky-${rowIndex}-${Date.now()}`
-                    : row.id
-                    ? `sticky-${row.id}-${rowIndex}`
-                    : `sticky-${rowIndex}-${JSON.stringify(row).slice(0, 50)}`;
+                  ? `shimmer-${rowIndex}-${Date.now()}`
+                  : row.id
+                  ? `row-${row.id}-${rowIndex}`
+                  : `row-${rowIndex}-${Object.keys(row).join('-')}`;
 
                   const rowStickyColumns =
                     !loading && Array.isArray(normalizedStickyColumns[rowIndex])

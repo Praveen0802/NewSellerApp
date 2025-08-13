@@ -24,11 +24,11 @@ import {
 } from "@/utils/apiHandler/request";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import AdyenDropIn from "./adyenPurchaseNewCard";
 import { useRouter } from "next/router";
 import GuestDetails from "./guestDetails";
 import useCountryCodes from "@/Hooks/useCountryCodes";
 import { allCountryCodes } from "@/utils/constants/allContryCodes";
+import StripeDropIn from "./adyenPurchaseNewCard";
 
 const ConfirmPurchasePopup = ({ onClose }) => {
   const { confirmPurchasePopupFields } = useSelector((state) => state?.common);
@@ -37,8 +37,8 @@ const ConfirmPurchasePopup = ({ onClose }) => {
   const [addressDetails, setAddressDetails] = useState([]);
   const [paymentDetails, setPaymentDetails] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState();
-  const [showAdyenDropIn, setShowAdyenDropIn] = useState(false);
-  const [adyenBookingId, setAdyenBookingId] = useState(null);
+  const [showStripeDropIn, setShowStripeDropIn] = useState(false); // Updated state name
+  const [stripeBookingId, setStripeBookingId] = useState(null); // Updated state name
   const [phoneCodeOptions, setPhoneCodeOptions] = useState([]);
   const [cityOptions, setCityOptions] = useState([]);
   const [countryOptions, setCountryOptions] = useState([]);
@@ -68,14 +68,13 @@ const ConfirmPurchasePopup = ({ onClose }) => {
   };
 
   const handleAddressChange = (id, field) => {
-
     setSelectedAddress(id);
     setFormFieldValues({
       ...formFieldValues,
       first_name: field?.first_name,
       last_name: field?.last_name,
       email: field?.email,
-      dialing_code: field?.phone_code,
+      dialing_code: field?.country_code,
       mobile_no: field?.mobile_number,
       country: field?.country_id,
       city: field?.city_id,
@@ -92,7 +91,6 @@ const ConfirmPurchasePopup = ({ onClose }) => {
           paymentPurchaseDetails("", {
             currency: data?.purchase?.price_breakdown?.currency,
           }),
-
           fetchCountrieList(),
         ]);
       setCountryOptions(
@@ -123,7 +121,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
         first_name: primaryAddress?.first_name,
         last_name: primaryAddress?.last_name,
         email: primaryAddress?.email,
-        dialing_code: primaryAddress?.phone_code,
+        dialing_code: primaryAddress?.country_code,
         mobile_no: primaryAddress?.mobile_number,
         country: primaryAddress?.country_id,
         city: primaryAddress?.city_id,
@@ -176,7 +174,6 @@ const ConfirmPurchasePopup = ({ onClose }) => {
     if (success) {
       toast.success(message);
       router.push(`/trade/purchase?success=true&booking_no=${booking}`);
-
       onClose();
     } else {
       toast.error(message || "Booking confirmation failed");
@@ -186,8 +183,9 @@ const ConfirmPurchasePopup = ({ onClose }) => {
 
   const paymentSubmit = async (paymentMethod, bookingId, bookingNo) => {
     if (paymentMethod == 1) {
+      // SB Pay - existing logic
       const confirmationPayload = {
-        booking_id: bookingId, //apiResponse?.booking_id,
+        booking_id: bookingId,
         payment_method: paymentMethod,
       };
 
@@ -204,10 +202,13 @@ const ConfirmPurchasePopup = ({ onClose }) => {
         );
       }
     } else if (paymentMethod == 2) {
-      setAdyenBookingId(bookingId);
-      setShowAdyenDropIn(true);
+      // Stripe - new logic
+      console.log("hidePaymentId","hideCtalling", bookingId);
+      setStripeBookingId(bookingId);
       setHideCta(true);
+      setShowStripeDropIn(true);
     } else if (paymentMethod == 3) {
+      // Existing card - existing logic
       const response = await paymentWithExistingCard("", {
         booking_id: bookingId,
         payment_method: 3,
@@ -221,6 +222,37 @@ const ConfirmPurchasePopup = ({ onClose }) => {
       }
     }
   };
+  console.log(hideCta, "selectedPayment");
+
+  function convertToAttendeesFormat(payload) {
+    const attendees = [];
+
+    // Get all the field names from the payload
+    const fieldNames = Object.keys(payload);
+
+    // Assuming all arrays have the same length, get the length from the first field
+    const numAttendees =
+      fieldNames.length > 0 ? payload[fieldNames[0]].length : 0;
+
+    // Create attendee objects
+    for (let i = 0; i < numAttendees; i++) {
+      const attendee = {
+        attendee: i + 1, // 1-based indexing
+        fields: [],
+      };
+
+      // Add each field for this attendee
+      fieldNames.forEach((fieldName) => {
+        const fieldObj = {};
+        fieldObj[fieldName] = payload[fieldName][i];
+        attendee.fields.push(fieldObj);
+      });
+
+      attendees.push(attendee);
+    }
+
+    return { attendees };
+  }
 
   const handleSubmit = async () => {
     try {
@@ -232,6 +264,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
         setLoader(false);
         return;
       }
+
       const paymentMethod =
         selectedPayment?.name == "SB Pay"
           ? 1
@@ -239,13 +272,13 @@ const ConfirmPurchasePopup = ({ onClose }) => {
           ? 2
           : 3;
       setSelectedPaymentMethod(paymentMethod);
+
       if (guestDetails?.length > 0) {
         try {
           const allFieldsFilled = guestDetails.every((guest) => {
             console.log(guest, "guestguest");
             return guest.required_fields.every((field) => {
               const fieldValue = guestFormFieldValues[field];
-              // Check if field exists, has values for this guest index, and the value is not empty
               return (
                 fieldValue &&
                 fieldValue[guest.index] &&
@@ -253,12 +286,15 @@ const ConfirmPurchasePopup = ({ onClose }) => {
               );
             });
           });
+
+          const result = convertToAttendeesFormat(guestFormFieldValues);
+          console.log({...result}, "resultresultresult");
           if (allFieldsFilled) {
             await updateNominee("", {
-              booking_id: adyenBookingId,
-              ...guestFormFieldValues,
+              booking_id: stripeBookingId,
+              ...result,
             });
-            paymentSubmit(paymentMethod, adyenBookingId, bookingNo);
+            paymentSubmit(paymentMethod, stripeBookingId, bookingNo);
             return;
           } else {
             toast.error("submit all guest details");
@@ -293,8 +329,6 @@ const ConfirmPurchasePopup = ({ onClose }) => {
           cart_id: response?.cart_id,
           lang: "en",
           client_country: "IN",
-          // ...(selectedAddress == "other"
-          //   ? {
           first_name: formFieldValues?.first_name,
           last_name: formFieldValues?.last_name,
           email: formFieldValues?.email,
@@ -303,10 +337,6 @@ const ConfirmPurchasePopup = ({ onClose }) => {
           country: `${formFieldValues?.country}`,
           city: `${formFieldValues?.city}`,
           address: `${formFieldValues?.address}`,
-          // }
-          // : {
-          //     billing_address_id: `${addressDetails?.[selectedAddress]?.id}`,
-          //   }),
           payment_method: `${paymentMethod}`,
         };
 
@@ -317,7 +347,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
           secondApiPayload
         );
         setBookingNo(apiResponse?.booking_no);
-        setAdyenBookingId(apiResponse?.booking_id);
+        setStripeBookingId(apiResponse?.booking_id);
 
         if (apiResponse?.guest_data?.length > 0) {
           const guestKey = apiResponse?.guest_data?.some((guest) => {
@@ -350,7 +380,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
     } finally {
     }
   };
-
+  console.log(hideCta, "hideCtahideCtahideCta");
   return (
     <div className="flex flex-col h-full max-h-screen">
       {/* Toast container */}
@@ -432,13 +462,16 @@ const ConfirmPurchasePopup = ({ onClose }) => {
         </div>
       )}
 
-      {showAdyenDropIn && (
-        <AdyenDropIn
-          bookingId={adyenBookingId}
+      {showStripeDropIn && (
+        <StripeDropIn
+          bookingId={stripeBookingId}
           paymentMethod={2}
           bookingConfirm={bookingConfirm}
           setHideCta={setHideCta}
           bookingNo={bookingNo}
+          amount={data?.purchase?.price_breakdown?.grand_total || 0}
+          currency={data?.purchase?.price_breakdown?.currency || "usd"}
+          formFieldValues={formFieldValues}
         />
       )}
     </div>

@@ -81,7 +81,7 @@ const PurchaseCard = ({ data,selectedQuantity,setSelectedQuantity }) => {
       // symbol: priceDetails?.currency_icon,
     },
   ];
-
+console.log(priceDetails,'priceDetailspriceDetails')
   return (
     <div className="border border-gray-200 rounded-md">
       <p className="px-4 py-2 border-b border-gray-200 text-[14px] font-medium">

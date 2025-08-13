@@ -2081,6 +2081,36 @@ export const adyenCreateSession = async (token, data) => {
   }
 };
 
+export const stripeSessionPayment = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.STRIPE_CREATE_SESSION}`,
+      method: "POST",
+      ...(token && { token: token }),
+      data: data,
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in purchaseTicketsBuy", error);
+    
+  }
+};
+
+export const stripeConfirmPayment = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.STRIPE_CONFIRM_PAYMENT}`,
+      method: "POST",
+      ...(token && { token: token }),
+      data: data,
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in purchaseTicketsBuy", error);
+    
+  }
+};
+
 export const adyenPaymentUpdate = async (token, data) => {
   try {
     const response = await makeRequest({
