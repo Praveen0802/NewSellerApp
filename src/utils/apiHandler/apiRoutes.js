@@ -154,6 +154,7 @@ export const API_ROUTES = {
   ADD_REPORTS_NOTES: "/reports/save-notes",
   GET_EVENT_LISTING: "/my-listings/events-search",
   GET_LMT_PAY_PREFILL: "/settings/lmt-pay/linked-accounts",
+  CREATE_PAYMENT_LINK: "/lmt-pay/create-payment",
   GET_PAYOUT_DETAILS: "/payouts/payout-details",
   GET_PAYOUT_HISTORY_REPORT: `/payouts/payout-export`,
   GET_PAYOUT_ORDER_REPORT: `/payouts/myorder-export`,

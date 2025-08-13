@@ -68,7 +68,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
   };
 
   const handleAddressChange = (id, field) => {
-    console.log(field, "fieldfieldfield");
+
     setSelectedAddress(id);
     setFormFieldValues({
       ...formFieldValues,

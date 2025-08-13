@@ -2660,6 +2660,21 @@ export const addReportsNotes = async (token, data) => {
   }
 };
 
+export const createPaymentLink = async (token, data) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.CREATE_PAYMENT_LINK}`,
+      method: "POST",
+      ...(token && { token: token }),
+      ...(data && { data: data }),
+    });
+    return response?.data?.success ? response?.data : {};
+  } catch (error) {
+    console.log("ERROR in updatingProfileDetails", error);
+    
+  }
+};
+
 export const FetchPerformerOrVenueListing = async (token, params = {}) => {
   try {
     const response = await makeRequest({

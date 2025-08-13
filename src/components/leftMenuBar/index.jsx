@@ -1052,7 +1052,7 @@ const LeftMenuBar = () => {
       // Optionally collapse sales menu when not on sales pages
       // setSalesExpanded(false);
     }
-  }, [window.location.pathname]);
+  }, [typeof window !== "undefined" && window.location.pathname]);
   const handleSelectedClick = (index, item) => {
     if (index == 0 && !isMobile) {
       dispatch(updateLeftMenuDisplay(!showFullDisplay));

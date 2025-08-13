@@ -24,7 +24,7 @@ const GTVLevelCard = ({ data }) => {
   return (
     <div className="bg-white rounded-lg border border-gray-200 px-3 py-4 max-w-md mx-auto ">
       {/* Progress indicator */}
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center gap-3 mb-4">
         <div className="flex gap-1 relative">
           {[
             { level: 3, width: "w-18", label: "3" },
@@ -58,9 +58,9 @@ const GTVLevelCard = ({ data }) => {
       </div>
 
       {/* Main content */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex justify-between items-start">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             <h2 className="text-sm font-semibold text-gray-900">
               GTV {data.quarter}
             </h2>
