@@ -75,6 +75,7 @@ const UploadTickets = ({
 
   // Normal flow states
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [assignedFiles, setAssignedFiles] = useState([]);
   const [transferredFiles, setTransferredFiles] = useState([]);
 
   // Proof upload flow states
@@ -147,9 +148,11 @@ const UploadTickets = ({
             existingId: ticket.id,
           }));
         setTransferredFiles(existingFiles);
+        setAssignedFiles(existingFiles)
       } else {
         const initialUploadTickets = rowData?.upload_tickets || [];
         setTransferredFiles(initialUploadTickets);
+        setAssignedFiles(initialUploadTickets)
       }
       setUploadedFiles([]);
     }
@@ -231,9 +234,11 @@ const UploadTickets = ({
   );
 
   const handleDeleteUploaded = useCallback(
-    (id) => {
+    (id,assigned) => {
       if (proofUploadView) {
         setProofUploadedFiles((prev) => prev.filter((file) => file.id !== id));
+      } else if(assigned){
+        setAssignedFiles((prev) => prev.filter((file) => file.id !== id));
       } else {
         setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
       }
@@ -326,11 +331,32 @@ const UploadTickets = ({
 
               return newTransferred.filter((file) => file !== null);
             });
+            setAssignedFiles((prev) => {
+              const newTransferred = [...prev];
+              const targetIndex = targetSlot - 1;
+
+              // If target slot is empty or beyond current length, add at that position
+              if (targetIndex >= newTransferred.length) {
+                // Fill gaps with nulls if necessary
+                while (newTransferred.length < targetIndex) {
+                  newTransferred.push(null);
+                }
+                newTransferred.push(fileToTransfer);
+              } else if (!newTransferred[targetIndex]) {
+                // Target slot is empty, place file there
+                newTransferred[targetIndex] = fileToTransfer;
+              } else {
+                // Target slot is occupied, add at end
+                newTransferred.push(fileToTransfer);
+              }
+
+              return newTransferred.filter((file) => file !== null);
+            });
           } else {
             // Original behavior - add at end
             setTransferredFiles((prev) => [...prev, fileToTransfer]);
+            setAssignedFiles((prev) => [...prev, fileToTransfer]);
           }
-
           setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
         }
       }
@@ -1003,7 +1029,7 @@ const UploadTickets = ({
       setIsDragging(false);
       setDraggedFile(null);
     };
-
+    console.log(uploadedFiles, "currentUploadedFiles");
     return (
       <>
         {/* Drag and drop area */}
@@ -1052,6 +1078,13 @@ const UploadTickets = ({
                 ? `Proof Document (${currentUploadedFiles.length}/1)`
                 : `Uploaded Files (${currentUploadedFiles.length})`}
             </h3>
+            <div class="flex items-center gap-x-2">
+                <span class="text-xs text-[#323A70]">Show assigned</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" class="sr-only peer" checked={showAssigned} onChange={(e) => {setShowAssigned((prev)=> !prev)}}/>
+                  <div class="w-7 h-3 bg-gray-200 peer-checked:bg-[#64EAA540] rounded-full transition-all peer peer-checked:after:translate-x-full peer-checked:after:bg-[#64EAA5] after:content-[''] after:absolute after:-top-0.5 after:-left-0.5 after:bg-gray-400 after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md peer-checked:bg-100"></div>
+                </label>
+            </div>
           </div>
 
           <div className="max-h-64 overflow-y-auto border border-[#E0E1EA] rounded">
@@ -1111,6 +1144,28 @@ const UploadTickets = ({
                 </div>
               ))
             )}
+          </div>
+          <div className="pt-2 flex flex-col gap-2">
+            {showAssigned && assignedFiles.map((file) => (
+                <div
+                  key={file.id}
+                  className={`flex items-center justify-between p-2 border rounded-sm bg-white transition-all duration-200 border-green-600 hover:border-green-600 `}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-700 truncate max-w-32">
+                      {file.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      className="p-1 text-red-500 cursor-pointer hover:text-red-700"
+                      onClick={() => handleDeleteUploaded(file.id,true)}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
           </div>
         </div>
       </>
