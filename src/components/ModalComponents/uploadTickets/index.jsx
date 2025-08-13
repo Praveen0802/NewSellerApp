@@ -1346,17 +1346,17 @@ const UploadTickets = ({
               return (
                 <div
                   key={itemNumber}
-                  className="grid grid-cols-2 items-center border-b border-gray-200 last:border-b-0"
+                  className="flex items-center border-b border-gray-200 last:border-b-0"
                   onDragOver={(e) => handleSlotDragOver(e, itemNumber)}
                   onDragLeave={(e) => handleSlotDragLeave(e, itemNumber)}
                   onDrop={(e) => handleSlotDrop(e, itemNumber)}
                 >
-                  <div className="px-3 py-2 text-xs font-medium text-[#323A70]">
+                  <div className="px-3 w-[15%] py-2 text-xs font-medium text-[#323A70]">
                     {proofUploadView
                       ? `Proof Document`
                       : `Ticket ${itemNumber}`}
                   </div>
-                  <div className="px-3 py-2 flex items-center">
+                  <div className="px-3 w-[85%] py-2 flex items-center">
                     {assignedFile ? (
                       <div className="flex bg-[#F2FBF9] border  border-[#03BA8A] rounded px-2 py-1 items-center justify-between w-full">
                         <div className="flex items-center gap-2 flex-1">
