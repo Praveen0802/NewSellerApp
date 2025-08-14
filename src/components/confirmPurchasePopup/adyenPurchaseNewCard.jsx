@@ -153,6 +153,7 @@ const StripeDropIn = ({
         const confirmationPayload = {
           booking_id: bookingId,
           payment_method: `${paymentMethod}`,
+          result:[result]
         };
         const confirmResponse = await purchaseTicketConfirm(
           "",

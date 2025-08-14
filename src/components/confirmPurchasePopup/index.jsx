@@ -255,6 +255,8 @@ const ConfirmPurchasePopup = ({ onClose }) => {
   }
 
   const handleSubmit = async () => {
+    toast.error("Booking is not allowed at this moment");
+    return;
     try {
       setLoader(true);
 
