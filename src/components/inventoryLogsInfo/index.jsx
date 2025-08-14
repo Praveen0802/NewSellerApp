@@ -274,12 +274,12 @@ const InventoryLogsInfo = ({
                                           key={fieldIndex}
                                           className={`hover:bg-gray-50 ${
                                             isChangedInCurrentLog
-                                              ? "bg-yellow-100"
+                                              ? "bg-green-100"
                                               : ""
                                           }`}
                                         >
                                           <td
-                                            className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-600 border-r border-gray-100 max-w-[150px] truncate align-top"
+                                            className="px-4 py-2 whitespace-nowrap text-sm font-light text-gray-500 border-r border-gray-100 max-w-[150px] truncate align-center"
                                             title={formatKeyName(key)}
                                           >
                                             {formatKeyName(key)}
@@ -299,10 +299,10 @@ const InventoryLogsInfo = ({
                                                 </a>
                                               ) : (
                                                 <span
-                                                  className={`inline-block px-2 py-1 rounded text-xs break-words ${
+                                                  className={`inline-block px-2 py-1 rounded text-sm break-words ${
                                                     isChangedInCurrentLog
-                                                      ? "bg-yellow-200 text-yellow-800 font-semibold"
-                                                      : "bg-gray-100"
+                                                      ? "bg-green-200 text-green-800 font-semibold"
+                                                      : "font-light"
                                                   }`}
                                                 >
                                                   {formatValue(currentValue)}
@@ -344,12 +344,12 @@ const InventoryLogsInfo = ({
                                           key={fieldIndex}
                                           className={`hover:bg-gray-50 ${
                                             isChangedInCurrentLog
-                                              ? "bg-yellow-100"
+                                              ? "bg-green-100"
                                               : ""
                                           }`}
                                         >
                                           <td
-                                            className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-600 border-r border-gray-100 max-w-[150px] truncate align-top"
+                                            className="px-4 py-2 whitespace-nowrap text-sm font-light text-gray-500 border-r border-gray-100 max-w-[150px] truncate align-center"
                                             title={formatKeyName(key)}
                                           >
                                             {formatKeyName(key)}
@@ -369,10 +369,10 @@ const InventoryLogsInfo = ({
                                                 </a>
                                               ) : (
                                                 <span
-                                                  className={`inline-block px-2 py-1 rounded text-xs break-words ${
+                                                  className={`inline-block px-2 py-1 rounded text-sm break-words ${
                                                     isChangedInCurrentLog
-                                                      ? "bg-yellow-200 text-yellow-800 font-semibold"
-                                                      : "bg-gray-100"
+                                                      ? "bg-green-200 text-green-800 font-semibold"
+                                                      : "font-light"
                                                   }`}
                                                 >
                                                   {formatValue(currentValue)}
