@@ -13,7 +13,15 @@ import logout from "../../../public/logout.svg";
 import Bulkticket from "../../../public/Bulkticket.svg";
 import leftArrow from "../../../public/leftArrow.jpg";
 import ticketStar from "../../../public/ticket-star.svg";
-import { Menu, Bell, ChevronDown, ChevronRight, Check } from "lucide-react";
+import {
+  Menu,
+  Bell,
+  ChevronDown,
+  ChevronRight,
+  Check,
+  ChevronLeft,
+  ArrowRight,
+} from "lucide-react";
 import useIsMobile from "@/utils/helperFunctions/useIsmobile";
 import { useRouter } from "next/router";
 import { setCookie, getCookie } from "@/utils/helperFunctions/cookie";
@@ -930,13 +938,28 @@ const LeftMenuBar = () => {
     showFullDisplay,
     userRoles,
     kycStatus,
-    leftPanelValues: leftPaneValues,
+    leftPanelValues,
   } = useSelector((state) => state.common);
   const [salesCount, setSalesCount] = useState([]);
-  console.log(leftPaneValues, "leftPaneValues");
+
   const name = currentUser?.first_name?.slice(0, 2).toUpperCase();
   const userName = currentUser?.first_name;
 
+  const leftPaneValues =
+    (kycStatus?.kyc_status == 0 || kycStatus?.kyc_status == 2) &&
+    userRoles?.user_type == "sellers"
+      ? [
+          {
+            // image: showFullDisplay ? "" : arrowRight,
+            icon: showFullDisplay ? (
+              <ChevronLeft className="size-5 text-white" />
+            ) : (
+              <ArrowRight className="size-5 text-white" />
+            ),
+            name: "Minimise",
+          },
+        ]
+      : leftPanelValues;
   const dispatch = useDispatch();
 
   // Fetch notification count for badge
@@ -1107,56 +1130,59 @@ const LeftMenuBar = () => {
     try {
       // Method 1: Clear cookies with different path and domain combinations
       const cookieNames = ["auth_token", "auth_token_validity", "user_token"];
-      
-      cookieNames.forEach(cookieName => {
+
+      cookieNames.forEach((cookieName) => {
         // Clear with default settings
         setCookie(cookieName, "", { expires: new Date(0) });
-        
+
         // Clear with explicit path
         setCookie(cookieName, "", { expires: new Date(0), path: "/" });
-        
+
         // Clear with domain (if your app uses specific domain)
-        setCookie(cookieName, "", { expires: new Date(0), path: "/", domain: window.location.hostname });
-        
+        setCookie(cookieName, "", {
+          expires: new Date(0),
+          path: "/",
+          domain: window.location.hostname,
+        });
+
         // Also try clearing with document.cookie directly for stubborn cookies
         document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
         document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
-        
+
         // Handle encoded cookies specifically
         const encodedCookieName = encodeURIComponent(cookieName);
         document.cookie = `${encodedCookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
       });
-  
+
       // Method 2: Additional cleanup for encoded tokens
       // Get all cookies and clear any that might be encoded versions
-      const allCookies = document.cookie.split(';');
-      allCookies.forEach(cookie => {
-        const [name] = cookie.trim().split('=');
+      const allCookies = document.cookie.split(";");
+      allCookies.forEach((cookie) => {
+        const [name] = cookie.trim().split("=");
         const decodedName = decodeURIComponent(name);
-        
+
         // If this looks like one of our auth cookies (encoded or not)
         if (cookieNames.includes(decodedName) || cookieNames.includes(name)) {
           document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
           document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
         }
       });
-  
+
       // Call logout API
       await LogoutCall();
-      
+
       // Additional cleanup - clear localStorage and sessionStorage
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         localStorage.clear();
         sessionStorage.clear();
       }
-      
+
       // Force reload to ensure clean state
-      window.location.href = '/login';
-      
+      window.location.href = "/login";
     } catch (error) {
       console.log("ERROR in logout", error);
       // Even if API call fails, still redirect to login
-      window.location.href = '/login';
+      window.location.href = "/login";
     }
   };
 

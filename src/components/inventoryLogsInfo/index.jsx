@@ -179,7 +179,6 @@ const InventoryLogsInfo = ({
               const payloadKeys = Object.keys(logEntry.json_payload || {});
               const hasPayload = payloadKeys.length > 0;
               const currentFieldValues = getCurrentFieldValues(index);
-              console.log(logEntry, "logEntrylogEntry");
               return (
                 <div
                   key={index}
@@ -255,8 +254,8 @@ const InventoryLogsInfo = ({
                           <div className="flex flex-wrap -mx-2">
                             {/* First Table */}
                             <div className="w-full md:w-1/2 px-2 mb-4">
-                              <table className="min-w-full border border-gray-200">
-                                <tbody className="bg-white divide-y divide-gray-200">
+                              <table className="min-w-full rounded-md border border-gray-200">
+                                <tbody  className="bg-white divide-y divide-gray-200">
                                   {allFields
                                     .slice(0, Math.ceil(allFields.length / 2))
                                     .map((key, fieldIndex) => {
@@ -325,7 +324,7 @@ const InventoryLogsInfo = ({
 
                             {/* Second Table */}
                             <div className="w-full md:w-1/2 px-2 mb-4">
-                              <table className="min-w-full border border-gray-200">
+                              <table className="min-w-full rounded-md border border-gray-200">
                                 <tbody className="bg-white divide-y divide-gray-200">
                                   {allFields
                                     .slice(Math.ceil(allFields.length / 2))
