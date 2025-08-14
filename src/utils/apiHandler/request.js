@@ -63,7 +63,6 @@ const makeRequest = async ({
     return response;
   } catch (error) {
     console.error(`${error?.response?.status} error in API: ${url}`, error);
-    
   }
 };
 
@@ -126,7 +125,6 @@ export const myListingUploadTickets = async (token, data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in saveListing", error);
-    
   }
 };
 
@@ -145,7 +143,6 @@ export const updateAdditionalFile = async (token, data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in saveListing", error);
-    
   }
 };
 
@@ -312,8 +309,6 @@ export const getSellerTickets = async (token, params = {}) => {
   }
 };
 
-
-
 export const getSellerLevel = async (token, params = {}) => {
   try {
     const response = await makeRequest({
@@ -340,7 +335,6 @@ export const loginUser = async (token, data) => {
   } catch (error) {
     return error?.response?.data;
     console.log("ERROR in loginUser", error);
-    
   }
 };
 
@@ -355,7 +349,6 @@ export const fetchSalesOverview = async (token, params = {}) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchingDashboardData", error);
-    
   }
 };
 
@@ -371,7 +364,6 @@ export const fetchProfileDetails = async (token, method, data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchingProfileDetails", error);
-    
   }
 };
 
@@ -386,7 +378,6 @@ export const updateProfileDetails = async (token, method, data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in updatingProfileDetails", error);
-    
   }
 };
 
@@ -412,7 +403,6 @@ export const fetchAddressBookDetails = async (
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchingAddressBookDetails", error);
-    
   }
 };
 
@@ -440,7 +430,6 @@ export const saveAddressBookDetails = async (
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchingAddressBookDetails", error);
-    
   }
 };
 
@@ -455,7 +444,6 @@ export const changePasswordRequest = async (token, data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in changePasswordRequest", error);
-    
   }
 };
 
@@ -470,7 +458,6 @@ export const fetchLMTOverview = async (token) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchLMTOverview", error);
-    
   }
 };
 
@@ -484,7 +471,6 @@ export const fetchDepositHistory = async (token) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchDepositHistory", error);
-    
   }
 };
 
@@ -499,7 +485,6 @@ export const fetchTransactionHistory = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchTransactionHistory", error);
-    
   }
 };
 
@@ -521,7 +506,6 @@ export const fetchBankAccountDetails = async (
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchBankAccountDetails", error);
-    
   }
 };
 
@@ -543,7 +527,6 @@ export const updateBankAccount = async (
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchBankAccountDetails", error);
-    
   }
 };
 
@@ -558,7 +541,6 @@ export const payOutOverview = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchOrderHistory", error);
-    
   }
 };
 
@@ -573,7 +555,6 @@ export const payOutHistory = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchOrderHistory", error);
-    
   }
 };
 
@@ -588,7 +569,6 @@ export const payOutOrderHistory = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchOrderHistory", error);
-    
   }
 };
 
@@ -602,7 +582,6 @@ export const sendResetRequest = async (data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in sendResetRequest", error);
-    
   }
 };
 
@@ -616,7 +595,6 @@ export const getUserRoleAccess = async (token) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in getUserRoleAccess", error);
-    
   }
 };
 
@@ -644,7 +622,6 @@ export const getKYCStatus = async (token) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in getSalesCount", error);
-    
   }
 };
 
@@ -672,7 +649,6 @@ export const dashboardAwaitingDelivery = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchOrderHistory", error);
-    
   }
 };
 
@@ -687,7 +663,6 @@ export const dashboardActivity = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in dashboardActivity", error);
-    
   }
 };
 
@@ -702,7 +677,6 @@ export const dashboardNotifications = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in DASHBOARD_NOTIFICATIONS", error);
-    
   }
 };
 
@@ -717,7 +691,6 @@ export const topSellingEvents = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in TOP_SELLING_EVENTS", error);
-    
   }
 };
 
@@ -732,7 +705,6 @@ export const LMTpurchaseTracking = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in LMTpurchaseTracking", error);
-    
   }
 };
 
@@ -747,7 +719,6 @@ export const LMTTradeOrders = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in LMTTradeOrders", error);
-    
   }
 };
 
@@ -762,7 +733,6 @@ export const dashbordTrade = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in DASHBOARD_LMT_TRADE", error);
-    
   }
 };
 
@@ -777,7 +747,6 @@ export const dashbordReports = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in DASHBOARD_REPORTS", error);
-    
   }
 };
 
@@ -792,7 +761,6 @@ export const fetchOrderHistory = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchOrderHistory", error);
-    
   }
 };
 
@@ -807,7 +775,6 @@ export const fetchTransactionHistoryMonthly = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchTransactionHistoryMonthly", error);
-    
   }
 };
 
@@ -822,7 +789,6 @@ export const fetchDepositHistoryMonthly = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchDepositHistoryMonthly", error);
-    
   }
 };
 
@@ -837,7 +803,6 @@ export const getMyListingOverView = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchDepositHistoryMonthly", error);
-    
   }
 };
 
@@ -852,7 +817,6 @@ export const getMyListingFilters = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchDepositHistoryMonthly", error);
-    
   }
 };
 
@@ -867,7 +831,7 @@ export const updateMyListing = async (token, id, data) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in fetchDepositHistoryMonthly", error);
-    // 
+    //
   }
 };
 
@@ -882,7 +846,6 @@ export const getMyListingHistory = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchDepositHistoryMonthly", error);
-    
   }
 };
 
@@ -897,7 +860,6 @@ export const getViewDetailsPopup = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchDepositHistoryMonthly", error);
-    
   }
 };
 
@@ -911,7 +873,7 @@ export const fetchAddHistoryFilters = async (token, params) => {
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
-    return {}
+    return {};
     console.log("ERROR in fetchAddHistoryFilters", error);
   }
 };
@@ -927,7 +889,6 @@ export const lmtOverview = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchDepositHistoryMonthly", error);
-    
   }
 };
 
@@ -942,7 +903,6 @@ export const getDepositDetails = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in getDepositDetails", error);
-    
   }
 };
 
@@ -957,7 +917,6 @@ export const getReferralBookings = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in getDepositDetails", error);
-    
   }
 };
 
@@ -972,7 +931,7 @@ export const requestMatchEvent = async (token, data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in getDepositDetails", error);
-    // 
+    //
   }
 };
 
@@ -987,7 +946,6 @@ export const getTransactionDetails = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in getTransactionDetails", error);
-    
   }
 };
 
@@ -1001,7 +959,6 @@ export const sendDepositRequest = async (data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in sendDepositRequest", error);
-    
   }
 };
 
@@ -1029,7 +986,6 @@ export const fetchCountrieList = async (token) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchCountrieList", error);
-    
   }
 };
 
@@ -1044,7 +1000,6 @@ export const fetchCityBasedonCountry = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in getDepositDetails", error);
-    
   }
 };
 
@@ -1059,7 +1014,6 @@ export const getAllPermissions = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in getDepositDetails", error);
-    
   }
 };
 
@@ -1081,7 +1035,6 @@ export const fetchUserDetails = async (
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchUserDetails", error);
-    
   }
 };
 
@@ -1096,7 +1049,6 @@ export const editUserDetails = async (token, method = "GET", params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchUserDetails", error);
-    
   }
 };
 
@@ -1111,7 +1063,6 @@ export const saveAddListing = async (token, data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchUserDetails", error);
-    
   }
 };
 
@@ -1130,7 +1081,6 @@ export const saveListing = async (token, data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in saveListing", error);
-    
   }
 };
 
@@ -1149,7 +1099,6 @@ export const saveBulkListing = async (token, data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in saveListing", error);
-    
   }
 };
 
@@ -1168,7 +1117,6 @@ export const uploadPopInstruction = async (token, data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in saveListing", error);
-    
   }
 };
 
@@ -1185,7 +1133,6 @@ export const updateTicketsPrice = async (token, data, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in updateTicketsPrice", error);
-    
   }
 };
 
@@ -1221,7 +1168,6 @@ export const DeleteUserDetails = async (
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchUserDetails", error);
-    
   }
 };
 
@@ -1264,7 +1210,6 @@ export const updateTeamMembers = async (
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchUserDetails", error);
-    
   }
 };
 
@@ -1279,7 +1224,6 @@ export const resetPassword = async (token, data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in sendResetRequest", error);
-    
   }
 };
 
@@ -1294,7 +1238,6 @@ export const getPaymentDetails = async (token, params) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in getPaymentDetails", error);
-    
   }
 };
 
@@ -1309,7 +1252,6 @@ export const storePaymentMethod = async (token, data) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in storePaymentMethod", error);
-    
   }
 };
 
@@ -1324,7 +1266,6 @@ export const getLinkedCards = async (token, params, id) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in getLinkedCards", error);
-    
   }
 };
 
@@ -1339,7 +1280,6 @@ export const removeSavedCards = async (token, data, id) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in getLinkedCards", error);
-    
   }
 };
 
@@ -1368,7 +1308,6 @@ export const paymentConfig = async (token, data, id) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in getLinkedCards", error);
-    
   }
 };
 
@@ -1383,7 +1322,6 @@ export const getCurrencyDetails = async (token, params) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in getCurrencyDetails", error);
-    
   }
 };
 export const getSalesTicketDetails = async (token, params) => {
@@ -1397,7 +1335,7 @@ export const getSalesTicketDetails = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in getSalesTicketDetails", error);
-    // 
+    //
   }
 };
 
@@ -1428,7 +1366,6 @@ export const removeLinkedCard = async (token, data) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in removeLinkedCard", error);
-    
   }
 };
 
@@ -1459,7 +1396,7 @@ export const RegisterUser = async (token, data) => {
   } catch (error) {
     console.log("ERROR in RegisterUser", error?.response, error);
     return error?.response?.data;
-    // 
+    //
   }
 };
 
@@ -1474,7 +1411,6 @@ export const VerifyEmail = async (token, data) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in VerifyEmail", error);
-    
   }
 };
 
@@ -1489,7 +1425,6 @@ export const ResendVerificationRequest = async (token, data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in ResendVerificationRequest", error);
-    
   }
 };
 
@@ -1505,7 +1440,7 @@ export const fetchSalesPageData = async (token, params) => {
     return response?.data || {};
   } catch (error) {
     console.log("ERROR in fetchSalesPageData", error);
-    // 
+    //
   }
 };
 
@@ -1521,7 +1456,7 @@ export const fetchSalesFilter = async (token, params) => {
     return response?.data || {};
   } catch (error) {
     console.log("ERROR in fetchSalesFilter", error);
-    // 
+    //
   }
 };
 
@@ -1537,7 +1472,7 @@ export const fetchSalesHistory = async (token, params) => {
     return response?.data || {};
   } catch (error) {
     console.log("ERROR in fetchSalesHistory", error);
-    // 
+    //
   }
 };
 
@@ -1552,7 +1487,6 @@ export const getTeamMembers = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in getTeamMembers", error);
-    
   }
 };
 
@@ -1571,7 +1505,7 @@ export const fetchSalesOrderDetails = async (token, params) => {
       : orderDetails;
   } catch (error) {
     // console.log("ERROR in fetchSalesPageData", error);
-    // 
+    //
     return orderDetails;
   }
 };
@@ -1587,7 +1521,6 @@ export const getTicketTypes = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in getTicketTypes", error);
-    
   }
 };
 
@@ -1602,7 +1535,7 @@ export const updateTicketTypes = async (token, data) => {
     return response?.data?.success ? response?.data : {};
   } catch (error) {
     console.log("ERROR in updateTicketTypes", error);
-    // 
+    //
     return error?.response?.data;
   }
 };
@@ -1616,13 +1549,12 @@ export const fetchSalesOrderLogs = async (token, params) => {
       ...(params && { params: params }),
     });
     return response?.data?.success
-      // ? response?.data?.data?.length > 0
-        ? response?.data?.data
-        : []
-      // : orderLog;
+      ? // ? response?.data?.data?.length > 0
+        response?.data?.data
+      : [];
+    // : orderLog;
   } catch (error) {
     console.log("ERROR in fetchSalesPageData", error);
-    
   }
 };
 
@@ -1635,13 +1567,12 @@ export const fetchSalesInventoryLogs = async (token, params) => {
       ...(params && { params: params }),
     });
     return response?.data?.success
-      // ? response?.data?.data?.length > 0
-        ? response?.data?.data
-        : []
-      // : inventoryLog;
+      ? // ? response?.data?.data?.length > 0
+        response?.data?.data
+      : [];
+    // : inventoryLog;
   } catch (error) {
     console.log("ERROR in fetchSalesPageData", error);
-    
   }
 };
 
@@ -1654,14 +1585,14 @@ export const fetchReportsOrderDetails = async (token, params) => {
       ...(params && { params: params }),
     });
     return response?.data?.success
-      // ? response?.data?.data?.length > 0
-        ? response?.data?.data
-        : []
-      // : orderDetails;
+      ? // ? response?.data?.data?.length > 0
+        response?.data?.data
+      : [];
+    // : orderDetails;
   } catch (error) {
     // console.log("ERROR in fetchSalesPageData", error);
-    // 
-    return orderDetails;
+    //
+    // return orderDetails;
   }
 };
 
@@ -1674,14 +1605,13 @@ export const fetchReportsOrderLogs = async (token, params) => {
       ...(params && { params: params }),
     });
     return response?.data?.success
-      // ? response?.data?.data?.length > 0
-        ? response?.data?.data
-        : []
-      // : orderLog;
+      ? // ? response?.data?.data?.length > 0
+        response?.data?.data
+      : [];
+    // : orderLog;
   } catch (error) {
-    return orderLog;
+    // return orderLog;
     console.log("ERROR in fetchReportsPageData", error);
-    
   }
 };
 
@@ -1694,14 +1624,13 @@ export const fetchReportsInventoryLogs = async (token, params) => {
       ...(params && { params: params }),
     });
     return response?.data?.success
-      ? response?.data?.data?.length > 0
+      // ? response?.data?.data?.length > 0
         ? response?.data?.data
-        : inventoryLog
-      : inventoryLog;
+        // : inventoryLog
+      : [];
   } catch (error) {
-    return inventoryLog;
+    // return inventoryLog;
     console.log("ERROR in fetchSalesPageData", error);
-    
   }
 };
 
@@ -1716,7 +1645,6 @@ export const fetchTournamentsList = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in fetchTournamentsList", error);
-    
   }
 };
 
@@ -1778,7 +1706,6 @@ export const FetchEventSearch = async (token, params = {}) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in FetchEventSearch", error);
-    
   }
 };
 
@@ -1793,7 +1720,6 @@ export const FetchVenue = async (token, params = {}) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in FetchVenue", error);
-    
   }
 };
 
@@ -1808,7 +1734,6 @@ export const FetchAllCategories = async (token, params = {}) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in FetchAllCategories", error);
-    
   }
 };
 
@@ -1823,7 +1748,6 @@ export const FetchTabTotal = async (token, params = {}) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in FetchTabTotal", error);
-    
   }
 };
 
@@ -1869,7 +1793,6 @@ export const purchaseEvents = async (token, id, params = {}) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in FetchTabTotal", error);
-    
   }
 };
 
@@ -1889,7 +1812,6 @@ export const purchaseFavouratesTracking = async (
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in purchaseFavouratesTracking", error);
-    
   }
 };
 
@@ -1904,7 +1826,6 @@ export const AddFavouratesTracing = async (token, method = "GET", data, id) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in purchaseFavouratesTracking", error);
-    
   }
 };
 
@@ -1925,7 +1846,6 @@ export const purchaseTracking = async (token, method = "GET", params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in purchaseFavouratesTracking", error);
-    
   }
 };
 
@@ -1945,7 +1865,6 @@ export const purchaseTickets = async (token, id, params = {}) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in purchaseTickets", error);
-    
   }
 };
 
@@ -1964,7 +1883,6 @@ export const purchaseHistory = async (token, params = {}) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in purchaseHistory", error);
-    
   }
 };
 
@@ -1984,7 +1902,6 @@ export const PriceUpdatewithQuantity = async (token, id, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in purchaseFavouratesTracking", error);
-    
   }
 };
 
@@ -2004,7 +1921,6 @@ export const paymentPurchaseDetails = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in paymentPurchaseDetails", error);
-    
   }
 };
 
@@ -2062,7 +1978,6 @@ export const deleteAddressBook = async (token, payload) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in deleteAddressBook", error);
-    
   }
 };
 
@@ -2077,7 +1992,6 @@ export const adyenCreateSession = async (token, data) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in purchaseTicketsBuy", error);
-    
   }
 };
 
@@ -2092,7 +2006,6 @@ export const stripeSessionPayment = async (token, data) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in purchaseTicketsBuy", error);
-    
   }
 };
 
@@ -2107,7 +2020,6 @@ export const stripeConfirmPayment = async (token, data) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in purchaseTicketsBuy", error);
-    
   }
 };
 
@@ -2122,7 +2034,6 @@ export const adyenPaymentUpdate = async (token, data) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in adyenPaymentUpdate", error);
-    
   }
 };
 
@@ -2137,7 +2048,6 @@ export const adyenPaymentSubmit = async (token, data) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in adyenPaymentSubmit", error);
-    
   }
 };
 
@@ -2149,10 +2059,10 @@ export const purchaseTicketConfirm = async (token, data) => {
       ...(token && { token: token }),
       data: data,
     });
+    console.log(response?.data,"pppppppppppp")
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in purchaseTicketConfirm", error);
-    
   }
 };
 
@@ -2298,7 +2208,6 @@ export const fetchNotificationHistory = async (token, params = {}) => {
     return response?.data?.success ? response?.data : {};
   } catch (error) {
     console.log("ERROR in fetchNotificationHistory", error);
-    
   }
 };
 
@@ -2387,7 +2296,7 @@ export const getZohoDocStatus = async (token, data) => {
   } catch (error) {
     console.log("ERROR in fetchSalesPageData", error);
     return error;
-    // 
+    //
   }
 };
 
@@ -2403,7 +2312,7 @@ export const getZohoDocsDownload = async (token, data) => {
   } catch (error) {
     console.log("ERROR in fetchSalesPageData", error);
     return error;
-    // 
+    //
   }
 };
 
@@ -2419,7 +2328,6 @@ export const fetchCurrency = async (token, params) => {
     return response?.data ? response?.data : {};
   } catch (error) {
     console.log("ERROR in fetchSalesPageData", error);
-    
   }
 };
 
@@ -2434,7 +2342,6 @@ export const getSellerContract = async (token, params) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in GetSellerContract", error);
-    
   }
 };
 
@@ -2449,7 +2356,6 @@ export const getAuthPhotoId = async (token, params) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in GetAuthPhotoId", error);
-    
   }
 };
 
@@ -2464,7 +2370,6 @@ export const getAuthAddress = async (token, params) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in GetAuthPhotoId", error);
-    
   }
 };
 
@@ -2479,7 +2384,6 @@ export const deleteSaleTicket = async (token, data) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in GetAuthPhotoId", error);
-    
   }
 };
 
@@ -2494,7 +2398,6 @@ export const downloadSaleAction = async (token, id, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in GetAuthPhotoId", error);
-    
   }
 };
 
@@ -2509,7 +2412,7 @@ export const saveSalesUploadedTickets = async (data, id) => {
     return response ? response : {};
   } catch (error) {
     console.log("ERROR in savePhotoId", error);
-    // 
+    //
   }
 };
 
@@ -2524,7 +2427,7 @@ export const savePaperTicketsUpload = async (data, id) => {
     return response ? response : {};
   } catch (error) {
     console.log("ERROR in savePhotoId", error);
-    // 
+    //
   }
 };
 
@@ -2539,7 +2442,7 @@ export const saveMobileTickets = async (data, id) => {
     return response ? response : {};
   } catch (error) {
     console.log("ERROR in savePhotoId", error);
-    // 
+    //
   }
 };
 
@@ -2554,7 +2457,7 @@ export const saveAdditionalInstructionFile = async (data, id) => {
     return response ? response : {};
   } catch (error) {
     console.log("ERROR in savePhotoId", error);
-    // 
+    //
   }
 };
 
@@ -2568,7 +2471,7 @@ export const saveSellerContract = async (data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in savePhotoId", error);
-    // 
+    //
   }
 };
 
@@ -2582,7 +2485,6 @@ export const savePhotoId = async (data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in savePhotoId", error);
-    
   }
 };
 
@@ -2598,7 +2500,6 @@ export const getSellerBusinessDocuments = async (token, params) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in getBusinessDocuments", error);
-    
   }
 };
 
@@ -2612,7 +2513,7 @@ export const saveSellerBusinessDocuments = async (data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in savePhotoId", error);
-    // 
+    //
   }
 };
 
@@ -2626,7 +2527,7 @@ export const saveAddressDocument = async (data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in savePhotoId", error);
-    // 
+    //
   }
 };
 
@@ -2641,7 +2542,6 @@ export const getReferralCode = async (token, params) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in getReferralCode", error);
-    
   }
 };
 
@@ -2671,7 +2571,6 @@ export const addSalesPendingNotes = async (token, data) => {
     return response?.data?.success ? response?.data : {};
   } catch (error) {
     console.log("ERROR in updatingProfileDetails", error);
-    
   }
 };
 
@@ -2686,7 +2585,6 @@ export const addReportsNotes = async (token, data) => {
     return response?.data?.success ? response?.data : {};
   } catch (error) {
     console.log("ERROR in updatingProfileDetails", error);
-    
   }
 };
 
@@ -2701,7 +2599,6 @@ export const createPaymentLink = async (token, data) => {
     return response?.data?.success ? response?.data : {};
   } catch (error) {
     console.log("ERROR in updatingProfileDetails", error);
-    
   }
 };
 
@@ -2731,7 +2628,6 @@ export const getLMTPayPrefill = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in getLMTPayPrefill", error);
-    
   }
 };
 
@@ -2746,7 +2642,6 @@ export const getPayoutDetails = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in getPayoutDetails", error);
-    
   }
 };
 
@@ -2761,7 +2656,6 @@ export const getPayoutHistoryReport = async (token, params) => {
     return response?.data || {};
   } catch (error) {
     console.log("ERROR in getPayoutHistory", error);
-    
   }
 };
 
@@ -2776,7 +2670,6 @@ export const getPayoutOrderReport = async (token, params) => {
     return response?.data || {};
   } catch (error) {
     console.log("ERROR in getPayoutOrderReport", error);
-    
   }
 };
 
@@ -2791,7 +2684,6 @@ export const getPayoutOrderDetails = async (token, params) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in getPayoutOrderDetails", error);
-    
   }
 };
 
@@ -2806,6 +2698,5 @@ export const submitKycForApproval = async (token, data) => {
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in submitKycForApproval", error);
-    
   }
 };

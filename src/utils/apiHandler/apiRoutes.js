@@ -126,7 +126,7 @@ export const API_ROUTES = {
   STRIPE_CONFIRM_PAYMENT: "/purchase/lmt-trade/confirmation",
   ADYEN_PAYMENT_UPDATE: "/adyen/paymentUpdate",
   ADYEN_PAYMENT_SUBMIT: "/adyen/paymentResponse",
-  PURCHASE_TICKET_CONFIRMATON: "/purchase/tickets/confirmation",
+  PURCHASE_TICKET_CONFIRMATON: "/purchase/lmt-trade/confirmation",
   PAY_WITH_SAVED_CARDS: "/adyen/pay-with-saved-card",
   PURCHASE_ATTENDEE_DETAILS: "/purchase/atendee-update-bulk",
   GET_CONTACT_DETAILS: "/settings/seller-contacts",

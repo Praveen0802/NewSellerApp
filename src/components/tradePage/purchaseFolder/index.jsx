@@ -69,7 +69,7 @@ const PurchaseFolder = (props) => {
   useEffect(() => {
     if (success == "true") {
       toast.success("Booking Completed successfully");
-      eyeIconClick({ booking_no: booking_no });
+      eyeIconClick({ booking_id: booking_no });
     }
   }, []);
   const eyeIconClick = async (item) => {

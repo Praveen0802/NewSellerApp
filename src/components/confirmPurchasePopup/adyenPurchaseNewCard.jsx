@@ -1,4 +1,5 @@
 import {
+  purchaseTicketConfirm,
   stripeConfirmPayment,
   stripeSessionPayment,
 } from "@/utils/apiHandler/request";
@@ -21,7 +22,6 @@ const StripeDropIn = ({
   const [card, setCard] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
 
   useEffect(() => {
     const loadStripe = async () => {
@@ -147,18 +147,29 @@ const StripeDropIn = ({
       if (result.error) {
         setError(result.error.message);
         bookingConfirm(false, `Payment failed: ${result.error.message}`);
-      }
-      else if (result.paymentIntent.status === "succeeded") {
+      } else if (result.paymentIntent.status === "succeeded") {
         // Step 3: Confirm payment on your backend
-        alert("Payment successful!");
-        // const confirmData = await stripeConfirmPayment("", {
-        //   currency: currency,
-        //   payment_intent_id: result.paymentIntent.id,
-        //   order_id: bookingNo,
-        //   booking_id: bookingId,
-        // });
-
-       
+        // SB Pay - existing logic
+        const confirmationPayload = {
+          booking_id: bookingId,
+          payment_method: `${paymentMethod}`,
+        };
+        const confirmResponse = await purchaseTicketConfirm(
+          "",
+          confirmationPayload
+        );
+        console.log(
+          confirmResponse,
+          "confirmResponseconfirmResponseconfirmResponse"
+        );
+        if (confirmResponse?.result?.booking_status == "Success") {
+          bookingConfirm(true, "Booking Confirmed Successfully", bookingNo);
+        } else {
+          bookingConfirm(
+            false,
+            confirmResponse?.result?.message || "Booking confirmation failed"
+          );
+        }
 
         // if (confirmData.success) {
         //   bookingConfirm(
