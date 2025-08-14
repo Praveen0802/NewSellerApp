@@ -12,7 +12,7 @@ const StripeDropIn = ({
   bookingNo,
   amount,
   currency = "usd",
-  formFieldValues
+  formFieldValues,
 }) => {
   const cardElementRef = useRef(null);
   const cardErrorsRef = useRef(null);
@@ -22,12 +22,6 @@ const StripeDropIn = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Constants - you might want to move these to environment variables
-  const API_BASE_URL = "https://api2.listmyticket.com/b2b/";
-  const DOMAIN_KEY =
-    "jgcvdp9FwDg94kpEQY9yb9nnlOGW39srytB7YTOXHb1jnWfPf1za8Dr0FVqrM0BK";
-  const BEARER_TOKEN = "523|QTvZ1oC4vR3ctPy5YHHMTmW0SO6zRJUussKPz0HW";
-  const STRIPE_PUBLIC_KEY = "pk_test_tKWlLA9GWpGTH9uisqWGpUuw";
 
   useEffect(() => {
     const loadStripe = async () => {
@@ -48,7 +42,7 @@ const StripeDropIn = ({
         }
 
         // Initialize Stripe
-        const stripeInstance = window.Stripe(STRIPE_PUBLIC_KEY);
+        const stripeInstance = window.Stripe(process.env.STRIPE_PUBLIC_KEY);
         const elementsInstance = stripeInstance.elements();
 
         // Create card element with custom styling
@@ -142,7 +136,8 @@ const StripeDropIn = ({
             card: card,
             billing_details: {
               // You can add billing details here if needed
-              name: formFieldValues.first_name + ' ' + formFieldValues.last_name,
+              name:
+                formFieldValues.first_name + " " + formFieldValues.last_name,
               email: formFieldValues.email,
             },
           },
@@ -153,27 +148,28 @@ const StripeDropIn = ({
         setError(result.error.message);
         bookingConfirm(false, `Payment failed: ${result.error.message}`);
       }
-      // else if (result.paymentIntent.status === "succeeded") {
-      //   // Step 3: Confirm payment on your backend
-      //   const confirmResponse = await stripeConfirmPayment("", {
-      //     currency: currency,
-      //     payment_intent_id: result.paymentIntent.id,
-      //     order_id: bookingNo,
-      //     booking_id: bookingId,
-      //   });
+      else if (result.paymentIntent.status === "succeeded") {
+        // Step 3: Confirm payment on your backend
+        alert("Payment successful!");
+        // const confirmData = await stripeConfirmPayment("", {
+        //   currency: currency,
+        //   payment_intent_id: result.paymentIntent.id,
+        //   order_id: bookingNo,
+        //   booking_id: bookingId,
+        // });
 
-      //   const confirmData = await confirmResponse.json();
+       
 
-      //   if (confirmData.success) {
-      //     bookingConfirm(
-      //       true,
-      //       "Payment successful & ticket booked!",
-      //       bookingNo
-      //     );
-      //   } else {
-      //     bookingConfirm(false, "Payment succeeded but booking failed!");
-      //   }
-      // }
+        // if (confirmData.success) {
+        //   bookingConfirm(
+        //     true,
+        //     "Payment successful & ticket booked!",
+        //     bookingNo
+        //   );
+        // } else {
+        //   bookingConfirm(false, "Payment succeeded but booking failed!");
+        // }
+      }
     } catch (error) {
       console.error("Payment error:", error);
       setError(error.message || "An error occurred during payment");

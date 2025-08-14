@@ -5,7 +5,7 @@ const AvailableList = ({ list, loading = false }) => {
   const handleCheckboxClick = (e) => {
     e.stopPropagation(); // Prevent the parent click event
 
-    // Don't proceed if disabled
+    // Don't proceed if checkbox is disabled
     if (list?.disabled) {
       return;
     }
@@ -17,11 +17,7 @@ const AvailableList = ({ list, loading = false }) => {
 
   // Handler for the entire component click
   const handleItemClick = () => {
-    // Don't proceed if disabled
-    if (list?.disabled) {
-      return;
-    }
-
+    // Container is always clickable
     if (list?.showCheckbox && list?.onClick) {
       list.onClick();
     }
@@ -48,54 +44,39 @@ const AvailableList = ({ list, loading = false }) => {
     );
   }
 
-  // Determine styling based on disabled state
+  // Determine styling - container is always enabled, only checkbox can be disabled
   const containerClasses = `
     border border-gray-200 rounded-md bg-white py-2 px-2 w-full flex flex-col gap-2
     ${
-      list?.disabled
-        ? "opacity-50 cursor-not-allowed bg-gray-50"
-        : list?.showCheckbox
+      list?.showCheckbox
         ? "cursor-pointer hover:bg-gray-50 transition-colors"
         : ""
     }
   `;
 
-  const valueTextClasses = `
-    text-[18px] 
-    ${list?.disabled ? "text-gray-400" : "text-[#343432]"}
-  `;
+  const valueTextClasses = "text-[18px] text-[#343432]";
 
-  const nameTextClasses = `
-    text-[11px] font-normal
-    ${list?.disabled ? "text-gray-400" : "text-gray-500"}
-  `;
+  const nameTextClasses = "text-[11px] font-normal text-gray-500";
 
   return (
     <div
       className={containerClasses}
       onClick={handleItemClick}
-      role={list?.showCheckbox && !list?.disabled ? "button" : undefined}
-      tabIndex={list?.showCheckbox && !list?.disabled ? 0 : -1}
+      role={list?.showCheckbox ? "button" : undefined}
+      tabIndex={list?.showCheckbox ? 0 : -1}
       onKeyDown={(e) => {
         if (
           list?.showCheckbox &&
-          !list?.disabled &&
           (e.key === "Enter" || e.key === " ")
         ) {
           handleItemClick();
         }
       }}
-      title={list?.disabled ? "This option is currently disabled" : undefined}
     >
       <div className="flex justify-between items-center">
         <p className={valueTextClasses}>{list?.value}</p>
         {list?.smallTooptip && (
-          <p
-            className={`
-            bg-[#F8F8FA] rounded-xl px-3 py-1 text-[10px]
-            ${list?.disabled ? "text-gray-400 bg-gray-100" : ""}
-          `}
-          >
+          <p className="bg-[#F8F8FA] rounded-xl px-3 py-1 text-[10px]">
             {list?.smallTooptip}
           </p>
         )}
