@@ -659,7 +659,7 @@ const SimpleEditableCell = ({
 
     // Date fields are ALWAYS rendered as editable (FloatingDateRange) unless disabled
     if (!disabled) {
-      console.log(value, "valuevaluevaluevalue");
+
       return (
         <div className="w-full">
           <FloatingDateRange

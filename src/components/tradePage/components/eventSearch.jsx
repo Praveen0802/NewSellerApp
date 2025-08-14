@@ -267,6 +267,7 @@ const EventSearch = ({ onClose, allCategories }) => {
   ];
 
   const handleEventClick = async (item) => {
+
     await fetchRecentlyViewedList("", "POST", "", {
       m_id: item?.m_id,
     });

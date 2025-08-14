@@ -38,6 +38,8 @@ import {
   getViewDetailsPopup,
   updateMyListing,
   deleteMyListing,
+  saveListing,
+  saveBulkListing,
 } from "@/utils/apiHandler/request";
 import UploadTickets from "../ModalComponents/uploadTickets";
 import InventoryLogsInfo from "../inventoryLogsInfo";
@@ -286,7 +288,6 @@ const Pagination = ({
 
 const TicketsPage = (props) => {
   const { success = "", response } = props;
-  console.log(response, "responseresponseresponse");
   // Memoize the overview data to prevent unnecessary re-renders
   const overViewData = useMemo(
     () => response?.overview || {},
@@ -396,6 +397,7 @@ const TicketsPage = (props) => {
         listing_note: ticket.listing_note?.map((note) => `${note.id}`),
         rawTicketData: ticket,
         rawMatchData: matchInfo,
+        isCloned: false, // Initialize as not cloned
       }));
 
       if (transformedTickets.length > 0) {
@@ -418,6 +420,37 @@ const TicketsPage = (props) => {
     });
     return allTickets;
   }, [ticketsByMatch]);
+
+  // NEW: Helper functions for cloned tickets
+  const getClonedTickets = useCallback(() => {
+    const allTickets = getAllTicketsFromMatches();
+    return allTickets.filter((ticket) => ticket.isCloned);
+  }, [getAllTicketsFromMatches]);
+
+  const getSelectedClonedTickets = useCallback(() => {
+    const allTickets = getAllTicketsFromMatches();
+    console.log(allTickets, "allTicketsallTickets",globalSelectedTickets);
+    return allTickets.filter(
+      (ticket) =>
+        globalSelectedTickets.includes(ticket.uniqueId) && ticket.isCloned
+    );
+  }, [getAllTicketsFromMatches, globalSelectedTickets]);
+
+  const areAllSelectedTicketsCloned = useCallback(() => {
+    if (globalSelectedTickets.length === 0) return false;
+
+    const allTickets = getAllTicketsFromMatches();
+    const selectedTickets = allTickets.filter((ticket) =>
+      globalSelectedTickets.includes(ticket.uniqueId)
+    );
+
+    return selectedTickets.every((ticket) => ticket.isCloned);
+  }, [getAllTicketsFromMatches, globalSelectedTickets]);
+
+  const hasAnyClonedTicketsSelected = useCallback(() => {
+    const selectedClonedTickets = getSelectedClonedTickets();
+    return selectedClonedTickets.length > 0;
+  }, [getSelectedClonedTickets]);
 
   // ENHANCED: Global selection handlers - UPDATED FOR ticketsByMatch
   const handleGlobalSelectAll = useCallback(() => {
@@ -476,30 +509,41 @@ const TicketsPage = (props) => {
   );
 
   // Handle row selection for individual match tables - UPDATED FOR ticketsByMatch
-  const handleSetSelectedRowsForMatch = useCallback(
-    (matchIndex, newSelectedRows) => {
-      // Remove existing selections for this match
-      setGlobalSelectedTickets((prevSelected) => {
-        const filteredGlobalSelection = prevSelected.filter((uniqueId) => {
-          const [ticketMatchIndex] = uniqueId.split("_");
-          return parseInt(ticketMatchIndex) !== parseInt(matchIndex);
-        });
-
-        // Add new selections for this match
-        const newGlobalSelections = newSelectedRows.map(
-          (rowIndex) => `${matchIndex}_${rowIndex}`
-        );
-
-        return [...filteredGlobalSelection, ...newGlobalSelections];
+const handleSetSelectedRowsForMatch = useCallback(
+  (matchIndex, newSelectedRows) => {
+    // Remove existing selections for this match
+    setGlobalSelectedTickets((prevSelected) => {
+      const filteredGlobalSelection = prevSelected.filter((uniqueId) => {
+        const [ticketMatchIndex] = uniqueId.split("_");
+        return parseInt(ticketMatchIndex) !== parseInt(matchIndex);
       });
-    },
-    []
-  );
+
+      // Add new selections for this match with correct format
+      const newGlobalSelections = newSelectedRows.map(
+        (rowIndex) => `${matchIndex}_${rowIndex}` // Ensure correct format
+      );
+
+      console.log("🔍 New global selections for match", matchIndex, ":", newGlobalSelections);
+      
+      return [...filteredGlobalSelection, ...newGlobalSelections];
+    });
+  },
+  []
+);
 
   // ENHANCED: Global bulk actions - UPDATED FOR ticketsByMatch
   const handleGlobalEdit = useCallback(() => {
     if (globalSelectedTickets.length === 0) {
       toast.error("Please select tickets to edit");
+      return;
+    }
+
+    // Check if any cloned tickets are selected - they can't be edited
+    const hasClonedSelected = hasAnyClonedTicketsSelected();
+    if (hasClonedSelected) {
+      toast.error(
+        "Cloned tickets cannot be edited. Please select only existing tickets."
+      );
       return;
     }
 
@@ -513,7 +557,7 @@ const TicketsPage = (props) => {
         `Bulk edit mode activated for ${globalSelectedTickets.length} tickets`
       );
     }
-  }, [globalSelectedTickets]);
+  }, [globalSelectedTickets, hasAnyClonedTicketsSelected]);
 
   const handleGlobalSaveEdit = useCallback(() => {
     setGlobalEditingTickets([]);
@@ -550,25 +594,45 @@ const TicketsPage = (props) => {
       const ticketsToDelete = allTickets.filter((ticket) =>
         globalSelectedTickets.includes(ticket.uniqueId)
       );
-      const ticketIds = ticketsToDelete.map((ticket) => ticket.s_no).join(",");
 
-      // API call to delete tickets
-      try {
-        await deleteMyListing("", {
-          ticket_id: ticketIds,
-        });
-      } catch (error) {
-        console.error("API delete error:", error);
+      // Separate cloned and existing tickets
+      const clonedTickets = ticketsToDelete.filter((ticket) => ticket.isCloned);
+      const existingTickets = ticketsToDelete.filter(
+        (ticket) => !ticket.isCloned
+      );
+
+      // For existing tickets, call delete API
+      if (existingTickets.length > 0) {
+        const ticketIds = existingTickets
+          .map((ticket) => ticket.s_no)
+          .join(",");
+        try {
+          await deleteMyListing("", {
+            ticket_id: ticketIds,
+          });
+        } catch (error) {
+          console.error("API delete error:", error);
+        }
       }
 
-      // Group tickets by match for deletion
+      // Group tickets by match for deletion from state
       const ticketsByMatchIndex = {};
       globalSelectedTickets.forEach((uniqueId) => {
         const [matchIndex, ticketIndex] = uniqueId.split("_");
         if (!ticketsByMatchIndex[matchIndex]) {
           ticketsByMatchIndex[matchIndex] = [];
         }
-        ticketsByMatchIndex[matchIndex].push(parseInt(ticketIndex));
+
+        // Find the actual index in the tickets array
+        const matchData = ticketsByMatch[matchIndex];
+        if (matchData) {
+          const actualIndex = matchData.tickets.findIndex(
+            (ticket) => ticket.uniqueId === uniqueId
+          );
+          if (actualIndex !== -1) {
+            ticketsByMatchIndex[matchIndex].push(actualIndex);
+          }
+        }
       });
 
       // Remove tickets from state
@@ -601,80 +665,420 @@ const TicketsPage = (props) => {
       });
 
       setGlobalSelectedTickets([]);
-      toast.success(
-        `${globalSelectedTickets.length} ticket(s) deleted successfully`
-      );
 
-      // Optionally refresh data from server
-      await fetchData(filtersApplied);
+      if (clonedTickets.length > 0 && existingTickets.length > 0) {
+        toast.success(
+          `${globalSelectedTickets.length} ticket(s) deleted successfully (${existingTickets.length} from server, ${clonedTickets.length} cloned)`
+        );
+      } else if (clonedTickets.length > 0) {
+        toast.success(
+          `${clonedTickets.length} cloned ticket(s) removed successfully`
+        );
+      } else {
+        toast.success(
+          `${existingTickets.length} ticket(s) deleted successfully`
+        );
+      }
+
+      // Optionally refresh data from server for existing tickets
+      if (existingTickets.length > 0) {
+        await fetchData(filtersApplied);
+      }
     } catch (error) {
       console.error("Error deleting tickets:", error);
       toast.error("Error deleting tickets");
     } finally {
       setLoader(false);
     }
-  }, [globalSelectedTickets, getAllTicketsFromMatches, filtersApplied]);
+  }, [
+    globalSelectedTickets,
+    getAllTicketsFromMatches,
+    filtersApplied,
+    ticketsByMatch,
+  ]);
 
   const [pendingEdits, setPendingEdits] = useState({}); // { "matchIndex_rowIndex": { field1: value1, field2: value2 } }
   const [originalValues, setOriginalValues] = useState({}); // Store original values for reset
 
-  const handleGlobalClone = useCallback(() => {
-    if (globalSelectedTickets.length === 0) {
-      toast.error("Please select tickets to clone");
-      return;
-    }
+  // UPDATED: Enhanced clone function
+const handleGlobalClone = useCallback(() => {
+  if (globalSelectedTickets.length === 0) {
+    toast.error("Please select tickets to clone");
+    return;
+  }
 
-    const allTickets = getAllTicketsFromMatches();
-    const ticketsToClone = allTickets.filter((ticket) =>
-      globalSelectedTickets.includes(ticket.uniqueId)
-    );
+  const allTickets = getAllTicketsFromMatches();
+  const ticketsToClone = allTickets.filter((ticket) =>
+    globalSelectedTickets.includes(ticket.uniqueId)
+  );
 
-    // Group cloned tickets by match
-    const clonedTicketsByMatch = {};
+  // Check if trying to clone already cloned tickets
+  const alreadyClonedSelected = ticketsToClone.some(ticket => ticket.isCloned);
+  if (alreadyClonedSelected) {
+    toast.error("Cannot clone already cloned tickets. Please select only existing tickets.");
+    return;
+  }
+
+  // Group cloned tickets by match
+  const clonedTicketsByMatch = {};
+  const newClonedTicketIds = []; // Track new IDs for selection
+
+  setTicketsByMatch((prevData) => {
+    const newData = { ...prevData };
 
     ticketsToClone.forEach((ticket) => {
       const matchIndex = ticket.matchIndex;
+      
       if (!clonedTicketsByMatch[matchIndex]) {
         clonedTicketsByMatch[matchIndex] = [];
       }
 
+      // IMPORTANT: Calculate the correct ticketIndex for the cloned ticket
+      const currentTicketsCount = newData[matchIndex]?.tickets.length || 0;
+      const newTicketIndex = currentTicketsCount; // This will be the index of the new ticket
+
+      // Create correct uniqueId format: matchIndex_ticketIndex
+      const correctUniqueId = `${matchIndex}_${newTicketIndex}`;
+
       const clonedTicket = {
         ...ticket,
-        id: `${matchIndex}-${Date.now()}-${Math.random()}`,
-        uniqueId: `${matchIndex}_${Date.now()}_${Math.random()}`,
-        s_no: `CLONE_${ticket.s_no}`,
+        id: `${matchIndex}-clone-${Date.now()}-${Math.random()}`, // Keep this for internal ID
+        uniqueId: correctUniqueId, // FIX: Use correct format
+        ticketIndex: newTicketIndex, // Update the ticket index
+        s_no: "", // Empty instead of CLONE_ prefix
+        isCloned: true, // Mark as cloned item
         rawTicketData: {
           ...ticket.rawTicketData,
-          s_no: `CLONE_${ticket.rawTicketData.s_no}`,
+          s_no: "", // Empty instead of CLONE_ prefix
         },
       };
 
-      clonedTicketsByMatch[matchIndex].push(clonedTicket);
+      console.log("🔍 Created cloned ticket with uniqueId:", correctUniqueId);
+      
+      // Add to the match data immediately
+      if (newData[matchIndex]) {
+        newData[matchIndex] = {
+          ...newData[matchIndex],
+          tickets: [...newData[matchIndex].tickets, clonedTicket],
+        };
+      }
+
+      // Track the new ID for selection
+      newClonedTicketIds.push(correctUniqueId);
     });
 
-    // Add cloned tickets to state
-    setTicketsByMatch((prevData) => {
-      const newData = { ...prevData };
+    return newData;
+  });
 
-      Object.entries(clonedTicketsByMatch).forEach(
-        ([matchIndex, clonedTickets]) => {
-          if (newData[matchIndex]) {
-            newData[matchIndex] = {
-              ...newData[matchIndex],
-              tickets: [...newData[matchIndex].tickets, ...clonedTickets],
-            };
+  // Clear current selection and optionally select the cloned tickets
+  setGlobalSelectedTickets([]);
+  
+  // Optional: Auto-select the cloned tickets
+  setTimeout(() => {
+    setGlobalSelectedTickets(newClonedTicketIds);
+    console.log("🔍 Auto-selected cloned tickets:", newClonedTicketIds);
+  }, 100);
+
+  toast.success(
+    `${globalSelectedTickets.length} ticket(s) cloned successfully`
+  );
+}, [globalSelectedTickets, getAllTicketsFromMatches]);
+
+  // NEW: Function to construct FormData for cloned tickets (similar to AddInventory)
+  const constructFormDataForClonedTickets = useCallback(
+    (clonedTicketsArray) => {
+      const formData = new FormData();
+
+      // Helper function to transform QR links (same as AddInventory)
+      const transformQRLinks = (qrLinks) => {
+        if (!qrLinks || qrLinks.length === 0) {
+          return {};
+        }
+
+        const androidLinks = [];
+        const iosLinks = [];
+
+        qrLinks.forEach((link) => {
+          if (link.qr_link_android) {
+            androidLinks.push(link.qr_link_android);
+          }
+          if (link.qr_link_ios) {
+            iosLinks.push(link.qr_link_ios);
+          }
+        });
+
+        const result = {};
+        if (androidLinks.length > 0) {
+          result.qr_link_android = androidLinks.join(",");
+        }
+        if (iosLinks.length > 0) {
+          result.qr_link_ios = iosLinks.join(",");
+        }
+
+        return result;
+      };
+
+      // Process each cloned ticket
+      clonedTicketsArray.forEach((ticket, index) => {
+        // Basic fields mapping
+        formData.append(
+          `data[${index}][ticket_types]`,
+          ticket.ticket_type_id || ""
+        );
+        formData.append(
+          `data[${index}][add_qty_addlist]`,
+          ticket.quantity || ""
+        );
+        formData.append(`data[${index}][home_town]`, ticket.home_town || "");
+        formData.append(
+          `data[${index}][ticket_category]`,
+          ticket.ticket_category_id || ""
+        );
+        formData.append(`data[${index}][ticket_block]`, ticket.block || "");
+        formData.append(
+          `data[${index}][add_price_addlist]`,
+          ticket.price || ""
+        );
+        formData.append(`data[${index}][web_price]`, ticket.web_price || "");
+        formData.append(
+          `data[${index}][max_display_qty]`,
+          ticket.quantity || ""
+        );
+        formData.append(`data[${index}][first_seat]`, ticket.first_seat || "");
+        formData.append(`data[${index}][row]`, ticket.row || "");
+        formData.append(
+          `data[${index}][split_type]`,
+          ticket.split_type_id || ""
+        );
+
+        // Handle ship date
+        let shipDateValue = ticket.ship_date || "";
+        if (typeof shipDateValue === "object" && shipDateValue.startDate) {
+          shipDateValue = shipDateValue.startDate;
+        }
+        formData.append(`data[${index}][ship_date]`, shipDateValue);
+
+        formData.append(
+          `data[${index}][ticket_in_hand]`,
+          ticket.ticket_in_hand ? "1" : "0"
+        );
+        formData.append(
+          `data[${index}][match_id]`,
+          ticket.rawMatchData?.m_id || ""
+        );
+        formData.append(
+          `data[${index}][add_pricetype_addlist]`,
+          ticket.price_type || "EUR"
+        );
+        formData.append(`data[${index}][event]`, "E");
+
+        // Handle listing notes (combine restrictions and notes)
+        const ticketDetails = ticket.listing_note || [];
+        ticketDetails.forEach((detail, detailIndex) => {
+          formData.append(
+            `data[${index}][ticket_details][${detailIndex}]`,
+            detail
+          );
+        });
+
+        formData.append(
+          `data[${index}][ticket_details1]`,
+          ticket.split_type_id || ""
+        );
+
+        // Handle additional fields if they exist
+        if (ticket.additional_file_type) {
+          formData.append(
+            `data[${index}][additional_file_type]`,
+            ticket.additional_file_type
+          );
+        }
+        if (ticket.additional_dynamic_content) {
+          formData.append(
+            `data[${index}][additional_dynamic_content]`,
+            ticket.additional_dynamic_content
+          );
+        }
+
+        // Handle QR links if they exist
+        if (ticket.qr_links) {
+          const qrLinksTransformed = transformQRLinks(ticket.qr_links);
+          if (qrLinksTransformed.qr_link_android) {
+            formData.append(
+              `data[${index}][qr_link_android]`,
+              qrLinksTransformed.qr_link_android
+            );
+          }
+          if (qrLinksTransformed.qr_link_ios) {
+            formData.append(
+              `data[${index}][qr_link_ios]`,
+              qrLinksTransformed.qr_link_ios
+            );
           }
         }
+
+        // Handle file uploads if they exist
+        if (ticket.upload_tickets && ticket.upload_tickets.length > 0) {
+          ticket.upload_tickets.forEach((uploadTicket, ticketIndex) => {
+            if (uploadTicket.file && uploadTicket.file instanceof File) {
+              formData.append(
+                `data[${index}][upload_tickets][${ticketIndex}]`,
+                uploadTicket.file,
+                uploadTicket.name
+              );
+            }
+          });
+        }
+
+        if (ticket.pop_upload_tickets) {
+          formData.append(
+            `data[${index}][pop_upload_tickets]`,
+            ticket.pop_upload_tickets.file,
+            ticket.pop_upload_tickets.name
+          );
+        }
+
+        // Handle additional info if it exists
+        if (ticket.additional_info) {
+          formData.append(
+            `data[${index}][additional_file_type]`,
+            ticket.additional_info.template || ""
+          );
+          formData.append(
+            `data[${index}][additional_dynamic_content]`,
+            ticket.additional_info.dynamicContent || ""
+          );
+
+          if (ticket.additional_info.templateFile) {
+            formData.append(
+              `data[${index}][additional_file]`,
+              ticket.additional_info.templateFile,
+              "additional_file"
+            );
+          }
+        }
+
+        // Handle courier details if they exist
+        if (ticket.courier_type) {
+          formData.append(`data[${index}][courier_type]`, ticket.courier_type);
+        }
+        if (ticket.courier_name) {
+          formData.append(`data[${index}][courier_name]`, ticket.courier_name);
+        }
+        if (ticket.courier_tracking_details) {
+          formData.append(
+            `data[${index}][courier_tracking_details]`,
+            ticket.courier_tracking_details
+          );
+        }
+      });
+
+      return formData;
+    },
+    []
+  );
+
+  // NEW: Publish function for cloned tickets
+  const handlePublishClonedTickets = useCallback(async () => {
+    if (globalSelectedTickets.length === 0) {
+      toast.error("Please select cloned tickets to publish");
+      return;
+    }
+
+    const selectedClonedTickets = getSelectedClonedTickets();
+
+    if (selectedClonedTickets.length === 0) {
+      toast.error("Please select cloned tickets to publish");
+      return;
+    }
+
+    if (!areAllSelectedTicketsCloned()) {
+      toast.error("Please select only cloned tickets to publish");
+      return;
+    }
+
+    setLoader(true);
+    try {
+      // Construct FormData for cloned tickets
+      const formData = constructFormDataForClonedTickets(selectedClonedTickets);
+
+      // Use appropriate API based on count (same as AddInventory)
+      if (selectedClonedTickets.length > 1) {
+        await saveBulkListing("", formData);
+      } else {
+        await saveListing("", formData);
+      }
+
+      // Remove cloned tickets from state after successful publish
+      setTicketsByMatch((prevData) => {
+        const newData = { ...prevData };
+
+        // Group selected tickets by match for removal
+        const ticketsByMatchIndex = {};
+        globalSelectedTickets.forEach((uniqueId) => {
+          const [matchIndex, ticketIndex] = uniqueId.split("_");
+          if (!ticketsByMatchIndex[matchIndex]) {
+            ticketsByMatchIndex[matchIndex] = [];
+          }
+
+          // Find the actual index in the tickets array
+          const matchData = newData[matchIndex];
+          if (matchData) {
+            const actualIndex = matchData.tickets.findIndex(
+              (ticket) => ticket.uniqueId === uniqueId
+            );
+            if (actualIndex !== -1) {
+              ticketsByMatchIndex[matchIndex].push(actualIndex);
+            }
+          }
+        });
+
+        // Remove tickets from state
+        Object.entries(ticketsByMatchIndex).forEach(([matchIndex, indices]) => {
+          if (newData[matchIndex]) {
+            // Sort indices in descending order to avoid index shifting
+            const sortedIndices = indices.sort((a, b) => b - a);
+            const newTickets = [...newData[matchIndex].tickets];
+
+            sortedIndices.forEach((index) => {
+              newTickets.splice(index, 1);
+            });
+
+            // Remove match if no tickets left
+            if (newTickets.length === 0) {
+              delete newData[matchIndex];
+            } else {
+              newData[matchIndex] = {
+                ...newData[matchIndex],
+                tickets: newTickets,
+              };
+            }
+          }
+        });
+
+        return newData;
+      });
+
+      setGlobalSelectedTickets([]);
+      toast.success(
+        `${selectedClonedTickets.length} cloned ticket(s) published successfully`
       );
 
-      return newData;
-    });
-
-    setGlobalSelectedTickets([]);
-    toast.success(
-      `${globalSelectedTickets.length} ticket(s) cloned successfully`
-    );
-  }, [globalSelectedTickets, getAllTicketsFromMatches]);
+      // Optionally refresh data from server
+      await fetchData(filtersApplied);
+    } catch (error) {
+      console.error("Error publishing cloned tickets:", error);
+      toast.error("Error publishing cloned tickets");
+    } finally {
+      setLoader(false);
+    }
+  }, [
+    globalSelectedTickets,
+    getSelectedClonedTickets,
+    areAllSelectedTicketsCloned,
+    constructFormDataForClonedTickets,
+    filtersApplied,
+  ]);
 
   // Check if a specific ticket is in edit mode - UPDATED FOR ticketsByMatch
   const isTicketInEditMode = useCallback(
@@ -684,7 +1088,7 @@ const TicketsPage = (props) => {
     },
     [isGlobalEditMode, globalEditingTickets]
   );
-  console.log(mockListingHistory, "mockListingHistory");
+
   // NEW: Construct headers dynamically from filters - REMAINS SAME
   const constructHeadersFromListingHistory = useMemo(() => {
     if (!mockListingHistory || mockListingHistory.length === 0) return [];
@@ -777,12 +1181,6 @@ const TicketsPage = (props) => {
           );
         },
       },
-      // {
-      //   key: "price_type",
-      //   label: "Price Currency",
-      //   editable: false,
-      //   type: "text",
-      // },
       {
         key: "listing_note",
         label: "Listing Note",
@@ -908,22 +1306,11 @@ const TicketsPage = (props) => {
             })
           );
         }
-        // if(header?.iconHandling){
-        //   header.iconBefore =(
-        //     <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
-        //       <p className="text-xs sm:text-[10px] lg:text-xs">
-        //         {matchDetails?.currency_icon?.[0] || "$"}
-        //       </p>
-        //     </div>
-        //   )
-        // }
       });
     }
 
     return headers;
   }, [mockListingHistory]);
-
-  // Enhanced handleCellEdit to work with ticketsByMatch
 
   // Enhanced updateCellValues function with better error handling
   const updateCellValues = async (updatedParams, id) => {
@@ -968,6 +1355,15 @@ const TicketsPage = (props) => {
     (rowIndex, columnKey, value, ticket, matchIndexParam) => {
       const matchIndex = matchIndexParam.toString();
       const rowKey = `${matchIndex}_${rowIndex}`;
+
+      // Check if trying to edit a cloned ticket
+      const currentTicket = ticketsByMatch[matchIndex]?.tickets[rowIndex];
+      if (currentTicket?.isCloned) {
+        toast.error(
+          "Cloned tickets cannot be edited. Please publish them first or select non-cloned tickets."
+        );
+        return;
+      }
 
       // Find header config
       const headerConfig = constructHeadersFromListingHistory.find(
@@ -1221,6 +1617,7 @@ const TicketsPage = (props) => {
       const isBulkEditMode =
         isGlobalEditMode && globalEditingTickets.length > 1;
       const hasEdits = hasPendingEdits(rowData?.matchIndex, rowIndex);
+      const isCloned = rowData?.isCloned;
 
       // Base columns
       const baseColumns = [
@@ -1232,8 +1629,16 @@ const TicketsPage = (props) => {
                 size={14}
                 className={`${
                   rowData?.ticket_in_hand ? "text-green-500" : "text-black"
-                } hover:text-green-500 cursor-pointer`}
-                onClick={() => handleHandAction(rowData, rowIndex)}
+                } ${
+                  isCloned
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:text-green-500 cursor-pointer"
+                }`}
+                onClick={() => {
+                  if (!isCloned) {
+                    handleHandAction(rowData, rowIndex);
+                  }
+                }}
               />
             </Tooltip>
           ),
@@ -1241,12 +1646,15 @@ const TicketsPage = (props) => {
         },
         {
           key: "upload",
-          toolTipContent: isBulkEditMode ? "Not Available" : "Upload",
+          toolTipContent:
+            isBulkEditMode || isCloned ? "Not Available" : "Upload",
           icon: (
-            <Tooltip content={isBulkEditMode ? "Not Available" : "Upload"}>
+            <Tooltip
+              content={isBulkEditMode || isCloned ? "Not Available" : "Upload"}
+            >
               <IconStore.upload
                 className={`size-4 ${
-                  isBulkEditMode
+                  isBulkEditMode || isCloned
                     ? "cursor-not-allowed opacity-50 grayscale"
                     : "cursor-pointer"
                 }`}
@@ -1254,25 +1662,32 @@ const TicketsPage = (props) => {
             </Tooltip>
           ),
           className: `${
-            isBulkEditMode ? "cursor-not-allowed pl-2" : "cursor-pointer pl-2"
+            isBulkEditMode || isCloned
+              ? "cursor-not-allowed pl-2"
+              : "cursor-pointer pl-2"
           }`,
           tooltipComponent: (
             <p className="text-center">{rowData.ticket_type}</p>
           ),
           onClick: () => {
-            if (!isBulkEditMode) {
+            if (!isBulkEditMode && !isCloned) {
               handleUploadAction(rowData, rowIndex);
             }
           },
         },
         {
           key: "upload_pop",
-          toolTipContent: isBulkEditMode ? "Not Available" : "Upload Pop",
+          toolTipContent:
+            isBulkEditMode || isCloned ? "Not Available" : "Upload Pop",
           icon: (
-            <Tooltip content={isBulkEditMode ? "Not Available" : "Upload Pop"}>
+            <Tooltip
+              content={
+                isBulkEditMode || isCloned ? "Not Available" : "Upload Pop"
+              }
+            >
               <HardDriveUpload
                 onClick={() => {
-                  if (!isBulkEditMode) {
+                  if (!isBulkEditMode && !isCloned) {
                     handleUploadAction(
                       { ...rowData, handleProofUpload: true },
                       rowIndex
@@ -1280,7 +1695,7 @@ const TicketsPage = (props) => {
                   }
                 }}
                 className={`w-[16px] h-[16px] ${
-                  isBulkEditMode
+                  isBulkEditMode || isCloned
                     ? "cursor-not-allowed opacity-50 text-gray-400"
                     : "cursor-pointer"
                 }`}
@@ -1309,8 +1724,8 @@ const TicketsPage = (props) => {
         },
       ];
 
-      // NEW: Add confirm/cancel buttons if there are pending edits and not in bulk mode
-      if (hasEdits && !isBulkEditMode) {
+      // NEW: Add confirm/cancel buttons if there are pending edits and not in bulk mode and not cloned
+      if (hasEdits && !isBulkEditMode && !isCloned) {
         return [
           // Replace the last two columns with confirm/cancel buttons
           ...baseColumns.slice(0, 2),
@@ -1662,6 +2077,7 @@ const TicketsPage = (props) => {
       }
     };
   }, []);
+
   const handleConfirmClick = useCallback((data, index, rowData) => {
     updateCellValues(data, rowData?.s_no);
     setShowUploadPopup({ show: false, rowData: null, rowIndex: null });
@@ -1894,6 +2310,7 @@ const TicketsPage = (props) => {
       setVisibleColumns(createInitialVisibleColumns());
     }
   }, [constructHeadersFromListingHistory, createInitialVisibleColumns]);
+
   // Calculate total ticket count across all matches - UPDATED FOR ticketsByMatch
   const getTotalTicketCount = useCallback(() => {
     let totalCount = 0;
@@ -1955,7 +2372,6 @@ const TicketsPage = (props) => {
             mode="multiple"
             showAccordion={true}
             matchIndex={matchIndex}
-            // totalTicketsCount={matchData.tickets.length}
             getStickyColumnsForRow={getStickyColumnsForRow}
             stickyHeaders={["", "", "", ""]}
             myListingPage={true}
@@ -1982,8 +2398,6 @@ const TicketsPage = (props) => {
     isGlobalEditMode,
     isTicketInEditMode,
     getStickyColumnsForRow,
-
-    // NEW: Add dependencies for pending edits
     pendingEdits,
     handleConfirmEdit,
     handleCancelEdit,
@@ -2004,6 +2418,7 @@ const TicketsPage = (props) => {
       await fetchData(params);
     }
   };
+
   return (
     <div className="bg-[#F5F7FA] w-full max-h-[calc(100vh-100px)] overflow-auto relative ">
       <div className="bg-white">
@@ -2086,7 +2501,7 @@ const TicketsPage = (props) => {
         </div>
       )}
 
-      {/* Global Bulk Action Bar */}
+      {/* UPDATED: Enhanced Bulk Action Bar with Clone Publishing */}
       {globalSelectedTickets.length > 0 && (
         <BulkActionBar
           selectedCount={globalSelectedTickets.length}
@@ -2099,12 +2514,18 @@ const TicketsPage = (props) => {
           onPublishLive={() => {
             toast.info("Publish functionality not implemented for this page");
           }}
+          onPublishCloned={handlePublishClonedTickets} // NEW: Publish cloned tickets
           onSaveEdit={handleGlobalSaveEdit}
           onCancelEdit={handleGlobalCancelEdit}
           loading={loader}
           disabled={globalSelectedTickets.length === 0}
           isEditMode={isGlobalEditMode}
           hidepublishLive={true}
+          // NEW: Props for clone functionality
+          hasClonedTickets={getClonedTickets().length > 0}
+          selectedClonedCount={getSelectedClonedTickets().length}
+          areAllSelectedCloned={areAllSelectedTicketsCloned()}
+          hasAnyClonedSelected={hasAnyClonedTicketsSelected()}
         />
       )}
 
