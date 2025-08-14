@@ -41,6 +41,7 @@ import ClearChip from "./components/clearChip";
 
 const InventoryFolder = (props) => {
   const { response = {}, matchId } = props;
+  console.log(response,'responseresponse')
   const {
     match_details = {},
     ticket_details = [],

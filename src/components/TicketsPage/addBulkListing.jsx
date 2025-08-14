@@ -1274,49 +1274,64 @@ const BulkInventory = (props) => {
     };
   };
   // Add listings to all matches at once
-  const handleAddListings = () => {
-    const validation = validateMandatoryFields();
+ const handleAddListings = () => {
+  const validation = validateMandatoryFields();
 
-    if (!validation.isValid) {
-      const fieldNames = validation.errors
-        .map((error) => error.label)
-        .join(", ");
-      toast.error(`Please fill in all mandatory fields: ${fieldNames}`);
-      return;
+  if (!validation.isValid) {
+    const fieldNames = validation.errors
+      .map((error) => error.label)
+      .join(", ");
+    toast.error(`Please fill in all mandatory fields: ${fieldNames}`);
+    return;
+  }
+
+  const hasFilterValues = Object.values(filtersApplied).some((value) => {
+    if (Array.isArray(value)) {
+      return value.length > 0;
     }
+    return value && value.toString().trim() !== "";
+  });
 
-    const hasFilterValues = Object.values(filtersApplied).some((value) => {
-      if (Array.isArray(value)) {
-        return value.length > 0;
-      }
-      return value && value.toString().trim() !== "";
-    });
-
-    if (!hasFilterValues) {
-      toast.error(
-        "Please select at least one filter value before adding listings."
-      );
-      return;
-    }
-
-    // Add listings to all matches
-    const updatedInventoryData = {};
-    allMatchDetails.forEach((match) => {
-      const newListing = createInventoryItemFromFilters(match);
-      updatedInventoryData[match.match_id] = [
-        ...(inventoryDataByMatch[match.match_id] || []),
-        newListing,
-      ];
-    });
-    console.log(
-      updatedInventoryData,
-      "updatedInventoryDataupdatedInventoryDataupdatedInventoryData"
+  if (!hasFilterValues) {
+    toast.error(
+      "Please select at least one filter value before adding listings."
     );
-    setInventoryDataByMatch((prev) => ({
-      ...prev,
-      ...updatedInventoryData,
-    }));
-  };
+    return;
+  }
+
+  // Add listings to all matches
+  const updatedInventoryData = {};
+  const newlyAddedTicketIds = []; // Track newly added tickets for selection
+  
+  allMatchDetails.forEach((match) => {
+    const newListing = createInventoryItemFromFilters(match);
+    const existingTickets = inventoryDataByMatch[match.match_id] || [];
+    const newIndex = existingTickets.length; // Index of the new ticket
+    
+    updatedInventoryData[match.match_id] = [
+      ...existingTickets,
+      newListing,
+    ];
+    
+    // Create uniqueId for the newly added ticket
+    const newTicketUniqueId = `${match.match_id}_${newIndex}`;
+    newlyAddedTicketIds.push(newTicketUniqueId);
+  });
+  
+  // Update inventory data
+  setInventoryDataByMatch((prev) => ({
+    ...prev,
+    ...updatedInventoryData,
+  }));
+  
+  // Auto-select all newly added tickets
+  setGlobalSelectedTickets((prevSelected) => [
+    ...prevSelected, // Keep existing selections
+    ...newlyAddedTicketIds // Add newly created tickets
+  ]);
+  
+  // Show success message indicating tickets were added and selected
+};
 
   // Handle confirm click for upload popup
   const handleConfirmClick = (data, index) => {
