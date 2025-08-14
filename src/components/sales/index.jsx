@@ -656,9 +656,13 @@ const SalesPage = (props) => {
     },
   ]);
 
+  // Updated itemConfig with disabled property
   const itemConfig = {
     [profile]: [
-      { name: "Delivery Revenue", value: overViewData?.amount_with_currency },
+      {
+        name: "Delivery Revenue",
+        value: overViewData?.amount_with_currency,
+      },
       {
         name: "Orders",
         value: overViewData?.orders,
@@ -669,35 +673,40 @@ const SalesPage = (props) => {
         value: overViewData?.e_tickets_count,
         showCheckbox: true,
         key: "ticket_type_1",
-        isChecked: selectedTicketType === "ticket_type_1", // Dynamic checked state
+        isChecked: selectedTicketType === "ticket_type_1",
+        disabled: overViewData?.e_tickets_count === 0, // Disable if count is 0
       },
       {
         name: "External Transfer",
         value: overViewData?.external_transfer_count,
         showCheckbox: true,
         key: "ticket_type_2",
-        isChecked: selectedTicketType === "ticket_type_2", // Dynamic checked state
+        isChecked: selectedTicketType === "ticket_type_2",
+        disabled: overViewData?.external_transfer_count === 0, // Disable if count is 0
       },
       {
         name: "Mobile Link/PKPASS",
         value: overViewData?.mobile_ticket_count,
         showCheckbox: true,
         key: "ticket_type_3",
-        isChecked: selectedTicketType === "ticket_type_3", // Dynamic checked state
+        isChecked: selectedTicketType === "ticket_type_3",
+        disabled: overViewData?.mobile_ticket_count === 0, // Disable if count is 0
       },
       {
         name: "Paper Ticket",
         value: overViewData?.paper_ticket_count,
         showCheckbox: true,
         key: "ticket_type_4",
-        isChecked: selectedTicketType === "ticket_type_4", // Dynamic checked state
+        isChecked: selectedTicketType === "ticket_type_4",
+        disabled: overViewData?.paper_ticket_count === 0, // Disable if count is 0
       },
       {
         name: "Local Delivery",
         value: overViewData?.local_delivery_count,
         showCheckbox: true,
         key: "ticket_type_5",
-        isChecked: selectedTicketType === "ticket_type_5", // Dynamic checked state
+        isChecked: selectedTicketType === "ticket_type_5",
+        disabled: overViewData?.local_delivery_count === 0, // Disable if count is 0
       },
     ],
   };
@@ -911,6 +920,16 @@ const SalesPage = (props) => {
   };
 
   const handleCheckboxToggle = (checkboxKey, isChecked, allCheckboxValues) => {
+    // Get the current item config to check if it's disabled
+    const currentItems = itemConfig[profile] || [];
+    const currentItem = currentItems.find((item) => item.key === checkboxKey);
+
+    // Early return if the item is disabled
+    if (currentItem?.disabled) {
+      console.log(`Checkbox ${checkboxKey} is disabled and cannot be toggled`);
+      return;
+    }
+
     // Reset sort state when filters change (optional)
     setSortState(null);
 
@@ -931,31 +950,31 @@ const SalesPage = (props) => {
       if (checkboxKey === "ticket_type_1") {
         params = {
           ...filtersApplied,
-          ticket_type_value: "2",
+          ticket_type_value: isChecked ? "2" : "",
           page: 1,
         };
       } else if (checkboxKey === "ticket_type_2") {
         params = {
           ...filtersApplied,
-          ticket_type_value: "6",
+          ticket_type_value: isChecked ? "6" : "",
           page: 1,
         };
       } else if (checkboxKey === "ticket_type_3") {
         params = {
           ...filtersApplied,
-          ticket_type_value: "4",
+          ticket_type_value: isChecked ? "4" : "",
           page: 1,
         };
       } else if (checkboxKey === "ticket_type_4") {
         params = {
           ...filtersApplied,
-          ticket_type_value: "3",
+          ticket_type_value: isChecked ? "3" : "",
           page: 1,
         };
       } else if (checkboxKey === "ticket_type_5") {
         params = {
           ...filtersApplied,
-          ticket_type_value: "5",
+          ticket_type_value: isChecked ? "5" : "",
           page: 1,
         };
       } else {
@@ -1130,50 +1149,50 @@ const SalesPage = (props) => {
   };
 
   const handleSort = async (sortData) => {
-  try {
-    // Set loading state to provide user feedback
-    setPageLoader(true);
-    
-    // Reset pagination-related states when sorting
-    setCurrentPage(1);
-    setHasNextPage(true);
-    setSalesData([]); // Clear existing data
-    
-    // Update sort state immediately for UI feedback
-    setSortState(sortData);
+    try {
+      // Set loading state to provide user feedback
+      setPageLoader(true);
 
-    // Prepare sort parameters for API call
-    const sortParams = sortData
-      ? {
-          order_by: sortData.sortableKey,
-          sort_order: sortData.sort_order,
-        }
-      : {
-          // Clear sorting when sortData is null
-          order_by: undefined,
-          sort_order: undefined,
-        };
+      // Reset pagination-related states when sorting
+      setCurrentPage(1);
+      setHasNextPage(true);
+      setSalesData([]); // Clear existing data
 
-    // Call API with sort parameters - remove undefined values
-    const updatedFilters = {
-      ...filtersApplied,
-      ...sortParams,
-      page: 1, // Reset to first page when sorting
-    };
+      // Update sort state immediately for UI feedback
+      setSortState(sortData);
 
-    // Remove undefined/null values from the filters before API call
-    const cleanedFilters = Object.fromEntries(
-      Object.entries(updatedFilters).filter(([_, value]) => value != null)
-    );
+      // Prepare sort parameters for API call
+      const sortParams = sortData
+        ? {
+            order_by: sortData.sortableKey,
+            sort_order: sortData.sort_order,
+          }
+        : {
+            // Clear sorting when sortData is null
+            order_by: undefined,
+            sort_order: undefined,
+          };
 
-    await apiCall(cleanedFilters, false, false, false);
-  } catch (error) {
-    console.error("Sort error:", error);
-    toast.error("Error sorting data");
-  } finally {
-    setPageLoader(false);
-  }
-};
+      // Call API with sort parameters - remove undefined values
+      const updatedFilters = {
+        ...filtersApplied,
+        ...sortParams,
+        page: 1, // Reset to first page when sorting
+      };
+
+      // Remove undefined/null values from the filters before API call
+      const cleanedFilters = Object.fromEntries(
+        Object.entries(updatedFilters).filter(([_, value]) => value != null)
+      );
+
+      await apiCall(cleanedFilters, false, false, false);
+    } catch (error) {
+      console.error("Sort error:", error);
+      toast.error("Error sorting data");
+    } finally {
+      setPageLoader(false);
+    }
+  };
 
   const customTableComponent = () => {
     return (

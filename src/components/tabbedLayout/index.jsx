@@ -65,7 +65,7 @@ const TabbedLayout = ({
   hideVisibleColumns = false,
   showTabFullWidth = false,
   customTableComponent = () => {},
-  showCustomTable=false,
+  showCustomTable = false,
   customComponent = () => {},
   transitionDirection: parentTransitionDirection = null,
   disableTransitions = false,
@@ -381,21 +381,31 @@ const TabbedLayout = ({
     onTabChange?.(tab);
   };
 
+  // Updated handleCheckboxToggle in TabbedLayout component
   const handleCheckboxToggle = (itemKey, currentValue) => {
-    let key, newValue;
+    let key, newValue, item;
 
     if (typeof itemKey === "number") {
       const currentItems = getCurrentListItems();
-      const item = currentItems[itemKey];
+      item = currentItems[itemKey];
       if (!item?.key) return;
       key = item.key;
       newValue = !checkboxValues[item.key];
     } else {
+      // Find the item by key to check if it's disabled
+      const currentItems = getCurrentListItems();
+      item = currentItems.find((item) => item.key === itemKey);
       key = itemKey;
       newValue =
         typeof currentValue === "boolean"
           ? !currentValue
           : !checkboxValues[key];
+    }
+
+    // Early return if the item is disabled
+    if (item?.disabled) {
+      console.log(`Checkbox ${key} is disabled and cannot be toggled`);
+      return;
     }
 
     const updatedCheckboxValues = {
@@ -413,7 +423,7 @@ const TabbedLayout = ({
       value,
       allFilters,
       currentTab,
-    })
+    });
     onFilterChange?.(filterKey, value, allFilters, currentTab);
   };
 
@@ -498,6 +508,7 @@ const TabbedLayout = ({
                             smallTooptip: item?.smallTooptip,
                             showCheckbox: item?.showCheckbox,
                             isChecked: item?.isChecked,
+                            disabled: item?.disabled,
                             onCheckChange: undefined,
                             onClick: undefined,
                           }}
@@ -549,6 +560,7 @@ const TabbedLayout = ({
                         value: item?.value,
                         showCheckbox: item?.showCheckbox,
                         smallTooptip: item?.smallTooptip,
+                         disabled: item?.disabled,
                         isChecked: item?.isChecked,
                         onCheckChange:
                           item?.showCheckbox &&
@@ -716,7 +728,7 @@ const TabbedLayout = ({
       )}
 
       {/* UPDATED: Scrollable container with scroll handler */}
-      {!showCustomTable &&  tabbedFilterActiveFilterCongig()}
+      {!showCustomTable && tabbedFilterActiveFilterCongig()}
 
       {showCustomTable && (
         <div
