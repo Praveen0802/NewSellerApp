@@ -16,7 +16,7 @@ export const hideHeaderPages = [
 export const nonAuthRequiredAPI = [
   "/auth/login",
   "/auth/password/reset-request",
-  "/settings/reset-password",
+  "/auth/reset-password",
   "/auth/register",
   "/auth/verify-email",
   "/auth/resend-verify-email",
