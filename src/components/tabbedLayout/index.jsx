@@ -720,6 +720,7 @@ const TabbedLayout = ({
                 selectedIndex={selectedIndex}
                 handleSelectItemClick={handleTabChange}
                 onCurrencyChange={onCurrencyChange}
+                loading={loading}
                 selectedCurrency={tabCurrencies?.[tab.key] || selectedCurrency}
               />
             );
