@@ -184,6 +184,7 @@ const SalesPage = (props) => {
 
       if (handleCountApiCall) {
         const count = await getSalesCount("", params);
+        console.log(count,'countcount')
         setSalesCount(count?.sales_count);
       }
 

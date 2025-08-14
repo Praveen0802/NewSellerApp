@@ -14,7 +14,6 @@ const InventoryLogsInfo = ({
 }) => {
   const [expandedLogs, setExpandedLogs] = useState(new Set());
   const [activeTab, setActiveTab] = useState("order"); // "order" or "inventory"
-
   function convertTimestamp(isoTimestamp) {
     const date = new Date(isoTimestamp);
 
@@ -130,7 +129,6 @@ const InventoryLogsInfo = ({
 
   const displayData = getCurrentData();
   const allFields = getAllFields();
-
   return (
     <RightViewModal className="!w-[800px]" show={show} onClose={onClose}>
       <div className="w-full bg-white rounded-lg">
@@ -181,40 +179,44 @@ const InventoryLogsInfo = ({
               const payloadKeys = Object.keys(logEntry.json_payload || {});
               const hasPayload = payloadKeys.length > 0;
               const currentFieldValues = getCurrentFieldValues(index);
-
+              console.log(logEntry, "logEntrylogEntry");
               return (
                 <div
                   key={index}
-                  className="mb-3 border border-[#E0E1EA] rounded-lg overflow-hidden"
+                  className="mb-3 border border-[#E0E1EA] rounded-[6px] overflow-hidden"
                 >
                   {/* Log Header */}
                   <div
                     onClick={() => toggleLog(index)}
                     className={`${
-                      isExpanded ? "bg-[#343432]" : "bg-[#343432]"
+                      isExpanded ? "bg-[#343432]" : "bg-white"
                     } flex justify-between items-center px-3 cursor-pointer`}
                   >
                     <div className="flex-1 py-3">
                       <div className="flex items-center gap-2">
                         <span
                           className={`text-sm font-medium ${
-                            isExpanded ? "text-white" : "text-[#ffff]"
+                            isExpanded ? "text-white" : "text-[#323A70]"
                           }`}
                         >
                           Log #{index + 1}
                         </span>
                         {logEntry.ticket_id && (
-                          <span className="text-xs text-white px-2 py-1 rounded-full">
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full  ${
+                              isExpanded ? "text-white" : "text-[#323A70]"
+                            }`}
+                          >
                             Ticket ID: {logEntry.ticket_id}
                           </span>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      {hasPayload &&  (
+                      {hasPayload && (
                         <div
                           className={`mt-1 text-xs py-3 ${
-                            isExpanded ? "text-white" : "text-[#ffff]"
+                            isExpanded ? "text-white" : "text-[#323A70]"
                           }`}
                         >
                           {convertTimestamp(logEntry.created_at)}
@@ -235,7 +237,7 @@ const InventoryLogsInfo = ({
                           {isExpanded ? (
                             <ChevronUp className="w-4 h-4 text-white" />
                           ) : (
-                            <ChevronDown className="w-4 h-4 text-white" />
+                            <ChevronDown className="w-4 h-4 text-[#323A70]" />
                           )}
                         </div>
                       </div>
@@ -272,19 +274,19 @@ const InventoryLogsInfo = ({
                                       return (
                                         <tr
                                           key={fieldIndex}
-                                          className={`hover:bg-gray-50 ${
+                                          className={` ${
                                             isChangedInCurrentLog
-                                              ? "bg-green-100"
-                                              : ""
+                                              ? ""
+                                              : "hover:bg-gray-50"
                                           }`}
                                         >
                                           <td
-                                            className="px-4 py-2 whitespace-nowrap text-sm font-light text-gray-500 border-r border-gray-100 max-w-[150px] truncate align-center"
+                                            className="px-4 py-2 whitespace-nowrap text-[12px] text-[#7D82A4] font-light border-r border-gray-100 max-w-[150px] truncate align-center"
                                             title={formatKeyName(key)}
                                           >
                                             {formatKeyName(key)}
                                           </td>
-                                          <td className="px-4 py-2 text-sm text-gray-800 break-words">
+                                          <td className="px-4 py-2 text-[#323A70] text-[12px] font-normal break-words">
                                             {hasValue ? (
                                               key
                                                 ?.toLowerCase()
@@ -342,19 +344,24 @@ const InventoryLogsInfo = ({
                                       return (
                                         <tr
                                           key={fieldIndex}
-                                          className={`hover:bg-gray-50 ${
+                                          className={` ${
                                             isChangedInCurrentLog
-                                              ? "bg-green-100"
-                                              : ""
+                                              ? ""
+                                              : "hover:bg-gray-50"
                                           }`}
                                         >
                                           <td
-                                            className="px-4 py-2 whitespace-nowrap text-sm font-light text-gray-500 border-r border-gray-100 max-w-[150px] truncate align-center"
+                                            className="px-4 py-2 whitespace-nowrap text-[12px] text-[#7D82A4] font-light border-r border-gray-100 max-w-[150px] truncate align-center"
                                             title={formatKeyName(key)}
                                           >
                                             {formatKeyName(key)}
                                           </td>
-                                          <td className="px-4 py-2 text-sm text-gray-800 break-words">
+                                          <td
+                                            className={`px-4 py-2  text-[#323A70]  text-[12px] ${
+                                              isChangedInCurrentLog &&
+                                              "bg-green-100"
+                                            } font-normal break-words`}
+                                          >
                                             {hasValue ? (
                                               key
                                                 ?.toLowerCase()
@@ -369,9 +376,9 @@ const InventoryLogsInfo = ({
                                                 </a>
                                               ) : (
                                                 <span
-                                                  className={`inline-block px-2 py-1 rounded text-sm break-words ${
+                                                  className={`inline-block px-2 py-1 rounded text-[#323A70]  text-[12px] break-words ${
                                                     isChangedInCurrentLog
-                                                      ? "bg-green-200 text-green-800 font-semibold"
+                                                      ? "  font-medium"
                                                       : "font-light"
                                                   }`}
                                                 >
