@@ -276,7 +276,7 @@ const InventoryLogsInfo = ({
                                           key={fieldIndex}
                                           className={` ${
                                             isChangedInCurrentLog
-                                              ? ""
+                                              ? "bg-green-100"
                                               : "hover:bg-gray-50"
                                           }`}
                                         >
@@ -346,7 +346,7 @@ const InventoryLogsInfo = ({
                                           key={fieldIndex}
                                           className={` ${
                                             isChangedInCurrentLog
-                                              ? ""
+                                              ? "bg-green-100"
                                               : "hover:bg-gray-50"
                                           }`}
                                         >
@@ -359,7 +359,7 @@ const InventoryLogsInfo = ({
                                           <td
                                             className={`px-4 py-2  text-[#323A70]  text-[12px] ${
                                               isChangedInCurrentLog &&
-                                              "bg-green-100"
+                                              ""
                                             } font-normal break-words`}
                                           >
                                             {hasValue ? (

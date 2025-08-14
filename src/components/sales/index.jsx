@@ -163,7 +163,7 @@ const SalesPage = (props) => {
     if (isClear) {
       updatedFilters = { currency: currency };
     } else {
-      updatedFilters = { ...filtersApplied, ...params, currency: currency };
+      updatedFilters = { ...filtersApplied, currency: currency, ...params };
     }
 
     setFiltersApplied(updatedFilters);
@@ -184,7 +184,7 @@ const SalesPage = (props) => {
 
       if (handleCountApiCall) {
         const count = await getSalesCount("", params);
-        console.log(count,'countcount')
+        console.log(count, "countcount");
         setSalesCount(count?.sales_count);
       }
 
