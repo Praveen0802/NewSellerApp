@@ -133,6 +133,7 @@ const ResetPasswordFold = ({ token }) => {
           />
         </div>
       ) : (
+        <>
         <form
           className="flex flex-col gap-6 w-full max-w-xs mx-auto"
           onSubmit={handleSubmit}
@@ -189,6 +190,8 @@ const ResetPasswordFold = ({ token }) => {
             />
           </div>
         </form>
+        <span className="text-sm text-blue-500 underline cursor-pointer" onClick={backToLogin}>Go Back to Login</span>
+        </>
       )}
     </div>
   );
