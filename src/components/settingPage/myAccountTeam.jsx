@@ -46,7 +46,7 @@ const MyAccountTeam = (props) => {
   };
 
   const [countryCode, setCountryCode] = useState(
-    `+${profileDetails?.country_code}`
+    `${profileDetails?.country_code}`
   );
 
   const handleCountryCodeChange = (code) => {
