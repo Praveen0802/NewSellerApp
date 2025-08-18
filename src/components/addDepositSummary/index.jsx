@@ -81,7 +81,7 @@ const AddDepositSummary = ({ onClose } = {}) => {
     [
       {
         label: "Deposit Amount",
-        type: "text",
+        type: "number",
         id: "deposit_amount",
         name: "deposit_amount",
         mandatory: true,
