@@ -1356,7 +1356,9 @@ const LeftMenuBar = () => {
         <div
           className="h-[80px] px-[10px] py-[20px] border-b-[1px] border-[#51428E] flex items-center justify-center flex-shrink-0 cursor-pointer"
           onClick={() => {
-            router.push("/dashboard");
+            if (kycStatus?.kyc_status == 1) {
+              router.push("/dashboard");
+            }
           }}
           title={"Go to Dashboard"}
         >
