@@ -342,23 +342,23 @@ const AddEditAddress = ({
       },
     ],
     [
-      {
-        label: "Company name",
-        type: "text",
-        id: "company_name",
-        name: "company_name",
-        value: formFieldValues?.company_name,
-        onChange: (e) => handleChange(e, "company_name"),
-        className: `!py-2 !px-4 ${fieldStyle}`,
-        labelClassName: "text-sm text-gray-600 mb-1 block",
-        rightIcon: formFieldValues?.company_name
-          ? () => (
-              <span className="text-green-500">
-                <IconStore.circleTick className="size-5" />
-              </span>
-            )
-          : null,
-      },
+      // {
+      //   label: "Company name",
+      //   type: "text",
+      //   id: "company_name",
+      //   name: "company_name",
+      //   value: formFieldValues?.company_name,
+      //   onChange: (e) => handleChange(e, "company_name"),
+      //   className: `!py-2 !px-4 ${fieldStyle}`,
+      //   labelClassName: "text-sm text-gray-600 mb-1 block",
+      //   rightIcon: formFieldValues?.company_name
+      //     ? () => (
+      //         <span className="text-green-500">
+      //           <IconStore.circleTick className="size-5" />
+      //         </span>
+      //       )
+      //     : null,
+      // },
     ],
     [
       {
