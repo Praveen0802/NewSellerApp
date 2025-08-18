@@ -30,7 +30,7 @@ const GTVLevelCard = ({ data }) => {
             { level: 3, width: "w-18", label: "3" },
             { level: 2, width: "w-18", label: "2" },
             { level: 1, width: "w-18", label: "1" },
-            { level: 0, width: "w-8", label: "S" },
+            // { level: 0, width: "w-8", label: "S" },
           ].map((step) => (
             <div key={step.level} className="relative">
               <div
