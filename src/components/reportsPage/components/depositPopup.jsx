@@ -200,7 +200,7 @@ const DepositPopup = ({ onClose, data, showShimmer = false }) => {
       <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
         <div>
           <h2 className="text-xl font-semibold text-gray-800">
-            Transaction Details
+            Wallet Payment Details
           </h2>
           <p className="text-sm text-gray-500 mt-1">
             Ref: {data?.reference_no}

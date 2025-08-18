@@ -230,7 +230,7 @@ const AddPayOutPopup = ({
       const response = await updateBankAccount(
         "",
         bankId,
-        bankId ? "PUT" : "POST",
+        "POST",
         formData
       );
       toast.success("Payout Account Added Successfully");
