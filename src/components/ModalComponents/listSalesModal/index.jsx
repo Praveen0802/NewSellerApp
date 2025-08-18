@@ -15,6 +15,7 @@ import {
   getmarketingInsights,
   updateTicketsPrice,
 } from "@/utils/apiHandler/request";
+import Tooltip from "@/components/addInventoryPage/simmpleTooltip";
 
 // Shimmer Loader Component
 const ShimmerLoader = () => {
@@ -151,11 +152,11 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
   //   { value: "away", label: "Away" },
   // ];
   const generateQuantityOptions = (max = 50) => {
-  return Array.from({ length: max }, (_, i) => ({
-    value: (i + 1).toString(),
-    label: (i + 1).toString()
-  }));
-};
+    return Array.from({ length: max }, (_, i) => ({
+      value: (i + 1).toString(),
+      label: (i + 1).toString(),
+    }));
+  };
 
   const quantityOptions = generateQuantityOptions();
 
@@ -266,6 +267,8 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
     setFiltersApplied(updatedFilters);
   };
 
+  console.log(listValueData, "listValueDatalistValueDatalistValueData");
+
   return (
     <div className="p-4">
       <CustomModal show={show} onClose={() => onClose()}>
@@ -349,7 +352,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                   placeholder="All Quantities"
                   textSize="text-xs"
                   buttonPadding="px-2 py-1 !w-full"
-                     className="!w-[120px]"
+                  className="!w-[120px]"
                 />
               </div>
             </div>
@@ -440,10 +443,12 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                         {editingRow === item.ticket_id ? (
                           // Edit Mode - Show input field with save/cancel buttons
                           <div className="flex items-center gap-1">
-                            <span className="text-gray-600">$</span>
+                            <span className="text-gray-600">
+                              {item?.currencyIcon}
+                            </span>
                             <input
                               type="text"
-                              value={editPrices[item.ticket_id] || ""}
+                              value={`${editPrices[item.ticket_id]}` || ""}
                               onChange={(e) =>
                                 handlePriceChange(
                                   item.ticket_id,
@@ -473,7 +478,10 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                           </div>
                         ) : (
                           // Display Mode - Show price with edit option if flag === 1
-                          <div className="flex items-center justify-between group">
+                          <div className="flex items-center gap-1 group">
+                            <span className="text-gray-600">
+                              {item?.currencyIcon}
+                            </span>
                             <span
                               className={`${
                                 item.flag === 1
@@ -506,6 +514,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                           </div>
                         )}
                       </div>
+
                       <div className="p-3 text-[12px] flex-1 flex items-center justify-between">
                         <span
                           className="truncate pr-2"
@@ -513,9 +522,14 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                         >
                           {getBenefitsText(item.ticket_details)}
                         </span>
-                        <button className="text-gray-400 flex-shrink-0">
-                          <IconStore.document />
-                        </button>
+                        <Tooltip
+                          content={getBenefitsText(item.ticket_details)}
+                          position="top"
+                        >
+                          <button className="text-gray-400 flex-shrink-0">
+                            <IconStore.document />
+                          </button>
+                        </Tooltip>
                       </div>
                     </div>
                   );

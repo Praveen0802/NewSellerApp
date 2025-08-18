@@ -4,6 +4,7 @@ import FormFields from "@/components/formFieldsComponent";
 import {
   fetchBankAccountDetails,
   updateBankAccount,
+  updatePayoutBankAccount,
 } from "@/utils/apiHandler/request";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import React, { useEffect, useState } from "react";
@@ -227,12 +228,10 @@ const AddPayOutPopup = ({
     setSubmitLoader(true);
     try {
       const bankId = item?.bank_id ? item?.bank_id : "";
-      const response = await updateBankAccount(
-        "",
-        bankId,
-        "POST",
-        formData
-      );
+      const response = await updatePayoutBankAccount("",  {
+        ...formData,
+        ...(bankId && { bankId: bankId }),
+      });
       toast.success("Payout Account Added Successfully");
       onClose();
     } catch (error) {

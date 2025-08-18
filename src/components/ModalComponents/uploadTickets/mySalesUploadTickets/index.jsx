@@ -55,7 +55,6 @@ const MySalesUploadTickets = ({
   myListingPage = false,
   mySalesPage = false,
 }) => {
-
   if (loading || !rowData) {
     return (
       <div>
@@ -69,7 +68,6 @@ const MySalesUploadTickets = ({
       </div>
     );
   }
-
 
   const proofUploadView = rowData?.handleProofUpload || false;
   const ticketTypes = !isNaN(parseInt(rowData?.ticket_type))
@@ -353,11 +351,11 @@ const MySalesUploadTickets = ({
   );
 
   const handleDeleteUploaded = useCallback(
-    (id,assigned) => {
+    (id, assigned) => {
       if (proofUploadView) {
         setProofUploadedFiles((prev) => prev.filter((file) => file.id !== id));
-      } else if(assigned){
-        setAssignedFiles((prev) => prev.filter((file) => file.id !== id)); 
+      } else if (assigned) {
+        setAssignedFiles((prev) => prev.filter((file) => file.id !== id));
       } else {
         setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
       }
@@ -459,7 +457,7 @@ const MySalesUploadTickets = ({
           fileToTransfer.ticketDetailId = correspondingTicketDetail?.id;
         }
         let files = Object.keys(assignedSlots).map((key) => assignedSlots[key]);
-        console.log(assignedSlots,files,'filesfilesfilesfiles')
+        console.log(assignedSlots, files, "filesfilesfilesfiles");
         setAssignedFiles([...assignedFiles, fileToTransfer]);
         // FIXED: Assign to specific slot instead of pushing to array
         setAssignedSlots((prev) => ({
@@ -490,13 +488,13 @@ const MySalesUploadTickets = ({
   );
 
   // Common Match Header Component
-const MatchHeader = () => (
+  const MatchHeader = () => (
     <div className="bg-[#343432] text-xs rounded-t-md text-white px-4 flex items-center justify-between min-w-0">
       <div className="grid grid-cols-4 gap-2">
-      <h3 className="font-medium truncate py-3 flex-shrink-0 max-w-[200px] border-r border-[#51428E]">
-        {matchDetails?.match_name}
-      </h3>
-      <div className="flex items-center gap-1 py-3 border-r border-[#51428E]">
+        <h3 className="font-medium truncate py-3 flex-shrink-0 max-w-[200px] border-r border-[#51428E]">
+          {matchDetails?.match_name}
+        </h3>
+        <div className="flex items-center gap-1 py-3 border-r border-[#51428E]">
           <Calendar className="w-4 h-4 flex-shrink-0" />
           <span className="text-xs whitespace-nowrap">
             {matchDetails?.match_date_format ||
@@ -528,7 +526,7 @@ const MatchHeader = () => (
   const TicketDetails = () => (
     <div className="border-[1px] border-[#E0E1EA] rounded-b-md flex-shrink-0">
       <div className="grid grid-cols-4 bg-gray-100 px-3 py-2 border-b border-gray-200">
-        <div className="text-xs font-medium text-[#323A70]">Listing ID</div>
+        <div className="text-xs font-medium text-[#323A70]">Booking ID</div>
         <div className="text-xs font-medium text-[#323A70]">
           {proofUploadView ? "Proof Required" : "Quantity"}
         </div>
@@ -546,7 +544,7 @@ const MatchHeader = () => (
 
       <div className="grid grid-cols-4 bg-[#F9F9FB] py-2 px-3 border-b border-gray-200">
         <div className="text-xs truncate">
-          {rowData?.rawTicketData?.s_no || rowData?.id || "N/A"}
+          {rowData?.bookingId || rowData?.rawTicketData?.s_no || rowData?.id || "N/A"}
         </div>
         <div className="text-xs truncate">
           {proofUploadView ? "1 Document" : maxQuantity}
@@ -576,7 +574,7 @@ const MatchHeader = () => (
     "existingUploadedTicketsexistingUploadedTickets",
     rowData?.qrLinksData
   );
-  console.log(assignedSlots,'assignedSlotsassignedSlots')
+  console.log(assignedSlots, "assignedSlotsassignedSlots");
   const debugId = useRef(
     `MainUpload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   );
@@ -913,17 +911,21 @@ const MatchHeader = () => (
       templateFile: additionalData?.templateFile || null,
     };
 
+    const formData = new FormData();
+    formData.append(
+      "ticket_id",
+      rowData?.fetchedAdditionalInfoDetails?.sellTicketId || ""
+    );
+    formData.append("dynamic_content", currentAdditionalInfo?.dynamicContent);
+    formData.append("ticket_type", currentAdditionalInfo?.template || "");
     if (currentAdditionalInfo?.templateFile) {
-      const formData = new FormData();
       formData.append(
-        "instruction_file[0]",
+        "additional_file",
         currentAdditionalInfo.templateFile,
         "instruction_file"
       );
-      formData.append("booking_id", rowData?.id);
-
-      const sendData = await saveAdditionalInstructionFile(formData);
     }
+    await saveAdditionalInstructionFile(formData);
   };
 
   const handleConfirmCtaClick = useCallback(async () => {
@@ -931,6 +933,7 @@ const MatchHeader = () => (
       if (ETicketsFlow) {
         try {
           setIsLoading(true);
+
           await additionalInfoCheck();
 
           // FIXED: Now this will get the latest data
@@ -1078,32 +1081,32 @@ const MatchHeader = () => (
         }
       } else {
         const hasModifications = Object.keys(modifiedTickets).length > 0;
-          await additionalInfoCheck();
-          if (hasModifications) {
-            try {
-              setIsLoading(true);
-              const formData = constructMySalesFormData();
-              const response = await saveSalesUploadedTickets(
-                formData,
-                rowData?.id
-              );
-  
-              if (response?.status == 200) {
-                toast.success("Tickets updated successfully");
-                onClose();
-              } else {
-                toast.error("Failed to update tickets");
-              }
-            } catch (error) {
-              console.error("Error updating tickets:", error);
+        await additionalInfoCheck();
+        if (hasModifications) {
+          try {
+            setIsLoading(true);
+            const formData = constructMySalesFormData();
+            const response = await saveSalesUploadedTickets(
+              formData,
+              rowData?.id
+            );
+
+            if (response?.status == 200) {
+              toast.success("Tickets updated successfully");
+              onClose();
+            } else {
               toast.error("Failed to update tickets");
-            } finally {
-              setIsLoading(false);
             }
-          } else {
-            onClose();
+          } catch (error) {
+            console.error("Error updating tickets:", error);
+            toast.error("Failed to update tickets");
+          } finally {
+            setIsLoading(false);
           }
-          return;
+        } else {
+          onClose();
+        }
+        return;
       }
     }
   }, [mySalesPage, modifiedTickets, rowData?.id, onClose]);
@@ -1263,11 +1266,18 @@ const MatchHeader = () => (
                 : `Uploaded Files (${currentUploadedFiles.length})`}
             </h3>
             <div class="flex items-center gap-x-2">
-                <span class="text-xs text-[#323A70]">Show assigned</span>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" class="sr-only peer" checked={showAssigned} onChange={(e) => {setShowAssigned((prev)=> !prev)}}/>
-                  <div class="w-7 h-3 bg-gray-200 peer-checked:bg-[#64EAA540] rounded-full transition-all peer peer-checked:after:translate-x-full peer-checked:after:bg-[#64EAA5] after:content-[''] after:absolute after:-top-0.5 after:-left-0.5 after:bg-gray-400 after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md peer-checked:bg-100"></div>
-                </label>
+              <span class="text-xs text-[#323A70]">Show assigned</span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  class="sr-only peer"
+                  checked={showAssigned}
+                  onChange={(e) => {
+                    setShowAssigned((prev) => !prev);
+                  }}
+                />
+                <div class="w-7 h-3 bg-gray-200 peer-checked:bg-[#64EAA540] rounded-full transition-all peer peer-checked:after:translate-x-full peer-checked:after:bg-[#64EAA5] after:content-[''] after:absolute after:-top-0.5 after:-left-0.5 after:bg-gray-400 after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md peer-checked:bg-100"></div>
+              </label>
             </div>
           </div>
 
@@ -1330,7 +1340,8 @@ const MatchHeader = () => (
             )}
           </div>
           <div className="pt-2 flex flex-col gap-2">
-            {showAssigned && assignedFiles?.map((file) => (
+            {showAssigned &&
+              assignedFiles?.map((file) => (
                 <div
                   key={file.id}
                   className={`flex items-center justify-between p-2 border rounded-sm bg-white transition-all duration-200 border-green-600 hover:border-green-600 `}
@@ -1343,7 +1354,7 @@ const MatchHeader = () => (
                   <div className="flex items-center gap-1">
                     <button
                       className="p-1 text-red-500 cursor-pointer hover:text-red-700"
-                      onClick={() => handleDeleteUploaded(file.id,true)}
+                      onClick={() => handleDeleteUploaded(file.id, true)}
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -1606,7 +1617,6 @@ const MatchHeader = () => (
       </div>
     );
   };
-console.log(isConfirmDisabled,'isConfirmDisabledisConfirmDisabled')
   return (
     <div>
       <RightViewModal
@@ -1642,6 +1652,7 @@ console.log(isConfirmDisabled,'isConfirmDisabledisConfirmDisabled')
             TicketAssignmentSection={TicketAssignmentSection}
             existingUploadedTickets={existingUploadedTickets}
             additionalTemplateFile={additionalTemplateFile}
+            rowData={rowData}
           />
 
           <div className="flex justify-between items-center p-3 bg-gray-50 border-t border-gray-200 flex-shrink-0">
@@ -1653,10 +1664,10 @@ console.log(isConfirmDisabled,'isConfirmDisabledisConfirmDisabled')
                 Cancel
               </button>
               <Button
-                className={`px-4 py-2 ${
-                  isConfirmDisabled ? "bg-gray-300" : "bg-green-500"
-                } text-white rounded text-sm disabled:bg-gray-300 flex gap-2 items-center disabled:cursor-not-allowed`}
-                disabled={isConfirmDisabled}
+                className={`px-4 py-2 bg-green-500 
+             
+                 text-white rounded text-sm disabled:bg-gray-300 flex gap-2 items-center disabled:cursor-not-allowed`}
+                // disabled={isConfirmDisabled}
                 loading={isLoading}
                 onClick={handleConfirmCtaClick}
               >

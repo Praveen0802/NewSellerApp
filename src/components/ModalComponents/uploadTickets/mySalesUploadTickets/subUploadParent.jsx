@@ -28,6 +28,7 @@ const MySalesSubUploadParent = React.forwardRef(
       onTemplateSelect,
       existingUploadedTickets,
       additionalTemplateFile,
+      rowData
     },
     ref
   ) => {
@@ -316,8 +317,70 @@ const MySalesSubUploadParent = React.forwardRef(
     }, []);
 
     // Update internal state when initialAdditionalData changes
+    // useEffect(() => {
+    //   if (initialAdditionalData) {
+    //     const newData = {
+    //       templateId: initialAdditionalData.templateId || "",
+    //       dynamicContent: initialAdditionalData.dynamicContent || "",
+    //       templateContent: initialAdditionalData.templateContent || "",
+    //       templateFile: initialAdditionalData.templateFile || null,
+    //     };
+    //     setAdditionalInfo(newData);
+    //     additionalInfoRef.current = newData;
+
+    //     // If there's an initial template ID, find and set its content
+    //     if (initialAdditionalData.templateId) {
+    //       handleTemplateChange(initialAdditionalData.templateId);
+    //     }
+    //   }
+    // }, [initialAdditionalData, handleTemplateChange]);
+
+
     useEffect(() => {
-      if (initialAdditionalData) {
+      // Handle prefilling from fetched additional info
+      if (rowData?.fetchedAdditionalInfoDetails) {
+        const fetchedData = rowData.fetchedAdditionalInfoDetails;
+        
+        // Only prefill if there's actual data (not empty strings)
+        const hasData = fetchedData.templateName || 
+                       fetchedData.dynamicContent || 
+                       fetchedData.templateFile;
+        
+        if (hasData) {
+          const prefilledData = {
+            templateId: fetchedData.ticketType || "",
+            templateName: fetchedData.templateName || "",
+            dynamicContent: fetchedData.dynamicContent || "",
+            templateContent: "",
+            templateFile: fetchedData.templateFile || null,
+            sellTicketId: fetchedData.sellTicketId || "",
+            ticketType: fetchedData.ticketType || "",
+            // Store original values for comparison
+            originalTemplateId: fetchedData.ticketType || "",
+            originalDynamicContent: fetchedData.dynamicContent || "",
+            originalTemplateFile: fetchedData.templateFile || null,
+          };
+          
+          setAdditionalInfo(prefilledData);
+          additionalInfoRef.current = prefilledData;
+          
+          // If there's a template name, find its ID and set content
+          if (fetchedData.templateName && additionalTemplateData.length > 0) {
+            const matchingTemplate = additionalTemplateData.find(
+              template => template.template_name === fetchedData.templateName
+            );
+            if (matchingTemplate) {
+              setSelectedTemplateContent(matchingTemplate.template_content);
+              setAdditionalInfo(prev => ({
+                ...prev,
+                templateId: matchingTemplate.id,
+                templateContent: matchingTemplate.template_content
+              }));
+            }
+          }
+        }
+      } else if (initialAdditionalData) {
+        // Existing initialization logic
         const newData = {
           templateId: initialAdditionalData.templateId || "",
           dynamicContent: initialAdditionalData.dynamicContent || "",
@@ -326,13 +389,12 @@ const MySalesSubUploadParent = React.forwardRef(
         };
         setAdditionalInfo(newData);
         additionalInfoRef.current = newData;
-
-        // If there's an initial template ID, find and set its content
+    
         if (initialAdditionalData.templateId) {
           handleTemplateChange(initialAdditionalData.templateId);
         }
       }
-    }, [initialAdditionalData, handleTemplateChange]);
+    }, [initialAdditionalData,handleTemplateChange, additionalTemplateData, rowData?.fetchedAdditionalInfoDetails]);
 
     // Instructions Panel Component
     const InstructionsPanel = ({ title, instructions }) => (

@@ -530,6 +530,23 @@ export const updateBankAccount = async (
   }
 };
 
+export const updatePayoutBankAccount = async (
+  token,
+  data
+) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.UPDATE_PAYOUT_BANK_DETAILS}`,
+      method: method,
+      ...(token && { token: token }),
+      ...(data && { data: data }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in fetchBankAccountDetails", error);
+  }
+};
+
 export const payOutOverview = async (token, params) => {
   try {
     const response = await makeRequest({
@@ -1624,10 +1641,10 @@ export const fetchReportsInventoryLogs = async (token, params) => {
       ...(params && { params: params }),
     });
     return response?.data?.success
-      // ? response?.data?.data?.length > 0
-        ? response?.data?.data
-        // : inventoryLog
-      : [];
+      ? // ? response?.data?.data?.length > 0
+        response?.data?.data
+      : // : inventoryLog
+        [];
   } catch (error) {
     // return inventoryLog;
     console.log("ERROR in fetchSalesPageData", error);
@@ -2059,7 +2076,7 @@ export const purchaseTicketConfirm = async (token, data) => {
       ...(token && { token: token }),
       data: data,
     });
-    console.log(response?.data,"pppppppppppp")
+    console.log(response?.data, "pppppppppppp");
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
     console.log("ERROR in purchaseTicketConfirm", error);
@@ -2621,6 +2638,20 @@ export const getLMTPayPrefill = async (token, params) => {
   try {
     const response = await makeRequest({
       url: API_ROUTES.GET_LMT_PAY_PREFILL,
+      method: "GET",
+      ...(params && { params: params }),
+      ...(token && { token: token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getLMTPayPrefill", error);
+  }
+};
+
+export const payOutBankAccount = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.PAY_OUT_BANK_ACCOUNT,
       method: "GET",
       ...(params && { params: params }),
       ...(token && { token: token }),

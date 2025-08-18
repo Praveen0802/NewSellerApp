@@ -318,7 +318,7 @@ const SalesPage = (props) => {
     try {
       // Set loading state before API call
       setUploadPopupLoading(true);
-
+  
       // Show the popup with loading state
       setShowUploadPopup({
         show: true,
@@ -326,15 +326,15 @@ const SalesPage = (props) => {
         rowData: null,
         rowIndex,
       });
-
+  
       // Fetch ticket details from API
       const response = await getSalesTicketDetails("", {
         booking_id: rowData?.id,
       });
-
+  
       // Check different possible response structures
       let ticketDetails = response?.ticket_details || response;
-
+  
       // Check ticket type to determine flow
       const ticketType = parseInt(
         rowData?.ticket_type || rowData?.ticket_types || rowData?.ticket_type_id
@@ -342,7 +342,18 @@ const SalesPage = (props) => {
       const isETicketFlow = ticketType === 4;
       const isPaperTicketFlow = ticketType === 3;
       const isNormalFlow = !isETicketFlow && !isPaperTicketFlow;
-
+  
+      // ENHANCED: Extract additional file templates data
+      const additionalInfoDetails = {
+        id: response?.additional_file_templates?.id || "",
+        ticketId: response?.additional_file_templates?.ticket_id || "",
+        sellTicketId: response?.additional_file_templates?.sell_ticket_id || "",
+        templateName: response?.additional_file_templates?.template_name || "",
+        dynamicContent: response?.additional_file_templates?.dynamic_content || "",
+        ticketType: response?.additional_file_templates?.ticket_type || "",
+        templateFile: response?.additional_file_templates?.template_file || null,
+      };
+  
       if (isETicketFlow) {
         // Existing E-Ticket flow logic
         const qrLinksData =
@@ -356,37 +367,36 @@ const SalesPage = (props) => {
             originalAndroid: ticket.qr_link_android || "",
             originalIos: ticket.qr_link_ios || "",
           })) || [];
-
+  
         qrLinksData.sort((a, b) => a.serial - b.serial);
-
+  
         const matchDate = separateDateTime(rowData?.event_date)?.date;
         const matchTime = separateDateTime(rowData?.event_date)?.time;
-
+  
         setShowUploadPopup({
           show: true,
           loading: false,
           rowData: {
             ...rowData,
+            bookingId: rowData?.order_id,
             matchDate,
             matchTime,
             qrLinksData,
             originalTicketDetails: ticketDetails,
+            fetchedAdditionalInfoDetails: additionalInfoDetails, // Pass the data
           },
           rowIndex,
         });
       } else if (isPaperTicketFlow && response?.tracking_details) {
-        // NEW: Paper Ticket Flow Logic
-
-        // Prepare paper ticket data from first ticket detail only
+        // Paper Ticket Flow Logic
         const paperTicketData = {
-          courier_type: "company", // default value
+          courier_type: "company",
           courier_company: response?.tracking_details?.delivery_provider || "",
           tracking_details: response?.tracking_details?.tracking_number || "",
           tracking_link: response?.tracking_details?.tracking_link || "",
           pod_file: response?.tracking_details?.pod || null,
         };
-
-        // Prepare paper ticket file upload data if POD file exists
+  
         const paperTicketFileUpload = response?.tracking_details?.pod
           ? [
               {
@@ -400,27 +410,28 @@ const SalesPage = (props) => {
               },
             ]
           : [];
-
+  
         const matchDate = separateDateTime(rowData?.event_date)?.date;
         const matchTime = separateDateTime(rowData?.event_date)?.time;
-
-        // Update popup with paper ticket data
+  
         setShowUploadPopup({
           show: true,
           loading: false,
           rowData: {
             ...rowData,
             matchDate,
+            bookingId: rowData?.order_id,
             matchTime,
             paper_ticket_details: paperTicketData,
             paperTicketFileUpload: paperTicketFileUpload,
             originalTicketDetails: ticketDetails,
             originalPaperTicketDetails: response?.tracking_details,
+            fetchedAdditionalInfoDetails: additionalInfoDetails, // Pass the data
           },
           rowIndex,
         });
       } else {
-        // Existing normal flow logic
+        // Normal flow logic
         const myListingFileUpload =
           ticketDetails?.map((ticket, index) => ({
             fileName: ticket.ticket_file_name,
@@ -431,21 +442,23 @@ const SalesPage = (props) => {
             isExisting: true,
             existingId: ticket.id,
           })) || [];
-
+  
         myListingFileUpload.sort((a, b) => a.serial - b.serial);
-
+  
         const matchDate = separateDateTime(rowData?.event_date)?.date;
         const matchTime = separateDateTime(rowData?.event_date)?.time;
-
+  
         setShowUploadPopup({
           show: true,
           loading: false,
           rowData: {
             ...rowData,
             matchDate,
+            bookingId: rowData?.order_id,
             matchTime,
             myListingFileUpload,
             originalTicketDetails: ticketDetails,
+            fetchedAdditionalInfoDetails: additionalInfoDetails, // Pass the data
           },
           rowIndex,
         });
@@ -453,7 +466,7 @@ const SalesPage = (props) => {
     } catch (error) {
       console.error("Error in handleUploadAction:", error);
       toast.error("Failed to load ticket details");
-
+  
       setShowUploadPopup({
         show: false,
         loading: false,

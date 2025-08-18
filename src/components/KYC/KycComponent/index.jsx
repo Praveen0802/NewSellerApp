@@ -49,10 +49,10 @@ const KycComponent = ({
   });
   const [submitForApproval, setSubmitForApproval] = useState(false);
   useEffect(() => {
-      if (kycStatus?.kyc_status !== undefined) {
-        setSubmitForApproval(kycStatus.kyc_status);
-      }
-    }, [kycStatus]);
+    if (kycStatus?.kyc_status !== undefined) {
+      setSubmitForApproval(kycStatus.kyc_status);
+    }
+  }, [kycStatus]);
   // New state for contract generation modal
   const [contractModal, setContractModal] = useState({
     open: false,
@@ -709,15 +709,21 @@ const KycComponent = ({
       const userId = getCookie("user_token");
       console.log("User ID from cookie:", userId);
       const body = {
-        user_id: userId
-      }
-      const response = await submitKycForApproval(token,body);
+        user_id: userId,
+      };
+      const response = await submitKycForApproval(token, body);
       setSubmitForApproval(2); // Set to "Waiting for Approval"
       toast.success("KYC submitted for approval successfully!");
-      
     } catch (error) {
       console.error("KYC submission failed", error);
     }
+  };
+
+  const areAllDocumentsApproved = () => {
+    const docTypes = Object.keys(documentConfig);
+    return docTypes.every(
+      (docType) => getDocumentStatus(docType) === "Approved"
+    );
   };
 
   return (
@@ -727,33 +733,33 @@ const KycComponent = ({
           KYC Documents
         </h2>
         {submitForApproval === 0 && (
-        <div
-          type="button"
-          onClick={handleSubmitForApproval}
-          disabled={hasNotUploaded}
-          className={`px-4 py-2 text-sm sm:text-base rounded-lg transition ${
-            hasNotUploaded
-              ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-              : "bg-gray-900 text-white hover:bg-gray-700 cursor-pointer"
-          }`}
-        >
-          Submit for Approval
-        </div>
-      )}
+          <div
+            type="button"
+            onClick={handleSubmitForApproval}
+            disabled={hasNotUploaded}
+            className={`px-4 py-2 text-sm sm:text-base rounded-lg transition ${
+              hasNotUploaded
+                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                : "bg-gray-900 text-white hover:bg-gray-700 cursor-pointer"
+            }`}
+          >
+            Submit for Approval
+          </div>
+        )}
 
-      {submitForApproval === 1 && (
-        <span className="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
-          Approved
-        </span>
-      )}
+        {submitForApproval === 1 && areAllDocumentsApproved() && (
+          <span className="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
+            Approved
+          </span>
+        )}
 
-      {submitForApproval === 2 && (
-        <span className="px-3 py-1 text-sm font-medium text-yellow-700 bg-yellow-100 rounded-full">
-          Waiting for Approval
-        </span>
-      )}
+        {(submitForApproval === 2 ||
+          (submitForApproval === 1 && !areAllDocumentsApproved())) && (
+          <span className="px-3 py-1 text-sm font-medium text-yellow-700 bg-yellow-100 rounded-full">
+            Waiting for Approval
+          </span>
+        )}
       </div>
-
 
       <div className="p-6 sm:p-4 bg-white border-[1px] flex flex-col gap-3 sm:gap-4 border-[#eaeaf1] w-full h-full">
         <div className="flex justify-between items-center">

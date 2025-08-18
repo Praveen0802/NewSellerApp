@@ -31,7 +31,7 @@ const AddEditUser = ({
     country_code = "+91",
     permissions = "",
   } = userDetails;
-
+  console.log(userDetails, "userDetailsuserDetailsuserDetails");
   const editType = type === "edit";
   const [loader, setLoader] = useState(false);
   const [phoneCodeOptions, setPhoneCodeOptions] = useState([]);
@@ -55,7 +55,9 @@ const AddEditUser = ({
     last_name: last_name,
     email: email,
     phone_number: phone_number,
-    country_code: country_code,
+    country_code: country_code?.includes("+")
+      ? country_code
+      : `+${country_code}`,
     password: "",
     confirm_password: "",
     permissions: existingPermissions,
@@ -84,7 +86,7 @@ const AddEditUser = ({
         };
       });
       setPermissionValues(permissionKeys || []);
-      if(userDetails.id == user_token){
+      if (userDetails.id == user_token) {
         setShowPermissions(false);
       }
     } catch (error) {
@@ -341,7 +343,7 @@ const AddEditUser = ({
 
     let permissionsArray;
     if (!showPermissions && userFormFields[6]?.[0]?.options) {
-      permissionsArray = userFormFields[6][0].options.map(opt => opt.value);
+      permissionsArray = userFormFields[6][0].options.map((opt) => opt.value);
     } else {
       permissionsArray = Array.isArray(formFieldValues.permissions)
         ? formFieldValues.permissions
@@ -382,8 +384,6 @@ const AddEditUser = ({
         toast.success(`User ${editType ? "updated" : "added"} successfully`);
         onClose({ submit: true });
       }
-
-    
     } catch (error) {
       toast.error(`Error in ${editType ? "updating" : "adding"} user`);
     } finally {
@@ -429,11 +429,10 @@ const AddEditUser = ({
           <FormFields formFields={[userFormFields[5][0]]} />
         </div>
 
-          {/* Permissions */}
+        {/* Permissions */}
         <div className={`w-full ${showPermissions ? "block" : "hidden"}`}>
           <FormFields formFields={[userFormFields[6][0]]} />
         </div>
-        
       </div>
 
       <FooterButton

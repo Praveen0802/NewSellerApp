@@ -148,11 +148,11 @@ const UploadTickets = ({
             existingId: ticket.id,
           }));
         setTransferredFiles(existingFiles);
-        setAssignedFiles(existingFiles)
+        setAssignedFiles(existingFiles);
       } else {
         const initialUploadTickets = rowData?.upload_tickets || [];
         setTransferredFiles(initialUploadTickets);
-        setAssignedFiles(initialUploadTickets)
+        setAssignedFiles(initialUploadTickets);
       }
       setUploadedFiles([]);
     }
@@ -234,10 +234,10 @@ const UploadTickets = ({
   );
 
   const handleDeleteUploaded = useCallback(
-    (id,assigned) => {
+    (id, assigned) => {
       if (proofUploadView) {
         setProofUploadedFiles((prev) => prev.filter((file) => file.id !== id));
-      } else if(assigned){
+      } else if (assigned) {
         setAssignedFiles((prev) => prev.filter((file) => file.id !== id));
       } else {
         setUploadedFiles((prev) => prev.filter((file) => file.id !== id));
@@ -490,7 +490,9 @@ const UploadTickets = ({
 
       <div className="grid grid-cols-4 bg-[#F9F9FB] py-2 px-3 border-b border-gray-200">
         <div className="text-xs truncate">
-          {rowData?.rawTicketData?.s_no || rowData?.id || "N/A"}
+          {myListingPage
+            ? rowData?.rawTicketData?.s_no || rowData?.id || "N/A"
+            : "-"}
         </div>
         <div className="text-xs truncate">
           {proofUploadView ? "1 Document" : maxQuantity}
@@ -580,7 +582,7 @@ const UploadTickets = ({
   // Enhanced modal title and subtitle
   const getModalTitle = () => {
     if (proofUploadView) return "Upload Proof Document";
-    if (ETicketsFlow) return "Configure E-Tickets";
+    if (ETicketsFlow) return "Mobile Ticket";
     if (paperTicketFlow) return "Configure Paper Tickets";
     return "Upload Tickets";
   };
@@ -1079,11 +1081,18 @@ const UploadTickets = ({
                 : `Uploaded Files (${currentUploadedFiles.length})`}
             </h3>
             <div class="flex items-center gap-x-2">
-                <span class="text-xs text-[#323A70]">Show assigned</span>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" class="sr-only peer" checked={showAssigned} onChange={(e) => {setShowAssigned((prev)=> !prev)}}/>
-                  <div class="w-7 h-3 bg-gray-200 peer-checked:bg-[#64EAA540] rounded-full transition-all peer peer-checked:after:translate-x-full peer-checked:after:bg-[#64EAA5] after:content-[''] after:absolute after:-top-0.5 after:-left-0.5 after:bg-gray-400 after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md peer-checked:bg-100"></div>
-                </label>
+              <span class="text-xs text-[#323A70]">Show assigned</span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  class="sr-only peer"
+                  checked={showAssigned}
+                  onChange={(e) => {
+                    setShowAssigned((prev) => !prev);
+                  }}
+                />
+                <div class="w-7 h-3 bg-gray-200 peer-checked:bg-[#64EAA540] rounded-full transition-all peer peer-checked:after:translate-x-full peer-checked:after:bg-[#64EAA5] after:content-[''] after:absolute after:-top-0.5 after:-left-0.5 after:bg-gray-400 after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md peer-checked:bg-100"></div>
+              </label>
             </div>
           </div>
 
@@ -1146,7 +1155,8 @@ const UploadTickets = ({
             )}
           </div>
           <div className="pt-2 flex flex-col gap-2">
-            {showAssigned && assignedFiles.map((file) => (
+            {showAssigned &&
+              assignedFiles.map((file) => (
                 <div
                   key={file.id}
                   className={`flex items-center justify-between p-2 border rounded-sm bg-white transition-all duration-200 border-green-600 hover:border-green-600 `}
@@ -1159,7 +1169,7 @@ const UploadTickets = ({
                   <div className="flex items-center gap-1">
                     <button
                       className="p-1 text-red-500 cursor-pointer hover:text-red-700"
-                      onClick={() => handleDeleteUploaded(file.id,true)}
+                      onClick={() => handleDeleteUploaded(file.id, true)}
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>

@@ -18,6 +18,7 @@ import {
   getDepositDetails,
   getLMTPayPrefill,
   getTransactionDetails,
+  payOutBankAccount,
 } from "@/utils/apiHandler/request";
 import { useDispatch } from "react-redux";
 import { updateWalletPopupFlag } from "@/utils/redux/common/action";
@@ -113,10 +114,11 @@ const ReportsPage = (props) => {
   const handleWalletPlusClick = async (item) => {
     const { currency } = item ?? {};
     setPayOutPopup((prev) => ({ ...prev, flag: true, isLoading: true }));
-    await getLMTPayPrefill("", "", "GET", "", {
-      currency,
+    await payOutBankAccount("", {
+      currency: currency,
     })
       .then((response) => {
+        console.log(response, "response");
         setPayOutPopup((prev) => ({
           ...prev,
           data: { ...response?.bank_account?.[0], currency: currency },

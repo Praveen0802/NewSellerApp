@@ -21,9 +21,7 @@ const parsedCookie = parseCookie(headers?.cookie);
 const authToken = decodeURIComponent(parsedCookie?.auth_token);
 
 // Construct the URL with booking_id as query parameter
-const apiUrl = `${process.env.API_BASE_URL}${API_ROUTES?.INSTRUCTION_FILE_UPLOAD}${
-    booking_id ? `?booking_id=${booking_id}` : ""
-}`;
+const apiUrl = `${process.env.API_BASE_URL}${API_ROUTES?.INSTRUCTION_FILE_UPLOAD}`;
 
 try {
     // Stream the request body directly to the external API
