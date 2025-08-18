@@ -19,10 +19,12 @@ const ViewMapPopup = ({
       <div className="bg-white p-2 rounded-md">
         <div className="flex justify-between items-center p-2 border-b-[1px] border-[#DADBE5]">
           <p className="text-[18px] font-semibold">{stadiumName}</p>
+          <div className="cursor-pointer">
           <IconStore.close
-            className="w-5 h-5 cursor-pointer"
+            className="w-5 h-5"
             onClick={onClose}
           />
+          </div>
         </div>
         <div className="flex flex-col justify-center items-center">
           <Image
