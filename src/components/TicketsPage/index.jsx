@@ -1158,7 +1158,7 @@ const handleGlobalClone = useCallback(() => {
         iconHandling: true,
         type: "number",
         iconBefore: (rowValue) => (
-          <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
+          <div className="border-r-[1px] pr-1 border-[#E0E1EA] w-full h-full flex items-center justify-center">
             <p className="text-xs sm:text-[10px] lg:text-xs">
               {rowValue?.currency_symbol}
             </p>
@@ -1173,7 +1173,7 @@ const handleGlobalClone = useCallback(() => {
         type: "number",
         iconBefore: (rowValue) => {
           return (
-            <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
+            <div className="border-r-[1px] pr-1 border-[#E0E1EA] w-full h-full flex items-center justify-center">
               <p className="text-xs sm:text-[10px] lg:text-xs">
                 {rowValue?.currency_symbol}
               </p>

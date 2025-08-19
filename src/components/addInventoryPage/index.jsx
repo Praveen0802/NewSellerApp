@@ -425,7 +425,7 @@ const AddInventoryPage = (props) => {
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[140px] lg:max-w-[212px]",
       iconBefore: (
-        <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
+        <div className="border-r-[1px] pr-4 border-[#E0E1EA] w-full h-full flex items-center justify-center">
           <p className="text-xs sm:text-[10px] lg:text-xs">
             {matchDetails?.currency_icon?.[0] || "$"}
           </p>
@@ -449,7 +449,7 @@ const AddInventoryPage = (props) => {
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
       iconBefore: (
-        <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
+        <div className="border-r-[1px] pr-4 border-[#E0E1EA] w-full h-full flex items-center justify-center">
           <p className="text-xs sm:text-[10px] lg:text-xs">
             {matchDetails?.currency_icon?.[0] || "$"}
           </p>
