@@ -757,7 +757,7 @@ const BulkInventory = (props) => {
       value: filtersApplied?.face_value,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       iconBefore: (
-        <div className="border-r-[1px] pr-1 border-[#E0E1EA] w-full h-full flex items-center justify-center">
+        <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
           <p className="text-xs">
             {allMatchDetails[0]?.currency_icon?.[0] || "$"}
           </p>
@@ -780,7 +780,7 @@ const BulkInventory = (props) => {
       value: filtersApplied?.add_price_addlist,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       iconBefore: (
-        <div className="border-r-[1px] pr-1 border-[#E0E1EA] w-full h-full flex items-center justify-center">
+        <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
           <p className="text-xs">
             {allMatchDetails[0]?.currency_icon?.[0] || "$"}
           </p>

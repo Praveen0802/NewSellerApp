@@ -263,7 +263,7 @@ const FloatingLabelInput = ({
         {((value?.length <= 3 && iconBefore && checkLength) ||
           (iconBefore && !checkLength)) && (
           <div
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer hover:text-gray-600 transition-colors h-full"
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer hover:text-gray-600 transition-colors"
             onMouseEnter={() => iconBeforeTooltip && setShowTooltip(true)}
             onMouseLeave={() => setShowTooltip(false)}
           >
