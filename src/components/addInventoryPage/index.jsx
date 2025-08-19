@@ -276,31 +276,6 @@ const AddInventoryPage = (props) => {
         setFiltersApplied((prev) => ({ ...prev, split_type: value })),
     },
     {
-      type: "select",
-      name: "split_details",
-      label: "Seating Arrangement",
-      mandatory: true,
-      value: filtersApplied?.split_details,
-      options: [
-        ...(split_details_left?.map((note) => ({
-          value: note.id.toString(),
-          label: note.name,
-        })) || []),
-        ...(split_details_right?.map((note) => ({
-          value: note.id.toString(),
-          label: note.name,
-        })) || []),
-      ],
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[180px] lg:max-w-[212px]",
-      className:
-        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, split_details: value })),
-    },
-    {
       type: "number",
       name: "max_display_qty",
       label: "Max Display Quantity",
@@ -323,24 +298,6 @@ const AddInventoryPage = (props) => {
           ...prev,
           max_display_qty: e?.target?.value,
         })),
-    },
-    {
-      type: "select",
-      name: "home_town",
-      label: "Fan Area",
-      value: filtersApplied?.home_town,
-      options: Object.entries(home_town || {}).map(([key, value]) => ({
-        value: key,
-        label: value,
-      })),
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[140px] lg:max-w-[212px]",
-      className:
-        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, home_town: value })),
     },
     {
       type: "select",
@@ -383,7 +340,6 @@ const AddInventoryPage = (props) => {
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, ticket_block: value })),
     },
-
     {
       type: "text",
       name: "row",
@@ -425,7 +381,7 @@ const AddInventoryPage = (props) => {
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[140px] lg:max-w-[212px]",
       iconBefore: (
-        <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
+        <div className="border-r-[1px] pr-4 border-[#E0E1EA]">
           <p className="text-xs sm:text-[10px] lg:text-xs">
             {matchDetails?.currency_icon?.[0] || "$"}
           </p>
@@ -449,7 +405,7 @@ const AddInventoryPage = (props) => {
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
       iconBefore: (
-        <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
+        <div className="border-r-[1px] pr-4 border-[#E0E1EA]">
           <p className="text-xs sm:text-[10px] lg:text-xs">
             {matchDetails?.currency_icon?.[0] || "$"}
           </p>
@@ -463,6 +419,31 @@ const AddInventoryPage = (props) => {
           ...prev,
           add_price_addlist: e?.target?.value,
         })),
+    },
+    {
+      type: "select",
+      name: "split_details",
+      label: "Seating Arrangement",
+      mandatory: true,
+      value: filtersApplied?.split_details,
+      options: [
+        ...(split_details_left?.map((note) => ({
+          value: note.id.toString(),
+          label: note.name,
+        })) || []),
+        ...(split_details_right?.map((note) => ({
+          value: note.id.toString(),
+          label: note.name,
+        })) || []),
+      ],
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[180px] lg:max-w-[212px]",
+      className:
+        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      onChange: (value) =>
+        setFiltersApplied((prev) => ({ ...prev, split_details: value })),
     },
     {
       type: "select",
@@ -514,7 +495,24 @@ const AddInventoryPage = (props) => {
       onChange: (value) =>
         setFiltersApplied((prev) => ({ ...prev, restrictions: value })),
     },
-
+    {
+      type: "select",
+      name: "home_town",
+      label: "Fan Area",
+      value: filtersApplied?.home_town,
+      options: Object.entries(home_town || {}).map(([key, value]) => ({
+        value: key,
+        label: value,
+      })),
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[140px] lg:max-w-[212px]",
+      className:
+        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName:
+        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      onChange: (value) =>
+        setFiltersApplied((prev) => ({ ...prev, home_town: value })),
+    },
     {
       type: "date",
       name: "ship_date",
