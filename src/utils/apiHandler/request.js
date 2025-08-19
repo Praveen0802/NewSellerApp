@@ -537,7 +537,7 @@ export const updatePayoutBankAccount = async (
   try {
     const response = await makeRequest({
       url: `${API_ROUTES.UPDATE_PAYOUT_BANK_DETAILS}`,
-      method: method,
+      method: "POST",
       ...(token && { token: token }),
       ...(data && { data: data }),
     });
