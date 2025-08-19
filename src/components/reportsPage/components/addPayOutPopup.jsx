@@ -228,6 +228,7 @@ const AddPayOutPopup = ({
     setSubmitLoader(true);
     try {
       const bankId = item?.bank_id ? item?.bank_id : "";
+      console.log(bankId,'bankIdbankId')
       const response = await updatePayoutBankAccount("",  {
         ...formData,
         ...(bankId && { bankId: bankId }),

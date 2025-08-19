@@ -1120,7 +1120,7 @@ const TicketsPage = (props) => {
 
     // Create headers based on the structure you want
     const headers = [
-      { key: "s_no", label: "Listing No", editable: false },
+      { key: "s_no", label: "Listing ID", editable: false },
       {
         key: "ticket_type_id",
         label: "Ticket Type",
@@ -1176,6 +1176,7 @@ const TicketsPage = (props) => {
         label: "Face Value",
         editable: true,
         iconHandling: true,
+        currencyFormat: true,
         type: "number",
         iconBefore: (rowValue) => (
           <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
@@ -1188,6 +1189,7 @@ const TicketsPage = (props) => {
       {
         key: "price",
         label: "Price",
+        currencyFormat: true,
         editable: true,
         iconHandling: true,
         type: "number",
@@ -1227,16 +1229,16 @@ const TicketsPage = (props) => {
         type: "select",
         options: [],
       },
-      {
-        key: "status",
-        label: "Status",
-        editable: false,
-      },
-      {
-        key: "sell_date",
-        label: "Listed Date",
-        editable: false,
-      },
+      // {
+      //   key: "status",
+      //   label: "Status",
+      //   editable: false,
+      // },
+      // {
+      //   key: "sell_date",
+      //   label: "Listed Date",
+      //   editable: false,
+      // },
     ];
 
     // Populate options for select fields from filters

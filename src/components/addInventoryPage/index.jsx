@@ -426,7 +426,7 @@ const AddInventoryPage = (props) => {
       type: "number",
       name: "face_value",
       label: "Face Value",
-      increasedWidth: "!w-[110px]",
+      increasedWidth: "!w-[120px]",
       currencyFormat: true,
       value: filtersApplied?.face_value,
       parentClassName:
@@ -451,7 +451,8 @@ const AddInventoryPage = (props) => {
       type: "number",
       name: "add_price_addlist",
       label: "Processed Price",
-      increasedWidth: "!w-[110px]",
+      increasedWidth: "!w-[120px]",
+      currencyFormat: true,
       mandatory: true,
       value: filtersApplied?.add_price_addlist,
       parentClassName:
@@ -563,8 +564,31 @@ const AddInventoryPage = (props) => {
     },
   ];
 
+  const columnOrder = [
+    "ticket_types",
+    "add_qty_addlist",
+    "split_type",
+    "max_display_qty",
+    "ticket_category",
+    "ticket_block",
+    "row",
+    "first_seat",
+    "face_value",
+    "add_price_addlist",
+    "split_details",
+    "notes",
+    "restrictions",
+    "home_town",
+    "ship_date",
+    "ticket_in_hand",
+  ];
+
+  const orderedFilters = columnOrder
+    .map((name) => filters.find((f) => f.name === name))
+    .filter(Boolean);
+  
   // KEEP THE ORIGINAL allHeaders generation (EXACT SAME)
-  const allHeaders = filters.map((filter) => {
+  const allHeaders = orderedFilters.map((filter) => {
     const baseHeader = {
       increasedWidth: filter.increasedWidth || "",
       key: filter.name,
@@ -575,6 +599,7 @@ const AddInventoryPage = (props) => {
       showIcon: filter?.showIcon,
       hideFromTable: filter?.hideFromTable,
       iconBefore: filter.iconBefore || null,
+      currencyFormat: filter.currencyFormat || false,
     };
 
     if (filter.multiselect) {

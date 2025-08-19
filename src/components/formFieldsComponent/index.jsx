@@ -11,6 +11,7 @@ const FormFields = ({ formFields }) => {
   return (
     <>
       {formFields?.map((field, index) => {
+        console.log("field", field?.label,field?.currencyFormat);
         const {
           type = "",
           label,

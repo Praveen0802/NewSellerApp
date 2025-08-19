@@ -508,12 +508,34 @@ const SimpleEditableCell = ({
   iconBefore = null,
   rowValue = {},
   alwaysShowAsEditable = false,
+  currencyFormat = false, // NEW: Add currencyFormat prop
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
+  const [displayValue, setDisplayValue] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef(null);
   const [shouldFocusInput, setShouldFocusInput] = useState(false);
+
+  // Currency formatting functions
+  const formatCurrency = (num) => {
+    if (!num || num === "") return "";
+    // Remove any existing commas and convert to number
+    const cleanNum = typeof num === 'string' ? num.replace(/,/g, '') : num;
+    const number = parseFloat(cleanNum);
+    if (isNaN(number)) return "";
+    // Format with commas
+    return number.toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
+  };
+
+  // Remove currency formatting to get raw number
+  const unformatCurrency = (formattedValue) => {
+    if (!formattedValue) return "";
+    return formattedValue.replace(/,/g, '');
+  };
 
   // Date formatting helper functions
   const formatDateForDisplay = (dateString) => {
@@ -604,9 +626,16 @@ const SimpleEditableCell = ({
     return dateString;
   };
 
+  // Update display value when value changes
   useEffect(() => {
-    setEditValue(value);
-  }, [value, type]);
+    if (currencyFormat && type === "number") {
+      setDisplayValue(formatCurrency(value));
+      setEditValue(value || "");
+    } else {
+      setDisplayValue(value || "");
+      setEditValue(value);
+    }
+  }, [value, currencyFormat, type]);
 
   // For multiselect type, use the MultiSelectEditableCell
   if (type === "multiselect") {
@@ -659,7 +688,6 @@ const SimpleEditableCell = ({
 
     // Date fields are ALWAYS rendered as editable (FloatingDateRange) unless disabled
     if (!disabled) {
-
       return (
         <div className="w-full">
           <FloatingDateRange
@@ -696,31 +724,119 @@ const SimpleEditableCell = ({
 
       setIsEditing(true);
       setShouldFocusInput(true);
+
+      // For currency format, switch to raw value for editing
+      if (currencyFormat && type === "number") {
+        const rawValue = unformatCurrency(displayValue);
+        setEditValue(rawValue);
+      }
     },
-    [disabled]
+    [disabled, currencyFormat, type, displayValue]
   );
 
   const handleSave = () => {
-    if (editValue !== value) {
-      onSave(editValue);
+    // For currency format, save the raw numeric value
+    const valueToSave = currencyFormat && type === "number" 
+      ? unformatCurrency(editValue) 
+      : editValue;
+
+    if (valueToSave !== value) {
+      onSave(valueToSave);
     }
     setIsEditing(false);
+
+    // Update display value for currency format
+    if (currencyFormat && type === "number") {
+      setDisplayValue(formatCurrency(valueToSave));
+    }
   };
 
   const handleCancel = () => {
     setEditValue(value);
+    if (currencyFormat && type === "number") {
+      setDisplayValue(formatCurrency(value));
+    }
     setIsEditing(false);
   };
 
   const handleChange = (newValue) => {
-    setEditValue(newValue);
+    // For currency format, handle validation
+    if (currencyFormat && type === "number") {
+      // Remove commas and validate as number
+      let cleanValue = newValue.replace(/,/g, "");
+      cleanValue = cleanValue.replace(/[^0-9.-]/g, "");
 
-    if (saveOnChange && newValue !== value) {
-      onSave(newValue);
+      const decimalCount = (cleanValue.match(/\./g) || []).length;
+      if (decimalCount > 1) {
+        const firstDecimalIndex = cleanValue.indexOf(".");
+        cleanValue =
+          cleanValue.substring(0, firstDecimalIndex + 1) +
+          cleanValue.substring(firstDecimalIndex + 1).replace(/\./g, "");
+      }
+
+      if (cleanValue.includes("-")) {
+        const negativeIndex = cleanValue.indexOf("-");
+        if (negativeIndex !== 0) {
+          cleanValue = cleanValue.replace(/-/g, "");
+        } else {
+          cleanValue = "-" + cleanValue.substring(1).replace(/-/g, "");
+        }
+      }
+
+      setEditValue(cleanValue);
+
+      if (saveOnChange && cleanValue !== unformatCurrency(value)) {
+        onSave(cleanValue);
+      }
+    } else {
+      setEditValue(newValue);
+
+      if (saveOnChange && newValue !== value) {
+        onSave(newValue);
+      }
     }
   };
 
   const handleKeyPress = (e) => {
+    // For currency format number inputs, prevent non-numeric characters
+    if (currencyFormat && type === "number") {
+      const allowedKeys = [
+        "Backspace",
+        "Delete",
+        "Tab",
+        "Escape",
+        "Enter",
+        "Home",
+        "End",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown",
+        "Clear",
+        "Copy",
+        "Paste",
+      ];
+
+      const isNumberKey = /^[0-9]$/.test(e.key);
+      const isDecimalPoint = e.key === "." && !e.target.value?.includes(".");
+      const isNegativeSign =
+        e.key === "-" &&
+        e.target.selectionStart === 0 &&
+        !e.target.value.includes("-");
+      const isModifierKey = e.ctrlKey || e.metaKey || e.altKey;
+
+      if (
+        !allowedKeys.includes(e.key) &&
+        !isNumberKey &&
+        !isDecimalPoint &&
+        !isNegativeSign &&
+        !isModifierKey
+      ) {
+        e.preventDefault();
+        return;
+      }
+    }
+
     if (e.key === "Enter") {
       handleSave();
     } else if (e.key === "Escape") {
@@ -733,6 +849,19 @@ const SimpleEditableCell = ({
       handleSave();
     } else {
       setIsEditing(false);
+      // Format currency on blur
+      if (currencyFormat && type === "number") {
+        setDisplayValue(formatCurrency(editValue));
+      }
+    }
+  };
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    // For currency format, show raw value when focused
+    if (currencyFormat && type === "number" && !isEditing) {
+      const rawValue = unformatCurrency(displayValue);
+      setEditValue(rawValue);
     }
   };
 
@@ -750,11 +879,20 @@ const SimpleEditableCell = ({
     if (type === "checkbox") {
       return value ? "Yes" : "No";
     }
+    
+    // For currency format, use displayValue
+    if (currencyFormat && type === "number") {
+      return displayValue || placeholder;
+    }
+    
     return value || placeholder;
   };
 
   const hasValue = () => {
     if (type === "checkbox") return true;
+    if (currencyFormat && type === "number") {
+      return !!(displayValue && displayValue.toString().trim());
+    }
     return !!(value && value.toString().trim());
   };
 
@@ -786,7 +924,7 @@ const SimpleEditableCell = ({
               onChange={(e) => handleChange(e.target.checked)}
               onKeyDown={handleKeyPress}
               onBlur={handleBlur}
-              onFocus={() => setIsFocused(true)}
+              onFocus={handleFocus}
               className={`w-4 h-4 text-gray-600 bg-gray-100 rounded transition-colors ${
                 isFocused
                   ? "border-green-500 ring-2 ring-green-500"
@@ -797,13 +935,13 @@ const SimpleEditableCell = ({
         ) : (
           <input
             ref={inputRef}
-            type={type}
+            type={currencyFormat && type === "number" ? "text" : type}
             value={editValue || ""}
             placeholder={placeholder}
             onChange={(e) => handleChange(e.target.value)}
             onKeyDown={handleKeyPress}
             onBlur={handleBlur}
-            onFocus={() => setIsFocused(true)}
+            onFocus={handleFocus}
             className={`border rounded ${getInputPadding()} py-1 text-xs focus:outline-none w-full bg-white text-[#323A70] transition-colors placeholder:text-gray-400 ${
               isFocused
                 ? "border-green-500 ring-2 ring-green-500"
@@ -832,8 +970,8 @@ const SimpleEditableCell = ({
             </div>
           ) : (
             <input
-              type={type}
-              value={editValue || ""}
+              type={currencyFormat && type === "number" ? "text" : type}
+              value={currencyFormat && type === "number" ? displayValue : (editValue || "")}
               placeholder={placeholder}
               className={`border border-[#DADBE5] rounded ${getInputPadding()} py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors placeholder:text-gray-400`}
               readOnly

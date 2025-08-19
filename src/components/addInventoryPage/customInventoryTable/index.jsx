@@ -496,6 +496,8 @@ const CommonInventoryTable = ({
   }, [inventoryData]);
 
   // Render editable cell function
+  // Update the renderEditableCell function in CommonInventoryTable.js
+
   const renderEditableCell = (
     row,
     header,
@@ -576,6 +578,7 @@ const CommonInventoryTable = ({
         disabled={!isRowEditable || isDisabled}
         placeholder={getPlaceholder()}
         iconBefore={header.iconBefore || null}
+        currencyFormat={header.currencyFormat || false} // ADD THIS LINE
         alwaysShowAsEditable={true}
       />
     );

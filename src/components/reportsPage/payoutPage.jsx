@@ -19,6 +19,7 @@ import {
   getPayoutHistoryReport,
   getPayoutOrderDetails,
   getPayoutOrderReport,
+  payOutBankAccount,
   payOutHistory,
   payOutOrderHistory, // You'll need to create this API function
 } from "@/utils/apiHandler/request";
@@ -98,8 +99,8 @@ const PayoutPage = (props) => {
   const handleRequestPayout = async (item) => {
     const currency = item?.keys?.currency;
     setPayOutPopup((prev) => ({ ...prev, flag: true, isLoading: true }));
-    await getLMTPayPrefill("", "", "GET", "", {
-      currency,
+    await payOutBankAccount("", {
+      currency: currency,
     })
       .then((response) => {
         setPayOutPopup((prev) => ({

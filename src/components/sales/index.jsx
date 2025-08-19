@@ -671,21 +671,108 @@ const SalesPage = (props) => {
       className: " cursor-pointer",
     },
   ]);
+  
+  const getCountByStatus = (status) => {
+    return salesCount?.find((item) => item.status === status)?.orders || 0;
+  };
 
-  const profileNameMapping ={
-    'pending': 'Pending',
-    'confirmed': 'Awaiting Delivery',
-    'cancelled': 'Cancelled',
-    'completed': 'Completed',
-    'replaced': 'Replaced',
-    'delivered': 'Delivered',
-  }
+  // Helper function to get amount by status
+  const getAmountByStatus = (status) => {
+    return (
+      salesCount?.find((item) => item.status === status)?.amount || "£0.00"
+    );
+  };
+
+  const tabsConfig = [
+    {
+      name: "Pending",
+      key: "pending",
+      count: getCountByStatus("pending"),
+      route: "/sales/pending",
+      amount: getAmountByStatus("pending"),
+      options: response?.currencyValues?.map((list) => {
+        return {
+          label: list?.code,
+          value: list?.code,
+        };
+      }),
+    },
+    {
+      name: "Awaiting Delivery",
+      key: "confirmed",
+      count: getCountByStatus("confirmed"),
+      route: "/sales/confirmed",
+      amount: getAmountByStatus("confirmed"),
+      options: response?.currencyValues?.map((list) => {
+        return {
+          label: list?.code,
+          value: list?.code,
+        };
+      }),
+    },
+    {
+      name: "Delivered",
+      key: "delivered",
+      count: getCountByStatus("delivered"),
+      route: "/sales/delivered",
+      amount: getAmountByStatus("delivered"),
+      currencyDropdown: true,
+      options: response?.currencyValues?.map((list) => {
+        return {
+          label: list?.code,
+          value: list?.code,
+        };
+      }),
+    },
+    {
+      name: "Completed",
+      key: "completed",
+      count: getCountByStatus("completed"),
+      route: "/sales/completed",
+      amount: getAmountByStatus("completed"),
+      options: response?.currencyValues?.map((list) => {
+        return {
+          label: list?.code,
+          value: list?.code,
+        };
+      }),
+    },
+    {
+      name: "Cancelled",
+      key: "cancelled",
+      count: getCountByStatus("cancelled"),
+      route: "/sales/cancelled",
+      amount: getAmountByStatus("cancelled"),
+      options: response?.currencyValues?.map((list) => {
+        return {
+          label: list?.code,
+          value: list?.code,
+        };
+      }),
+    },
+    {
+      name: "Replaced",
+      key: "replaced",
+      count: getCountByStatus("replaced"),
+      route: "/sales/replaced",
+      amount: getAmountByStatus("replaced"),
+      options: response?.currencyValues?.map((list) => {
+        return {
+          label: list?.code,
+          value: list?.code,
+        };
+      }),
+    },
+  ];
+
+  const activeTabConfig = tabsConfig.find(tab => tab.key === activeTab);
+
 
   // Updated itemConfig with disabled property
   const itemConfig = {
     [profile]: [
       {
-        name: `${profileNameMapping[profile]} Revenue`,
+        name: (activeTabConfig?.name || activeTab) +" Revenue",
         value: overViewData?.amount_with_currency,
       },
       {
@@ -1041,98 +1128,6 @@ const SalesPage = (props) => {
     setCurrency(currencyCode);
   };
 
-  const getCountByStatus = (status) => {
-    return salesCount?.find((item) => item.status === status)?.orders || 0;
-  };
-
-  // Helper function to get amount by status
-  const getAmountByStatus = (status) => {
-    return (
-      salesCount?.find((item) => item.status === status)?.amount || "£0.00"
-    );
-  };
-
-  const tabsConfig = [
-    {
-      name: "Pending",
-      key: "pending",
-      count: getCountByStatus("pending"),
-      route: "/sales/pending",
-      amount: getAmountByStatus("pending"),
-      options: response?.currencyValues?.map((list) => {
-        return {
-          label: list?.code,
-          value: list?.code,
-        };
-      }),
-    },
-    {
-      name: "Awaiting Delivery",
-      key: "confirmed",
-      count: getCountByStatus("confirmed"),
-      route: "/sales/confirmed",
-      amount: getAmountByStatus("confirmed"),
-      options: response?.currencyValues?.map((list) => {
-        return {
-          label: list?.code,
-          value: list?.code,
-        };
-      }),
-    },
-    {
-      name: "Delivered",
-      key: "delivered",
-      count: getCountByStatus("delivered"),
-      route: "/sales/delivered",
-      amount: getAmountByStatus("delivered"),
-      currencyDropdown: true,
-      options: response?.currencyValues?.map((list) => {
-        return {
-          label: list?.code,
-          value: list?.code,
-        };
-      }),
-    },
-    {
-      name: "Completed",
-      key: "completed",
-      count: getCountByStatus("completed"),
-      route: "/sales/completed",
-      amount: getAmountByStatus("completed"),
-      options: response?.currencyValues?.map((list) => {
-        return {
-          label: list?.code,
-          value: list?.code,
-        };
-      }),
-    },
-    {
-      name: "Cancelled",
-      key: "cancelled",
-      count: getCountByStatus("cancelled"),
-      route: "/sales/cancelled",
-      amount: getAmountByStatus("cancelled"),
-      options: response?.currencyValues?.map((list) => {
-        return {
-          label: list?.code,
-          value: list?.code,
-        };
-      }),
-    },
-    {
-      name: "Replaced",
-      key: "replaced",
-      count: getCountByStatus("replaced"),
-      route: "/sales/replaced",
-      amount: getAmountByStatus("replaced"),
-      options: response?.currencyValues?.map((list) => {
-        return {
-          label: list?.code,
-          value: list?.code,
-        };
-      }),
-    },
-  ];
 
   const { downloadCSV } = useCSVDownload();
 

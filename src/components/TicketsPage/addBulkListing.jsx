@@ -634,6 +634,7 @@ const BulkInventory = (props) => {
     {
       type: "number",
       name: "add_qty_addlist",
+      increasedWidth: "!w-[100px]",
       label: "Quantity",
       mandatory: true,
       value: filtersApplied?.add_qty_addlist,
@@ -658,6 +659,7 @@ const BulkInventory = (props) => {
       type: "select",
       name: "split_type",
       label: "Split Type",
+      increasedWidth: "!w-[120px]",
       mandatory: true,
       value: filtersApplied?.split_type,
       options: [
@@ -702,6 +704,7 @@ const BulkInventory = (props) => {
     {
       type: "number",
       name: "max_display_qty",
+      increasedWidth: "min-w-[100px]",
       label: "Max Display Quantity",
       value: filtersApplied?.max_display_qty,
       options: [
@@ -726,6 +729,7 @@ const BulkInventory = (props) => {
       type: "select",
       name: "home_town",
       label: "Fan Area",
+      increasedWidth: "!w-[100px]",
       value: filtersApplied?.home_town,
       options: Object.entries(home_town || {}).map(([key, value]) => ({
         value: key,
@@ -743,7 +747,8 @@ const BulkInventory = (props) => {
       name: "ticket_category",
       label: "Seating Category",
       mandatory: true,
-      increasedWidth: "!w-[180px] !min-w-[180px]",
+      increasedWidth:
+      "!w-[180px] !min-w-[180px] sm:!w-[160px] sm:!min-w-[160px] lg:!w-[180px] lg:!min-w-[180px]",
       value: filtersApplied?.ticket_category,
       options: Object.entries(block_data || {}).map(([key, value]) => ({
         value: key,
@@ -763,6 +768,7 @@ const BulkInventory = (props) => {
     {
       type: "select",
       name: "ticket_block",
+      increasedWidth: "!w-[110px]",
       label: "Section/Block",
       value: filtersApplied?.ticket_block,
       options: blockData, // Will be dynamically populated per match
@@ -778,6 +784,7 @@ const BulkInventory = (props) => {
       type: "text",
       name: "row",
       label: "Row",
+      increasedWidth: "!w-[100px]",
       value: filtersApplied?.row,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[10px] w-full mobile:text-xs",
@@ -793,6 +800,7 @@ const BulkInventory = (props) => {
       type: "text",
       name: "first_seat",
       label: "First Seat",
+      increasedWidth: "!w-[110px]",
       value: filtersApplied?.first_seat,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       className: "!py-[10px] w-full mobile:text-xs",
@@ -807,7 +815,9 @@ const BulkInventory = (props) => {
     {
       type: "number",
       name: "face_value",
+      currencyFormat: true,
       label: "Face Value",
+      increasedWidth: "!w-[120px]",
       value: filtersApplied?.face_value,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       iconBefore: (
@@ -831,6 +841,8 @@ const BulkInventory = (props) => {
       name: "add_price_addlist",
       label: "Processed Price",
       mandatory: true,
+      increasedWidth: "!w-[120px]",
+      currencyFormat: true,
       value: filtersApplied?.add_price_addlist,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
       iconBefore: (
@@ -943,6 +955,7 @@ const BulkInventory = (props) => {
       showIcon: filter?.showIcon,
       hideFromTable: filter?.hideFromTable,
       iconBefore: filter?.iconBefore,
+      currencyFormat: filter.currencyFormat || false,
     };
 
     if (filter.multiselect) {

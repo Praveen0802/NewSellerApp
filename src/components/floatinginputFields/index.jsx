@@ -13,7 +13,7 @@ const FloatingLabelInput = ({
   keyValue,
   showDropdown = false,
   name,
-  currencyFormat=false,
+  currencyFormat = false,
   required = false,
   autoComplete = "on",
   mandatory = false,
@@ -41,11 +41,41 @@ const FloatingLabelInput = ({
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [displayValue, setDisplayValue] = useState("");
   
   // Refs for handling click outside
   const containerRef = useRef(null);
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Currency formatting function
+  const formatCurrency = (num) => {
+    if (!num || num === "") return "";
+    // Remove any existing commas and convert to number
+    const cleanNum = typeof num === 'string' ? num.replace(/,/g, '') : num;
+    const number = parseFloat(cleanNum);
+    if (isNaN(number)) return "";
+    // Format with commas
+    return number.toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
+  };
+
+  // Remove currency formatting to get raw number
+  const unformatCurrency = (formattedValue) => {
+    if (!formattedValue) return "";
+    return formattedValue.replace(/,/g, '');
+  };
+
+  // Update display value when value prop changes
+  useEffect(() => {
+    if (currencyFormat && type === "number") {
+      setDisplayValue(formatCurrency(value));
+    } else {
+      setDisplayValue(value || "");
+    }
+  }, [value, currencyFormat, type]);
 
   // Update focus state when value changes
   useEffect(() => {
@@ -54,6 +84,20 @@ const FloatingLabelInput = ({
 
   const handleFocus = (e) => {
     setIsFocused(true);
+    
+    // If currency format, switch to raw value for editing
+    if (currencyFormat && type === "number") {
+      const rawValue = unformatCurrency(displayValue);
+      setDisplayValue(rawValue);
+      // Update input value directly
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.value = rawValue;
+          inputRef.current.setSelectionRange(rawValue.length, rawValue.length);
+        }
+      }, 0);
+    }
+    
     if (onFocus) {
       onFocus(e);
     }
@@ -77,6 +121,13 @@ const FloatingLabelInput = ({
   }, [defaultFocus]);
 
   const handleBlur = (e) => {
+    // If currency format, format the value on blur
+    if (currencyFormat && type === "number") {
+      const rawValue = e.target.value;
+      const formattedValue = formatCurrency(rawValue);
+      setDisplayValue(formattedValue);
+    }
+
     // Don't close dropdown immediately - let the timeout handle it
     if (e.target.value === "") {
       setIsFocused(false);
@@ -118,7 +169,7 @@ const FloatingLabelInput = ({
       ];
 
       const isNumberKey = /^[0-9]$/.test(e.key);
-      const isDecimalPoint = e.key === "." && !e.target.value?.includes(".");
+      const isDecimalPoint = e.key === "." && !e.target.value?.replace(/,/g, '').includes(".");
       const isNegativeSign =
         e.key === "-" &&
         e.target.selectionStart === 0 &&
@@ -147,6 +198,12 @@ const FloatingLabelInput = ({
     let inputValue = e.target.value;
 
     if (type === "number") {
+      // For currency format, we need to handle commas and allow text input
+      if (currencyFormat) {
+        // Remove commas and validate as number
+        inputValue = inputValue.replace(/,/g, "");
+      }
+      
       inputValue = inputValue.replace(/[^0-9.-]/g, "");
 
       const decimalCount = (inputValue.match(/\./g) || []).length;
@@ -166,10 +223,25 @@ const FloatingLabelInput = ({
         }
       }
 
-      e.target.value = inputValue;
+      // Create a synthetic event with the clean value
+      const syntheticEvent = {
+        ...e,
+        target: {
+          ...e.target,
+          value: inputValue
+        }
+      };
+      
+      // Update display value for currency format
+      if (currencyFormat) {
+        setDisplayValue(inputValue);
+      }
+      
+      // Call onChange with clean numeric value
+      onChange(syntheticEvent, keyValue);
+    } else {
+      onChange(e, keyValue);
     }
-
-    onChange(e, keyValue);
   };
 
   const handleClick = (e) => {
@@ -225,7 +297,7 @@ const FloatingLabelInput = ({
       ? "border-[#DADBE5] focus:border-indigo-300 focus:ring-1 focus:ring-indigo-300"
       : "border-[#DADBE5]"
   } ${getRightPadding()} ${
-    type === "number"
+    (type === "number" && !currencyFormat)
       ? "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       : ""
   }`;
@@ -281,9 +353,9 @@ const FloatingLabelInput = ({
         <input
           ref={inputRef}
           id={id}
-          type={actualType}
+          type={currencyFormat && type === "number" ? "text" : actualType}
           name={name}
-          value={value || ""}
+          value={displayValue}
           onChange={handleInputChange}
           onFocus={handleFocus}
           onBlur={handleBlur}
