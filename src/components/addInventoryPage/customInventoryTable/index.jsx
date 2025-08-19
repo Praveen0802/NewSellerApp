@@ -1,4 +1,4 @@
-// Complete updated CommonInventoryTable.js with enhanced sticky columns
+// Fixed CommonInventoryTable.js with working increasedWidth
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
@@ -130,6 +130,38 @@ const CommonInventoryTable = ({
   ]);
 
   const dynamicStickyWidth = calculateStickyWidth();
+
+  // Function to get column width styles
+  const getColumnWidth = (header) => {
+    if (header.increasedWidth) {
+      // Extract width value from the increasedWidth string
+      const widthMatch = header.increasedWidth.match(
+        /!?w-\[(\d+px)\]|!?w-(\d+)/
+      );
+      if (widthMatch) {
+        const width = widthMatch[1] || `${widthMatch[2] * 4}px`; // Convert rem to px if needed
+        return {
+          width: width,
+          minWidth: width,
+          maxWidth: width,
+        };
+      }
+      // For other formats like min-w-[100px]
+      const minWidthMatch = header.increasedWidth.match(/!?min-w-\[(\d+px)\]/);
+      if (minWidthMatch) {
+        return {
+          minWidth: minWidthMatch[1],
+          width: minWidthMatch[1],
+        };
+      }
+    }
+
+    // Default responsive widths
+    return {
+      minWidth: isMobile ? "100px" : "130px",
+      width: isMobile ? "100px" : "130px",
+    };
+  };
 
   // Responsive breakpoint detection
   useEffect(() => {
@@ -696,8 +728,10 @@ const CommonInventoryTable = ({
                   </div>
                 </Tooltip>
               )}
-               {matchDetails?.unPublishedTickets >0 && (
-                <Tooltip content={`${matchDetails?.unPublishedTickets} Un Published`}>
+              {matchDetails?.unPublishedTickets > 0 && (
+                <Tooltip
+                  content={`${matchDetails?.unPublishedTickets} Un Published`}
+                >
                   <div className="flex w-[30px] gap-1 items-center">
                     <Image
                       src={unpublishedListingValue}
@@ -828,7 +862,9 @@ const CommonInventoryTable = ({
                           className={`${
                             isMobile ? "w-3 h-3" : "w-4 h-4"
                           } text-gray-600 border-[#DADBE5] rounded focus:ring-blue-500 ${
-                            isEditMode ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                            isEditMode
+                              ? "cursor-not-allowed opacity-50"
+                              : "cursor-pointer"
                           }`}
                         />
                       </div>
@@ -907,26 +943,26 @@ const CommonInventoryTable = ({
             >
               <thead>
                 <tr className="bg-gray-50 border-b border-[#DADBE5]">
-                  {headers.map((header) => (
-                    <th
-                      key={header.key}
-                      className={`${isMobile ? "px-2 py-2" : "px-3 py-3"} ${
-                        header?.increasedWidth
-                          ? header?.increasedWidth
-                          : isMobile
-                          ? "min-w-[100px]"
-                          : "min-w-[130px]"
-                      } text-left text-[#7D82A4] font-medium whitespace-nowrap ${
-                        isMobile ? "text-[10px]" : "text-xs"
-                      } border-r border-[#DADBE5]`}
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="truncate text-[#7D82A4]">
-                          {header.label}
-                        </span>
-                      </div>
-                    </th>
-                  ))}
+                  {headers.map((header) => {
+                    const columnStyles = getColumnWidth(header);
+                    return (
+                      <th
+                        key={header.key}
+                        className={`${
+                          isMobile ? "px-2 py-2" : "px-3 py-3"
+                        } text-left text-[#7D82A4] font-medium whitespace-nowrap ${
+                          isMobile ? "text-[10px]" : "text-xs"
+                        } border-r border-[#DADBE5]`}
+                        style={columnStyles}
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="truncate text-[#7D82A4]">
+                            {header.label}
+                          </span>
+                        </div>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
@@ -947,44 +983,42 @@ const CommonInventoryTable = ({
                           : "bg-white hover:bg-gray-50"
                       } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
                     >
-                      {headers.map((header) => (
-                        <td
-                          key={`${rowIndex}-${header.key}`}
-                          className={`${
-                            isMobile
-                              ? "py-1.5 px-2 text-[10px]"
-                              : "py-2 px-3 text-xs"
-                          } ${
-                            header?.increasedWidth
-                              ? header?.increasedWidth
-                              : isMobile
-                              ? "min-w-[100px]"
-                              : "min-w-[130px]"
-                          } whitespace-nowrap overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
-                            isRowDisabled ? "bg-gray-50" : ""
-                          } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
-                        >
-                          {header.editable ? (
-                            renderEditableCell(
-                              row,
-                              header,
-                              rowIndex,
-                              true,
-                              isRowDisabled
-                            )
-                          ) : (
-                            <span
-                              className={`${header.className || ""} ${
+                      {headers.map((header) => {
+                        const columnStyles = getColumnWidth(header);
+                        return (
+                          <td
+                            key={`${rowIndex}-${header.key}`}
+                            className={`${
+                              isMobile
+                                ? "py-1.5 px-2 text-[10px]"
+                                : "py-2 px-3 text-xs"
+                            } whitespace-nowrap overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
+                              isRowDisabled ? "bg-gray-50" : ""
+                            } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
+                            style={columnStyles}
+                          >
+                            {header.editable ? (
+                              renderEditableCell(
+                                row,
+                                header,
+                                rowIndex,
+                                true,
                                 isRowDisabled
-                                  ? "text-gray-400"
-                                  : "text-[#323A70]"
-                              }`}
-                            >
-                              {row[header.key]}
-                            </span>
-                          )}
-                        </td>
-                      ))}
+                              )
+                            ) : (
+                              <span
+                                className={`${header.className || ""} ${
+                                  isRowDisabled
+                                    ? "text-gray-400"
+                                    : "text-[#323A70]"
+                                }`}
+                              >
+                                {row[header.key]}
+                              </span>
+                            )}
+                          </td>
+                        );
+                      })}
                     </tr>
                   );
                 })}

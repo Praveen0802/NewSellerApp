@@ -30,7 +30,7 @@ const NoResultsFound = ({ headers }) => (
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.467-.881-6.077-2.33M15 17.5a6.5 6.5 0 11-6.5-6.5 6.5 6.5 0 013.25-.87M19.5 10.5c0 7.142-7.153 11.25-11.25 4s4.108-11.25 11.25-4z"
+              d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.467-.881-6.077-2.33M15 17.5a6.5 6.5 0 11-6.5-6.5 6.5 6.5 0 013.25-.87M19.5 10.5c0 7.142-7.153 11.25-11.25-4s4.108-11.25 11.25-4z"
             />
           </svg>
         </div>
@@ -47,12 +47,37 @@ const EventsTable = ({ events, headers, selectedRows, setSelectedRows, loader })
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const [selectedStadium, setSelectedStadium] = useState(null);
 
+  // Reset selections when events change OR when selectedRows is cleared externally
+  useEffect(() => {
+    if (selectedRows.length === 0) {
+      setSelectedTeamId(null);
+      setSelectedStadium(null);
+    }
+  }, [selectedRows]);
+
   // Reset selections when events change
   useEffect(() => {
     setSelectedRows([]);
     setSelectedTeamId(null);
     setSelectedStadium(null);
   }, [events]);
+
+  // Helper function to get team name by team ID
+  const getTeamNameById = (teamId) => {
+    const event = events.find((event) => event.team_1 === teamId);
+    if (event?.match_name) {
+      // Extract team name from match_name (part before "vs")
+      const teamName = event.match_name.split(' vs ')[0]?.trim();
+      return teamName || `Team ${teamId}`;
+    }
+    return `Team ${teamId}`;
+  };
+
+  // Get the selected team name for display
+  const getSelectedTeamName = () => {
+    if (!selectedTeamId) return null;
+    return getTeamNameById(selectedTeamId);
+  };
 
   const handleRowSelection = (m_id) => {
     const clickedEvent = events.find((event) => event.m_id === m_id);
@@ -93,7 +118,7 @@ const EventsTable = ({ events, headers, selectedRows, setSelectedRows, loader })
     else {
       // You can add a toast notification or visual feedback here
       console.warn(
-        `Can only select events from team ${selectedTeamId} at ${selectedStadium}`
+        `Can only select events from team ${getTeamNameById(selectedTeamId)} at ${selectedStadium}`
       );
     }
   };
@@ -144,18 +169,18 @@ const EventsTable = ({ events, headers, selectedRows, setSelectedRows, loader })
     );
   };
 
-  // Check if a row is selectable
+  // Check if a row is selectable - now based on selectedRows length
   const isRowSelectable = (event) => {
     return (
-      (selectedTeamId === null && selectedStadium === null) ||
+      selectedRows.length === 0 ||
       (event.team_1 === selectedTeamId && event.stadium === selectedStadium)
     );
   };
 
-  // Check if a row should appear disabled
+  // Check if a row should appear disabled - now based on selectedRows length
   const isRowDisabled = (event) => {
     return (
-      (selectedTeamId !== null || selectedStadium !== null) &&
+      selectedRows.length > 0 &&
       (event.team_1 !== selectedTeamId || event.stadium !== selectedStadium)
     );
   };
@@ -199,7 +224,7 @@ const EventsTable = ({ events, headers, selectedRows, setSelectedRows, loader })
       {(selectedTeamId || selectedStadium) && selectedRows.length > 0 && (
         <div className="bg-green-50 border border-green-200 p-2 mb-2 rounded text-sm">
           <span className="text-green-800">
-            Selected: <strong>Team {selectedTeamId}</strong> at{" "}
+            Selected: <strong>{getSelectedTeamName()}</strong> at{" "}
             <strong>{selectedStadium}</strong>
             <span className="ml-2">
               ({selectedRows.length} of {selectableEvents.length} events
@@ -299,7 +324,7 @@ const EventsTable = ({ events, headers, selectedRows, setSelectedRows, loader })
                               : "bg-gray-100 text-gray-600"
                           }`}
                         >
-                          Team {event[header.key]}
+                          {getTeamNameById(event.team_1)}
                         </span>
                       ) : header.key === "stadium" ? (
                         <span

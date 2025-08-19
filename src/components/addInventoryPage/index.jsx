@@ -233,7 +233,7 @@ const AddInventoryPage = (props) => {
       label: "Quantity",
       mandatory: true,
       value: filtersApplied?.add_qty_addlist,
-      increasedWidth: "min-w-[100px]",
+      increasedWidth: "!w-[100px]",
       options: [
         { value: "1", label: "1" },
         { value: "2", label: "2" },
@@ -257,7 +257,7 @@ const AddInventoryPage = (props) => {
       type: "select",
       name: "split_type",
       label: "Split Type",
-      increasedWidth: "min-w-[120px]",
+      increasedWidth: "!w-[120px]",
       mandatory: true,
       value: filtersApplied?.split_type,
       options: [
@@ -312,6 +312,7 @@ const AddInventoryPage = (props) => {
         { value: "4", label: "4" },
         { value: "5", label: "5" },
       ],
+      increasedWidth: "min-w-[100px]",
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
       className:
@@ -327,6 +328,7 @@ const AddInventoryPage = (props) => {
     {
       type: "select",
       name: "home_town",
+      increasedWidth: "!w-[100px]",
       label: "Fan Area",
       value: filtersApplied?.home_town,
       options: Object.entries(home_town || {}).map(([key, value]) => ({
@@ -371,9 +373,11 @@ const AddInventoryPage = (props) => {
       type: "select",
       name: "ticket_block",
       label: "Section/Block",
+      increasedWidth: "!w-[110px]",
       value: filtersApplied?.ticket_block,
       options: blockDetails,
       disabled: !filtersApplied?.ticket_category,
+
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[150px] lg:max-w-[212px]",
       className:
@@ -389,6 +393,7 @@ const AddInventoryPage = (props) => {
       name: "row",
       label: "Row",
       value: filtersApplied?.row,
+      increasedWidth: "!w-[100px]",
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[100px] lg:max-w-[212px]",
       className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs",
@@ -404,6 +409,7 @@ const AddInventoryPage = (props) => {
       type: "number",
       name: "first_seat",
       label: "First Seat",
+      increasedWidth: "!w-[110px]",
       value: filtersApplied?.first_seat,
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[120px] lg:max-w-[212px]",
@@ -420,6 +426,7 @@ const AddInventoryPage = (props) => {
       type: "number",
       name: "face_value",
       label: "Face Value",
+      increasedWidth: "!w-[110px]",
       currencyFormat: true,
       value: filtersApplied?.face_value,
       parentClassName:
@@ -444,6 +451,7 @@ const AddInventoryPage = (props) => {
       type: "number",
       name: "add_price_addlist",
       label: "Processed Price",
+      increasedWidth: "!w-[110px]",
       mandatory: true,
       value: filtersApplied?.add_price_addlist,
       parentClassName:
@@ -680,8 +688,6 @@ const AddInventoryPage = (props) => {
 
   // Updated handleCellEdit to work with the common component
   const handleCellEdit = (rowIndex, columnKey, value, row, matchIndex) => {
-    console.log("Cell edited:", { rowIndex, columnKey, value });
-
     let updateValues = {};
     if (columnKey === "ticket_types") {
       updateValues = {
@@ -690,6 +696,11 @@ const AddInventoryPage = (props) => {
         qr_links: [],
         upload_tickets: [],
         paper_ticket_details: {},
+      };
+    }
+    if (columnKey == "ticket_category") {
+      updateValues = {
+        ticket_block: "",
       };
     }
 
@@ -1013,7 +1024,7 @@ const AddInventoryPage = (props) => {
           publishingData.additional_info.dynamicContent || ""
         );
       }
-      
+
       if (publishingData?.additional_info?.templateFile) {
         // Debug: Check what you're actually trying to append
 

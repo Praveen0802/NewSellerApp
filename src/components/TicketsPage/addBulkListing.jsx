@@ -63,7 +63,7 @@ import Tooltip from "../addInventoryPage/simmpleTooltip";
 
 const BulkInventory = (props) => {
   const { matchId, response } = props;
-  console.log(response, "responseresponseresponse");
+
   if (Object.keys(response) == 0) {
     return (
       <div className="bg-[#F5F7FA] w-full max-h-[calc(100vh-100px)] overflow-auto relative min-h-screen">
@@ -114,8 +114,62 @@ const BulkInventory = (props) => {
 
   const dispatch = useDispatch();
 
-  // Handle multiple matches
-  const allMatchDetails = response?.match_data || [];
+  const [activeMatches, setActiveMatches] = useState(() => {
+    return response?.match_data || [];
+  });
+
+  // Update allMatchDetails to use activeMatches instead of response.match_data
+  const allMatchDetails = activeMatches || [];
+
+  // Add this function to your BulkInventory component
+  const handleDeleteMatch = (matchIdToDelete) => {
+    const deletedMatch = activeMatches.find(
+      (match) => match.match_id === matchIdToDelete
+    );
+
+    // Remove the match from activeMatches
+    const updatedMatchDetails = activeMatches.filter(
+      (match) => match.match_id !== matchIdToDelete
+    );
+    setActiveMatches(updatedMatchDetails);
+
+    // Remove inventory data for this match
+    setInventoryDataByMatch((prevData) => {
+      const newData = { ...prevData };
+      delete newData[matchIdToDelete];
+      return newData;
+    });
+
+    // Remove any selected tickets from this match from global selection
+    const filteredGlobalSelection = globalSelectedTickets.filter((uniqueId) => {
+      const [ticketMatchId] = uniqueId.split("_");
+      return ticketMatchId !== matchIdToDelete.toString();
+    });
+    setGlobalSelectedTickets(filteredGlobalSelection);
+
+    // Remove any editing tickets from this match from global editing
+    const filteredGlobalEditing = globalEditingTickets.filter((uniqueId) => {
+      const [ticketMatchId] = uniqueId.split("_");
+      return ticketMatchId !== matchIdToDelete.toString();
+    });
+    setGlobalEditingTickets(filteredGlobalEditing);
+
+    // If no editing tickets left, exit edit mode
+    if (filteredGlobalEditing.length === 0) {
+      setIsGlobalEditMode(false);
+    }
+
+    // Show success message
+    toast.success(
+      `Match "${deletedMatch?.match_name || "Unknown"}" removed successfully`
+    );
+
+    // If no matches left, you might want to redirect or show empty state
+    if (updatedMatchDetails.length === 0) {
+      // Optional: redirect to previous page or show empty state
+      console.log("No matches remaining - consider redirecting");
+    }
+  };
 
   // Modify inventory data structure to handle multiple matches
   const [inventoryDataByMatch, setInventoryDataByMatch] = useState(() => {
@@ -888,6 +942,7 @@ const BulkInventory = (props) => {
       options: filter.options || [],
       showIcon: filter?.showIcon,
       hideFromTable: filter?.hideFromTable,
+      iconBefore: filter?.iconBefore,
     };
 
     if (filter.multiselect) {
@@ -1000,7 +1055,6 @@ const BulkInventory = (props) => {
 
   // KEEP ALL ORIGINAL FUNCTIONS (form data construction, validation, etc.)
   const constructFormDataAsFields = (publishingDataArray) => {
-    console.log(publishingDataArray,'publishingDataArraypublishingDataArray')
     const formData = new FormData();
 
     const transformQRLinks = (qrLinks) => {
@@ -1072,7 +1126,7 @@ const BulkInventory = (props) => {
 
       let shipDateValue = "";
       if (publishingData.ship_date) {
-         shipDateValue = publishingData.ship_date
+        shipDateValue = publishingData.ship_date;
       }
       if (!shipDateValue) {
         const matchDetails = allMatchDetails.find(
@@ -1274,64 +1328,61 @@ const BulkInventory = (props) => {
     };
   };
   // Add listings to all matches at once
- const handleAddListings = () => {
-  const validation = validateMandatoryFields();
+  const handleAddListings = () => {
+    const validation = validateMandatoryFields();
 
-  if (!validation.isValid) {
-    const fieldNames = validation.errors
-      .map((error) => error.label)
-      .join(", ");
-    toast.error(`Please fill in all mandatory fields: ${fieldNames}`);
-    return;
-  }
-
-  const hasFilterValues = Object.values(filtersApplied).some((value) => {
-    if (Array.isArray(value)) {
-      return value.length > 0;
+    if (!validation.isValid) {
+      const fieldNames = validation.errors
+        .map((error) => error.label)
+        .join(", ");
+      toast.error(`Please fill in all mandatory fields: ${fieldNames}`);
+      return;
     }
-    return value && value.toString().trim() !== "";
-  });
 
-  if (!hasFilterValues) {
-    toast.error(
-      "Please select at least one filter value before adding listings."
-    );
-    return;
-  }
+    const hasFilterValues = Object.values(filtersApplied).some((value) => {
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+      return value && value.toString().trim() !== "";
+    });
 
-  // Add listings to all matches
-  const updatedInventoryData = {};
-  const newlyAddedTicketIds = []; // Track newly added tickets for selection
-  
-  allMatchDetails.forEach((match) => {
-    const newListing = createInventoryItemFromFilters(match);
-    const existingTickets = inventoryDataByMatch[match.match_id] || [];
-    const newIndex = existingTickets.length; // Index of the new ticket
-    
-    updatedInventoryData[match.match_id] = [
-      ...existingTickets,
-      newListing,
-    ];
-    
-    // Create uniqueId for the newly added ticket
-    const newTicketUniqueId = `${match.match_id}_${newIndex}`;
-    newlyAddedTicketIds.push(newTicketUniqueId);
-  });
-  
-  // Update inventory data
-  setInventoryDataByMatch((prev) => ({
-    ...prev,
-    ...updatedInventoryData,
-  }));
-  
-  // Auto-select all newly added tickets
-  setGlobalSelectedTickets((prevSelected) => [
-    ...prevSelected, // Keep existing selections
-    ...newlyAddedTicketIds // Add newly created tickets
-  ]);
-  
-  // Show success message indicating tickets were added and selected
-};
+    if (!hasFilterValues) {
+      toast.error(
+        "Please select at least one filter value before adding listings."
+      );
+      return;
+    }
+
+    // Add listings to all matches
+    const updatedInventoryData = {};
+    const newlyAddedTicketIds = []; // Track newly added tickets for selection
+
+    allMatchDetails.forEach((match) => {
+      const newListing = createInventoryItemFromFilters(match);
+      const existingTickets = inventoryDataByMatch[match.match_id] || [];
+      const newIndex = existingTickets.length; // Index of the new ticket
+
+      updatedInventoryData[match.match_id] = [...existingTickets, newListing];
+
+      // Create uniqueId for the newly added ticket
+      const newTicketUniqueId = `${match.match_id}_${newIndex}`;
+      newlyAddedTicketIds.push(newTicketUniqueId);
+    });
+
+    // Update inventory data
+    setInventoryDataByMatch((prev) => ({
+      ...prev,
+      ...updatedInventoryData,
+    }));
+
+    // Auto-select all newly added tickets
+    setGlobalSelectedTickets((prevSelected) => [
+      ...prevSelected, // Keep existing selections
+      ...newlyAddedTicketIds, // Add newly created tickets
+    ]);
+
+    // Show success message indicating tickets were added and selected
+  };
 
   // Handle confirm click for upload popup
   const handleConfirmClick = (data, index) => {
@@ -1351,7 +1402,6 @@ const BulkInventory = (props) => {
       matchDetails: null,
     });
   };
-console.log(inventoryDataByMatch,'inventoryDataByMatchinventoryDataByMatchinventoryDataByMatch')
   // Calculate total tickets across all matches
   const getTotalTicketCount = () => {
     return Object.values(inventoryDataByMatch).reduce(
@@ -1441,6 +1491,11 @@ console.log(inventoryDataByMatch,'inventoryDataByMatchinventoryDataByMatchinvent
                       <Clock className="w-3 h-3 text-[#00A3ED]" />{" "}
                       <p className="text-[12px]">{list?.match_time}</p>{" "}
                     </div>
+                    <X
+                      className="w-3.5 h-3.5 text-gray-600 cursor-pointer hover:text-red-500 transition-colors"
+                      onClick={() => handleDeleteMatch(list.match_id)}
+                      title={`Remove ${list?.match_name}`}
+                    />
                   </div>
                 );
               })}

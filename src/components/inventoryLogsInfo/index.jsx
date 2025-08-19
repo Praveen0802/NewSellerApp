@@ -12,8 +12,36 @@ const InventoryLogsInfo = ({
   isLoading = false,
   showTabs = false, // New prop to enable tab functionality (sales page)
 }) => {
+
+  console.log(data,'datadatadata')
+
   const [expandedLogs, setExpandedLogs] = useState(new Set());
   const [activeTab, setActiveTab] = useState("order"); // "order" or "inventory"
+
+  // Define the specific fields and their order for inventory logs (matching Figma design)
+  const inventoryFieldsOrder = [
+    'benefits_restrictions',
+    'category', 
+    'date_of_ship',
+    'face_value',
+    'first_seat',
+    'in_hand',
+    'listing_owner',
+    'max_display_quantity',
+    'ticket_files_status',
+    'mobile_links_status',
+    'fan_area',
+    'payout_price',
+    'quantity',
+    'sold_tickets',
+    'section',
+    'row',
+    'seating_arrangement',
+    'split_type',
+    'status',
+    'ticket_type'
+  ];
+
   function convertTimestamp(isoTimestamp) {
     const date = new Date(isoTimestamp);
 
@@ -72,15 +100,24 @@ const InventoryLogsInfo = ({
     return firstEntry?.json_payload || {};
   };
 
-  // Get all unique fields across all logs
+  // Get all unique fields across all logs - with specific handling for inventory logs
   const getAllFields = () => {
     const currentData = getCurrentData();
+    
+    // If we're showing inventory logs and tabs are enabled, use predefined order
+    if (showTabs && activeTab === "inventory") {
+      // Return ALL predefined inventory fields, regardless of whether they exist in data
+      return inventoryFieldsOrder;
+    }
+    
+    // For order logs or backward compatibility, get all fields as before
     const allFields = new Set();
     currentData.forEach((entry) => {
       if (entry.json_payload) {
         Object.keys(entry.json_payload).forEach((key) => allFields.add(key));
       }
     });
+    console.log(Array.from(allFields),'Array.from(allFields)Array.from(allFields)')
     return Array.from(allFields);
   };
 
@@ -311,7 +348,7 @@ const InventoryLogsInfo = ({
                                               )
                                             ) : (
                                               <span className="text-gray-400 italic text-xs">
-                                                Not set
+                                                Empty
                                               </span>
                                             )}
                                           </td>
@@ -386,7 +423,7 @@ const InventoryLogsInfo = ({
                                               )
                                             ) : (
                                               <span className="text-gray-400 italic text-xs">
-                                                Not set
+                                                Empty
                                               </span>
                                             )}
                                           </td>

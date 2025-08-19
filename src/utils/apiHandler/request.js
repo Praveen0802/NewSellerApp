@@ -153,9 +153,10 @@ export const deleteTicketUpload = async (token, id) => {
       method: "DELETE",
       ...(token && { token: token }),
     });
-    return response?.data?.success ? response?.data?.data : {};
+    return response?.data;
   } catch (error) {
-    console.log("ERROR in saveListing", error);
+    console.log("ERROR in saveListing", error?.response?.data);
+    return error?.response?.data;
   }
 };
 
@@ -530,10 +531,7 @@ export const updateBankAccount = async (
   }
 };
 
-export const updatePayoutBankAccount = async (
-  token,
-  data
-) => {
+export const updatePayoutBankAccount = async (token, data) => {
   try {
     const response = await makeRequest({
       url: `${API_ROUTES.UPDATE_PAYOUT_BANK_DETAILS}`,

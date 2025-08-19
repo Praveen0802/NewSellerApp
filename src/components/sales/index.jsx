@@ -318,7 +318,7 @@ const SalesPage = (props) => {
     try {
       // Set loading state before API call
       setUploadPopupLoading(true);
-  
+
       // Show the popup with loading state
       setShowUploadPopup({
         show: true,
@@ -326,15 +326,15 @@ const SalesPage = (props) => {
         rowData: null,
         rowIndex,
       });
-  
+
       // Fetch ticket details from API
       const response = await getSalesTicketDetails("", {
         booking_id: rowData?.id,
       });
-  
+
       // Check different possible response structures
       let ticketDetails = response?.ticket_details || response;
-  
+
       // Check ticket type to determine flow
       const ticketType = parseInt(
         rowData?.ticket_type || rowData?.ticket_types || rowData?.ticket_type_id
@@ -342,18 +342,20 @@ const SalesPage = (props) => {
       const isETicketFlow = ticketType === 4;
       const isPaperTicketFlow = ticketType === 3;
       const isNormalFlow = !isETicketFlow && !isPaperTicketFlow;
-  
+
       // ENHANCED: Extract additional file templates data
       const additionalInfoDetails = {
         id: response?.additional_file_templates?.id || "",
         ticketId: response?.additional_file_templates?.ticket_id || "",
         sellTicketId: response?.additional_file_templates?.sell_ticket_id || "",
         templateName: response?.additional_file_templates?.template_name || "",
-        dynamicContent: response?.additional_file_templates?.dynamic_content || "",
+        dynamicContent:
+          response?.additional_file_templates?.dynamic_content || "",
         ticketType: response?.additional_file_templates?.ticket_type || "",
-        templateFile: response?.additional_file_templates?.template_file || null,
+        templateFile:
+          response?.additional_file_templates?.template_file || null,
       };
-  
+
       if (isETicketFlow) {
         // Existing E-Ticket flow logic
         const qrLinksData =
@@ -367,12 +369,12 @@ const SalesPage = (props) => {
             originalAndroid: ticket.qr_link_android || "",
             originalIos: ticket.qr_link_ios || "",
           })) || [];
-  
+
         qrLinksData.sort((a, b) => a.serial - b.serial);
-  
+
         const matchDate = separateDateTime(rowData?.event_date)?.date;
         const matchTime = separateDateTime(rowData?.event_date)?.time;
-  
+
         setShowUploadPopup({
           show: true,
           loading: false,
@@ -396,7 +398,7 @@ const SalesPage = (props) => {
           tracking_link: response?.tracking_details?.tracking_link || "",
           pod_file: response?.tracking_details?.pod || null,
         };
-  
+
         const paperTicketFileUpload = response?.tracking_details?.pod
           ? [
               {
@@ -410,10 +412,10 @@ const SalesPage = (props) => {
               },
             ]
           : [];
-  
+
         const matchDate = separateDateTime(rowData?.event_date)?.date;
         const matchTime = separateDateTime(rowData?.event_date)?.time;
-  
+
         setShowUploadPopup({
           show: true,
           loading: false,
@@ -442,12 +444,12 @@ const SalesPage = (props) => {
             isExisting: true,
             existingId: ticket.id,
           })) || [];
-  
+
         myListingFileUpload.sort((a, b) => a.serial - b.serial);
-  
+
         const matchDate = separateDateTime(rowData?.event_date)?.date;
         const matchTime = separateDateTime(rowData?.event_date)?.time;
-  
+
         setShowUploadPopup({
           show: true,
           loading: false,
@@ -466,7 +468,7 @@ const SalesPage = (props) => {
     } catch (error) {
       console.error("Error in handleUploadAction:", error);
       toast.error("Failed to load ticket details");
-  
+
       setShowUploadPopup({
         show: false,
         loading: false,
@@ -670,11 +672,20 @@ const SalesPage = (props) => {
     },
   ]);
 
+  const profileNameMapping ={
+    'pending': 'Pending',
+    'confirmed': 'Awaiting Delivery',
+    'cancelled': 'Cancelled',
+    'completed': 'Completed',
+    'replaced': 'Replaced',
+    'delivered': 'Delivered',
+  }
+
   // Updated itemConfig with disabled property
   const itemConfig = {
     [profile]: [
       {
-        name: "Delivery Revenue",
+        name: `${profileNameMapping[profile]} Revenue`,
         value: overViewData?.amount_with_currency,
       },
       {

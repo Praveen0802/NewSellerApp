@@ -37,6 +37,7 @@ import TemplateContentRenderer from "./templateContent";
 import SubUploadParent from "./subUploadParent";
 import { readCookie } from "@/utils/helperFunctions/cookie";
 import { separateDateTime } from "@/utils/helperFunctions";
+import FilePreviewModal from "./previewFile";
 
 const UploadTickets = ({
   show,
@@ -470,7 +471,7 @@ const UploadTickets = ({
 
   // Common Ticket Details Component
   const TicketDetails = () => (
-    <div className="border-[1px] border-[#E0E1EA] rounded-b-md flex-shrink-0">
+    <div className="border-[1px] border-[#E0E1EA]  flex-shrink-0">
       <div className="grid grid-cols-4 bg-gray-100 px-3 py-2 border-b border-gray-200">
         <div className="text-xs font-medium text-[#323A70]">Listing ID</div>
         <div className="text-xs font-medium text-[#323A70]">
@@ -488,7 +489,7 @@ const UploadTickets = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-4 bg-[#F9F9FB] py-2 px-3 border-b border-gray-200">
+      <div className="grid grid-cols-4 bg-[#F9F9FB] py-2 px-3 ">
         <div className="text-xs truncate">
           {myListingPage
             ? rowData?.rawTicketData?.s_no || rowData?.id || "N/A"
@@ -508,13 +509,13 @@ const UploadTickets = ({
           ) : proofUploadView ? (
             <>
               {existingProofTickets ? (
-                <span className="text-green-600">{"Confirmed"}</span>
+                <span className="text-[#323A70]">{"Uploaded"}</span>
               ) : (
-                <span className="text-orange-600">{"Pending"}</span>
+                <span className="text-[#323A70]">{"Pending"}</span>
               )}
             </>
           ) : (
-            <div className="flex gap-5 items-center justify-end">
+            <div className="flex gap-5 items-center justify-start">
               <span>{rowData?.row || "0"} (0)</span>
             </div>
           )}
@@ -922,6 +923,17 @@ const UploadTickets = ({
     // You can perform real-time validation or updates here
   }, []);
 
+  // 2. Add this state variable after your existing state declarations
+  const [previewFile, setPreviewFile] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+
+  // 3. Add this function to handle preview clicks
+  const handlePreviewClick = useCallback((file, e) => {
+    e?.stopPropagation();
+    setPreviewFile(file);
+    setShowPreview(true);
+  }, []);
+
   // Handle template selection callback (optional)
   const handleTemplateSelect = useCallback((templateData) => {
     console.log("Template selected:", templateData);
@@ -937,7 +949,7 @@ const UploadTickets = ({
     const currentTransferredFiles = proofUploadView
       ? proofTransferredFiles
       : transferredFiles;
-
+  
     // Enhanced upload message for proof upload
     const getUploadMessage = () => {
       if (proofUploadView) {
@@ -955,12 +967,12 @@ const UploadTickets = ({
         return "Add your file(s) to start uploading";
       }
     };
-
+  
     // Enhanced drag area disabled logic
     const isDragAreaDisabled = proofUploadView
       ? currentTransferredFiles.length >= 1
       : transferredFiles.length >= maxQuantity;
-
+  
     // Enhanced no files message
     const getNoFilesMessage = () => {
       if (proofUploadView) {
@@ -979,23 +991,23 @@ const UploadTickets = ({
         return "No files uploaded yet";
       }
     };
-
+  
     // NEW: Drag handlers for file items
     const handleDragStart = (e, file) => {
       if (!canTransferFile(file.id)) {
         e.preventDefault();
         return;
       }
-
+  
       // Set drag data for better compatibility
       e.dataTransfer.setData("text/plain", JSON.stringify(file));
       e.dataTransfer.effectAllowed = "move";
-
+  
       // Store dragged file globally for fallback
       window.currentDraggedFile = file;
       setIsDragging(true);
       setDraggedFile(file);
-
+  
       // Create ghost image
       const ghostElement = document.createElement("div");
       ghostElement.innerHTML = `
@@ -1018,19 +1030,38 @@ const UploadTickets = ({
       ghostElement.style.position = "absolute";
       ghostElement.style.top = "-1000px";
       document.body.appendChild(ghostElement);
-
+  
       e.dataTransfer.setDragImage(ghostElement, 10, 10);
-
+  
       setTimeout(() => {
         document.body.removeChild(ghostElement);
       }, 0);
     };
-
+  
     const handleDragEnd = () => {
       window.currentDraggedFile = null;
       setIsDragging(false);
       setDraggedFile(null);
     };
+  
+    // NEW: Enhanced eye icon click handler for FileUploadSection
+    const handleFileUploadEyeIconClick = (file, e) => {
+      e?.stopPropagation();
+      
+      // If file has URL (existing file), open in new tab
+      if (file.url && file.isExisting) {
+        window.open(file.url, "_blank");
+      } 
+      // If file is newly uploaded (File object), show preview modal
+      else if (file.file instanceof File) {
+        handlePreviewClick(file, e);
+      }
+      // Fallback for any other cases
+      else if (file.url) {
+        window.open(file.url, "_blank");
+      }
+    };
+  
     console.log(uploadedFiles, "currentUploadedFiles");
     return (
       <>
@@ -1071,7 +1102,7 @@ const UploadTickets = ({
             </p>
           )}
         </div>
-
+  
         {/* Uploaded files list */}
         <div className="flex-1">
           <div className="flex justify-between items-center mb-2">
@@ -1080,23 +1111,23 @@ const UploadTickets = ({
                 ? `Proof Document (${currentUploadedFiles.length}/1)`
                 : `Uploaded Files (${currentUploadedFiles.length})`}
             </h3>
-            <div class="flex items-center gap-x-2">
-              <span class="text-xs text-[#323A70]">Show assigned</span>
-              <label class="relative inline-flex items-center cursor-pointer">
+            <div className="flex items-center gap-x-2">
+              <span className="text-xs text-[#323A70]">Show assigned</span>
+              <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
-                  class="sr-only peer"
+                  className="sr-only peer"
                   checked={showAssigned}
                   onChange={(e) => {
                     setShowAssigned((prev) => !prev);
                   }}
                 />
-                <div class="w-7 h-3 bg-gray-200 peer-checked:bg-[#64EAA540] rounded-full transition-all peer peer-checked:after:translate-x-full peer-checked:after:bg-[#64EAA5] after:content-[''] after:absolute after:-top-0.5 after:-left-0.5 after:bg-gray-400 after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md peer-checked:bg-100"></div>
+                <div className="w-7 h-3 bg-gray-200 peer-checked:bg-[#64EAA540] rounded-full transition-all peer peer-checked:after:translate-x-full peer-checked:after:bg-[#64EAA5] after:content-[''] after:absolute after:-top-0.5 after:-left-0.5 after:bg-gray-400 after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md peer-checked:bg-100"></div>
               </label>
             </div>
           </div>
-
-          <div className="max-h-64 overflow-y-auto border border-[#E0E1EA] rounded">
+  
+          <div className="max-h-64 overflow-y-auto flex flex-col gap-2 rounded">
             {currentUploadedFiles.length === 0 ? (
               <div className="p-4 text-center text-gray-500 text-sm">
                 {getNoFilesMessage()}
@@ -1108,7 +1139,7 @@ const UploadTickets = ({
                   draggable={canTransferFile(file.id)}
                   onDragStart={(e) => handleDragStart(e, file)}
                   onDragEnd={handleDragEnd}
-                  className={`flex items-center justify-between p-2 border-b border-gray-200 last:border-b-0 bg-white transition-all duration-200 ${
+                  className={`flex items-center border border-[#eaeaf1] bg-[#F9F9FB] justify-between px-[8px] py-[5px]  transition-all duration-200 ${
                     canTransferFile(file.id)
                       ? "cursor-grab hover:bg-blue-50 hover:border-l-4 hover:border-l-blue-500"
                       : "cursor-not-allowed opacity-60"
@@ -1119,19 +1150,18 @@ const UploadTickets = ({
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    {canTransferFile(file.id) && (
-                      <div className="text-gray-400 text-xs">⋮⋮</div>
-                    )}
-                    <span className="text-xs text-gray-700 truncate max-w-32">
+                    <span className="text-[12px] text-[#323A70] truncate max-w-32">
                       {file.name}
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
+                    {/* NEW: Eye icon for uploaded files */}
+                  
                     <Button
                       onClick={() => handleTransferSingleFile(file.id)}
                       disabled={!canTransferFile(file.id)}
                       classNames={{
-                        root: `py-1 px-2 cursor-pointer rounded-sm text-xs ${
+                        root: `py-[4px] px-[6px] cursor-pointer rounded-sm text-[10px] ${
                           canTransferFile(file.id)
                             ? "bg-[#343432] text-white hover:bg-[#343432]/90"
                             : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -1141,10 +1171,21 @@ const UploadTickets = ({
                       }}
                     >
                       {proofUploadView ? "Attach" : "Add"}{" "}
-                      <ArrowRight className="w-3 h-3" />
+                      <ArrowRight className="w-4 h-4" />
                     </Button>
                     <button
-                      className="p-1 text-red-500 cursor-pointer hover:text-red-700"
+                      className="pl-2 text-[#130061]  cursor-pointer hover:text-blue-700"
+                      onClick={(e) => handleFileUploadEyeIconClick(file, e)}
+                      title={
+                        file.url && file.isExisting
+                          ? "Open file in new tab"
+                          : "Preview file"
+                      }
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      className="p-1 text-[#130061] cursor-pointer"
                       onClick={() => handleDeleteUploaded(file.id)}
                     >
                       <Trash2 className="w-3 h-3" />
@@ -1154,6 +1195,8 @@ const UploadTickets = ({
               ))
             )}
           </div>
+          
+          {/* Show assigned files section */}
           <div className="pt-2 flex flex-col gap-2">
             {showAssigned &&
               assignedFiles.map((file) => (
@@ -1167,6 +1210,18 @@ const UploadTickets = ({
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
+                    {/* NEW: Eye icon for assigned files */}
+                    <button
+                      className="p-1 text-gray-900 cursor-pointer hover:text-blue-700"
+                      onClick={(e) => handleFileUploadEyeIconClick(file, e)}
+                      title={
+                        file.url && file.isExisting
+                          ? "Open file in new tab"
+                          : "Preview file"
+                      }
+                    >
+                      <Eye className="w-3 h-3" />
+                    </button>
                     <button
                       className="p-1 text-red-500 cursor-pointer hover:text-red-700"
                       onClick={() => handleDeleteUploaded(file.id, true)}
@@ -1185,6 +1240,8 @@ const UploadTickets = ({
   console.log(transferredFiles, "transferredFiles");
 
   // NEW: Enhanced Ticket Assignment Section Component with Drag Drop Support
+  // Replace your existing TicketAssignmentSection function with this updated version:
+
   const TicketAssignmentSection = () => {
     // Use the appropriate state variables based on proof upload view
     const currentTransferredFiles = proofUploadView
@@ -1262,8 +1319,14 @@ const UploadTickets = ({
           const idToDelete = assignedFile.existingId || assignedFile.id;
           console.log(idToDelete, "idToDelete");
           try {
-            await deleteTicketUpload("", idToDelete);
-            toast.success("File deleted successfully");
+            const response = await deleteTicketUpload("", idToDelete);
+            console.log(response, "responseresponse");
+            if (response?.success) {
+              toast.success("File deleted successfully");
+            } else {
+              toast.error(`${response?.message}` || "Failed to delete file");
+              return;
+            }
           } catch (error) {
             console.error("Failed to delete from server:", error);
             toast.error("Failed to delete file from server");
@@ -1309,6 +1372,24 @@ const UploadTickets = ({
         console.error("Error in handleDeleteUpload:", error);
       } finally {
         setIsLoading(false);
+      }
+    };
+
+    // NEW: Enhanced eye icon click handler
+    const handleEyeIconClick = (assignedFile, e) => {
+      e?.stopPropagation();
+
+      // If file has URL (existing file), open in new tab
+      if (assignedFile.url && assignedFile.isExisting) {
+        window.open(assignedFile.url, "_blank");
+      }
+      // If file is newly uploaded (File object), show preview modal
+      else if (assignedFile.file instanceof File) {
+        handlePreviewClick(assignedFile, e);
+      }
+      // Fallback for any other cases
+      else if (assignedFile.url) {
+        window.open(assignedFile.url, "_blank");
       }
     };
 
@@ -1375,17 +1456,18 @@ const UploadTickets = ({
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          {assignedFile.isExisting && (
-                            <button
-                              className="p-1 text-gray-900 cursor-pointer hover:text-blue-700"
-                              onClick={() =>
-                                window.open(assignedFile.url, "_blank")
-                              }
-                              title="View uploaded ticket"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          )}
+                          {/* UPDATED: Always show eye icon, but behavior depends on file type */}
+                          <button
+                            className="p-1 text-gray-900 cursor-pointer hover:text-blue-700"
+                            onClick={(e) => handleEyeIconClick(assignedFile, e)}
+                            title={
+                              assignedFile.url && assignedFile.isExisting
+                                ? "Open file in new tab"
+                                : "Preview file"
+                            }
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
                           <button
                             className="p-1 text-gray-900 cursor-pointer hover:text-red-700"
                             onClick={() => {
@@ -1485,6 +1567,11 @@ const UploadTickets = ({
           </div>
         </div>
       </RightViewModal>
+      <FilePreviewModal
+        show={showPreview}
+        onClose={() => setShowPreview(false)}
+        file={previewFile}
+      />
     </div>
   );
 };

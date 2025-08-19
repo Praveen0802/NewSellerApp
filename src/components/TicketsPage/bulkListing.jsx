@@ -40,7 +40,7 @@ const BulkListings = (props) => {
   const [eventsData, setEventsData] = useState(
     response?.bulkListingData?.value?.events
   );
-
+  console.log(response, "responseresponse");
   const [searchValue, setSearchValue] = useState(filters?.query || "");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [visibleFilters, setVisibleFilters] = useState({
@@ -109,9 +109,9 @@ const BulkListings = (props) => {
     { title: "Event Name", key: "match_name" },
     { title: "Event Date", key: "match_date" },
     { title: "Event Time", key: "match_time" },
-    { title: "Stadium", key: "stadium" },
-    { title: "Total Tickets", key: "total_ticket" },
-    { title: "Total Fare", key: "ticket_fare_from" },
+    { title: "Tournament", key: "tournament_name" },
+    { title: "Price Range", key: "ticket_fare_from" },
+    { title: "Tickets Available", key: "tickets_available" },
   ];
 
   const handleDateChange = (dateRange, key) => {
@@ -518,6 +518,7 @@ const BulkListings = (props) => {
         <div className="overflow-y-auto overflow-x-auto h-full">
           <EventsTable
             events={eventListViews}
+            
             headers={headers}
             selectedRows={selectedRows}
             setSelectedRows={setSelectedRows}
@@ -535,10 +536,15 @@ const BulkListings = (props) => {
         >
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-4">
-              <span className="text-sm text-[#323A70] font-medium">
-                {selectedRows.length} event{selectedRows.length > 1 ? "s" : ""}{" "}
-                selected
-              </span>
+              <Button
+                type="outlined"
+                classNames={{
+                  root: "px-4 py-2  text-[#374151] bg-[#03BA8A] ",
+                  label_: "text-sm text-white font-medium",
+                }}
+                // onClick={() => setSelectedRows([])}
+                label="Request Event"
+              />
             </div>
             <div className="flex items-center gap-3">
               <Button
@@ -547,7 +553,7 @@ const BulkListings = (props) => {
                   root: "px-4 py-2 border border-[#D1D5DB] text-[#374151] hover:bg-[#F9FAFB]",
                   label_: "text-sm font-medium",
                 }}
-                onClick={() => setSelectedRows([])}
+                onClick={() => {setSelectedRows([]); }}
                 label="Cancel"
               />
               <Button

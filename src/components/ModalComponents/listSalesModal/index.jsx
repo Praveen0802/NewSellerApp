@@ -421,7 +421,9 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                   return (
                     <div
                       key={item.ticket_id || index}
-                      className="flex border-b border-gray-200 hover:bg-gray-50 text-[#323A70]"
+                      className={`${
+                        item.flag === 1 ? "bg-gray-100" : ""
+                      } flex border-b border-gray-200  text-[#323A70]`}
                     >
                       <div
                         className="p-3 text-[12px] w-32 truncate"
@@ -478,7 +480,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                           </div>
                         ) : (
                           // Display Mode - Show price with edit option if flag === 1
-                          <div className="flex items-center gap-1 group">
+                          <div className={`flex items-center  gap-1 group`}>
                             <span className="text-gray-600">
                               {item?.currencyIcon}
                             </span>

@@ -759,7 +759,7 @@ const SimpleEditableCell = ({
   };
 
   const getInputPadding = () => {
-    return iconBefore ? "pl-10 pr-2" : "px-2";
+    return iconBefore ? "pl-7 pr-2" : "px-2";
   };
 
   const renderIconBefore = () => {

@@ -126,6 +126,7 @@ const ActiveFilterPills = ({
   onClearAllFilters,
   currentTab,
 }) => {
+  console.log(activeFilters, "activeFiltersactiveFilters");
   const getFilterDisplayValue = (filterKey, value, config) => {
     if (!value) return null;
 
@@ -144,16 +145,25 @@ const ActiveFilterPills = ({
     const entries = [];
     Object.entries(activeFilters).forEach(([key, value]) => {
       if (key === "page" || !value || value === "") return;
-
+      console.log(key, "key");
       const displayValue = getFilterDisplayValue(
         key,
         value,
         filterConfig[currentTab]
       );
+      console.log(displayValue, "displayValuedisplayValue");
       if (displayValue) {
         entries.push({ key, value, displayValue });
       }
     });
+    if (activeFilters?.start_date && activeFilters?.end_date) {
+      entries.push({
+        key: "event_date",
+        value: `${activeFilters?.start_date} - ${activeFilters?.end_date}`,
+        displayValue: `${activeFilters?.start_date} - ${activeFilters?.end_date}`,
+      });
+    }
+    console.log(entries, "entriesentries");
     return entries;
   };
 
@@ -288,6 +298,7 @@ const Pagination = ({
 
 const TicketsPage = (props) => {
   const { success = "", response } = props;
+  console.log(response, "responseresponse");
   // Memoize the overview data to prevent unnecessary re-renders
   const overViewData = useMemo(
     () => response?.overview || {},
@@ -429,7 +440,7 @@ const TicketsPage = (props) => {
 
   const getSelectedClonedTickets = useCallback(() => {
     const allTickets = getAllTicketsFromMatches();
-    console.log(allTickets, "allTicketsallTickets",globalSelectedTickets);
+    console.log(allTickets, "allTicketsallTickets", globalSelectedTickets);
     return allTickets.filter(
       (ticket) =>
         globalSelectedTickets.includes(ticket.uniqueId) && ticket.isCloned
@@ -509,27 +520,32 @@ const TicketsPage = (props) => {
   );
 
   // Handle row selection for individual match tables - UPDATED FOR ticketsByMatch
-const handleSetSelectedRowsForMatch = useCallback(
-  (matchIndex, newSelectedRows) => {
-    // Remove existing selections for this match
-    setGlobalSelectedTickets((prevSelected) => {
-      const filteredGlobalSelection = prevSelected.filter((uniqueId) => {
-        const [ticketMatchIndex] = uniqueId.split("_");
-        return parseInt(ticketMatchIndex) !== parseInt(matchIndex);
+  const handleSetSelectedRowsForMatch = useCallback(
+    (matchIndex, newSelectedRows) => {
+      // Remove existing selections for this match
+      setGlobalSelectedTickets((prevSelected) => {
+        const filteredGlobalSelection = prevSelected.filter((uniqueId) => {
+          const [ticketMatchIndex] = uniqueId.split("_");
+          return parseInt(ticketMatchIndex) !== parseInt(matchIndex);
+        });
+
+        // Add new selections for this match with correct format
+        const newGlobalSelections = newSelectedRows.map(
+          (rowIndex) => `${matchIndex}_${rowIndex}` // Ensure correct format
+        );
+
+        console.log(
+          "🔍 New global selections for match",
+          matchIndex,
+          ":",
+          newGlobalSelections
+        );
+
+        return [...filteredGlobalSelection, ...newGlobalSelections];
       });
-
-      // Add new selections for this match with correct format
-      const newGlobalSelections = newSelectedRows.map(
-        (rowIndex) => `${matchIndex}_${rowIndex}` // Ensure correct format
-      );
-
-      console.log("🔍 New global selections for match", matchIndex, ":", newGlobalSelections);
-      
-      return [...filteredGlobalSelection, ...newGlobalSelections];
-    });
-  },
-  []
-);
+    },
+    []
+  );
 
   // ENHANCED: Global bulk actions - UPDATED FOR ticketsByMatch
   const handleGlobalEdit = useCallback(() => {
@@ -701,88 +717,92 @@ const handleSetSelectedRowsForMatch = useCallback(
   const [originalValues, setOriginalValues] = useState({}); // Store original values for reset
 
   // UPDATED: Enhanced clone function
-const handleGlobalClone = useCallback(() => {
-  if (globalSelectedTickets.length === 0) {
-    toast.error("Please select tickets to clone");
-    return;
-  }
+  const handleGlobalClone = useCallback(() => {
+    if (globalSelectedTickets.length === 0) {
+      toast.error("Please select tickets to clone");
+      return;
+    }
 
-  const allTickets = getAllTicketsFromMatches();
-  const ticketsToClone = allTickets.filter((ticket) =>
-    globalSelectedTickets.includes(ticket.uniqueId)
-  );
+    const allTickets = getAllTicketsFromMatches();
+    const ticketsToClone = allTickets.filter((ticket) =>
+      globalSelectedTickets.includes(ticket.uniqueId)
+    );
 
-  // Check if trying to clone already cloned tickets
-  const alreadyClonedSelected = ticketsToClone.some(ticket => ticket.isCloned);
-  if (alreadyClonedSelected) {
-    toast.error("Cannot clone already cloned tickets. Please select only existing tickets.");
-    return;
-  }
+    // Check if trying to clone already cloned tickets
+    const alreadyClonedSelected = ticketsToClone.some(
+      (ticket) => ticket.isCloned
+    );
+    if (alreadyClonedSelected) {
+      toast.error(
+        "Cannot clone already cloned tickets. Please select only existing tickets."
+      );
+      return;
+    }
 
-  // Group cloned tickets by match
-  const clonedTicketsByMatch = {};
-  const newClonedTicketIds = []; // Track new IDs for selection
+    // Group cloned tickets by match
+    const clonedTicketsByMatch = {};
+    const newClonedTicketIds = []; // Track new IDs for selection
 
-  setTicketsByMatch((prevData) => {
-    const newData = { ...prevData };
+    setTicketsByMatch((prevData) => {
+      const newData = { ...prevData };
 
-    ticketsToClone.forEach((ticket) => {
-      const matchIndex = ticket.matchIndex;
-      
-      if (!clonedTicketsByMatch[matchIndex]) {
-        clonedTicketsByMatch[matchIndex] = [];
-      }
+      ticketsToClone.forEach((ticket) => {
+        const matchIndex = ticket.matchIndex;
 
-      // IMPORTANT: Calculate the correct ticketIndex for the cloned ticket
-      const currentTicketsCount = newData[matchIndex]?.tickets.length || 0;
-      const newTicketIndex = currentTicketsCount; // This will be the index of the new ticket
+        if (!clonedTicketsByMatch[matchIndex]) {
+          clonedTicketsByMatch[matchIndex] = [];
+        }
 
-      // Create correct uniqueId format: matchIndex_ticketIndex
-      const correctUniqueId = `${matchIndex}_${newTicketIndex}`;
+        // IMPORTANT: Calculate the correct ticketIndex for the cloned ticket
+        const currentTicketsCount = newData[matchIndex]?.tickets.length || 0;
+        const newTicketIndex = currentTicketsCount; // This will be the index of the new ticket
 
-      const clonedTicket = {
-        ...ticket,
-        id: `${matchIndex}-clone-${Date.now()}-${Math.random()}`, // Keep this for internal ID
-        uniqueId: correctUniqueId, // FIX: Use correct format
-        ticketIndex: newTicketIndex, // Update the ticket index
-        s_no: "", // Empty instead of CLONE_ prefix
-        isCloned: true, // Mark as cloned item
-        rawTicketData: {
-          ...ticket.rawTicketData,
+        // Create correct uniqueId format: matchIndex_ticketIndex
+        const correctUniqueId = `${matchIndex}_${newTicketIndex}`;
+
+        const clonedTicket = {
+          ...ticket,
+          id: `${matchIndex}-clone-${Date.now()}-${Math.random()}`, // Keep this for internal ID
+          uniqueId: correctUniqueId, // FIX: Use correct format
+          ticketIndex: newTicketIndex, // Update the ticket index
           s_no: "", // Empty instead of CLONE_ prefix
-        },
-      };
-
-      console.log("🔍 Created cloned ticket with uniqueId:", correctUniqueId);
-      
-      // Add to the match data immediately
-      if (newData[matchIndex]) {
-        newData[matchIndex] = {
-          ...newData[matchIndex],
-          tickets: [...newData[matchIndex].tickets, clonedTicket],
+          isCloned: true, // Mark as cloned item
+          rawTicketData: {
+            ...ticket.rawTicketData,
+            s_no: "", // Empty instead of CLONE_ prefix
+          },
         };
-      }
 
-      // Track the new ID for selection
-      newClonedTicketIds.push(correctUniqueId);
+        console.log("🔍 Created cloned ticket with uniqueId:", correctUniqueId);
+
+        // Add to the match data immediately
+        if (newData[matchIndex]) {
+          newData[matchIndex] = {
+            ...newData[matchIndex],
+            tickets: [...newData[matchIndex].tickets, clonedTicket],
+          };
+        }
+
+        // Track the new ID for selection
+        newClonedTicketIds.push(correctUniqueId);
+      });
+
+      return newData;
     });
 
-    return newData;
-  });
+    // Clear current selection and optionally select the cloned tickets
+    setGlobalSelectedTickets([]);
 
-  // Clear current selection and optionally select the cloned tickets
-  setGlobalSelectedTickets([]);
-  
-  // Optional: Auto-select the cloned tickets
-  setTimeout(() => {
-    setGlobalSelectedTickets(newClonedTicketIds);
-    console.log("🔍 Auto-selected cloned tickets:", newClonedTicketIds);
-  }, 100);
+    // Optional: Auto-select the cloned tickets
+    setTimeout(() => {
+      setGlobalSelectedTickets(newClonedTicketIds);
+      console.log("🔍 Auto-selected cloned tickets:", newClonedTicketIds);
+    }, 100);
 
-  toast.success(
-    `${globalSelectedTickets.length} ticket(s) cloned successfully`
-  );
-}, [globalSelectedTickets, getAllTicketsFromMatches]);
+    toast.success(
+      `${globalSelectedTickets.length} ticket(s) cloned successfully`
+    );
+  }, [globalSelectedTickets, getAllTicketsFromMatches]);
 
   // NEW: Function to construct FormData for cloned tickets (similar to AddInventory)
   const constructFormDataForClonedTickets = useCallback(
@@ -1145,12 +1165,12 @@ const handleGlobalClone = useCallback(() => {
         editable: true,
         type: "number",
       },
-      {
-        key: "seat",
-        label: "Seat",
-        editable: true,
-        type: "text",
-      },
+      // {
+      //   key: "seat",
+      //   label: "Seat",
+      //   editable: true,
+      //   type: "text",
+      // },
       {
         key: "web_price",
         label: "Face Value",
@@ -1262,6 +1282,10 @@ const handleGlobalClone = useCallback(() => {
           [
             ...(filter.restriction_left || []),
             ...(filter.restriction_right || []),
+            ...(filter.split_details_left || []),
+            ...(filter.split_details_right || []),
+            ...(filter.notes_left || []),
+            ...(filter.notes_right || []),
           ].forEach((note) => {
             allListingNotes.set(note.id.toString(), note.name);
           });
@@ -1355,7 +1379,7 @@ const handleGlobalClone = useCallback(() => {
     (rowIndex, columnKey, value, ticket, matchIndexParam) => {
       const matchIndex = matchIndexParam.toString();
       const rowKey = `${matchIndex}_${rowIndex}`;
-
+      console.log(rowIndex, columnKey, value, "rowKeyrowKey");
       // Check if trying to edit a cloned ticket
       const currentTicket = ticketsByMatch[matchIndex]?.tickets[rowIndex];
       if (currentTicket?.isCloned) {
@@ -1528,9 +1552,70 @@ const handleGlobalClone = useCallback(() => {
         const ticket = ticketsByMatch[matchIndex]?.tickets[rowIndex];
         if (!ticket) return;
 
-        // Transform field keys for API (ticket_type_id -> ticket_type, etc.)
+        // Transform field keys and values for API
         const transformedParams = {};
+
         Object.entries(pendingChanges).forEach(([key, value]) => {
+          // Find the header configuration for this field
+          const headerConfig = constructHeadersFromListingHistory.find(
+            (h) => h.key === key
+          );
+
+          let processedValue = value;
+
+          // Handle select fields - ensure we're using the value, not the label
+          if (headerConfig?.type === "select" && headerConfig?.options) {
+            // Check if the current value is a label instead of a value
+            const optionByValue = headerConfig.options.find(
+              (opt) => opt.value === value || opt.value === String(value)
+            );
+            const optionByLabel = headerConfig.options.find(
+              (opt) => opt.label === value
+            );
+
+            if (optionByValue) {
+              // Value is already correct
+              processedValue = optionByValue.value;
+            } else if (optionByLabel) {
+              // Value is actually a label, use the corresponding value
+              processedValue = optionByLabel.value;
+              console.log(
+                `🔄 Converted label "${value}" to value "${processedValue}" for field "${key}"`
+              );
+            } else {
+              // Fallback: keep the original value but log a warning
+              console.warn(
+                `⚠️ Could not find option for value/label "${value}" in field "${key}"`
+              );
+              processedValue = value;
+            }
+          }
+
+          // Handle multiselect fields (like listing_note)
+          if (headerConfig?.type === "multiselect" && headerConfig?.options) {
+            if (Array.isArray(value)) {
+              processedValue = value.map((item) => {
+                const optionByValue = headerConfig.options.find(
+                  (opt) => opt.value === item || opt.value === String(item)
+                );
+                const optionByLabel = headerConfig.options.find(
+                  (opt) => opt.label === item
+                );
+
+                if (optionByValue) {
+                  return optionByValue.value;
+                } else if (optionByLabel) {
+                  console.log(
+                    `🔄 Converted multiselect label "${item}" to value "${optionByLabel.value}" for field "${key}"`
+                  );
+                  return optionByLabel.value;
+                }
+                return item;
+              });
+            }
+          }
+
+          // Transform field keys for API (ticket_type_id -> ticket_type, etc.)
           const transformedKey =
             key === "ticket_type_id"
               ? "ticket_type"
@@ -1539,8 +1624,11 @@ const handleGlobalClone = useCallback(() => {
               : key === "split_type_id"
               ? "split_type"
               : key;
-          transformedParams[transformedKey] = value;
+
+          transformedParams[transformedKey] = processedValue;
         });
+
+        console.log("📤 Sending to API:", transformedParams);
 
         // Make single API call with all transformed parameters
         const update = await updateMyListing(
@@ -1550,6 +1638,76 @@ const handleGlobalClone = useCallback(() => {
         );
 
         if (update?.success) {
+          // Update the local state with the correct values
+          setTicketsByMatch((prevData) => ({
+            ...prevData,
+            [matchIndex]: {
+              ...prevData[matchIndex],
+              tickets: prevData[matchIndex].tickets.map((ticketItem, index) => {
+                if (index === rowIndex) {
+                  // Update with the processed values (not the original pending changes)
+                  const updatedTicket = { ...ticketItem };
+                  Object.entries(pendingChanges).forEach(([key, value]) => {
+                    const headerConfig =
+                      constructHeadersFromListingHistory.find(
+                        (h) => h.key === key
+                      );
+
+                    let finalValue = value;
+
+                    // Apply the same transformation logic for the UI update
+                    if (
+                      headerConfig?.type === "select" &&
+                      headerConfig?.options
+                    ) {
+                      const optionByValue = headerConfig.options.find(
+                        (opt) =>
+                          opt.value === value || opt.value === String(value)
+                      );
+                      const optionByLabel = headerConfig.options.find(
+                        (opt) => opt.label === value
+                      );
+
+                      if (optionByValue) {
+                        finalValue = optionByValue.value;
+                      } else if (optionByLabel) {
+                        finalValue = optionByLabel.value;
+                      }
+                    }
+
+                    if (
+                      headerConfig?.type === "multiselect" &&
+                      headerConfig?.options &&
+                      Array.isArray(value)
+                    ) {
+                      finalValue = value.map((item) => {
+                        const optionByValue = headerConfig.options.find(
+                          (opt) =>
+                            opt.value === item || opt.value === String(item)
+                        );
+                        const optionByLabel = headerConfig.options.find(
+                          (opt) => opt.label === item
+                        );
+
+                        if (optionByValue) {
+                          return optionByValue.value;
+                        } else if (optionByLabel) {
+                          return optionByLabel.value;
+                        }
+                        return item;
+                      });
+                    }
+
+                    updatedTicket[key] = finalValue;
+                  });
+
+                  return updatedTicket;
+                }
+                return ticketItem;
+              }),
+            },
+          }));
+
           // Clear pending edits and original values for this row
           setPendingEdits((prev) => {
             const newPending = { ...prev };
@@ -1571,7 +1729,7 @@ const handleGlobalClone = useCallback(() => {
               : "Field updated successfully"
           );
         } else {
-          console.error("Update failed:");
+          console.error("Update failed:", update);
           toast.error("Failed to update field(s)");
           // Revert the changes on error
           handleCancelEdit(matchIndex, rowIndex);
@@ -1583,7 +1741,12 @@ const handleGlobalClone = useCallback(() => {
         handleCancelEdit(matchIndex, rowIndex);
       }
     },
-    [pendingEdits, ticketsByMatch, handleCancelEdit]
+    [
+      pendingEdits,
+      ticketsByMatch,
+      handleCancelEdit,
+      constructHeadersFromListingHistory,
+    ]
   );
 
   // NEW: Check if a row has pending edits
@@ -2006,6 +2169,13 @@ const handleGlobalClone = useCallback(() => {
 
     let params = {};
 
+    if (filterKey == "event_date") {
+      params = {
+        ...params,
+        start_date: "",
+        end_date: "",
+      };
+    }
     // Handle different filter types
     if (filterKey === "matchDate") {
       params = {
