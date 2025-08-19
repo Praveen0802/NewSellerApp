@@ -1100,7 +1100,7 @@ const handleGlobalClone = useCallback(() => {
 
     // Create headers based on the structure you want
     const headers = [
-      { key: "s_no", label: "Listing No", editable: false },
+      { key: "s_no", label: "Listing ID", editable: false },
       {
         key: "ticket_type_id",
         label: "Ticket Type",
@@ -1207,16 +1207,16 @@ const handleGlobalClone = useCallback(() => {
         type: "select",
         options: [],
       },
-      {
-        key: "status",
-        label: "Status",
-        editable: false,
-      },
-      {
-        key: "sell_date",
-        label: "Listed Date",
-        editable: false,
-      },
+      // {
+      //   key: "status",
+      //   label: "Status",
+      //   editable: false,
+      // },
+      // {
+      //   key: "sell_date",
+      //   label: "Listed Date",
+      //   editable: false,
+      // },
     ];
 
     // Populate options for select fields from filters
