@@ -517,7 +517,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
 
                       <div className="p-3 text-[12px] flex-1 flex items-center justify-between">
                         <span
-                          className="truncate pr-2"
+                          className="break-words pr-2 max-w-[180px]"
                           title={getBenefitsText(item.ticket_details)}
                         >
                           {getBenefitsText(item.ticket_details)}
