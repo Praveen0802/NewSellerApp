@@ -41,7 +41,6 @@ import ClearChip from "./components/clearChip";
 
 const InventoryFolder = (props) => {
   const { response = {}, matchId } = props;
-  console.log(response,'responseresponse')
   const {
     match_details = {},
     ticket_details = [],
@@ -195,7 +194,7 @@ const InventoryFolder = (props) => {
       section: item?.block_id,
       row: item?.row,
       price_with_symbol: item?.price_with_symbol,
-      
+
       ...(isMobile
         ? {
             price: item?.price_with_symbol,
@@ -267,16 +266,13 @@ const InventoryFolder = (props) => {
 
   const rightStickyHeaders = isMobile ? [] : [];
 
+  // Fixed tooltip component in the rightStickyColumns mapping
+  // Fixed tooltip component in the rightStickyColumns mapping
   const rightStickyColumns = displayTicketDetails?.map((item) => {
     return [
       ...(isMobile
         ? []
         : [
-            // {
-            //   icon: <p>{item?.price_with_symbol}</p>,
-            //   className:
-            //     "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
-            // },
             {
               icon: (
                 <Image
@@ -315,6 +311,8 @@ const InventoryFolder = (props) => {
               ),
               tooltipPosition: "top",
             },
+            // Updated tooltip content in your rightStickyColumns mapping
+            // Updated tooltip content in your rightStickyColumns mapping
             {
               icon: item?.listing_note?.length > 0 && (
                 <Image
@@ -328,21 +326,34 @@ const InventoryFolder = (props) => {
               key: "document",
               tooltipComponent: item?.listing_note?.length > 0 && (
                 <div>
-                  <p className="text-left">Benifits/Restrictions</p>
-                  {item?.listing_note?.map((note, index) => (
-                    <div className="flex flex-col gap-2" key={index}>
-                      <ul
-                        className={`list-disc ml-[20px] ${
-                          item?.listing_note?.length > 3 &&
-                          "grid grid-cols-2 gap-1"
-                        }`}
-                      >
-                        {Object.values(note).map((value, i) => (
-                          <li key={i}>{value}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
+                  <div className="font-medium text-gray-800 mb-2 text-xs pb-1 border-b border-gray-200">
+                    Benefits/Restrictions
+                  </div>
+                  <div className="space-y-1 max-h-32 overflow-y-auto text-xs">
+                    {item?.listing_note?.map((note, index) => (
+                      <div key={index}>
+                        {typeof note === "object" && note !== null ? (
+                          <div className="space-y-1">
+                            {Object.values(note).map((value, i) => (
+                              <div
+                                key={i}
+                                className="text-gray-700 leading-tight"
+                              >
+                                •{" "}
+                                {typeof value === "string"
+                                  ? value
+                                  : String(value)}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-gray-700 leading-tight">
+                            • {typeof note === "string" ? note : String(note)}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ),
               tooltipPosition: "top",

@@ -107,8 +107,8 @@ const FloatingSelect = ({
           return itemValue !== optionValue;
         });
       } else {
-        // Add option if not selected
-        newSelected = [...selected, option];
+        // Add option if not selected - return just the value, not the whole object
+        newSelected = [...selected, optionValue];
       }
 
       setSelected(newSelected);
@@ -165,16 +165,19 @@ const FloatingSelect = ({
       }
     } else {
       // Select all filtered options that aren't already selected
-      const newOptions = filteredOptions.filter((option) => {
-        const optionValue = option.value !== undefined ? option.value : option;
-        return !selected.some((item) => {
-          const itemValue =
-            typeof item === "object" && item !== null ? item.value : item;
-          return itemValue === optionValue;
-        });
-      });
+      // FIXED: Extract only the values, not the entire objects
+      const newOptionValues = filteredOptions
+        .filter((option) => {
+          const optionValue = option.value !== undefined ? option.value : option;
+          return !selected.some((item) => {
+            const itemValue =
+              typeof item === "object" && item !== null ? item.value : item;
+            return itemValue === optionValue;
+          });
+        })
+        .map((option) => option.value !== undefined ? option.value : option);
 
-      const newSelected = [...selected, ...newOptions];
+      const newSelected = [...selected, ...newOptionValues];
       setSelected(newSelected);
       if (onSelect) {
         onSelect(newSelected, keyValue, "select");
