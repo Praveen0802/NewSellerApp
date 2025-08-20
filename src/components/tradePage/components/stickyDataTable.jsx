@@ -147,6 +147,8 @@ const StickyDataTable = ({
   dateFormatConfig = {}, // New prop for date formatting configuration
   onSort = null, // New prop for handling sort operations
   currentSort = null, // Current sort state { sortableKey: string, sort_order: 'ASC'|'DESC' }
+  stickyColumnWidth = 50, // NEW: Width per sticky column in pixels (default: 50px)
+  stickyColumnsConfig = {}, // NEW: Configuration object for sticky columns
 }) => {
   // Use whichever callback is provided
   const scrollEndCallback = onScrollEnd || fetchScrollEnd;
@@ -157,7 +159,7 @@ const StickyDataTable = ({
   // Use external sort state if provided, otherwise use internal
   const sortState = currentSort || internalSortState;
 
-  // Calculate the width of sticky columns based on consistent sizing
+  // Calculate the width of sticky columns based on configuration
   const maxStickyColumnsLength =
     rightStickyColumns.length > 0
       ? Math.max(
@@ -167,7 +169,22 @@ const StickyDataTable = ({
           0
         )
       : 0;
-  const stickyColumnsWidth = maxStickyColumnsLength * 50; // 50px per column
+
+  // NEW: Calculate sticky columns width with configuration
+  const stickyColumnsWidth = useMemo(() => {
+    // If stickyColumnsConfig has totalWidth, use that
+    if (stickyColumnsConfig.totalWidth) {
+      return stickyColumnsConfig.totalWidth;
+    }
+    
+    // If stickyColumnsConfig has individual column widths, sum them up
+    if (stickyColumnsConfig.columnWidths && Array.isArray(stickyColumnsConfig.columnWidths)) {
+      return stickyColumnsConfig.columnWidths.reduce((sum, width) => sum + width, 0);
+    }
+    
+    // Fallback to the old calculation with configurable width per column
+    return maxStickyColumnsLength * stickyColumnWidth;
+  }, [maxStickyColumnsLength, stickyColumnWidth, stickyColumnsConfig]);
 
   // Split headers into regular and sticky columns
   const regularHeaders = headers.filter(
@@ -584,6 +601,14 @@ const StickyDataTable = ({
       .map((_) => []);
   }, [rightStickyColumns, displayData]);
 
+  // NEW: Get width for individual sticky column
+  const getStickyColumnWidth = (columnIndex) => {
+    if (stickyColumnsConfig.columnWidths && Array.isArray(stickyColumnsConfig.columnWidths)) {
+      return stickyColumnsConfig.columnWidths[columnIndex] || stickyColumnWidth;
+    }
+    return stickyColumnWidth;
+  };
+
   return (
     <div ref={containerRef} className="w-full relative">
       {/* Main scrollable table container */}
@@ -735,6 +760,10 @@ const StickyDataTable = ({
                       <th
                         key={`sticky-header-${idx}`}
                         className="py-2 px-2 text-left text-[#7D82A4] text-[13px] border-r-[1px] border-[#E0E1EA] font-medium whitespace-nowrap"
+                        style={{ 
+                          width: getStickyColumnWidth(idx),
+                          minWidth: getStickyColumnWidth(idx)
+                        }}
                       >
                         {header}
                       </th>
@@ -793,6 +822,10 @@ const StickyDataTable = ({
                         <th
                           key={`empty-header-${idx}`}
                           className="py-2 px-2"
+                          style={{ 
+                            width: getStickyColumnWidth(idx),
+                            minWidth: getStickyColumnWidth(idx)
+                          }}
                         ></th>
                       )
                     )}
@@ -877,6 +910,10 @@ const StickyDataTable = ({
                             <td
                               key={`shimmer-${rowIndex}-${colIndex}`}
                               className="py-2 text-sm align-middle text-center"
+                              style={{ 
+                                width: getStickyColumnWidth(colIndex),
+                                minWidth: getStickyColumnWidth(colIndex)
+                              }}
                             >
                               <div className="flex justify-center">
                                 <div className="w-8 h-8">
@@ -894,6 +931,10 @@ const StickyDataTable = ({
                               className={`text-sm align-middle text-center border-r-[1px] border-[#E0E1EA] ${
                                 column?.className || ""
                               }`}
+                              style={{ 
+                                width: getStickyColumnWidth(colIndex),
+                                minWidth: getStickyColumnWidth(colIndex)
+                              }}
                             >
                               <div className="flex justify-center">
                                 {column?.icon && column?.tooltipComponent ? (
@@ -936,6 +977,10 @@ const StickyDataTable = ({
                             <td
                               key={`${rowIndex}-empty-${i}`}
                               className="py-2 text-sm"
+                              style={{ 
+                                width: getStickyColumnWidth(rowStickyColumns.length + i),
+                                minWidth: getStickyColumnWidth(rowStickyColumns.length + i)
+                              }}
                             ></td>
                           ))}
                         </>

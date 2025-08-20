@@ -16,7 +16,7 @@
     const { headers, query } = req;
     const { booking_id } = query; // Extract booking_id from query parameters
 
-
+console.log(booking_id, "booking_id");
     const parsedCookie = parseCookie(headers?.cookie);
     const authToken = decodeURIComponent(parsedCookie?.auth_token);
 

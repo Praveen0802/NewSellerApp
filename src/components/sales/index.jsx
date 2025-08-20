@@ -671,7 +671,7 @@ const SalesPage = (props) => {
       className: " cursor-pointer",
     },
   ]);
-  
+
   const getCountByStatus = (status) => {
     return salesCount?.find((item) => item.status === status)?.orders || 0;
   };
@@ -765,14 +765,16 @@ const SalesPage = (props) => {
     },
   ];
 
-  const activeTabConfig = tabsConfig.find(tab => tab.key === activeTab);
-
+  const activeTabConfig = tabsConfig.find((tab) => tab.key === activeTab);
 
   // Updated itemConfig with disabled property
   const itemConfig = {
     [profile]: [
       {
-        name: (activeTabConfig?.name === "Delivered" || activeTab === "delivered"? "Delivery": activeTabConfig?.name || activeTab) +" Revenue",
+        name:
+          (activeTabConfig?.name === "Delivered" || activeTab === "delivered"
+            ? "Delivery"
+            : activeTabConfig?.name || activeTab) + " Revenue",
         value: overViewData?.amount_with_currency,
       },
       {
@@ -1128,13 +1130,12 @@ const SalesPage = (props) => {
     setCurrency(currencyCode);
   };
 
-
   const { downloadCSV } = useCSVDownload();
 
   const handleDownloadCSV = async () => {
     setCsvLoader(true);
     try {
-      const response = await downloadSalesCSVReport({
+      const response = await downloadSalesCSVReport("", {
         order_status: profile,
         currency: currency,
       });

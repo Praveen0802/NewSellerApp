@@ -38,18 +38,21 @@ const TradeHome = (props) => {
   }, []);
 
   const constructViewDataType = (array) => {
-    return Array.isArray(array) && array?.map((item) => {
-      return {
-        id: item?.m_id,
-        name: item?.match_name,
-        date: desiredFormatDate(item?.match_date),
-        time: item?.match_time,
-        listing: item?.listings,
-        league: item?.tournament_name || item?.othereventCategory_name,
-        availableTickets: item?.available_tickets,
-        priceFrom: item?.price_start_from_with_currency,
-      };
-    });
+    return (
+      Array.isArray(array) &&
+      array?.map((item) => {
+        return {
+          id: item?.m_id,
+          name: item?.match_name,
+          date: desiredFormatDate(item?.match_date),
+          time: item?.match_time,
+          listing: item?.listings,
+          league: item?.tournament_name || item?.othereventCategory_name,
+          availableTickets: item?.available_tickets,
+          priceFrom: item?.price_start_from_with_currency,
+        };
+      })
+    );
   };
 
   const sections = [
@@ -105,80 +108,92 @@ const TradeHome = (props) => {
     <div className="w-full bg-gray-100 md:p-4 p-2 h-full">
       {isMobile && (
         <div className="flex overflow-x-auto pb-2 mb-2 gap-2 sticky top-0 bg-gray-100 z-10 -mx-2 px-2 pt-2">
-          {sections.map((section, index) => (
-            <div
-              key={`tab-${index}`}
-              onClick={() => toggleSection(index)}
-              className={`flex-shrink-0 py-2 px-3 rounded-full flex items-center gap-1 cursor-pointer ${
-                expandedSections[index]
-                  ? "bg-[#343432] text-white"
-                  : "bg-white text-[#130061] border border-[#130061]"
-              }`}
-            >
-              <IconStore.eye className="size-4" />
-              <span className="text-xs whitespace-nowrap font-medium">
-                {section.name}
-              </span>
-            </div>
-          ))}
+          {sections.map((section, index) => {
+            if (section?.events?.length == 0) {
+              return null;
+            }
+            return (
+              <div
+                key={`tab-${index}`}
+                onClick={() => toggleSection(index)}
+                className={`flex-shrink-0 py-2 px-3 rounded-full flex items-center gap-1 cursor-pointer ${
+                  expandedSections[index]
+                    ? "bg-[#343432] text-white"
+                    : "bg-white text-[#130061] border border-[#130061]"
+                }`}
+              >
+                <IconStore.eye className="size-4" />
+                <span className="text-xs whitespace-nowrap font-medium">
+                  {section.name}
+                </span>
+              </div>
+            );
+          })}
         </div>
       )}
 
       <div className="space-y-3">
-        {sections.map((section, index) => (
-          <div
-            key={index}
-            className={`transition-all duration-300 ease-in-out ${
-              isMobile ? "mb-2" : "mb-4"
-            }`}
-          >
-            {/* Section header */}
+        {sections.map((section, index) => {
+          if (section?.events?.length == 0) {
+            return null;
+          }
+          return (
             <div
-              className={`flex items-center justify-between bg-[#343432] text-white px-4 py-[14px] ${
-                expandedSections[index] ? "rounded-t-[6px]" : "rounded-[6px]"
-              } cursor-pointer`}
-              onClick={() => toggleSection(index)}
-            >
-              <div className="flex gap-3 items-center">
-              <IconStore.eye className="size-4" />
-                <span className="text-[14px] font-medium">{section.name}</span>
-              </div>
-              <div className="flex items-center bg-[#FFFFFF26] p-1 rounded-full">
-                {expandedSections[index] ? (
-                  <IconStore.chevronUp className="size-4" />
-                ) : (
-                  <IconStore.chevronDown className="size-4" />
-                )}
-              </div>
-            </div>
-
-            {/* Section content */}
-            <div
-              className={`bg-white rounded-b shadow overflow-hidden transition-all duration-300 ease-in-out ${
-                expandedSections[index]
-                  ? "max-h-[500px] md:max-h-[400px] opacity-100"
-                  : "max-h-0 opacity-0"
+              key={index}
+              className={`transition-all duration-300 ease-in-out ${
+                isMobile ? "mb-2" : "mb-4"
               }`}
             >
-              <div className="overflow-y-auto max-h-[500px] md:max-h-[400px]">
-                {section?.events?.length > 0 ? (
-                  section.events.map((event, eventIndex) => (
-                    <EventListView
-                      key={eventIndex}
-                      showEventSearch={showEventSearch}
-                      event={event}
-                      onClick={() => handleEventClick(event)}
-                    />
-                  ))
-                ) : (
-                  <div className="p-4 text-center text-gray-500 flex flex-col items-center">
-                    <p>No events available</p>
-                  </div>
-                )}
+              {/* Section header */}
+              <div
+                className={`flex items-center justify-between bg-[#343432] text-white px-4 py-[14px] ${
+                  expandedSections[index] ? "rounded-t-[6px]" : "rounded-[6px]"
+                } cursor-pointer`}
+                onClick={() => toggleSection(index)}
+              >
+                <div className="flex gap-3 items-center">
+                  <IconStore.eye className="size-4" />
+                  <span className="text-[14px] font-medium">
+                    {section.name}
+                  </span>
+                </div>
+                <div className="flex items-center bg-[#FFFFFF26] p-1 rounded-full">
+                  {expandedSections[index] ? (
+                    <IconStore.chevronUp className="size-4" />
+                  ) : (
+                    <IconStore.chevronDown className="size-4" />
+                  )}
+                </div>
+              </div>
+
+              {/* Section content */}
+              <div
+                className={`bg-white rounded-b shadow overflow-hidden transition-all duration-300 ease-in-out ${
+                  expandedSections[index]
+                    ? "max-h-[500px] md:max-h-[400px] opacity-100"
+                    : "max-h-0 opacity-0"
+                }`}
+              >
+                <div className="overflow-y-auto max-h-[500px] md:max-h-[400px]">
+                  {section?.events?.length > 0 ? (
+                    section.events.map((event, eventIndex) => (
+                      <EventListView
+                        key={eventIndex}
+                        showEventSearch={showEventSearch}
+                        event={event}
+                        onClick={() => handleEventClick(event)}
+                      />
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-gray-500 flex flex-col items-center">
+                      <p>No events available</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

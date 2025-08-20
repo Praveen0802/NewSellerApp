@@ -44,7 +44,7 @@ const PayoutPage = (props) => {
     EUR: euFlag,
     AED: Flag,
   };
-
+console.log(apiData,'apiDataapiData')
   const [toggleDropDown, setToggleDropDown] = useState(true);
   const [selectedTab, setSelectedTab] = useState("payout"); // New state for tab selection
   const [currentHistoryData, setCurrentHistoryData] = useState(
@@ -485,7 +485,6 @@ const PayoutPage = (props) => {
       const response = isOrderTab
         ? await getPayoutOrderReport()
         : await getPayoutHistoryReport();
-      console.log(response, "responseresponseresponse");
       if (response) {
         downloadCSV(
           response,

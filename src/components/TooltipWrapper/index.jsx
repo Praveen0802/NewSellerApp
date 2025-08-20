@@ -13,23 +13,23 @@ export default function TooltipWrapper({
 
   const positionConfigs = {
     top: {
-      tooltipClass: "bottom-full right-0 mb-2",
-      pointerClass: "absolute top-full right-4",
+      tooltipClass: "bottom-full left-1/2 -translate-x-1/2 mb-1",
+      pointerClass: "absolute top-full left-1/2 -translate-x-1/2",
       borderClass: "border-l-4 border-r-4 border-t-4 border-t-gray-800",
     },
     bottom: {
-      tooltipClass: "top-full right-0 mt-2",
-      pointerClass: "absolute bottom-full right-4",
+      tooltipClass: "top-full left-1/2 -translate-x-1/2 mt-1",
+      pointerClass: "absolute bottom-full left-1/2 -translate-x-1/2",
       borderClass: "border-l-4 border-r-4 border-b-4 border-b-gray-800",
     },
     left: {
-      tooltipClass: "right-full top-0 mr-2",
-      pointerClass: "absolute top-4 left-full",
+      tooltipClass: "right-full top-1/2 -translate-y-1/2 mr-1",
+      pointerClass: "absolute top-1/2 left-full -translate-y-1/2",
       borderClass: "border-t-4 border-b-4 border-l-4 border-l-gray-800",
     },
     right: {
-      tooltipClass: "left-full top-0 ml-2",
-      pointerClass: "absolute top-4 right-full",
+      tooltipClass: "left-full top-1/2 -translate-y-1/2 ml-1",
+      pointerClass: "absolute top-1/2 right-full -translate-y-1/2",
       borderClass: "border-t-4 border-b-4 border-r-4 border-r-gray-800",
     },
   };
@@ -66,17 +66,11 @@ export default function TooltipWrapper({
       {children}
       {isActive && (
         <div
-          className={`absolute ${config.tooltipClass} bg-white text-xs shadow-lg border border-gray-200 px-3 py-2 rounded-lg`}
-          style={{ 
-            zIndex: 10000,
-            width: '280px',
-            whiteSpace: 'normal'
-          }}
+          className={`absolute z-[9999] ${config.tooltipClass} bg-white  text-xs shadow-md px-2 py-1 rounded whitespace-nowrap`}
         >
           {component}
           <div
             className={`${config.pointerClass} w-0 h-0 border-solid border-transparent ${config.borderClass}`}
-            style={{ zIndex: 10001 }}
           ></div>
         </div>
       )}

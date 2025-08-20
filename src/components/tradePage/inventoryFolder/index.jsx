@@ -176,7 +176,6 @@ const InventoryFolder = (props) => {
     { key: "category", label: "Category" },
     { key: "section", label: "Section/Block" },
     { key: "row", label: "Row" },
-    { key: "price_with_symbol", label: "Ticket Price" },
     ...(isMobile
       ? [
           { key: "price", label: "Price" },
@@ -193,8 +192,6 @@ const InventoryFolder = (props) => {
       category: item?.seat_category,
       section: item?.block_id,
       row: item?.row,
-      price_with_symbol: item?.price_with_symbol,
-
       ...(isMobile
         ? {
             price: item?.price_with_symbol,
@@ -264,7 +261,7 @@ const InventoryFolder = (props) => {
     fetchAPIDetails({ page: 1 });
   };
 
-  const rightStickyHeaders = isMobile ? [] : [];
+  const rightStickyHeaders = isMobile ? [] : ["Ticket Price"];
 
   // Fixed tooltip component in the rightStickyColumns mapping
   // Fixed tooltip component in the rightStickyColumns mapping
@@ -273,6 +270,11 @@ const InventoryFolder = (props) => {
       ...(isMobile
         ? []
         : [
+            {
+              icon: <p>{item?.price_with_symbol}</p>,
+              className:
+                "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
+            },
             {
               icon: (
                 <Image
@@ -635,6 +637,16 @@ const InventoryFolder = (props) => {
                 rightStickyHeaders={rightStickyHeaders}
                 handleTicketMouseEnter={handleTicketMouseEnter}
                 handleTicketMouseLeave={handleTicketMouseLeave}
+                stickyColumnsConfig={{
+                  columnWidths: [
+                    120, // Ticket Price - wider for values like £90,349.00
+                    50, // Attachment icon
+                    50, // Hand icon
+                    50, // Document icon
+                    50, // Star icon
+                    80, // Buy button
+                  ],
+                }}
               />
             </div>
           </div>
