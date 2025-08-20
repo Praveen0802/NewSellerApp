@@ -21,6 +21,28 @@ const TradeTickets = ({ resultData, handleScrollEnd, loader }) => {
   const dropdownRef = useRef(null);
   const router = useRouter();
 
+  function formatDateTime(datetime) {
+    if (!datetime) return "";
+
+    const date = new Date(datetime);
+
+    // Format options
+    const options = {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    };
+
+    return date
+      .toLocaleDateString("en-GB", options)
+      .replace(/,/g, ",")
+      .replace(/(\d{2}:\d{2})/, "$1");
+  }
+
   const tracking = {
     title: "Tracking",
     count: resultData?.purchaseTracking?.tracking || "0",
@@ -41,7 +63,7 @@ const TradeTickets = ({ resultData, handleScrollEnd, loader }) => {
     listItems:
       resultData?.tradeOrders?.data?.data?.map((item) => ({
         title: item?.match_name,
-        amount: item?.match_datetime,
+        amount: formatDateTime(item?.match_datetime),
       })) || [],
     keyValue: "tradeOrders",
     meta: resultData?.tradeOrders?.data,
@@ -224,20 +246,20 @@ const TradeTickets = ({ resultData, handleScrollEnd, loader }) => {
                       >
                         <div className="border border-[#eaeaf1] rounded-md p-2 hover:bg-[#eaeaf1]">
                           {/* Match name with proper text overflow */}
-                          <p 
-                            className="text-[13px] text-[#343432] font-semibold mb-2 truncate" 
+                          <p
+                            className="text-[13px] text-[#343432] font-semibold mb-2 truncate"
                             title={item?.match_name}
                           >
                             {item?.match_name}
                           </p>
-                          
+
                           {/* Details container with flexible layout */}
                           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
                             {/* Date */}
                             <div className="flex items-center gap-1 min-w-0">
                               <Calendar className="w-3 h-3 flex-shrink-0" />
-                              <span 
-                                className="text-[#7D82A4] text-[10px] font-normal truncate" 
+                              <span
+                                className="text-[#7D82A4] text-[10px] font-normal truncate"
                                 title={desiredFormatDate(item?.match_date)}
                               >
                                 {desiredFormatDate(item?.match_date)}
@@ -247,7 +269,7 @@ const TradeTickets = ({ resultData, handleScrollEnd, loader }) => {
                             {/* Time */}
                             <div className="flex items-center gap-1 min-w-0">
                               <Clock className="w-3 h-3 flex-shrink-0" />
-                              <span 
+                              <span
                                 className="text-[#7D82A4] text-[10px] font-normal truncate"
                                 title={item?.match_time}
                               >
@@ -258,7 +280,7 @@ const TradeTickets = ({ resultData, handleScrollEnd, loader }) => {
                             {/* Location */}
                             <div className="flex items-center gap-1 min-w-0 flex-1">
                               <MapPin className="w-3 h-3 flex-shrink-0" />
-                              <span 
+                              <span
                                 className="text-[#7D82A4] text-[10px] font-normal truncate"
                                 title={`${item?.stadium}, ${item?.city}, ${item?.country}`}
                               >
@@ -273,17 +295,17 @@ const TradeTickets = ({ resultData, handleScrollEnd, loader }) => {
                     // No results found message
                     <div className="text-center py-8">
                       <div className="text-gray-400 mb-2">
-                        <svg 
-                          className="w-12 h-12 mx-auto mb-3" 
-                          fill="none" 
-                          stroke="currentColor" 
+                        <svg
+                          className="w-12 h-12 mx-auto mb-3"
+                          fill="none"
+                          stroke="currentColor"
                           viewBox="0 0 24 24"
                         >
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={1.5} 
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                           />
                         </svg>
                       </div>

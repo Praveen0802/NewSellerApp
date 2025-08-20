@@ -325,6 +325,7 @@ const OrderInfo = ({
     delivery_details: order_details?.delivery_status_label,
     days_to_event: order_details?.days_in_event,
     ticket_type: ticket_details?.[0]?.ticket_types,
+    payout_date: order_details?.payout_date,
   };
   console.log(orderObject, "orderObjectorderObject");
   // Format customer details - prioritize attendee details, then user address, then address
@@ -375,7 +376,7 @@ const OrderInfo = ({
     const payload = {
       [id_key_name]: String(order_id),
       order_notes: note,
-    };  
+    };
 
     const resp =
       type === "sales"
@@ -442,7 +443,33 @@ const OrderInfo = ({
   };
 
   const currentOrderObject = updatedOrderObject || orderObject;
-
+  const OrderValueObject = [
+    {
+      key: "order_id",
+      name: "Order ID",
+    },
+    {
+      key: "order_date",
+      name: "Order Date",
+    },
+    {
+      key: "order_status",
+      name: "Order Status",
+    },
+    {
+      name: "Delivery By",
+      key: "delivered_by",
+    },
+    {
+      name: "Days to Event",
+      key: "days_to_event",
+    },
+    {
+      name: "Expected Payout Date",
+      key: "payout_date",
+    },
+  ];
+  console.log(currentOrderObject, "currentOrderObjectcurrentOrderObject");
   return (
     <RightViewModal
       className={`transition-all duration-300 ease-in-out ${
@@ -458,7 +485,7 @@ const OrderInfo = ({
       >
         <div className="overflow-auto rounded-md bg-white h-full">
           <div className="flex items-center border-b-[1px] border-[#E0E1EA] justify-between py-[13px] px-[24px]">
-            <p className="text-[18px] text-[#323A70]">
+            <p className="text-[18px] text-[#323A70] font-semibold ">
               Order ID:
               {order_details?.booking_no || order_details?.order_id}
             </p>
@@ -516,6 +543,7 @@ const OrderInfo = ({
                   order_id_label={order_id_label}
                   ticketTypesList={ticketTypesList}
                   onTicketTypeChange={handleTicketTypeChange}
+                  OrderValueObject={OrderValueObject}
                 />
               </div>
 

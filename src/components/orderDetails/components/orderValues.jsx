@@ -3,34 +3,71 @@ import { IconStore } from "@/utils/helperFunctions/iconStore";
 import React from "react";
 import DisplayValues from "./displayValues";
 
-const OrderValues = ({ 
-  orderObject, 
-  order_id_label = null, 
-  ticketTypesList = [], 
-  onTicketTypeChange = () => {} 
+const OrderValues = ({
+  orderObject,
+  order_id_label = null,
+  ticketTypesList = [],
+  onTicketTypeChange = () => {},
+  OrderValueObject = [], // Added this prop to receive the field definitions
 }) => {
-  console.log(orderObject,'orderObject')
+  console.log(orderObject, "orderObject", OrderValueObject);
+
+  // Function to format ISO date string to DD/MM/YYYY format
+  const formatDeliveredByDate = (dateString) => {
+    if (!dateString) return dateString;
+
+    try {
+      const date = new Date(dateString);
+      // Check if it's a valid date
+      if (isNaN(date.getTime())) return dateString;
+
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateString;
+    }
+  };
+
+  // Function to get the formatted value based on the key
+  const getFormattedValue = (key, value) => {
+    if (key === "delivered_by" || key == "payout_date") {
+      return formatDeliveredByDate(value);
+    }
+    return value;
+  };
+
   return (
     <div className="border-[1px] border-[#E0E1EA] rounded-md">
       <p className="px-[16px] py-[12px] text-[16px] font-semibold text-[#343432] border-b-[1px] border-[#E0E1EA]">
         Order Details
       </p>
       <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {Object?.entries(orderObject)?.map(([key, value], index) => {
-          const copyKeys = key == "order_id";
-          const orderStatusKey = key == "order_status";
-          const deliveryKey = key == "delivery_by";
-          
+        {OrderValueObject?.map((fieldConfig, index) => {
+          const { key, name } = fieldConfig;
+          const value = orderObject[key];
+
+          // Skip if the value doesn't exist in orderObject
+          if (value === undefined || value === null) return null;
+
+          const copyKeys = key === "order_id";
+          const orderStatusKey = key === "order_status";
+          const deliveryKey = key === "delivery_by";
+          const formattedValue = getFormattedValue(key, value);
+
           return (
             <DisplayValues
-              text={convertSnakeCaseToCamelCase(key)}
+              text={name} // Use the name from OrderValueObject instead of converting snake_case
               copyKeys={copyKeys}
               orderStatusKey={orderStatusKey}
               orderObject={orderObject}
               deliveryKey={deliveryKey}
               ticketTypesList={ticketTypesList}
               onTicketTypeChange={onTicketTypeChange}
-              value={ value}
+              value={formattedValue}
               key={index}
             />
           );

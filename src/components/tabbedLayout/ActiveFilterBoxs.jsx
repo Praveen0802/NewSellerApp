@@ -1,4 +1,4 @@
-// Updated ActiveFiltersBox component with excludedKeys prop
+// Updated ActiveFiltersBox component with proper date range handling
 import React from "react";
 import reloadIcon from "../../../public/reload.svg";
 import Image from "next/image";
@@ -9,8 +9,7 @@ const ActiveFiltersBox = ({
   onClearAllFilters,
   currentTab = "home",
   filterConfig = {},
-  // NEW: Add excludedKeys prop to exclude specific keys from being displayed
-  excludedKeys = [], // Array of keys to exclude from active filters display
+  excludedKeys = [],
 }) => {
   console.log("activeFilters", activeFilters);
 
@@ -35,7 +34,42 @@ const ActiveFiltersBox = ({
     }
   };
 
-  // ... (keep all your existing helper functions unchanged) ...
+  // NEW: Helper function to check if date range filters exist and combine them
+  const getDateRangeFilters = () => {
+    const dateRanges = [];
+    const processedKeys = new Set();
+
+    // Define date range patterns
+    const dateRangePatterns = [
+      { from: 'order_date_from', to: 'order_date_to', displayName: 'Order Date' },
+      { from: 'delivery_date_from', to: 'delivery_date_to', displayName: 'Delivery Date' },
+      { from: 'event_date_from', to: 'event_date_to', displayName: 'Event Date' },
+      { from: 'transaction_date_from', to: 'transaction_date_to', displayName: 'Transaction Date' },
+    ];
+
+    dateRangePatterns.forEach(({ from, to, displayName }) => {
+      const fromValue = activeFilters[from];
+      const toValue = activeFilters[to];
+
+      if (fromValue && toValue) {
+        dateRanges.push({
+          key: `${from}_${to}`, // Combined key for identification
+          displayName,
+          fromValue,
+          toValue,
+          fromKey: from,
+          toKey: to
+        });
+        
+        // Mark these keys as processed so they don't appear separately
+        processedKeys.add(from);
+        processedKeys.add(to);
+      }
+    });
+
+    return { dateRanges, processedKeys };
+  };
+
   // Helper function to get label from options array
   const getLabelFromOptions = (options, value) => {
     try {
@@ -100,6 +134,30 @@ const ActiveFiltersBox = ({
     } catch (error) {
       console.warn("Error formatting date for display:", error);
       return dateValue;
+    }
+  };
+
+  // NEW: Helper function to format date range for display
+  const formatDateRangeForDisplay = (dateRange) => {
+    try {
+      const { displayName, fromValue, toValue } = dateRange;
+      
+      if (fromValue && toValue) {
+        return `${displayName}: ${fromValue} - ${toValue}`;
+      }
+      
+      if (fromValue) {
+        return `${displayName}: From ${fromValue}`;
+      }
+      
+      if (toValue) {
+        return `${displayName}: Until ${toValue}`;
+      }
+      
+      return null;
+    } catch (error) {
+      console.warn("Error formatting date range for display:", error);
+      return null;
     }
   };
 
@@ -395,15 +453,21 @@ const ActiveFiltersBox = ({
     }
   };
 
-  // UPDATED: Get active filter entries with excludedKeys support
-  const activeFilterEntries = (() => {
+  // UPDATED: Get active filter entries with excludedKeys support and date range handling
+  const getActiveFilterEntries = () => {
     try {
       if (!activeFilters || typeof activeFilters !== "object") return [];
 
-      return Object.entries(activeFilters).filter(([key, value]) => {
+      const { dateRanges, processedKeys } = getDateRangeFilters();
+      
+      // Get regular filter entries (excluding processed date range keys)
+      const regularEntries = Object.entries(activeFilters).filter(([key, value]) => {
         try {
-          // NEW: Check if this key should be excluded
+          // Skip if this key should be excluded
           if (excludedKeys.includes(key)) return false;
+          
+          // Skip if this key was already processed as part of a date range
+          if (processedKeys.has(key)) return false;
           
           if (value === null || value === undefined || value === "")
             return false;
@@ -434,11 +498,19 @@ const ActiveFiltersBox = ({
           return false;
         }
       });
+
+      // Combine regular entries with date range entries
+      const combinedEntries = [
+        ...regularEntries,
+        ...dateRanges.map(dateRange => [dateRange.key, dateRange])
+      ];
+
+      return combinedEntries;
     } catch (error) {
       console.warn("Error getting active filter entries:", error);
       return [];
     }
-  })();
+  };
 
   // Handle clearing individual filter
   const handleClearFilter = (filterKey) => {
@@ -446,20 +518,38 @@ const ActiveFiltersBox = ({
       if (onFilterChange && filterKey) {
         const updatedFilters = { ...activeFilters };
 
-        if (Array.isArray(updatedFilters[filterKey])) {
-          updatedFilters[filterKey] = [];
-        } else if (typeof updatedFilters[filterKey] === "object") {
-          updatedFilters[filterKey] = {};
+        // Check if this is a date range filter (combined key)
+        const { dateRanges } = getDateRangeFilters();
+        const dateRange = dateRanges.find(dr => dr.key === filterKey);
+        
+        if (dateRange) {
+          // This is a combined date range key, clear both from and to values
+          updatedFilters[dateRange.fromKey] = '';
+          updatedFilters[dateRange.toKey] = '';
+          
+          // Call onFilterChange for both keys to ensure proper state update
+          onFilterChange(dateRange.fromKey, '', updatedFilters, currentTab);
+          // Small timeout to ensure the first call completes
+          setTimeout(() => {
+            onFilterChange(dateRange.toKey, '', updatedFilters, currentTab);
+          }, 0);
         } else {
-          updatedFilters[filterKey] = "";
-        }
+          // Regular filter clearing
+          if (Array.isArray(updatedFilters[filterKey])) {
+            updatedFilters[filterKey] = [];
+          } else if (typeof updatedFilters[filterKey] === "object") {
+            updatedFilters[filterKey] = {};
+          } else {
+            updatedFilters[filterKey] = "";
+          }
 
-        onFilterChange(
-          filterKey,
-          updatedFilters[filterKey],
-          updatedFilters,
-          currentTab
-        );
+          onFilterChange(
+            filterKey,
+            updatedFilters[filterKey],
+            updatedFilters,
+            currentTab
+          );
+        }
       }
     } catch (error) {
       console.error("Error clearing individual filter:", error);
@@ -495,6 +585,8 @@ const ActiveFiltersBox = ({
     }
   };
 
+  const activeFilterEntries = getActiveFilterEntries();
+
   // Don't render if no active filters
   if (activeFilterEntries.length === 0) {
     return null;
@@ -518,7 +610,15 @@ const ActiveFiltersBox = ({
             </button>
             {activeFilterEntries.map(([key, value]) => {
               try {
-                const formattedValue = formatFilterValue(key, value);
+                let formattedValue;
+                
+                // Check if this is a date range filter
+                if (typeof value === 'object' && value.displayName && value.fromValue && value.toValue) {
+                  formattedValue = formatDateRangeForDisplay(value);
+                } else {
+                  formattedValue = formatFilterValue(key, value);
+                }
+                
                 if (formattedValue === null || formattedValue === undefined)
                   return null;
 
@@ -533,7 +633,7 @@ const ActiveFiltersBox = ({
                     <button
                       onClick={() => handleClearFilter(key)}
                       className="text-gray-400 hover:text-gray-600 cursor-pointer flex items-center justify-center"
-                      title={`Remove ${getFilterDisplayName(key)} filter`}
+                      title={`Remove ${typeof value === 'object' && value.displayName ? value.displayName : getFilterDisplayName(key)} filter`}
                     >
                       <svg
                         className="w-3 h-3"

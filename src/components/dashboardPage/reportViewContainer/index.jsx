@@ -3,6 +3,27 @@ import React from "react";
 import LeftViewContainer from "./leftViewContainer";
 import RightViewContainer from "./rightViewContainer";
 
+// Shimmer component
+const Shimmer = () => {
+  return (
+    <div className="bg-white border h-[379px] border-[#eaeaf1] p-3 md:p-5 rounded-md flex flex-col gap-3 md:gap-4  animate-pulse">
+      {/* Header shimmer */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="h-4 md:h-5 bg-gray-200 rounded w-32 md:w-40"></div>
+        <div className="h-8 md:h-9 bg-gray-200 rounded w-[150px]"></div>
+      </div>
+      
+      {/* Content shimmer */}
+      <div className="flex flex-col md:flex-row gap-4 md:gap-5 flex-1">
+        {/* Left side shimmer */}
+        <div className="flex-1 bg-gray-200 rounded-md h-32 md:h-full"></div>
+        {/* Right side shimmer */}
+        <div className="flex-1 bg-gray-200 rounded-md h-32 md:h-full"></div>
+      </div>
+    </div>
+  );
+};
+
 const ReportViewContainer = ({ reportValues }) => {
   const {
     title,
@@ -15,20 +36,28 @@ const ReportViewContainer = ({ reportValues }) => {
     keyValue,
     meta,
     loader,
+    wholeLoader
   } = reportValues;
+  
+  console.log(wholeLoader, 'pppppp');
+
+  // Show shimmer when wholeLoader is true
+  if (wholeLoader) {
+    return <Shimmer />;
+  }
 
   return (
     <div className="bg-white border border-[#eaeaf1] p-3 md:p-5 rounded-md flex flex-col gap-3 md:gap-4 h-full">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-sm md:text-base font-semibold">{title}</p>
-        {/* <CustomSelect
+        <CustomSelect
           selectedValue={selectedOption}
           options={options}
           onSelect={onChange}
           textSize="text-xs md:text-sm"
-          buttonPadding="px-2 md:px-3 py-1 md:py-1.5"
+          buttonPadding="px-2 md:px-3 py-1 w-[150px] md:py-1.5"
           dropdownItemPadding="py-1 pl-2 pr-4 md:pr-6"
-        /> */}
+        />
       </div>
       <div className="flex flex-col md:flex-row gap-4 md:gap-5 flex-1">
         <LeftViewContainer reports={reports} />

@@ -48,11 +48,13 @@ const SalesPage = (props) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedTicketTypes, setSelectedTicketTypes] = useState([]);
 
   const [filtersApplied, setFiltersApplied] = useState({
     order_status: profile,
     page: 1,
   });
+  console.log(filtersApplied, "filtersAppliedfiltersApplied");
   const { teamMembers } = useTeamMembersDetails();
 
   const [activeTab, setActiveTab] = useState(profile || "pending");
@@ -687,7 +689,7 @@ const SalesPage = (props) => {
     {
       name: "Pending",
       key: "pending",
-      count: getCountByStatus("pending"),
+      count: getCountByStatus("pending") || "0",
       route: "/sales/pending",
       amount: getAmountByStatus("pending"),
       options: response?.currencyValues?.map((list) => {
@@ -787,40 +789,40 @@ const SalesPage = (props) => {
         value: overViewData?.e_tickets_count,
         showCheckbox: true,
         key: "ticket_type_1",
-        isChecked: selectedTicketType === "ticket_type_1",
-        disabled: overViewData?.e_tickets_count === 0, // Disable if count is 0
+        isChecked: selectedTicketTypes.includes("ticket_type_1"), // Check if in array
+        disabled: overViewData?.e_tickets_count === 0,
       },
       {
         name: "External Transfer",
         value: overViewData?.external_transfer_count,
         showCheckbox: true,
         key: "ticket_type_2",
-        isChecked: selectedTicketType === "ticket_type_2",
-        disabled: overViewData?.external_transfer_count === 0, // Disable if count is 0
+        isChecked: selectedTicketTypes.includes("ticket_type_2"), // Check if in array
+        disabled: overViewData?.external_transfer_count === 0,
       },
       {
         name: "Mobile Link/PKPASS",
         value: overViewData?.mobile_ticket_count,
         showCheckbox: true,
         key: "ticket_type_3",
-        isChecked: selectedTicketType === "ticket_type_3",
-        disabled: overViewData?.mobile_ticket_count === 0, // Disable if count is 0
+        isChecked: selectedTicketTypes.includes("ticket_type_3"), // Check if in array
+        disabled: overViewData?.mobile_ticket_count === 0,
       },
       {
         name: "Paper Ticket",
         value: overViewData?.paper_ticket_count,
         showCheckbox: true,
         key: "ticket_type_4",
-        isChecked: selectedTicketType === "ticket_type_4",
-        disabled: overViewData?.paper_ticket_count === 0, // Disable if count is 0
+        isChecked: selectedTicketTypes.includes("ticket_type_4"), // Check if in array
+        disabled: overViewData?.paper_ticket_count === 0,
       },
       {
         name: "Local Delivery",
         value: overViewData?.local_delivery_count,
         showCheckbox: true,
         key: "ticket_type_5",
-        isChecked: selectedTicketType === "ticket_type_5",
-        disabled: overViewData?.local_delivery_count === 0, // Disable if count is 0
+        isChecked: selectedTicketTypes.includes("ticket_type_5"), // Check if in array
+        disabled: overViewData?.local_delivery_count === 0,
       },
     ],
   };
@@ -959,7 +961,7 @@ const SalesPage = (props) => {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setSelectedItems([]);
-    setSelectedTicketType(""); // Clear ticket type selection when changing tabs
+    setSelectedTicketTypes([]); // Reset to empty array instead of empty string
     // Reset pagination when changing tabs
     setCurrentPage(1);
     setHasNextPage(true);
@@ -970,9 +972,9 @@ const SalesPage = (props) => {
     const currentTicketTypeValue = filtersApplied?.ticket_type_value;
 
     if (!currentTicketTypeValue) {
-      setSelectedTicketType("");
+      setSelectedTicketTypes([]);
     } else {
-      // Map ticket_type_value back to ticket_type key
+      // Map ticket_type_value back to ticket_type keys for multi-select
       const typeMapping = {
         2: "ticket_type_1",
         6: "ticket_type_2",
@@ -981,14 +983,26 @@ const SalesPage = (props) => {
         5: "ticket_type_5",
       };
 
-      setSelectedTicketType(typeMapping[currentTicketTypeValue] || "");
+      // Split comma-separated values and map them back to keys
+      const selectedValues = currentTicketTypeValue
+        .split(",")
+        .map((val) => parseInt(val.trim()));
+      const selectedKeys = selectedValues
+        .map((val) => typeMapping[val])
+        .filter((key) => key); // Remove any undefined values
+
+      setSelectedTicketTypes(selectedKeys);
     }
   }, [filtersApplied?.ticket_type_value]);
 
   const handleFilterChange = async (filterKey, value) => {
     // Reset sort state when filters change (optional)
     setSortState(null);
-
+    console.log(
+      "🚀 ~ file: index.jsx:164 ~ handleFilterChange ~ value:",
+      value,
+      filterKey
+    );
     let params = {};
     if (filterKey === "orderDate") {
       params = {
@@ -1009,6 +1023,20 @@ const SalesPage = (props) => {
         ...params,
         event_date_from: value?.startDate,
         event_date_to: value?.endDate,
+        page: 1,
+      };
+    } else if (filterKey == "order_date_to") {
+      params = {
+        ...params,
+        order_date_to: "",
+        order_date_from: "",
+        page: 1,
+      };
+    } else if (filterKey == "delivery_date_to") {
+      params = {
+        ...params,
+        delivery_date_to: "",
+        delivery_date_from: "",
         page: 1,
       };
     } else if (filterKey == "ticket_in_hand") {
@@ -1047,58 +1075,43 @@ const SalesPage = (props) => {
     // Reset sort state when filters change (optional)
     setSortState(null);
 
-    let params = {};
+    let updatedSelectedTypes = [...selectedTicketTypes];
 
-    // If the same checkbox is clicked again, uncheck it
-    if (selectedTicketType === checkboxKey && isChecked) {
-      setSelectedTicketType("");
-      params = {
-        ...filtersApplied,
-        ticket_type_value: "",
-        page: 1,
-      };
-    } else {
-      // Set new selection
-      setSelectedTicketType(checkboxKey);
-
-      if (checkboxKey === "ticket_type_1") {
-        params = {
-          ...filtersApplied,
-          ticket_type_value: isChecked ? "2" : "",
-          page: 1,
-        };
-      } else if (checkboxKey === "ticket_type_2") {
-        params = {
-          ...filtersApplied,
-          ticket_type_value: isChecked ? "6" : "",
-          page: 1,
-        };
-      } else if (checkboxKey === "ticket_type_3") {
-        params = {
-          ...filtersApplied,
-          ticket_type_value: isChecked ? "4" : "",
-          page: 1,
-        };
-      } else if (checkboxKey === "ticket_type_4") {
-        params = {
-          ...filtersApplied,
-          ticket_type_value: isChecked ? "3" : "",
-          page: 1,
-        };
-      } else if (checkboxKey === "ticket_type_5") {
-        params = {
-          ...filtersApplied,
-          ticket_type_value: isChecked ? "5" : "",
-          page: 1,
-        };
-      } else {
-        params = {
-          ...filtersApplied,
-          [checkboxKey]: isChecked ? 1 : 0,
-          page: 1,
-        };
+    // If checkbox is being checked, add it to the array
+    if (isChecked) {
+      if (!updatedSelectedTypes.includes(checkboxKey)) {
+        updatedSelectedTypes.push(checkboxKey);
       }
+    } else {
+      // If checkbox is being unchecked, remove it from the array
+      updatedSelectedTypes = updatedSelectedTypes.filter(
+        (type) => type !== checkboxKey
+      );
     }
+
+    // Update the state
+    setSelectedTicketTypes(updatedSelectedTypes);
+
+    // Map checkbox keys to their corresponding ticket type values
+    const ticketTypeMapping = {
+      ticket_type_1: "2", // E-Ticket
+      ticket_type_2: "6", // External Transfer
+      ticket_type_3: "4", // Mobile Link/PKPASS
+      ticket_type_4: "3", // Paper Ticket
+      ticket_type_5: "5", // Local Delivery
+    };
+
+    // Convert selected checkbox keys to their corresponding values
+    const selectedValues = updatedSelectedTypes
+      .map((key) => ticketTypeMapping[key])
+      .filter((value) => value) // Remove any undefined values
+      .join(","); // Join with comma
+
+    let params = {
+      ...filtersApplied,
+      ticket_type_value: selectedValues || "", // Pass empty string if no selections
+      page: 1,
+    };
 
     apiCall(params);
   };
@@ -1164,7 +1177,7 @@ const SalesPage = (props) => {
     }
   };
   const handleClearAllFilters = async () => {
-    setSelectedTicketType("");
+    setSelectedTicketTypes([]); // Reset to empty array
     setSortState(null); // Reset sort state
     await apiCall({}, false, false, true);
   };
@@ -1222,7 +1235,7 @@ const SalesPage = (props) => {
           <div className="p-4 border-b flex justify-between border-gray-200">
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold">
-                {formatTabName(activeTab)} Orders ({listData.length})
+                {formatTabName(activeTab)} Orders ({overViewData?.orders})
               </h2>
               {hasNextPage && (
                 <span className="text-sm text-gray-500">

@@ -554,7 +554,7 @@ const MySalesUploadTickets = ({
         </div>
         <div className="text-xs truncate">
           {ETicketsFlow ? (
-            "E-Ticket"
+            "Mobile Ticket"
           ) : paperTicketFlow ? (
             "Paper Ticket"
           ) : proofUploadView ? (
@@ -817,7 +817,7 @@ const MySalesUploadTickets = ({
 
   const getModalTitle = () => {
     if (proofUploadView) return "Upload Proof Document";
-    if (ETicketsFlow) return "Configure E-Tickets";
+    if (ETicketsFlow) return "Configure Mobile Ticket";
     if (paperTicketFlow) return "Configure Paper Tickets";
     return "Upload Tickets";
   };

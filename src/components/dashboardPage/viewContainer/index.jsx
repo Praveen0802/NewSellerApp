@@ -19,8 +19,6 @@ const ViewContainer = ({
   const scrollContainerRef = useRef(null);
   const [hasMore, setHasMore] = useState(true);
 
-  console.log("displayValues", displayValues);
-
   // Update hasMore when meta changes
   useEffect(() => {
     if (meta) {
@@ -56,31 +54,31 @@ const ViewContainer = ({
   );
 
   return (
-    <div className="bg-white flex flex-col gap-3 md:gap-4 w-full rounded-md p-3 md:p-5">
-      <div className="flex justify-between items-center flex-wrap gap-2">
-        <p className="text-[#343432] text-sm md:text-base whitespace-nowrap">
+    <div className="bg-white flex flex-col gap-3 md:gap-4 w-full rounded-md p-4">
+      <div className="flex justify-between items-center flex-wrap gap-1">
+        <p className="text-[#343432] text-[13px] whitespace-nowrap">
           {title}
         </p>
         <CustomSelect
           selectedValue={selectedOption}
           options={options}
           onSelect={onChange}
-          textSize="text-xs md:text-sm w-[200px]"
-          buttonPadding="px-2 md:px-3 py-1 md:py-1.5"
+          textSize="!text-xs  w-[150px]"
+          buttonPadding="px-1 py-1 "
           dropdownItemPadding="py-1 pl-2 pr-4 md:pr-6"
         />
       </div>
 
       <div className="border border-[#eaeaf1] rounded-md">
-        <div className="grid md:grid-cols-2 p-3 gap-3 md:p-4">
+        <div className="grid md:grid-cols-1 p-4 gap-4">
           {listValues?.map((listItem, listIndex) => {
             return (
               <div
-                className="flex items-center border-1 p-2 rounded-md border-[#eaeaf1] justify-between"
+                className="flex items-center justify-between"
                 key={listIndex}
               >
                 <div className="flex gap-2 items-center">
-                  <div className="bg-[#F2F5FD] p-1.5 md:p-2 rounded-md">
+                  <div className="bg-[#F2F5FD] p-1 rounded-md">
                     <Image
                       src={listItem?.image}
                       width={16}
@@ -89,11 +87,11 @@ const ViewContainer = ({
                       className="w-4 h-4"
                     />
                   </div>
-                  <p className="text-[#343432] text-xs md:text-sm">
+                  <p className="text-[#343432] text-xs">
                     {listItem?.text}
                   </p>
                 </div>
-                <p className="text-[#343432] text-sm md:text-base font-semibold">
+                <p className="text-[#343432] text-sm  font-semibold">
                   {listItem?.count}
                 </p>
               </div>
@@ -101,7 +99,7 @@ const ViewContainer = ({
           })}
         </div>
 
-        {displayValues?.length > 0 ? (
+        {/* {displayValues?.length > 0 ? (
           <div className="border-t border-[#eaeaf1]">
             <div className="flex items-center p-2 border-b border-[#eaeaf1] justify-between bg-gray-50">
               <p className="text-gray-400 font-medium text-xs">
@@ -131,7 +129,6 @@ const ViewContainer = ({
                 );
               })}
 
-              {/* Loading shimmer for pagination */}
               {isLoadingMore && (
                 <div className="border-t border-[#eaeaf1]">
                   {[...Array(3)].map((_, index) => (
@@ -140,7 +137,6 @@ const ViewContainer = ({
                 </div>
               )}
 
-              {/* End of data indicator */}
              
             </div>
           </div>
@@ -161,7 +157,7 @@ const ViewContainer = ({
           </div>
         ) : (
           <NoDataFound />
-        )}
+        )} */}
       </div>
     </div>
   );

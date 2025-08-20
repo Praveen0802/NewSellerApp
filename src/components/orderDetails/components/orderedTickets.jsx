@@ -23,6 +23,10 @@ const OrderedTickets = ({ ticket_details }) => {
 
   const listingObject = [
     {
+      name: "Event Name",
+      text: ticket_details?.venue || "Not specified",
+    },
+    {
       name: "Event Venue",
       text: ticket_details?.venue || "Not specified",
     },

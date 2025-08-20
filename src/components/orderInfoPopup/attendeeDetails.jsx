@@ -13,6 +13,7 @@ const AttendeeDetails = ({
   currentOrderObject,
 }) => {
   const { downloadFile } = useS3Download();
+  
   if (!attendee_details || attendee_details.length === 0) {
     return (
       <div className="border border-gray-200 rounded-lg p-4">
@@ -67,8 +68,7 @@ const AttendeeDetails = ({
           </Button>
         ) : (
           <>
-            {" "}
-            {!attendee?.ticket_file_url ? (
+            {!attendee?.display_fields?.ticket_file_url ? (
               <>-</>
             ) : (
               <Button
@@ -78,7 +78,7 @@ const AttendeeDetails = ({
                   label_: "text-white pl-0",
                 }}
                 onClick={() => {
-                  downloadFile(attendee?.ticket_file_url, "ticket");
+                  downloadFile(attendee?.display_fields?.ticket_file_url, "ticket");
                 }}
               >
                 {showAttendeeUpload ? (
@@ -98,6 +98,37 @@ const AttendeeDetails = ({
     );
   };
 
+  // Get all available display fields from the first attendee to determine table columns
+  const getAvailableFields = () => {
+    const allFields = new Set();
+    attendee_details.forEach(attendee => {
+      if (attendee.display_fields) {
+        Object.keys(attendee.display_fields).forEach(field => {
+          if (field !== 'ticket_file_url') { // Exclude ticket_file_url from regular columns
+            allFields.add(field);
+          }
+        });
+      }
+    });
+    return Array.from(allFields);
+  };
+
+  const availableFields = getAvailableFields();
+
+  // Helper function to get field label
+  const getFieldLabel = (field) => {
+    const labelMap = {
+      dob: "Date of Birth",
+      row: "Row",
+      seat: "Seat",
+      nationality: "Nationality",
+      city: "City",
+      first_name: "First Name",
+      last_name: "Last Name"
+    };
+    return labelMap[field] || field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, ' ');
+  };
+
   return (
     <div className="border border-gray-200 rounded-lg p-4">
       <h3 className="text-[16px] font-medium text-[#323A70] mb-4">
@@ -110,17 +141,13 @@ const AttendeeDetails = ({
           <thead>
             <tr className="border-b border-gray-200">
               <th className="text-left py-2 px-2 font-medium text-gray-700">
-                Name
+                Ticket ID
               </th>
-              <th className="text-left py-2 px-2 font-medium text-gray-700">
-                Date of Birth
-              </th>
-              <th className="text-left py-2 px-2 font-medium text-gray-700">
-                Nationality
-              </th>
-              <th className="text-left py-2 px-2 font-medium text-gray-700">
-                City
-              </th>
+              {availableFields.map(field => (
+                <th key={field} className="text-left py-2 px-2 font-medium text-gray-700">
+                  {getFieldLabel(field)}
+                </th>
+              ))}
               {expandedVersion && mySalesPage && (
                 <th className="text-center py-2 px-2 font-medium text-gray-700">
                   Action
@@ -131,10 +158,6 @@ const AttendeeDetails = ({
           <tbody>
             {attendee_details.map((attendee, index) => {
               const statusInfo = getTicketStatusLabel(attendee.ticket_status);
-              const fullName =
-                `${attendee.first_name || ""} ${
-                  attendee.last_name || ""
-                }`.trim() || "-";
 
               return (
                 <tr
@@ -142,18 +165,13 @@ const AttendeeDetails = ({
                   className="border-b border-gray-100 hover:bg-gray-50"
                 >
                   <td className="py-3 px-2 text-gray-900 font-medium">
-                    {fullName}
+                    {attendee.ticketid || "-"}
                   </td>
-                  <td className="py-3 px-2 text-gray-600">
-                    {attendee.dob || "-"}
-                  </td>
-
-                  <td className="py-3 px-2 text-gray-600 text-xs">
-                    {attendee.nationality || "-"}
-                  </td>
-                  <td className="py-3 px-2 text-gray-600 text-xs">
-                    {attendee.city || "-"}
-                  </td>
+                  {availableFields.map(field => (
+                    <td key={field} className="py-3 px-2 text-gray-600 text-xs">
+                      {attendee.display_fields?.[field] || "-"}
+                    </td>
+                  ))}
                   {expandedVersion && mySalesPage && (
                     <>
                       {ticketType == 3 ? (
@@ -178,9 +196,6 @@ const AttendeeDetails = ({
       <div className="md:hidden mt-4">
         {attendee_details.map((attendee, index) => {
           const statusInfo = getTicketStatusLabel(attendee.ticket_status);
-          const fullName =
-            `${attendee.first_name || ""} ${attendee.last_name || ""}`.trim() ||
-            "-";
 
           return (
             <div
@@ -188,7 +203,9 @@ const AttendeeDetails = ({
               className="border border-gray-200 rounded-lg p-3 mb-3 last:mb-0"
             >
               <div className="flex justify-between items-start mb-2">
-                <h4 className="font-medium text-gray-900">{fullName}</h4>
+                <h4 className="font-medium text-gray-900">
+                  Ticket ID: {attendee.ticketid || "-"}
+                </h4>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}
                 >
@@ -200,18 +217,12 @@ const AttendeeDetails = ({
                   <span className="font-medium">Serial:</span>{" "}
                   {attendee.serial || index + 1}
                 </div>
-                <div>
-                  <span className="font-medium">Ticket ID:</span>{" "}
-                  {attendee.ticketid || "-"}
-                </div>
-                <div>
-                  <span className="font-medium">Nationality:</span>{" "}
-                  {attendee.nationality || "-"}
-                </div>
-                <div>
-                  <span className="font-medium">DOB:</span>{" "}
-                  {formatDate(attendee.dob)}
-                </div>
+                {availableFields.map(field => (
+                  <div key={field}>
+                    <span className="font-medium">{getFieldLabel(field)}:</span>{" "}
+                    {attendee.display_fields?.[field] || "-"}
+                  </div>
+                ))}
                 <div>
                   <span className="font-medium">Upload Date:</span>{" "}
                   {attendee.ticket_upload_date

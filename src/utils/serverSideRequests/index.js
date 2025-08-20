@@ -282,6 +282,7 @@ export const fetchDashboardPageDetails = async (token) => {
       dashbordReports(token),
       LMTpurchaseTracking(token),
       LMTTradeOrders(token),
+      fetchCurrency(token),
     ]);
 
     const [
@@ -293,6 +294,7 @@ export const fetchDashboardPageDetails = async (token) => {
       reports,
       purchaseTracking,
       tradeOrders,
+      currencyOptions
     ] = results.map((result) =>
       result.status === "fulfilled" ? result.value : null
     );
@@ -306,6 +308,7 @@ export const fetchDashboardPageDetails = async (token) => {
       reports,
       purchaseTracking,
       tradeOrders,
+      currencyOptions
     };
   } catch {
     return [];

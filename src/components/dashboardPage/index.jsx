@@ -31,7 +31,6 @@ import {
 
 const DashboardPage = (props) => {
   const [resultData, setResultData] = useState(props?.response);
-console.log(props,'propsprops')
   const [loader, setLoader] = useState({
     salesOverView: false,
     awaitingDelivery: false,
@@ -41,8 +40,9 @@ console.log(props,'propsprops')
     reports: false,
     purchaseTracking: false,
     tradeOrders: false,
+    reports: false,
   });
-
+const [wholerLoader,setWholerLoader] = useState(false)
   const [filters, setFilters] = useState({
     salesOverView: "last_180days",
     awaitingDelivery: "next_24hours",
@@ -68,8 +68,12 @@ console.log(props,'propsprops')
       ...prevLoader,
       [keyValue]: true,
     }));
+    setWholerLoader(true)
 
     try {
+      if (keyValue === "currency") {
+        response = await dashbordReports(token);
+      }
       if (keyValue === "salesOverView") {
         response = await fetchSalesOverview("", params);
       } else if (keyValue === "awaitingDelivery") {
@@ -152,6 +156,7 @@ console.log(props,'propsprops')
         ...prevLoader,
         [keyValue]: false,
       }));
+      setWholerLoader(false)
     }
   };
 
@@ -160,7 +165,6 @@ console.log(props,'propsprops')
       ...prevFilters,
       [filterKey]: value,
     }));
-
     // Prepare params based on filter type
     let params = { page: 1 };
     let apiKey = filterKey;
@@ -186,6 +190,11 @@ console.log(props,'propsprops')
     ) {
       params = {
         date_format: value,
+        page: 1,
+      };
+    } else if (filterKey === "reports") {
+      params = {
+        currency: value,
         page: 1,
       };
     }
@@ -251,13 +260,14 @@ console.log(props,'propsprops')
     }
   };
 
-
   const listValues = [
     {
       title: "Sales",
       keyValue: "salesOverView",
       options: [
+        { value: "all", label: "All Sales" },
         { value: "today", label: "Today" },
+
         { value: "last_login", label: "Last Login" },
         { value: "last_7days", label: "Last 7 days" },
         { value: "last_15days", label: "Last 15 days" },
@@ -292,15 +302,16 @@ console.log(props,'propsprops')
       title: "Awaiting Delivery",
       keyValue: "awaitingDelivery",
       options: [
+        { value: "all", label: "All Events" },
         { value: "today", label: "Today" },
         { value: "past_events", label: "Past Events" },
-        { value: "next_24hours", label: "Events in next 24 hours" },
-        { value: "next_48hours", label: "Events in next 48 hours" },
-        { value: "next_7days", label: "Events in next 7 days" },
-        { value: "next_14days", label: "Events in next 14 days" },
-        { value: "next_30days", label: "Events in next 30 days" },
+        { value: "next_24hours", label: "Next 24 hours" },
+        { value: "next_48hours", label: "Next 48 hours" },
+        { value: "next_7days", label: "Next 7 days" },
+        { value: "next_14days", label: "Next 14 days" },
+        { value: "next_30days", label: "Next 30 days" },
 
-        { value: "next_180days", label: "Events in next 6 months" },
+        { value: "next_180days", label: "Next 6 months" },
       ],
       selectedOption: filters?.awaitingDelivery,
       onchange: (value) => {
@@ -328,15 +339,16 @@ console.log(props,'propsprops')
       meta: resultData?.awaitingDelivery?.meta,
     },
   ];
-
   const reportValues = {
     title: "Reports",
-    // options: [
-    //   { value: "today", label: "Today" },
-    //   { value: "yesterday", label: "Yesterday" },
-    // ],
-    // selectedOption: "today",
-    // onchange: () => {},
+    options: resultData?.currencyOptions?.map((item) => ({
+      value: item?.code,
+      label: item?.code,
+    })),
+    selectedOption: "GBP",
+    onChange: (value) => {
+      handleSelectOptionChange("reports", value);
+    },
     reports: [
       {
         image: Pound,
@@ -377,6 +389,7 @@ console.log(props,'propsprops')
     keyValue: "reports",
     meta: resultData?.reports?.meta,
     loader: loader.reports,
+    wholeLoader: wholerLoader
   };
 
   const sellingEvents = {
@@ -423,24 +436,43 @@ console.log(props,'propsprops')
 
       <div className="overflow-auto p-4 md:p-6 w-full h-full flex flex-col gap-4 md:gap-5 bg-[#F5F7FA]">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {listValues?.map((listItem, listIndex) => {
-            return (
-              <ViewContainer
-                key={listIndex}
-                title={listItem?.title}
-                options={listItem?.options}
-                listValues={listItem?.listValues}
-                onChange={listItem?.onchange}
-                loader={loader[listItem?.keyValue]}
-                selectedOption={listItem?.selectedOption}
-                displayValues={listItem?.displayValues}
-                handleScrollEnd={handleScrollEnd}
-                keyValue={listItem?.keyValue}
-                meta={listItem?.meta}
-              />
-            );
-          })}
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {listValues?.map((listItem, listIndex) => {
+                return (
+                  <ViewContainer
+                    key={listIndex}
+                    title={listItem?.title}
+                    options={listItem?.options}
+                    listValues={listItem?.listValues}
+                    onChange={listItem?.onchange}
+                    loader={loader[listItem?.keyValue]}
+                    selectedOption={listItem?.selectedOption}
+                    displayValues={listItem?.displayValues}
+                    handleScrollEnd={handleScrollEnd}
+                    keyValue={listItem?.keyValue}
+                    meta={listItem?.meta}
+                  />
+                );
+              })}
+            </div>
+            <ReportViewContainer reportValues={reportValues} />
+          </div>
+          <div className="w-full flex flex-col">
+            <TopSellingEvents
+              sellingEvents={sellingEvents}
+              handleClick={handleCreateListing}
+              handleScrollEnd={handleScrollEnd}
+              loader={loader.topSelling}
+            />
+          </div>
         </div>
+
+        <TradeTickets
+          resultData={resultData}
+          handleScrollEnd={handleScrollEnd}
+          loader={loader}
+        />
         <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
           <div className="w-full md::w-1/2 flex flex-col gap-4 md:gap-6">
             <NotificationActivityList
@@ -450,21 +482,7 @@ console.log(props,'propsprops')
               loader={loader}
             />
           </div>
-          <div className="w-full md::w-1/2 flex flex-col">
-            <TopSellingEvents
-              sellingEvents={sellingEvents}
-              handleClick={handleCreateListing}
-              handleScrollEnd={handleScrollEnd}
-              loader={loader.topSelling}
-            />
-          </div>
         </div>
-        <TradeTickets
-          resultData={resultData}
-          handleScrollEnd={handleScrollEnd}
-          loader={loader}
-        />
-        <ReportViewContainer reportValues={reportValues} />
       </div>
     </div>
   );
