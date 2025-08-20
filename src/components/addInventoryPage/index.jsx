@@ -272,8 +272,20 @@ const AddInventoryPage = (props) => {
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, split_type: value })),
+      // onChange: (value) =>
+      //   setFiltersApplied((prev) => ({ ...prev, split_type: value })),
+      onChange: (value) => {
+        setFiltersApplied((prev) => {
+          let updated = { ...prev, split_type: value };
+          if (value === "6") {
+            updated.split_details = "27";
+          } else if (prev.split_details === "27") {
+            updated.split_details = "";
+          }
+
+          return updated;
+        });
+      },
     },
     {
       type: "select",
@@ -297,8 +309,18 @@ const AddInventoryPage = (props) => {
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, split_details: value })),
+      // onChange: (value) =>
+      //   setFiltersApplied((prev) => ({ ...prev, split_details: value })),
+      onChange: (value) => {
+        setFiltersApplied((prev) => {
+          let updated = { ...prev, split_details: value };
+          if (prev.split_type === "6" && value !== "27") {
+            updated.split_type = "5";
+          }
+
+          return updated;
+        });
+      },
     },
     {
       type: "number",

@@ -112,7 +112,7 @@ const SalesPage = (props) => {
     },
     {
       key: "ticket_details",
-      label: "Ticket Details",
+      label: "Ticket Category",
       sortable: true,
       sortableKey: "ticket_details",
     },
@@ -128,15 +128,15 @@ const SalesPage = (props) => {
       sortable: true,
       sortableKey: "ticket_type",
     },
-    { key: "category", label: "Category" },
-    { key: "order_status_label", label: "Order Status" },
-    { key: "delivery_status_label", label: "Delivery Status" },
     {
       key: "section",
       label: "Section",
       sortable: true,
       sortableKey: "section_block",
     },
+    { key: "category", label: "Category" },
+    { key: "order_status_label", label: "Order Status" },
+    { key: "delivery_status_label", label: "Delivery Status" },
     {
       key: "row",
       label: "Row",
@@ -1238,7 +1238,7 @@ const SalesPage = (props) => {
                 label_: "text-[12px] px-[2]",
               }}
             >
-              Export CSV
+              Export to CSV
             </Button>
           </div>
 

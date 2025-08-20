@@ -345,7 +345,7 @@ console.log(props,'propsprops')
       },
       {
         image: Shopping,
-        text: "Total Sales",
+        text: "Total Orders",
         desc: resultData?.reports?.over_view?.[0]?.total_sales,
       },
       {
