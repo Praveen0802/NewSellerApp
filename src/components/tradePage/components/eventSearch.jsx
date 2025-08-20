@@ -1,7 +1,7 @@
 import FormFields from "@/components/formFieldsComponent";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import SearchedList from "./searchedList";
 import {
@@ -74,6 +74,13 @@ const EventSearch = ({ onClose, allCategories }) => {
     setVenueOptions(response);
   };
 
+  // const debounce = (func, delay) => {
+  //   let timer;
+  //   return function (...args) {
+  //     clearTimeout(timer);
+  //     timer = setTimeout(() => func(...args), delay);
+  //   };
+  // };
   const debounce = (func, delay) => {
     let timer;
     return function (...args) {
@@ -82,9 +89,16 @@ const EventSearch = ({ onClose, allCategories }) => {
     };
   };
 
-  const debouncedFetchEventSearch = debounce((fetchFunction, params) => {
-    fetchFunction(params);
-  }, 500);
+  const debouncedFetchEventSearch = useCallback(
+    debounce((fetchFunction, params) => {
+      fetchFunction(params);
+    }, 500),
+    []
+  );
+
+  // const debouncedFetchEventSearch = debounce((fetchFunction, params) => {
+  //   fetchFunction(params);
+  // }, 500);
 
   const categoriesList = allCategories?.map((item) => {
     return {
