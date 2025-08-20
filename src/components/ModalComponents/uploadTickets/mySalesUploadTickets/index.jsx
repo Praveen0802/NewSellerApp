@@ -42,6 +42,7 @@ import { UploadTicketsShimmer } from "./shimmerLoader";
 import MySalesPaperTicketCourierSection from "./mySalesPaperTicketsSection";
 import MyQRLinksSection from "./MyQrLinkSection";
 import QRLinksSection from "../QRLinkSection";
+import FilePreviewModal from "../previewFile";
 
 const MySalesUploadTickets = ({
   show,
@@ -90,6 +91,10 @@ const MySalesUploadTickets = ({
     hasExistingTickets && existingUploadedTickets.length < maxQuantity;
 
   const [isLoading, setIsLoading] = useState(false);
+  // 2. Add this state variable after your existing state declarations
+  const [previewFile, setPreviewFile] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+
   const [showAssigned, setShowAssigned] = useState(false);
   const [deletedTicketIds, setDeletedTicketIds] = useState([]);
   const [modifiedTickets, setModifiedTickets] = useState({});
@@ -113,6 +118,12 @@ const MySalesUploadTickets = ({
     courier_company: "",
     tracking_details: "",
   });
+
+  const handlePreviewClick = useCallback((file, e) => {
+    e?.stopPropagation();
+    setPreviewFile(file);
+    setShowPreview(true);
+  }, []);
 
   const additionalTemplateFile =
     rowData?.rawTicketData?.additional_template_file;
@@ -544,7 +555,10 @@ const MySalesUploadTickets = ({
 
       <div className="grid grid-cols-4 bg-[#F9F9FB] py-2 px-3 border-b border-gray-200">
         <div className="text-xs truncate">
-          {rowData?.bookingId || rowData?.rawTicketData?.s_no || rowData?.id || "N/A"}
+          {rowData?.bookingId ||
+            rowData?.rawTicketData?.s_no ||
+            rowData?.id ||
+            "N/A"}
         </div>
         <div className="text-xs truncate">
           {proofUploadView ? "1 Document" : maxQuantity}
@@ -1219,6 +1233,23 @@ const MySalesUploadTickets = ({
       setDraggedFile(null);
     };
 
+    const handleFileUploadEyeIconClick = (file, e) => {
+      e?.stopPropagation();
+
+      // If file has URL (existing file), open in new tab
+      if (file.url && file.isExisting) {
+        window.open(file.url, "_blank");
+      }
+      // If file is newly uploaded (File object), show preview modal
+      else if (file.file instanceof File) {
+        handlePreviewClick(file, e);
+      }
+      // Fallback for any other cases
+      else if (file.url) {
+        window.open(file.url, "_blank");
+      }
+    };
+
     return (
       <>
         <div
@@ -1312,11 +1343,13 @@ const MySalesUploadTickets = ({
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
+                    {/* NEW: Eye icon for uploaded files */}
+
                     <Button
                       onClick={() => handleTransferSingleFile(file.id)}
                       disabled={!canTransferFile(file.id)}
                       classNames={{
-                        root: `py-1 px-2 cursor-pointer rounded-sm text-xs ${
+                        root: `py-[4px] px-[6px] cursor-pointer rounded-sm text-[10px] ${
                           canTransferFile(file.id)
                             ? "bg-[#343432] text-white hover:bg-[#343432]/90"
                             : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -1326,10 +1359,21 @@ const MySalesUploadTickets = ({
                       }}
                     >
                       {proofUploadView ? "Attach" : "Add"}{" "}
-                      <ArrowRight className="w-3 h-3" />
+                      <ArrowRight className="w-4 h-4" />
                     </Button>
                     <button
-                      className="p-1 text-red-500 cursor-pointer hover:text-red-700"
+                      className="pl-2 text-[#130061]  cursor-pointer hover:text-blue-700"
+                      onClick={(e) => handleFileUploadEyeIconClick(file, e)}
+                      title={
+                        file.url && file.isExisting
+                          ? "Open file in new tab"
+                          : "Preview file"
+                      }
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      className="p-1 text-[#130061] cursor-pointer"
                       onClick={() => handleDeleteUploaded(file.id)}
                     >
                       <Trash2 className="w-3 h-3" />
@@ -1503,6 +1547,23 @@ const MySalesUploadTickets = ({
       }
     };
 
+    const handleEyeIconClick = (assignedFile, e) => {
+      e?.stopPropagation();
+
+      // If file has URL (existing file), open in new tab
+      if (assignedFile.url && assignedFile.isExisting) {
+        window.open(assignedFile.url, "_blank");
+      }
+      // If file is newly uploaded (File object), show preview modal
+      else if (assignedFile.file instanceof File) {
+        handlePreviewClick(assignedFile, e);
+      }
+      // Fallback for any other cases
+      else if (assignedFile.url) {
+        window.open(assignedFile.url, "_blank");
+      }
+    };
+
     return (
       <div
         className={`p-3 transition-all duration-200 ${
@@ -1570,17 +1631,23 @@ const MySalesUploadTickets = ({
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          {assignedFile.isExisting && assignedFile.url && (
+                          <div className="flex items-center gap-1">
+                            {/* UPDATED: Always show eye icon, but behavior depends on file type */}
                             <button
                               className="p-1 text-gray-900 cursor-pointer hover:text-blue-700"
-                              onClick={() =>
-                                window.open(assignedFile.url, "_blank")
+                              onClick={(e) =>
+                                handleEyeIconClick(assignedFile, e)
                               }
-                              title="View uploaded ticket"
+                              title={
+                                assignedFile.url && assignedFile.isExisting
+                                  ? "Open file in new tab"
+                                  : "Preview file"
+                              }
                             >
                               <Eye className="w-4 h-4" />
                             </button>
-                          )}
+                           
+                          </div>
                           <button
                             className="p-1 text-gray-900 cursor-pointer hover:text-red-700"
                             onClick={() => {
@@ -1676,7 +1743,13 @@ const MySalesUploadTickets = ({
             </div>
           </div>
         </div>
+       
       </RightViewModal>
+      <FilePreviewModal
+          show={showPreview}
+          onClose={() => setShowPreview(false)}
+          file={previewFile}
+        />
     </div>
   );
 };

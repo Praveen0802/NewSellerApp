@@ -45,6 +45,7 @@ const ActiveFiltersBox = ({
       { from: 'delivery_date_from', to: 'delivery_date_to', displayName: 'Delivery Date' },
       { from: 'event_date_from', to: 'event_date_to', displayName: 'Event Date' },
       { from: 'transaction_date_from', to: 'transaction_date_to', displayName: 'Transaction Date' },
+      { from: 'transaction_start_date', to: 'transaction_end_date', displayName: 'Transaction Date' },
     ];
 
     dateRangePatterns.forEach(({ from, to, displayName }) => {

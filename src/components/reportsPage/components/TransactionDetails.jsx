@@ -1,4 +1,11 @@
-import React, { useState, useMemo, memo, useCallback, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useMemo,
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 import { X, ChevronDown, ChevronUp, CreditCard, FileText } from "lucide-react";
 import RightViewModal from "@/components/commonComponents/rightViewModal";
 import {
@@ -111,7 +118,7 @@ const BookingRow = memo(({ booking, index, onClick = () => {} } = {}) => (
     </div>
     <div className="flex items-center">
       <span className="text-sm text-slate-700 font-medium break-words">
-        {booking.match_name || "—"}
+        {booking.match_name || "—"} {booking?.match_date}
       </span>
     </div>
     <div className="flex items-center justify-center">
@@ -200,9 +207,10 @@ const TransactionDetailsPopup = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMoreData, setHasMoreData] = useState(true);
   const [meta, setMeta] = useState(null);
-  
+
   // Refs for scroll detection
   const scrollContainerRef = useRef(null);
+  const tableScrollRef = useRef(null); // New ref for table scroll container
   const isLoadingRef = useRef(false);
 
   // Initialize data when component mounts or data changes
@@ -212,9 +220,10 @@ const TransactionDetailsPopup = ({
       setMeta(data.payoutTableData.meta || null);
       setCurrentPage(data.payoutTableData.meta?.current_page || 1);
       setHasMoreData(
-        data.payoutTableData.meta ? 
-        data.payoutTableData.meta.current_page < data.payoutTableData.meta.last_page : 
-        false
+        data.payoutTableData.meta
+          ? data.payoutTableData.meta.current_page <
+              data.payoutTableData.meta.last_page
+          : false
       );
     }
   }, [data]);
@@ -267,14 +276,14 @@ const TransactionDetailsPopup = ({
 
       if (payoutOrderDetails?.payout_orders) {
         // Append new data to existing bookings
-        setAllBookings(prevBookings => [
+        setAllBookings((prevBookings) => [
           ...prevBookings,
-          ...payoutOrderDetails.payout_orders
+          ...payoutOrderDetails.payout_orders,
         ]);
-        
+
         setCurrentPage(nextPage);
         setMeta(payoutOrderDetails.meta);
-        
+
         // Check if there's more data to load
         if (payoutOrderDetails.meta) {
           setHasMoreData(nextPage < payoutOrderDetails.meta.last_page);
@@ -292,27 +301,30 @@ const TransactionDetailsPopup = ({
     }
   }, [currentPage, hasMoreData, data?.id]);
 
-  // Scroll event handler
-  const handleScroll = useCallback((e) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.target;
-    const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
-    
-    // Trigger load more when user scrolls to 90% of the content
-    if (scrollPercentage > 0.9 && hasMoreData && !isLoadingMore) {
-      loadMoreData();
-    }
-  }, [loadMoreData, hasMoreData, isLoadingMore]);
+  // Updated scroll event handler for table container
+  const handleTableScroll = useCallback(
+    (e) => {
+      const { scrollTop, scrollHeight, clientHeight } = e.target;
+      const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
 
-  // Attach scroll listener
+      // Trigger load more when user scrolls to 90% of the table content
+      if (scrollPercentage > 0.9 && hasMoreData && !isLoadingMore) {
+        loadMoreData();
+      }
+    },
+    [loadMoreData, hasMoreData, isLoadingMore]
+  );
+
+  // Attach scroll listener to table container
   useEffect(() => {
-    const scrollContainer = scrollContainerRef.current;
-    if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', handleScroll);
+    const tableScrollContainer = tableScrollRef.current;
+    if (tableScrollContainer) {
+      tableScrollContainer.addEventListener("scroll", handleTableScroll);
       return () => {
-        scrollContainer.removeEventListener('scroll', handleScroll);
+        tableScrollContainer.removeEventListener("scroll", handleTableScroll);
       };
     }
-  }, [handleScroll]);
+  }, [handleTableScroll]);
 
   const handleEyeClick = async (item, transactionType) => {
     const { booking_id = null } = item ?? {};
@@ -352,8 +364,7 @@ const TransactionDetailsPopup = ({
     () => [
       [
         { label: "Reference Number", value: transactionData.reference_no },
-        { label: "Amount", value: transactionData.amount },
-        { label: "Currency", value: transactionData.currency },
+        { label: "Amount", value: `${transactionData.currency} ${transactionData.amount}` },
         { label: "Total Orders", value: transactionData.total_orders },
       ],
       [
@@ -410,7 +421,7 @@ const TransactionDetailsPopup = ({
   };
 
   return (
-    <RightViewModal show={show} onClose={handleClose} className="!w-[50%]">
+    <RightViewModal show={show} onClose={handleClose} className="!w-[70%]">
       <div className="p-4">
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-gray-300 bg-gray-50">
@@ -428,7 +439,7 @@ const TransactionDetailsPopup = ({
           </button>
         </div>
 
-        <div 
+        <div
           ref={scrollContainerRef}
           className="overflow-y-auto hideScrollbar max-h-[calc(90vh-40px)] m-2"
         >
@@ -447,7 +458,16 @@ const TransactionDetailsPopup = ({
                   <p className="text-sm text-gray-600 mb-1">
                     Transaction Status
                   </p>
-                  <span className="inline-flex px-3 py-1 rounded border border-gray-300 text-sm font-medium bg-white text-gray-800">
+                  <span
+                    className={`inline-flex px-3 py-1 rounded ${
+                      transactionData.status_label?.toLowerCase() == "paid"
+                        ? "bg-green-100 text-green-600 border-green-300"
+                        : transactionData.status_label?.toLowerCase() ==
+                          "pending"
+                        ? "bg-yellow-100 text-yellow-600 border-yellow-300"
+                        : "bg-white border-gray-300"
+                    } border  text-sm font-medium  text-gray-800`}
+                  >
                     {transactionData.status_label || "-"}
                   </span>
                 </div>
@@ -479,7 +499,7 @@ const TransactionDetailsPopup = ({
             </div>
           </AccordionSection>
 
-          {/* Enhanced Booking Details */}
+          {/* Enhanced Booking Details with Sticky Header */}
           <AccordionSection
             title=""
             icon={FileText}
@@ -488,6 +508,7 @@ const TransactionDetailsPopup = ({
             itemCount={meta?.total || allBookings.length}
           >
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              {/* Table Title Section */}
               <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
                 <h4 className="text-lg font-semibold text-slate-900">
                   Order Information
@@ -499,59 +520,67 @@ const TransactionDetailsPopup = ({
                 </h4>
               </div>
 
-              <div className="p-6">
-                {/* Table Header */}
-                <div className="grid grid-cols-4 gap-6 mb-6 pb-4 border-b-2 border-slate-200">
-                  {tableHeaders.map((header, index) => (
-                    <div
-                      key={index}
-                      className={`text-xs font-bold text-slate-700 uppercase tracking-wider ${
-                        index === 2
-                          ? "text-center"
-                          : index === 3
-                          ? "text-right"
-                          : ""
-                      }`}
-                    >
-                      {header}
-                    </div>
-                  ))}
+              {/* Table Container with Fixed Header */}
+              <div className="relative">
+                {/* Sticky Header */}
+                <div className="sticky top-0 z-10 bg-white border-b-2 border-slate-200 px-6 pt-6 pb-4">
+                  <div className="grid grid-cols-4 gap-6">
+                    {tableHeaders.map((header, index) => (
+                      <div
+                        key={index}
+                        className={`text-xs font-bold text-slate-700 uppercase tracking-wider ${
+                          index === 2
+                            ? "text-center"
+                            : index === 3
+                            ? "text-right"
+                            : ""
+                        }`}
+                      >
+                        {header}
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Table Body */}
-                <div className="space-y-3">
-                  {allBookings.length > 0 ? (
-                    <>
-                      {allBookings.map((booking, index) => (
-                        <BookingRow
-                          key={booking.booking_id || index}
-                          booking={booking}
-                          index={index}
-                          onClick={() => handleEyeClick(booking)}
-                        />
-                      ))}
-                      
-                      {/* Loading indicator */}
-                      {isLoadingMore && <LoadingIndicator />}
-                      
-                      {/* End of data indicator */}
-                      {!hasMoreData && allBookings.length > 0 && (
-                        <div className="text-center py-4 text-slate-500 text-sm border-t border-slate-200">
-                          No more items to load
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="text-center py-12 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
-                      <FileText className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                      <p className="text-lg font-medium text-slate-500 mb-2">
-                        No booking details available
-                      </p>
-                      <p className="text-sm text-slate-400">
-                        Booking information will appear here when available
-                      </p>
-                    </div>
-                  )}
+                {/* Scrollable Table Body */}
+                <div 
+                  ref={tableScrollRef}
+                  className="px-6 pb-6 max-h-[400px] overflow-y-auto"
+                >
+                  <div className="space-y-3 pt-3">
+                    {allBookings.length > 0 ? (
+                      <>
+                        {allBookings.map((booking, index) => (
+                          <BookingRow
+                            key={booking.booking_id || index}
+                            booking={booking}
+                            index={index}
+                            onClick={() => handleEyeClick(booking)}
+                          />
+                        ))}
+
+                        {/* Loading indicator */}
+                        {isLoadingMore && <LoadingIndicator />}
+
+                        {/* End of data indicator */}
+                        {!hasMoreData && allBookings.length > 0 && (
+                          <div className="text-center py-4 text-slate-500 text-sm border-t border-slate-200">
+                            No more items to load
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center py-12 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
+                        <FileText className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                        <p className="text-lg font-medium text-slate-500 mb-2">
+                          No booking details available
+                        </p>
+                        <p className="text-sm text-slate-400">
+                          Booking information will appear here when available
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

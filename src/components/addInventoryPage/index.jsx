@@ -454,8 +454,8 @@ const AddInventoryPage = (props) => {
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[140px] lg:max-w-[212px]",
       iconBefore: (
-        <div className="border-r-[1px] pr-4 border-[#E0E1EA]">
-          <p className="text-xs sm:text-[10px] lg:text-xs">
+        <div className="border-r-[1px] pr-2 border-[#E0E1EA]">
+          <p className="text-xs sm:text-[10px] lg:text-xs"> 
             {matchDetails?.currency_icon?.[0] || "$"}
           </p>
         </div>
@@ -608,7 +608,7 @@ const AddInventoryPage = (props) => {
   const orderedFilters = columnOrder
     .map((name) => filters.find((f) => f.name === name))
     .filter(Boolean);
-  
+
   // KEEP THE ORIGINAL allHeaders generation (EXACT SAME)
   const allHeaders = orderedFilters.map((filter) => {
     const baseHeader = {
@@ -1172,23 +1172,56 @@ const AddInventoryPage = (props) => {
   const [loader, setLoader] = useState(false);
 
   // Enhanced publish function to handle multiple rows
+  // Enhanced publish function to handle multiple rows with price validation
   const handlePublishLive = async () => {
     if (selectedRows.length === 0) {
       toast.error("Please select rows to publish");
       return;
     }
 
+    // Get selected rows data and validate prices
+    const selectedRowsData = [];
+    const invalidPriceTickets = [];
+
+    selectedRows.forEach((index) => {
+      const rowData = inventoryData[index];
+      const ticketPrice = parseFloat(rowData.add_price_addlist) || 0;
+
+      // Check if price is greater than 5
+      if (ticketPrice < 5) {
+        invalidPriceTickets.push({
+          ticketIndex: index + 1,
+          currentPrice: ticketPrice,
+          rowIndex: index,
+        });
+      }
+
+      selectedRowsData.push({
+        match_id: matchDetails?.match_id || matchId,
+        ...rowData,
+      });
+    });
+
+    // If there are tickets with invalid prices, show error and return
+    if (invalidPriceTickets.length > 0) {
+      const errorMessage =
+        invalidPriceTickets.length === 1
+          ? `Cannot publish: Ticket #${invalidPriceTickets[0].ticketIndex} has a processed price of ${invalidPriceTickets[0].currentPrice}. Minimum required price is greater than 5.`
+          : `Cannot publish: ${invalidPriceTickets.length} tickets have processed prices of 5 or less. All tickets must have a processed price greater than 5 to publish.`;
+
+      toast.error(errorMessage);
+
+      // Optional: Select only the invalid tickets to highlight them
+      const invalidRowIndices = invalidPriceTickets.map(
+        (ticket) => ticket.rowIndex
+      );
+      setSelectedRows(invalidRowIndices);
+
+      return;
+    }
+
     setLoader(true);
     try {
-      // Get selected rows data
-      const selectedRowsData = selectedRows.map((index) => {
-        const rowData = inventoryData[index];
-        return {
-          match_id: matchDetails?.match_id || matchId,
-          ...rowData,
-        };
-      });
-
       // Construct FormData for multiple rows
       const formData = constructFormDataAsFields(selectedRowsData);
       if (selectedRows?.length > 1) {
