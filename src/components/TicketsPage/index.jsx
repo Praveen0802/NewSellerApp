@@ -2576,19 +2576,19 @@ const TicketsPage = (props) => {
   ]);
 
   const handleCheckBoxChange = async (key, value) => {
-    if (key == "listing_status_published") {
-      const params = {
-        ...filtersApplied,
-        ...(value && { listing_status: 1 }),
-      };
-      await fetchData(params);
-    } else if (key == "listing_status_unpublished") {
-      const params = {
-        ...filtersApplied,
-        ...(value && { listing_status: 0 }),
-      };
-      await fetchData(params);
+    let params = { ...filtersApplied };
+
+    if (value) {
+      if (key === "listing_status_published") {
+        params.listing_status = 1;
+      } else if (key === "listing_status_unpublished") {
+        params.listing_status = 0;
+      }
+    } else {
+      delete params.listing_status;
     }
+
+    await fetchData(params);
   };
 
   return (
