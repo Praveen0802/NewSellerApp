@@ -502,8 +502,10 @@ const UploadTickets = ({
           {rowData?.ticket_category || "N/A"}, {rowData?.ticket_block || ""}
         </div>
         <div className="text-xs truncate">
-          {ETicketsFlow ? (
+          {[ticketTypes].flat().includes(2) ? (
             "E-Ticket"
+          ) :ETicketsFlow ? (
+            "Mobile Ticket"
           ) : paperTicketFlow ? (
             "Paper Ticket"
           ) : proofUploadView ? (
