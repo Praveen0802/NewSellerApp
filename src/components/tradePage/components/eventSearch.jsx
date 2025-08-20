@@ -92,7 +92,7 @@ const EventSearch = ({ onClose, allCategories }) => {
   const debouncedFetchEventSearch = useCallback(
     debounce((fetchFunction, params) => {
       fetchFunction(params);
-    }, 1000),
+    }, 500),
     []
   );
 
