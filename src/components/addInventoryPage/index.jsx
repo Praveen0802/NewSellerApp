@@ -763,7 +763,13 @@ const AddInventoryPage = (props) => {
         }
         // Single row edit mode: update only the specific row
         else if (index === rowIndex) {
-          return { ...item, [columnKey]: value, ...updateValues };
+          let data ={...item}
+          if (value === "6" && columnKey === "split_type") {
+            data.split_details = "27";
+          } else if (item.split_details === "27") {
+            data.split_details = "";
+          }
+          return { ...data, [columnKey]: value, ...updateValues };
         }
         return item;
       })
