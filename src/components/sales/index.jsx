@@ -138,7 +138,7 @@ const SalesPage = (props) => {
     },
     { key: "category", label: "Category" },
     { key: "order_status_label", label: "Order Status" },
-    { key: "delivery_status_label", label: "Delivery Status" },
+    // { key: "delivery_status_label", label: "Delivery Status" },
     {
       key: "row",
       label: "Row",
@@ -1257,7 +1257,7 @@ const SalesPage = (props) => {
           </div>
 
           {/* StickyDataTable with sorting functionality */}
-          <div className="">
+          <div className="max-h-[calc(100vh-410px)] overflow-auto">
             <StickyDataTable
               headers={headers}
               data={listData}

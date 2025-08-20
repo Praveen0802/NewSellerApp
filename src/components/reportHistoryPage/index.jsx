@@ -109,8 +109,7 @@ const CurrencySlider = ({
         ? currencies.length - 1
         : currentCurrencyIndex - 1;
     if (setTransitionDirection) {
-      setTransitionDirection("prev"); // Set direction BEFORE changing currency
-      // Reset direction after a short delay to prevent multiple triggers
+      setTransitionDirection("prev");
       setTimeout(() => setTransitionDirection(null), 100);
     }
     setCurrentCurrencyIndex(newIndex);
@@ -123,8 +122,7 @@ const CurrencySlider = ({
         ? 0
         : currentCurrencyIndex + 1;
     if (setTransitionDirection) {
-      setTransitionDirection("next"); // Set direction BEFORE changing currency
-      // Reset direction after a short delay to prevent multiple triggers
+      setTransitionDirection("next");
       setTimeout(() => setTransitionDirection(null), 100);
     }
     setCurrentCurrencyIndex(newIndex);
@@ -149,6 +147,12 @@ const CurrencySlider = ({
 };
 
 const RportHistory = (props) => {
+  // Pagination states - similar to SalesPage
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
+
   const [filtersApplied, setFiltersApplied] = useState({
     page: 1,
   });
@@ -184,7 +188,7 @@ const RportHistory = (props) => {
   const currencySliderResult = CurrencySlider({
     overViewData,
     onCurrencyChange: setCurrentCurrency,
-    setTransitionDirection: setTransitionDirection, // Pass the transition direction setter
+    setTransitionDirection: setTransitionDirection,
   });
 
   // Debounced search function
@@ -208,7 +212,7 @@ const RportHistory = (props) => {
         setSearchMatches([]);
         setShowSearchDropdown(false);
       }
-    }, 1000); // 300ms debounce delay
+    }, 1000);
   }, []);
 
   // Define table headers based on your UI screenshot
@@ -268,7 +272,6 @@ const RportHistory = (props) => {
     }, {});
   };
 
-  // New state for column visibility - dynamically formed from allHeaders
   const [visibleColumns, setVisibleColumns] = useState(
     createInitialVisibleColumns()
   );
@@ -296,7 +299,6 @@ const RportHistory = (props) => {
   }, [staticReportsData?.reports_history]);
 
   const getOrderDetails = async (item) => {
-    // setIsLoading(true);
     setShowInfoPopup((prev) => {
       return {
         ...prev,
@@ -317,7 +319,6 @@ const RportHistory = (props) => {
       id: item?.id,
       isLoading: false,
     });
-    // setIsLoading(false);
   };
 
   const loadLogData = async (item) => {
@@ -327,13 +328,11 @@ const RportHistory = (props) => {
         fetchReportsInventoryLogs("", { ticket_id: item?.id }),
       ]);
 
-      // Extract results, handling both fulfilled and rejected promises
       const orderLogs =
         results[0].status === "fulfilled" ? results[0].value : [];
       const inventoryLogs =
         results[1].status === "fulfilled" ? results[1].value : [];
 
-      // Optional: Log any errors
       results.forEach((result, index) => {
         if (result.status === "rejected") {
           const logType = index === 0 ? "Order" : "Inventory";
@@ -396,12 +395,12 @@ const RportHistory = (props) => {
     ]);
   }, [staticReportsData?.reports_history]);
 
-  // Modified configuration for list items (stats cards) - now uses currency slider data
+  // Configuration for list items - uses currency slider data
   const listItemsConfig = {
     reports: currencySliderResult.data || [],
   };
 
-  // Currency navigation component for full width container
+  // Currency navigation component
   const CurrencyNavigationContainer = () => {
     const {
       currencies,
@@ -416,12 +415,10 @@ const RportHistory = (props) => {
 
     return (
       <div className="relative flex items-center justify-center px-4 py-2 bg-gray-50 border-b border-gray-200">
-        {/* Left Arrow */}
         <button
           onClick={() => {
-            setTransitionDirection("prev"); // Set direction first
+            setTransitionDirection("prev");
             handlePrevious();
-            // Reset after short delay
             setTimeout(() => setTransitionDirection(null), 100);
           }}
           className="absolute left-4 p-2 rounded-full hover:bg-gray-200 transition-colors z-10"
@@ -430,7 +427,6 @@ const RportHistory = (props) => {
           <IconStore.chevronLeft className="w-5 h-5 text-gray-600" />
         </button>
 
-        {/* Center Content */}
         <div className="flex items-center gap-3">
           <span className="text-lg font-semibold text-gray-700">
             {getCurrencySymbol(currentCurrency)} {currentCurrency.toUpperCase()}
@@ -440,19 +436,19 @@ const RportHistory = (props) => {
               <div
                 key={currency}
                 className={`w-3 h-3 rounded-full transition-colors ${
-                  index === currentCurrencyIndex ? "bg-green-500" : "bg-gray-300"
+                  index === currentCurrencyIndex
+                    ? "bg-green-500"
+                    : "bg-gray-300"
                 }`}
               />
             ))}
           </div>
         </div>
 
-        {/* Right Arrow */}
         <button
           onClick={() => {
-            setTransitionDirection("next"); // Set direction first
+            setTransitionDirection("next");
             handleNext();
-            // Reset after short delay
             setTimeout(() => setTransitionDirection(null), 100);
           }}
           className="absolute right-4 p-2 rounded-full hover:bg-gray-200 transition-colors z-10"
@@ -464,94 +460,138 @@ const RportHistory = (props) => {
     );
   };
 
-  const apiCall = async (params, clearAllFilter) => {
-    setIsLoading(true);
+  // UPDATED: Modified API call to handle pagination like SalesPage
+  const apiCall = async (
+    params,
+    handleCountApiCall = false,
+    isLoadMore = false,
+    isClear = false
+  ) => {
+    // Only show main loader for initial load, not for pagination
+    if (!isLoadMore) {
+      setIsLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
 
-    // Clean up undefined values before making API call
-    // const cleanParams = Object.fromEntries(
-    //   Object.entries(params).filter(
-    //     ([_, value]) => value !== undefined && value !== null && value !== ""
-    //   )
-    // );
     let updatedFilters = {};
-    if (clearAllFilter) {
+    if (isClear) {
       updatedFilters = { ...params, page: 1 };
     } else {
-      updatedFilters = { ...filtersApplied, ...params, page: 1 };
+      updatedFilters = { ...filtersApplied, ...params };
     }
 
     setFiltersApplied(updatedFilters);
 
     try {
       const [reportOverview, reportData] = await Promise.all([
-        reportsOverview("", updatedFilters),
+        // Only fetch overview if not loading more or if explicitly requested
+        (!isLoadMore || handleCountApiCall) ? reportsOverview("", updatedFilters) : Promise.resolve(overViewData),
         reportHistory("", updatedFilters),
       ]);
 
-      // Clear old data before setting new data to prevent stale state
-      setStaticReportsData(null);
-      setOverViewData(null);
+      // Handle pagination metadata
+      if (reportData?.meta) {
+        setCurrentPage(reportData.meta.current_page || 1);
+        setTotalPages(reportData.meta.last_page || 1);
+        setHasNextPage(reportData.meta.next_page_url !== null);
+      }
 
-      // Set new data
-      setStaticReportsData(reportData);
-      setOverViewData(reportOverview);
+      if (isLoadMore) {
+        // Append new data to existing data
+        setStaticReportsData((prevData) => ({
+          ...prevData,
+          reports_history: [
+            ...(prevData?.reports_history || []),
+            ...(reportData?.reports_history || []),
+          ],
+          meta: reportData?.meta,
+        }));
+      } else {
+        // Replace data for new search/filter
+        setStaticReportsData(reportData);
+        if (!isLoadMore || handleCountApiCall) {
+          setOverViewData(reportOverview);
+        }
+      }
     } catch (error) {
       console.error("API call error:", error);
+      toast.error("Error loading data");
     } finally {
       setIsLoading(false);
+      setLoadingMore(false);
     }
   };
 
+  // NEW: Load more data when scrolling to end - similar to SalesPage
+  const handleScrollEnd = async () => {
+    if (loadingMore || !hasNextPage) {
+      return;
+    }
+
+    console.log("Loading more data...", { currentPage, hasNextPage });
+    const nextPage = currentPage + 1;
+    await apiCall({ page: nextPage }, false, true);
+  };
+
   const handleSearchMatchChange = async (value) => {
+    // Reset pagination when searching
+    setCurrentPage(1);
+    setHasNextPage(true);
+    setStaticReportsData({ reports_history: [], meta: {} });
+
     const updatedFilters = {
       ...filtersApplied,
       searchMatch: value,
-      page: 1, // Reset to first page on new search
+      page: 1,
     };
 
     await apiCall(updatedFilters);
   };
 
-  // Add this state variable at the top of your component
-  const [hasReachedEnd, setHasReachedEnd] = useState(false);
-
   // Handle sort functionality
   const handleSort = async (sortData) => {
-    // Reset the reached end state when sorting
-    setHasReachedEnd(false);
-
-    // Update sort state
-    setSortState(sortData);
-
-    // Prepare sort parameters for API call
-    const sortParams = sortData
-      ? {
-          order_by: sortData.sortableKey,
-          sort_order: sortData.sort_order,
-        }
-      : {
-          // Remove sorting parameters when sortData is null
-          order_by: null,
-          sort_order: null,
-        };
-
-    // Call API with sort parameters - remove undefined values
-    const updatedFilters = {
-      ...filtersApplied,
-      ...sortParams,
-      page: 1, // Reset to first page when sorting
-    };
-
-    // Remove undefined/null values from the filters before API call
-    const cleanedFilters = Object.fromEntries(
-      Object.entries(updatedFilters).filter(([_, value]) => value != null)
-    );
-
     try {
-      await apiCall(cleanedFilters);
+      // Show loading state
+      setIsLoading(true);
+
+      // Reset pagination-related states when sorting
+      setCurrentPage(1);
+      setHasNextPage(true);
+      setStaticReportsData({ reports_history: [], meta: {} });
+
+      // Update sort state
+      setSortState(sortData);
+
+      // Prepare sort parameters for API call
+      const sortParams = sortData
+        ? {
+            order_by: sortData.sortableKey,
+            sort_order: sortData.sort_order,
+          }
+        : {
+            order_by: undefined,
+            sort_order: undefined,
+          };
+
+      // Call API with sort parameters
+      const updatedFilters = {
+        ...filtersApplied,
+        ...sortParams,
+        page: 1,
+      };
+
+      // Remove undefined/null values from the filters before API call
+      const cleanedFilters = Object.fromEntries(
+        Object.entries(updatedFilters).filter(([_, value]) => value != null)
+      );
+
+      await apiCall(cleanedFilters, false, false, false);
     } catch (error) {
       console.error("Sort error:", error);
       toast.error("Error sorting data");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -561,8 +601,10 @@ const RportHistory = (props) => {
     allFilters,
     currentTab
   ) => {
-    // Reset the reached end state when filtering
-    setHasReachedEnd(false);
+    // Reset pagination when filtering
+    setCurrentPage(1);
+    setHasNextPage(true);
+    setStaticReportsData({ reports_history: [], meta: {} });
 
     let params = {};
     console.log(
@@ -575,44 +617,46 @@ const RportHistory = (props) => {
       currentTab,
       "currentTab"
     );
+    
     // Handle different filter types
     if (filterKey === "orderDate") {
       params = {
         ...params,
         order_date_from: value?.startDate,
         order_date_to: value?.endDate,
+        page: 1,
       };
     } else if (filterKey === "transactionDate") {
       params = {
         ...params,
         transaction_start_date: value?.startDate,
         transaction_end_date: value?.endDate,
+        page: 1,
       };
     } else if (filterKey === "eventDate") {
       params = {
         ...params,
         event_start_date: value?.startDate,
         event_end_date: value?.endDate,
+        page: 1,
       };
     } else {
       params = {
         ...params,
         [filterKey]: value,
+        page: 1,
       };
     }
 
     const updatedFilters = {
       ...filtersApplied,
       ...params,
-      page: 1, // Reset to first page on filter change
+      page: 1,
     };
-    console.log(updatedFilters, "updatedFiltersupdatedFilters");
+
     // Handle query field with both dropdown search and API call debouncing
     if (filterKey === "query" && value?.target?.value) {
-      // Update the search dropdown (existing functionality)
       debouncedSearch(value?.target?.value);
-
-      // Also debounce the API call for filtering
       debouncedApiCall(updatedFilters);
     }
     // For text inputs, use debounced API call
@@ -620,7 +664,6 @@ const RportHistory = (props) => {
       filterKey === "query" ||
       (typeof value === "object" && value?.target)
     ) {
-      // This handles text inputs
       debouncedApiCall(updatedFilters);
     }
     // For non-text inputs (selects, dates, etc.), call API immediately
@@ -632,8 +675,15 @@ const RportHistory = (props) => {
       }
     }
   };
+
   const handleClearAllFilters = () => {
-    apiCall({}, true); // Call the API with no filters
+    // Reset pagination when clearing filters
+    setCurrentPage(1);
+    setHasNextPage(true);
+    setStaticReportsData({ reports_history: [], meta: {} });
+    setSortState(null);
+    
+    apiCall({}, false, false, true);
   };
 
   // Configuration for filters
@@ -646,13 +696,10 @@ const RportHistory = (props) => {
         showDelete: true,
         iconBefore: <SearchIcon />,
         deleteFunction: () => handleFilterChange("query", ""),
-        // showDropdown: true,
-        // dropDownComponent: searchMatchDropDown(),
         label: "Search Match event or Booking number",
         className: "!py-[7px]  !text-[#343432] !text-[14px]",
         parentClassName: "!w-[300px]",
       },
-
       {
         type: "select",
         name: "venue",
@@ -684,7 +731,6 @@ const RportHistory = (props) => {
         parentClassName: "!w-[150px]",
         className: "!py-[8px] !px-[16px] mobile:text-xs",
       },
-
       {
         type: "select",
         name: "team_members",
@@ -722,7 +768,6 @@ const RportHistory = (props) => {
         className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
         labelClassName: "!text-[11px]",
       },
-
       {
         type: "select",
         name: "category",
@@ -741,64 +786,6 @@ const RportHistory = (props) => {
     ],
   };
 
-  const handleScrollEnd = async () => {
-    // Prevent multiple simultaneous calls
-    if (isLoading || hasReachedEnd) return; // Add hasReachedEnd check
-
-    // Check if we've reached the end based on meta data
-    if (filtersApplied.page >= staticReportsData?.meta?.total_pages) {
-      setHasReachedEnd(true);
-      return;
-    }
-
-    // Additional safety check - if no meta data, don't proceed
-    if (!staticReportsData?.meta) return;
-
-    setIsLoading(true);
-    const updatedFilter = {
-      ...filtersApplied,
-      page: filtersApplied.page + 1,
-    };
-
-    try {
-      const response = await reportHistory("", updatedFilter);
-      console.log(response, "responseresponse");
-
-      // Check if response has valid data before updating state
-      if (
-        response?.reports_history &&
-        Array.isArray(response.reports_history)
-      ) {
-        // If the response is empty, we've reached the end
-        if (response.reports_history.length === 0) {
-          console.log("No more data to load - reached end");
-          setHasReachedEnd(true); // Set flag instead of updating page
-          return; // Don't update filtersApplied
-        }
-
-        // Only update state and page if we have data
-        setStaticReportsData({
-          reports_history: [
-            ...staticReportsData?.reports_history,
-            ...response.reports_history,
-          ],
-          meta: response?.meta,
-        });
-        setFiltersApplied(updatedFilter);
-      } else {
-        // Handle case where response structure is unexpected
-        console.log("Invalid response structure");
-        setHasReachedEnd(true);
-      }
-    } catch (error) {
-      console.error("Scroll end error:", error);
-      // Optionally set hasReachedEnd to true on error to prevent infinite retries
-      // setHasReachedEnd(true);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const apiCallDebounceTimer = useRef(null);
 
   const debouncedApiCall = useCallback(async (params) => {
@@ -812,10 +799,10 @@ const RportHistory = (props) => {
       } catch (error) {
         console.error("Debounced API call error:", error);
       }
-    }, 500); // 500ms debounce delay for API calls
+    }, 500);
   }, []);
 
-  // Update the cleanup function to clear both timers
+  // Cleanup function
   const cleanup = () => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
@@ -825,24 +812,9 @@ const RportHistory = (props) => {
     }
   };
 
-  // Make sure to call cleanup on unmount
   useEffect(() => {
     return cleanup;
   }, []);
-
-  useEffect(() => {
-    // Reset any state that might cause stale data
-    setHasReachedEnd(false);
-
-    // If you have any row selection state, reset it here
-    // setSelectedRows([]);
-
-    // Reset sort state if needed when data changes completely
-    if (filtersApplied.page === 1) {
-      // Only reset sort on new filter (not pagination)
-      // setSortState(null); // Uncomment if you want to reset sort on filter
-    }
-  }, [staticReportsData?.reports_history]);
 
   const { downloadCSV } = useCSVDownload();
 
@@ -851,7 +823,6 @@ const RportHistory = (props) => {
 
     try {
       const response = await downloadReports("");
-      // Check if response is successful
       if (response) {
         downloadCSV(response);
         toast.success("Report downloaded");
@@ -859,7 +830,6 @@ const RportHistory = (props) => {
     } catch (error) {
       console.error("Error downloading CSV:", error);
       toast.error("Error downloading Report");
-      // Handle error (show toast, alert, etc.)
     } finally {
       setExportLoader(false);
     }
@@ -872,17 +842,63 @@ const RportHistory = (props) => {
   };
 
   const EXCLUDED_ACTIVE_FILTER_KEYS = [
-    "order_by", // Sorting parameter
-    "sort_order", // Sorting parameter
-    "page", // Pagination parameter
-    "limit", // Pagination parameter (if you use it)
-    "offset", // Pagination parameter (if you use it)
+    "order_by",
+    "sort_order", 
+    "page",
+    "limit",
+    "offset",
   ];
+
+  const customTableComponent = () => {
+    return (
+      <div className="p-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="px-4 py-2 border-b border-gray-200 flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-semibold">
+                Reports ({staticReportsData?.reports_history?.length || 0})
+              </h2>
+              {hasNextPage && (
+                <span className="text-sm text-gray-500">
+                  Page {currentPage} of {totalPages}
+                </span>
+              )}
+            </div>
+            <Button
+              onClick={handleExportCSV}
+              loading={exportLoader}
+              classNames={{
+                label_: "text-xs",
+                root: "flex gap-2 !px-2 items-center bg-[#F3F4F6] hover:bg-gray-200",
+              }}
+            >
+              <IconStore.download className="size-4" />
+              <span className="text-xs">Export CSV</span>
+            </Button>
+          </div>
+
+          <div className="overflow-auto">
+            <StickyDataTable
+              headers={filteredHeaders}
+              data={transformedData}
+              rightStickyColumns={rightStickyColumns}
+              loading={isLoading}
+              dateFormatConfig={{
+                order_date: "dateOnly",
+                event_date: "dateOnly",
+              }}
+              onSort={handleSort}
+              currentSort={sortState}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white">
-        {/* Currency navigation container */}
         <CurrencyNavigationContainer />
 
         <TabbedLayout
@@ -897,8 +913,16 @@ const RportHistory = (props) => {
           currentFilterValues={{ ...filtersApplied, page: "" }}
           showSelectedFilterPills={true}
           onCheckboxToggle={() => {}}
-          transitionDirection={transitionDirection} // Pass transition direction to TabbedLayout
+          transitionDirection={transitionDirection}
           excludedKeys={EXCLUDED_ACTIVE_FILTER_KEYS}
+          showCustomTable={true}
+          customTableComponent={customTableComponent}
+          reportsPage={true}
+          // NEW PROPS FOR SCROLL HANDLING - same as SalesPage
+          onScrollEnd={handleScrollEnd}
+          loadingMore={loadingMore}
+          hasNextPage={hasNextPage}
+          scrollThreshold={100}
         />
       </div>
 
@@ -914,8 +938,9 @@ const RportHistory = (props) => {
         orderLogs={showLogDetailsModal?.orderLogs}
         inventoryLogs={showLogDetailsModal?.inventoryLogs}
         isLoading={showLogDetailsModal?.isLoading}
-        showTabs={true} // Enable tab functionality
+        showTabs={true}
       />
+      
       <OrderInfo
         show={showInfoPopup?.flag}
         data={showInfoPopup?.data}
@@ -924,44 +949,6 @@ const RportHistory = (props) => {
         type="report"
         showShimmer={showInfoPopup?.isLoading}
       />
-      {/* StickyDataTable section */}
-      <div className="p-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-4 py-2 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-sm font-semibold">Reports</h2>
-            <Button
-              onClick={handleExportCSV}
-              loading={exportLoader}
-              classNames={{
-                label_: "text-xs",
-                root: "flex gap-2 !px-2 items-center bg-[#F3F4F6] hover:bg-gray-200",
-              }}
-            >
-              <IconStore.download className="size-4" />
-              <span className="text-xs">Export CSV</span>
-            </Button>
-          </div>
-
-          {/* StickyDataTable */}
-          <div className="max-h-[calc(100vh-410px)] overflow-auto">
-            <StickyDataTable
-              headers={filteredHeaders}
-              data={transformedData}
-              rightStickyColumns={rightStickyColumns}
-              loading={isLoading}
-              onScrollEnd={() => {
-                handleScrollEnd();
-              }}
-              dateFormatConfig={{
-                order_date: "dateOnly",
-                event_date: "dateOnly",
-              }}
-              onSort={handleSort} // Pass sort handler
-              currentSort={sortState} // Pass current sort state
-            />
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

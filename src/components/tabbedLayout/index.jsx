@@ -84,7 +84,9 @@ const TabbedLayout = ({
   loadingMore = false,
   hasNextPage = true,
   scrollThreshold = 100, // Distance from bottom to trigger load more
+  reportsPage
 }) => {
+  console.log(customTableComponent,'customTableComponent')
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState(initialTab || tabs[0]?.key);
   const [checkboxValues, setCheckboxValues] = useState({});
@@ -735,7 +737,7 @@ const TabbedLayout = ({
         <div
           ref={scrollContainerRef}
           className={`${
-            customTableComponent && "overflow-auto max-h-[calc(100vh-250px)]"
+            customTableComponent && `${`overflow-auto ${reportsPage ? "max-h-[calc(100vh-125px)]" :"max-h-[calc(100vh-250px)]"}`}`
           }`}
           onScroll={debouncedHandleScroll}
         >
