@@ -772,7 +772,7 @@ const SalesPage = (props) => {
   const itemConfig = {
     [profile]: [
       {
-        name: (activeTabConfig?.name || activeTab) +" Revenue",
+        name: (activeTabConfig?.name === "Delivered" || activeTab === "delivered"? "Delivery": activeTabConfig?.name || activeTab) +" Revenue",
         value: overViewData?.amount_with_currency,
       },
       {
