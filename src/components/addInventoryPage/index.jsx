@@ -454,7 +454,7 @@ const AddInventoryPage = (props) => {
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[140px] lg:max-w-[212px]",
       iconBefore: (
-        <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
+        <div className="border-r-[1px] pr-4 border-[#E0E1EA]">
           <p className="text-xs sm:text-[10px] lg:text-xs">
             {matchDetails?.currency_icon?.[0] || "$"}
           </p>
@@ -480,7 +480,7 @@ const AddInventoryPage = (props) => {
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
       iconBefore: (
-        <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
+        <div className="border-r-[1px] pr-4 border-[#E0E1EA]">
           <p className="text-xs sm:text-[10px] lg:text-xs">
             {matchDetails?.currency_icon?.[0] || "$"}
           </p>
@@ -974,7 +974,7 @@ const AddInventoryPage = (props) => {
         publishingData.add_price_addlist || ""
       );
       formData.append(
-        `data[${index}][web_price]`,
+        `data[${index}][add_web_price_addlist]`,
         publishingData.face_value || ""
       );
 
