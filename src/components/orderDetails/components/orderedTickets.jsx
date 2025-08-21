@@ -2,6 +2,7 @@ import React, { Fragment } from "react";
 import DisplayValues from "./displayValues";
 
 const OrderedTickets = ({ ticket_details }) => {
+  console.log(ticket_details,'ticket_detailsticket_details')
   if (!ticket_details) {
     return (
       <div className="border-[1px] border-[#E0E1EA] rounded-md">

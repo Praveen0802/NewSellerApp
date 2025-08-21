@@ -23,7 +23,8 @@ const OrderDetails = ({ show, onClose, data = {} }) => {
     payment_details = {},
     tickets = {},
   } = data;
-
+  
+console.log(data,'datadata')
   const [expandedVersion, setExpandedVersion] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -104,6 +105,20 @@ const OrderDetails = ({ show, onClose, data = {} }) => {
     },
   ];
 
+
+  const transformedTicketDetails = ticket_details
+  ? {
+      venue: ticket_details?.venue_name,
+      match_date: ticket_details?.match_date,
+      match_time: ticket_details?.match_datetime,
+      seat_category: ticket_details?.seat_category,
+      ticket_types: ticket_details?.ticket_type,
+      quantity: ticket_details?.quantity,
+      ticket_price: ticket_details?.total_paid_converted,
+      order_value: ticket_details?.ticket_price_converted,
+      currency_type: ticket_details?.currency,
+    }
+  : null;
   const bookingId = order_details?.booking_status_id;
 
   const handleCollapseModal = () => {
@@ -226,7 +241,7 @@ const OrderDetails = ({ show, onClose, data = {} }) => {
                   <PaymentOrderDetails payment_details={payment_details} />
                 </div>
               </div>
-              <OrderedTickets ticket_details={ticket_details} />
+              <OrderedTickets ticket_details={transformedTicketDetails} />
               <Benifits
                 expandedVersion={expandedVersion}
                 benefits_restrictions={benefits_restrictions}

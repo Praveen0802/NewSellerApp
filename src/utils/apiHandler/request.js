@@ -122,7 +122,8 @@ export const myListingUploadTickets = async (token, data) => {
         },
       }),
     });
-    return response?.data?.success ? response?.data?.data : {};
+    console.log(response,'response?.data')
+    return response;
   } catch (error) {
     console.log("ERROR in saveListing", error);
   }

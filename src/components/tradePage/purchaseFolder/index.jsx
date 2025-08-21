@@ -69,33 +69,63 @@ const PurchaseFolder = (props) => {
   useEffect(() => {
     if (success == "true") {
       toast.success("Booking Completed successfully");
-      eyeIconClick({ booking_id: booking_no });
+      eyeIconClick({ booking_no: booking_no });
     }
   }, []);
   const eyeIconClick = async (item) => {
-    const response = await purchaseHistory("", {
-      booking_no: item?.booking_id,
-    });
-    setShowOrderPopup({
-      flag: true,
-      data: response?.[0],
-    });
+    // Check if item exists
+    if (!item) {
+      console.error("Item is null or undefined");
+      return;
+    }
+
+    // Check if booking_id exists
+    if (!item.booking_no) {
+      console.error("Booking ID is missing");
+      return;
+    }
+
+    try {
+      const response = await purchaseHistory("", {
+        booking_no: item.booking_no.includes("1BX")
+          ? item.booking_no.replace("1BX", "")
+          : `${item.booking_no}`,
+      });
+
+      // Check if response exists and has data
+      if (response && response.length > 0) {
+        setShowOrderPopup({
+          flag: true,
+          data: response[0],
+        });
+      } else {
+        console.warn("No data received from purchaseHistory");
+        // Optionally set popup with empty data or show error message
+        setShowOrderPopup({
+          flag: true,
+          data: null,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching purchase history:", error);
+      // Handle error appropriately
+    }
   };
 
   const headers = [
-    { key: "status", label: "Status", },
-    { key: "bookingNo", label: "Booking Status", },
-    { key: "listmyTicket", label: "Booking No", },
-    { key: "orderDate", label: "Order Date", },
-    { key: "event", label: "Event", },
-    { key: "venue", label: "Venue", },
-    { key: "eventDate", label: "Event Date", },
-    { key: "category", label: "Category", },
-    { key: "ticketType", label: "Ticket Type", },
-    { key: "qty", label: "Qty", },
-    { key: "ticketPrice", label: "Ticket Price", },
-    { key: "subTotal", label: "Subtotal", },
-    { key: "total", label: "Total", },
+    { key: "status", label: "Status" },
+    { key: "bookingNo", label: "Booking Status" },
+    { key: "listmyTicket", label: "Booking No" },
+    { key: "orderDate", label: "Order Date" },
+    { key: "event", label: "Event" },
+    { key: "venue", label: "Venue" },
+    { key: "eventDate", label: "Event Date" },
+    { key: "category", label: "Category" },
+    { key: "ticketType", label: "Ticket Type" },
+    { key: "qty", label: "Qty" },
+    { key: "ticketPrice", label: "Ticket Price" },
+    { key: "subTotal", label: "Subtotal" },
+    { key: "total", label: "Total" },
   ];
 
   const data = listTicketDetails?.map((item) => {
@@ -192,7 +222,7 @@ const PurchaseFolder = (props) => {
         ...filtersApplied,
         event_date_from: dateRange?.startDate,
         event_date_to: dateRange?.endDate,
-        page:1
+        page: 1,
       };
     }
     if (key == "orderDate") {
@@ -237,7 +267,7 @@ const PurchaseFolder = (props) => {
     const params = {
       ...filtersApplied,
       [key]: value,
-      page:1
+      page: 1,
     };
     fetchAPiDetails(params);
   };
@@ -309,7 +339,7 @@ const PurchaseFolder = (props) => {
               handleSelectChange(e, "ticket_status");
             }}
             paddingClassName="!py-[6px] !px-[12px] w-full text-xs"
-                labelClassName="!text-[11px]"
+            labelClassName="!text-[11px]"
           />
 
           <FloatingSelect
@@ -331,7 +361,7 @@ const PurchaseFolder = (props) => {
               handleSelectChange(e, "booking_status");
             }}
             paddingClassName="!py-[6px] !px-[12px] w-full text-xs"
-                labelClassName="!text-[11px]"
+            labelClassName="!text-[11px]"
           />
         </div>
       )}
@@ -418,7 +448,7 @@ const PurchaseFolder = (props) => {
           handleSelectChange(e, "booking_status");
         }}
         paddingClassName="!py-[6px] !px-[12px] w-full mobile:text-xs"
-            labelClassName="!text-[11px]"
+        labelClassName="!text-[11px]"
       />
     </div>
   );

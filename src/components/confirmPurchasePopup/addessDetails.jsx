@@ -198,7 +198,7 @@ const AddressDetails = ({
       </p>
       <div>
         {addressDetails?.map((field, index) => {
-          if (!field?.address_type && !field?.address_line1) return null;
+          // if (!field?.address_type && !field?.address_line1) return null;
           return (
             <label
               key={index}
@@ -216,7 +216,11 @@ const AddressDetails = ({
                 />
                 <div className="ml-3 flex items-center">
                   <p className="text-gray-700 text-[13px] font-medium">
-                    {field?.address_type} - {field?.address}
+                    {field?.first_name}
+                    {field?.address_type
+                      ? ` - ${field?.address_type}`
+                      : ""}{" "}
+                    {field?.address ? ` - ${field?.address}` : ""}
                   </p>
                 </div>
               </div>

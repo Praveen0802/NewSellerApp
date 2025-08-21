@@ -298,7 +298,6 @@ const Pagination = ({
 
 const TicketsPage = (props) => {
   const { success = "", response } = props;
-  console.log(response, "responseresponse");
   // Memoize the overview data to prevent unnecessary re-renders
   const overViewData = useMemo(
     () => response?.overview || {},

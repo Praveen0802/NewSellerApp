@@ -76,12 +76,16 @@ const PurchaseCard = ({ data,selectedQuantity,setSelectedQuantity }) => {
       // symbol: priceDetails?.currency_icon,
     },
     {
+      key: "Payment Fee",
+      value: priceDetails?.payment_fee || "0.00",
+      // symbol: priceDetails?.currency_icon,
+    },
+    {
       key: "Total",
-      value: priceDetails?.total,
+      value: priceDetails?.total_with_payment_fee,
       // symbol: priceDetails?.currency_icon,
     },
   ];
-console.log(priceDetails,'priceDetailspriceDetails')
   return (
     <div className="border border-gray-200 rounded-md">
       <p className="px-4 py-2 border-b border-gray-200 text-[14px] font-medium">

@@ -258,6 +258,8 @@ const OrderInfo = ({
     attendee_details,
     order_id_label,
   } = data;
+
+  console.log(data,'datadatadata')
   // Extract order notes from ticket details
   const order_notes = ticket_details?.[0]?.order_notes || "";
   // const order_notes = "";

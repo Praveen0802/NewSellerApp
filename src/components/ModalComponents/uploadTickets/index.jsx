@@ -769,8 +769,8 @@ const UploadTickets = ({
           console.log("error", err);
         }
       }
-
-      if (response.success) {
+console.log(response,'responseresponse')
+      if (response.status == 200) {
       onClose();
       toast.success(
         proofUploadView
