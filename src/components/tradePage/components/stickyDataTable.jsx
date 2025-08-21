@@ -201,7 +201,7 @@ const StickyDataTable = ({
   const [hasScrolled, setHasScrolled] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-  const [activeTooltipKey, setActiveTooltipKey] = useState(null);
+  const [activeTooltip, setActiveTooltip] = useState(null);
 
   // Flag to prevent multiple triggers of the scroll end callback
   const hasCalledScrollEnd = useRef(false);
@@ -566,11 +566,11 @@ const StickyDataTable = ({
 
   // Handle mouse hover for tooltips
   const handleMouseEnter = (tooltipKey) => {
-    setActiveTooltipKey(tooltipKey);
+    setActiveTooltip(tooltipKey);
   };
 
   const handleMouseLeave = () => {
-    setActiveTooltipKey(null);
+    setActiveTooltip(null);
   };
 
   // Ensure rightStickyColumns matches displayData length
@@ -942,8 +942,8 @@ const StickyDataTable = ({
                                     component={column?.tooltipComponent}
                                     position={column.tooltipPosition || "top"}
                                     tooltipKey={`${rowIndex}-${column.key}`}
-                                    activeKey={activeTooltipKey}
-                                    setActiveKey={setActiveTooltipKey}
+                                    activeKey={activeTooltip}
+                                    setActiveKey={setActiveTooltip}
                                   >
                                     <div
                                       className="cursor-pointer"

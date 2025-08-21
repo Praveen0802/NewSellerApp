@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function TooltipWrapper({
   children,
@@ -7,71 +7,177 @@ export default function TooltipWrapper({
   tooltipKey,
   activeKey,
   setActiveKey,
+  offset = 8, // pixels between element and tooltip
 }) {
   const tooltipRef = useRef(null);
-  const isActive = activeKey === tooltipKey;
+  const [tooltipStyle, setTooltipStyle] = useState({});
+  const [isClicked, setIsClicked] = useState(false);
+  const isActive = isClicked || activeKey === tooltipKey;
 
-  const positionConfigs = {
-    top: {
-      tooltipClass: "bottom-full left-1/2 -translate-x-1/2 mb-1",
-      pointerClass: "absolute top-full left-1/2 -translate-x-1/2",
-      borderClass: "border-l-4 border-r-4 border-t-4 border-t-gray-800",
-    },
-    bottom: {
-      tooltipClass: "top-full left-1/2 -translate-x-1/2 mt-1",
-      pointerClass: "absolute bottom-full left-1/2 -translate-x-1/2",
-      borderClass: "border-l-4 border-r-4 border-b-4 border-b-gray-800",
-    },
-    left: {
-      tooltipClass: "right-full top-1/2 -translate-y-1/2 mr-1",
-      pointerClass: "absolute top-1/2 left-full -translate-y-1/2",
-      borderClass: "border-t-4 border-b-4 border-l-4 border-l-gray-800",
-    },
-    right: {
-      tooltipClass: "left-full top-1/2 -translate-y-1/2 ml-1",
-      pointerClass: "absolute top-1/2 right-full -translate-y-1/2",
-      borderClass: "border-t-4 border-b-4 border-r-4 border-r-gray-800",
-    },
+  const updateTooltipPosition = () => {
+    if (!tooltipRef.current) return;
+
+    const element = tooltipRef.current.firstChild;
+    if (!element) return;
+
+    const rect = element.getBoundingClientRect();
+    const scrollY = window.scrollY || document.documentElement.scrollTop;
+    const scrollX = window.scrollX || document.documentElement.scrollLeft;
+
+    let style = { position: "fixed", zIndex: 9999 };
+
+    switch (position) {
+      case "top":
+        style.top = `${rect.top + scrollY - offset}px`;
+        style.left = `${rect.left + scrollX + rect.width / 2}px`;
+        style.transform = "translateX(-50%) translateY(-100%)";
+        break;
+      case "bottom":
+        style.top = `${rect.bottom + scrollY + offset}px`;
+        style.left = `${rect.left + scrollX + rect.width / 2}px`;
+        style.transform = "translateX(-50%)";
+        break;
+      case "left":
+        style.top = `${rect.top + scrollY + rect.height / 2}px`;
+        style.left = `${rect.left + scrollX - offset}px`;
+        style.transform = "translateX(-100%) translateY(-50%)";
+        break;
+      case "right":
+        style.top = `${rect.top + scrollY + rect.height / 2}px`;
+        style.left = `${rect.right + scrollX + offset}px`;
+        style.transform = "translateY(-50%)";
+        break;
+      default:
+        style.top = `${rect.top + scrollY - offset}px`;
+        style.left = `${rect.left + scrollX + rect.width / 2}px`;
+        style.transform = "translateX(-50%) translateY(-100%)";
+    }
+
+    setTooltipStyle(style);
   };
 
-  const config = positionConfigs[position] || positionConfigs.top;
+  const handleMouseEnter = () => {
+    if (tooltipKey && !isClicked) {
+      setActiveKey(tooltipKey);
+      requestAnimationFrame(updateTooltipPosition);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (tooltipKey && !isClicked) {
+      setActiveKey(null);
+    }
+  };
 
   const handleClick = (e) => {
     e.stopPropagation();
-    setActiveKey(isActive ? null : tooltipKey);
+    if (tooltipKey) {
+      if (isClicked) {
+        setIsClicked(false);
+        setActiveKey(null);
+      } else {
+        setIsClicked(true);
+        setActiveKey(tooltipKey);
+        requestAnimationFrame(updateTooltipPosition);
+      }
+    }
   };
 
+  // Close tooltip when clicking outside
   useEffect(() => {
-    const handleOutsideClick = (e) => {
-      if (tooltipRef.current && !tooltipRef.current.contains(e.target)) {
+    const handleClickOutside = (e) => {
+      if (isClicked && tooltipRef.current && !tooltipRef.current.contains(e.target)) {
+        setIsClicked(false);
         setActiveKey(null);
       }
     };
 
-    if (isActive) {
-      document.addEventListener("click", handleOutsideClick);
+    if (isClicked) {
+      document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener("click", handleOutsideClick);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isActive]);
+  }, [isClicked]);
+
+  // Update position on scroll and resize
+  useEffect(() => {
+    if (!isActive) return;
+
+    const handleScrollOrResize = () => {
+      updateTooltipPosition();
+    };
+
+    window.addEventListener("scroll", handleScrollOrResize, true);
+    window.addEventListener("resize", handleScrollOrResize);
+
+    return () => {
+      window.removeEventListener("scroll", handleScrollOrResize, true);
+      window.removeEventListener("resize", handleScrollOrResize);
+    };
+  }, [isActive, position]);
 
   return (
     <div
       ref={tooltipRef}
-      className="relative inline-block"
+      className="inline-block relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       onClick={handleClick}
     >
       {children}
       {isActive && (
         <div
-          className={`absolute z-[9999] ${config.tooltipClass} bg-white  text-xs shadow-md px-2 py-1 rounded whitespace-nowrap`}
+          className="bg-white text-gray-800 text-xs shadow-lg px-3 py-1.5 rounded whitespace-nowrap border border-gray-200"
+          style={{
+            ...tooltipStyle,
+            zIndex: 9999,
+          }}
         >
           {component}
+          {/* Arrow */}
           <div
-            className={`${config.pointerClass} w-0 h-0 border-solid border-transparent ${config.borderClass}`}
-          ></div>
+            className="absolute w-2 h-2 bg-white border-t border-l border-gray-200"
+            style={{
+              ...(position === "top" && {
+                bottom: "-6px",
+                left: "50%",
+                transform: "translateX(-50%) rotate(-45deg)",
+                borderRight: '1px solid #e5e7eb',
+                borderBottom: '1px solid #e5e7eb',
+                borderTop: 'none',
+                borderLeft: 'none',
+              }),
+              ...(position === "bottom" && {
+                top: "-6px",
+                left: "50%",
+                transform: "translateX(-50%) rotate(135deg)",
+                borderRight: '1px solid #e5e7eb',
+                borderBottom: '1px solid #e5e7eb',
+                borderTop: 'none',
+                borderLeft: 'none',
+              }),
+              ...(position === "left" && {
+                right: "-6px",
+                top: "50%",
+                transform: "translateY(-50%) rotate(-135deg)",
+                borderRight: '1px solid #e5e7eb',
+                borderBottom: '1px solid #e5e7eb',
+                borderTop: 'none',
+                borderLeft: 'none',
+              }),
+              ...(position === "right" && {
+                left: "-6px",
+                top: "50%",
+                transform: "translateY(-50%) rotate(45deg)",
+                borderRight: '1px solid #e5e7eb',
+                borderBottom: '1px solid #e5e7eb',
+                borderTop: 'none',
+                borderLeft: 'none',
+              }),
+            }}
+          />
         </div>
       )}
     </div>
