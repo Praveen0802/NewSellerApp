@@ -49,7 +49,7 @@ const ReportsPage = (props) => {
   const [transactionHistory, setTransactionHistory] =
     useState(transaction_history);
   const [depositHistory, setDepositHistory] = useState(deposit_history);
-  console.log(overview, "overviewoverview");
+  console.log(depositHistory, "depositHistory", transactionHistory);
   const values = overview?.map((item) => {
     return {
       icon: flagMap?.[item.currency],

@@ -156,7 +156,7 @@ const RportHistory = (props) => {
   const [filtersApplied, setFiltersApplied] = useState({
     page: 1,
   });
-
+console.log(props,'propsprops')
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [showLogDetailsModal, setShowLogDetailsModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -486,7 +486,9 @@ const RportHistory = (props) => {
     try {
       const [reportOverview, reportData] = await Promise.all([
         // Only fetch overview if not loading more or if explicitly requested
-        (!isLoadMore || handleCountApiCall) ? reportsOverview("", updatedFilters) : Promise.resolve(overViewData),
+        !isLoadMore || handleCountApiCall
+          ? reportsOverview("", updatedFilters)
+          : Promise.resolve(overViewData),
         reportHistory("", updatedFilters),
       ]);
 
@@ -617,7 +619,7 @@ const RportHistory = (props) => {
       currentTab,
       "currentTab"
     );
-    
+
     // Handle different filter types
     if (filterKey === "orderDate") {
       params = {
@@ -638,6 +640,13 @@ const RportHistory = (props) => {
         ...params,
         event_start_date: value?.startDate,
         event_end_date: value?.endDate,
+        page: 1,
+      };
+    } else if (filterKey === "transaction_end_date") {
+      params = {
+        ...params,
+        transaction_start_date: "",
+        transaction_end_date: "",
         page: 1,
       };
     } else {
@@ -682,7 +691,7 @@ const RportHistory = (props) => {
     setHasNextPage(true);
     setStaticReportsData({ reports_history: [], meta: {} });
     setSortState(null);
-    
+
     apiCall({}, false, false, true);
   };
 
@@ -748,8 +757,12 @@ const RportHistory = (props) => {
         label: "Order Status",
         value: filtersApplied?.order_status,
         options: [
-          { value: "paid", label: "Paid" },
+          { value: "pending", label: "Pending" },
+          { value: "confirmed", label: "Awaiting Delivery" },
+          { value: "delivered", label: "Delivered" },
           { value: "completed", label: "Completed" },
+          { value: "cancelled", label: "Cancelled" },
+          { value: "replaced", label: "Replaced" },
         ],
         parentClassName: "!w-[12%]",
         className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
@@ -843,7 +856,7 @@ const RportHistory = (props) => {
 
   const EXCLUDED_ACTIVE_FILTER_KEYS = [
     "order_by",
-    "sort_order", 
+    "sort_order",
     "page",
     "limit",
     "offset",
@@ -856,13 +869,9 @@ const RportHistory = (props) => {
           <div className="px-4 py-2 border-b border-gray-200 flex justify-between items-center">
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-semibold">
-                Reports ({staticReportsData?.reports_history?.length || 0})
+                Reports
               </h2>
-              {hasNextPage && (
-                <span className="text-sm text-gray-500">
-                  Page {currentPage} of {totalPages}
-                </span>
-              )}
+              
             </div>
             <Button
               onClick={handleExportCSV}
@@ -940,7 +949,7 @@ const RportHistory = (props) => {
         isLoading={showLogDetailsModal?.isLoading}
         showTabs={true}
       />
-      
+
       <OrderInfo
         show={showInfoPopup?.flag}
         data={showInfoPopup?.data}

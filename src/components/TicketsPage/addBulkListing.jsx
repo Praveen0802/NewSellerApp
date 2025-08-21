@@ -310,8 +310,10 @@ const BulkInventory = (props) => {
   // MODIFIED: Global cell edit handler - Fixed to work across all matches
   const handleGlobalCellEdit = (matchId, rowIndex, columnKey, value, row) => {
     console.log("Global cell edited:", { matchId, rowIndex, columnKey, value });
-
+  
     let updateValues = {};
+    
+    // Existing logic for ticket_types
     if (columnKey === "ticket_types") {
       updateValues = {
         additional_file_type: "",
@@ -321,12 +323,31 @@ const BulkInventory = (props) => {
         paper_ticket_details: {},
       };
     }
-
+  
+    // New conditional logic for split_type and split_details
+    if (columnKey === "split_type") {
+      if (value === "6") {
+        updateValues.split_details = "27";
+      } else {
+        // If changing split_type and current split_details is "27", clear it
+        if (row.split_details === "27") {
+          updateValues.split_details = "";
+        }
+      }
+    }
+  
+    if (columnKey === "split_details") {
+      // If split_type is "6" and trying to set split_details to something other than "27"
+      if (row.split_type === "6" && value !== "27") {
+        updateValues.split_type = "5";
+      }
+    }
+  
     if (isGlobalEditMode && globalEditingTickets.length > 0) {
       // In global edit mode, update ALL selected tickets across ALL matches
       setInventoryDataByMatch((prevData) => {
         const newData = { ...prevData };
-
+  
         // Group editing tickets by match for efficient updates
         const ticketsByMatch = {};
         globalEditingTickets.forEach((uniqueId) => {
@@ -337,7 +358,7 @@ const BulkInventory = (props) => {
           }
           ticketsByMatch[ticketMatchId].push(index);
         });
-
+  
         // Update tickets in each match that are in edit mode
         Object.entries(ticketsByMatch).forEach(([editMatchId, indices]) => {
           if (newData[editMatchId]) {
@@ -349,7 +370,7 @@ const BulkInventory = (props) => {
             });
           }
         });
-
+  
         return newData;
       });
     } else {
@@ -471,54 +492,84 @@ const BulkInventory = (props) => {
   const [loader, setLoader] = useState(false);
 
   // MODIFIED: Global publish function
-  const handleGlobalPublishLive = async () => {
-    if (globalSelectedTickets.length === 0) {
-      toast.error("Please select tickets to publish");
-      return;
-    }
+  // MODIFIED: Global publish function with price validation
+const handleGlobalPublishLive = async () => {
+  if (globalSelectedTickets.length === 0) {
+    toast.error("Please select tickets to publish");
+    return;
+  }
 
-    setLoader(true);
+  // Collect all selected tickets with their match details for validation
+  const selectedTicketsData = [];
+  const invalidPriceTickets = [];
 
-    try {
-      // Collect all selected tickets with their match details
-      const selectedTicketsData = [];
+  globalSelectedTickets.forEach((uniqueId) => {
+    const [matchId, originalIndex] = uniqueId.split("_");
+    const index = parseInt(originalIndex);
+    const matchDetails = allMatchDetails.find(
+      (m) => m.match_id.toString() === matchId
+    );
+    const ticketData = inventoryDataByMatch[matchId][index];
 
-      globalSelectedTickets.forEach((uniqueId) => {
-        const [matchId, originalIndex] = uniqueId.split("_");
-        const index = parseInt(originalIndex);
-        const matchDetails = allMatchDetails.find(
-          (m) => m.match_id.toString() === matchId
-        );
-        const ticketData = inventoryDataByMatch[matchId][index];
-
-        if (ticketData && matchDetails) {
-          selectedTicketsData.push({
-            match_id: matchDetails.match_id,
-            add_pricetype_addlist: matchDetails.price_type || "EUR",
-            ...ticketData,
-          });
-        }
-      });
-
-      const formData = constructFormDataAsFields(selectedTicketsData);
-
-      if (selectedTicketsData.length > 1) {
-        await saveBulkListing("", formData);
-      } else {
-        await saveListing("", formData);
+    if (ticketData && matchDetails) {
+      const ticketPrice = parseFloat(ticketData.add_price_addlist) || 0;
+      
+      // Check if price is greater than 5
+      if (ticketPrice < 5) {
+        invalidPriceTickets.push({
+          matchName: matchDetails.match_name,
+          ticketIndex: index + 1,
+          currentPrice: ticketPrice,
+          uniqueId
+        });
       }
 
-      router.push("/my-listings?success=true");
-      toast.success(
-        `${selectedTicketsData.length} listing(s) published successfully`
-      );
-      setLoader(false);
-    } catch (error) {
-      console.error("Error publishing listings:", error);
-      toast.error("Error in publishing listing");
-      setLoader(false);
+      selectedTicketsData.push({
+        match_id: matchDetails.match_id,
+        add_pricetype_addlist: matchDetails.price_type || "EUR",
+        ...ticketData,
+      });
     }
-  };
+  });
+
+  // If there are tickets with invalid prices, show error and return
+  if (invalidPriceTickets.length > 0) {
+    const errorMessage = invalidPriceTickets.length === 1 
+      ? `Cannot publish: Ticket #${invalidPriceTickets[0].ticketIndex} from "${invalidPriceTickets[0].matchName}" has a processed price of ${invalidPriceTickets[0].currentPrice}. Minimum required price is greater than 5.`
+      : `Cannot publish: ${invalidPriceTickets.length} tickets have processed prices of 5 or less. All tickets must have a processed price greater than 5 to publish.`;
+    
+    toast.error(errorMessage);
+    
+    // Optional: You could also highlight the invalid tickets in the UI
+    // by selecting only the invalid ones
+    const invalidTicketIds = invalidPriceTickets.map(ticket => ticket.uniqueId);
+    setGlobalSelectedTickets(invalidTicketIds);
+    
+    return;
+  }
+
+  setLoader(true);
+
+  try {
+    const formData = constructFormDataAsFields(selectedTicketsData);
+
+    if (selectedTicketsData.length > 1) {
+      await saveBulkListing("", formData);
+    } else {
+      await saveListing("", formData);
+    }
+
+    router.push("/my-listings?success=true");
+    toast.success(
+      `${selectedTicketsData.length} listing(s) published successfully`
+    );
+    setLoader(false);
+  } catch (error) {
+    console.error("Error publishing listings:", error);
+    toast.error("Error in publishing listing");
+    setLoader(false);
+  }
+};
 
   const [searchEventLoader, setSearchEventLoader] = useState(false);
   const [searchedEvents, setSearchedEvents] = useState([]);
@@ -672,11 +723,18 @@ const BulkInventory = (props) => {
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (e) =>
-        setFiltersApplied((prev) => ({
-          ...prev,
-          split_type: e,
-        })),
+      onChange: (value) => {
+        setFiltersApplied((prev) => {
+          let updated = { ...prev, split_type: value };
+          if (value === "6") {
+            updated.split_details = "27";
+          } else if (prev.split_details === "27") {
+            updated.split_details = "";
+          }
+console.log(updated,'updatedupdated')
+          return updated;
+        });
+      },
     },
     {
       type: "select",
@@ -698,8 +756,16 @@ const BulkInventory = (props) => {
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, split_details: value })),
+      onChange: (value) => {
+        setFiltersApplied((prev) => {
+          let updated = { ...prev, split_details: value };
+          if (prev.split_type === "6" && value !== "27") {
+            updated.split_type = "5";
+          }
+
+          return updated;
+        });
+      },
     },
     {
       type: "number",
@@ -748,7 +814,7 @@ const BulkInventory = (props) => {
       label: "Seating Category",
       mandatory: true,
       increasedWidth:
-      "!w-[180px] !min-w-[180px] sm:!w-[160px] sm:!min-w-[160px] lg:!w-[180px] lg:!min-w-[180px]",
+        "!w-[180px] !min-w-[180px] sm:!w-[160px] sm:!min-w-[160px] lg:!w-[180px] lg:!min-w-[180px]",
       value: filtersApplied?.ticket_category,
       options: Object.entries(block_data || {}).map(([key, value]) => ({
         value: key,

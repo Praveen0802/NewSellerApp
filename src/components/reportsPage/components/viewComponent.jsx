@@ -3,13 +3,22 @@ import React, { useState } from "react";
 import plus from "../../../../public/plus.svg";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 
-const ViewComponent = ({ item, onClick, hidePlus = false }) => {
+const ViewComponent = ({ item, onClick, hidePlus = false, isPayout }) => {
   const [tooltipVisible, setTooltipVisible] = useState(null);
   const keyValues = [
-    { key: "Pending Delivery", value: item?.keys?.pendingDelivery },
-    ...(item?.keys?.pendingPayment ? [{ key: "Pending Payout", value: item?.keys?.pendingPayment }] : []),
-    ...(item?.keys?.holding ? [{ key: "On Hold", value: item?.keys?.holding }] : []),
-    ...(item?.keys?.totalRevenue ? [{ key: "Total Revenue", value: item?.keys?.totalRevenue }] : []),
+    {
+      key: isPayout ? "Pending Delivery" : "Pending Fund",
+      value: item?.keys?.pendingDelivery,
+    },
+    ...(item?.keys?.pendingPayment
+      ? [{ key: "Pending Payout", value: item?.keys?.pendingPayment }]
+      : []),
+    ...(item?.keys?.holding
+      ? [{ key: "On Hold", value: item?.keys?.holding }]
+      : []),
+    ...(item?.keys?.totalRevenue
+      ? [{ key: "Total Revenue", value: item?.keys?.totalRevenue }]
+      : []),
   ];
 
   return (

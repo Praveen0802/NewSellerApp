@@ -198,7 +198,10 @@ const MyReferrals = (props) => {
       page: 1,
       per_page: itemsPerPage,
       keyword: searchText,
-      ...(range?.startDate && { start_date: range?.startDate }),
+      ...(range?.startDate && {
+        start_date: range?.startDate,
+        end_date: range?.endDate,
+      }),
     });
     setCurrentPage(1);
   };
@@ -585,23 +588,11 @@ const MyReferrals = (props) => {
               labelClassName="!text-[11px]"
             />
             <FloatingDateRange
-              label={"Start Date"}
+              label={"Date Range"}
               value={startDate}
-              keyValue="start_date"
+              keyValue="date_range"
               className="!w-full"
-              singleDateMode={true}
               onChange={handleDateChange}
-              paddingClassName="!py-[6px] !px-[12px] w-[20%] text-xs"
-              parentClassName="!w-[20%]"
-              labelClassName="!text-[11px]"
-            />
-            <FloatingDateRange
-              label={"End Date"}
-              value={endDate}
-              keyValue="end_date"
-              className="!w-full"
-              singleDateMode={true}
-              onChange={handleEndDateChange}
               paddingClassName="!py-[6px] !px-[12px] w-[20%] text-xs"
               parentClassName="!w-[20%]"
               labelClassName="!text-[11px]"
@@ -684,8 +675,8 @@ const MyReferrals = (props) => {
                             ...(startDate?.startDate && {
                               start_date: startDate.startDate,
                             }),
-                            ...(endDate?.startDate && {
-                              end_date: endDate.startDate,
+                            ...(startDate?.endDate && {
+                              end_date: startDate.endDate,
                             }),
                           });
                           setCurrentPage(1);
@@ -697,7 +688,8 @@ const MyReferrals = (props) => {
                   {/* Start Date Filter Chip */}
                   {startDate?.startDate && (
                     <div className="py-2 px-3 flex gap-1 items-center text-sm border-[1px] border-[#eaeaf1] rounded-md">
-                      Start Date: {formatDate(startDate.startDate)}
+                      Date Range: {formatDate(startDate.startDate)}-
+                      {formatDate(startDate.endDate)}
                       <X
                         className="w-4 h-4 cursor-pointer"
                         onClick={() => {
@@ -707,32 +699,6 @@ const MyReferrals = (props) => {
                             per_page: itemsPerPage,
                             keyword: searchText,
                             ...(statusFilter && { status: statusFilter }),
-                            ...(endDate?.startDate && {
-                              end_date: endDate.startDate,
-                            }),
-                          });
-                          setCurrentPage(1);
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  {/* End Date Filter Chip */}
-                  {endDate?.startDate && (
-                    <div className="py-2 px-3 flex gap-1 items-center text-sm border-[1px] border-[#eaeaf1] rounded-md">
-                      End Date: {formatDate(endDate.startDate)}
-                      <X
-                        className="w-4 h-4 cursor-pointer"
-                        onClick={() => {
-                          setEndDate("");
-                          handleApiCall({
-                            page: 1,
-                            per_page: itemsPerPage,
-                            keyword: searchText,
-                            ...(statusFilter && { status: statusFilter }),
-                            ...(startDate?.startDate && {
-                              start_date: startDate.startDate,
-                            }),
                           });
                           setCurrentPage(1);
                         }}

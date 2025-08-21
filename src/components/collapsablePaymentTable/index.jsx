@@ -10,41 +10,92 @@ const CollapsablePaymentTable = ({
   isLoading = false,
   tableType = "reports", // "reports" or "payout"
 }) => {
-  const [expandedSections, setExpandedSections] = useState(
-    sections?.map((_, index) => index === 0) || []
-  );
+  const [expandedSections, setExpandedSections] = useState([]);
+  const [contentHeights, setContentHeights] = useState([]);
+  const contentRefs = useRef([]);
 
-  const contentRefs = useRef(sections?.map(() => React.createRef()) || []);
-  const [contentHeights, setContentHeights] = useState(
-    sections?.map(() => 0) || []
-  );
-
+  // Initialize refs array to match sections length
   useEffect(() => {
-    // Calculate heights of all section contents
-    if (!isLoading && contentRefs.current.length > 0) {
-      contentRefs.current.forEach((ref, index) => {
-        if (ref.current) {
-          setContentHeights((prev) => {
-            const newHeights = [...prev];
-            newHeights[index] = ref.current.scrollHeight;
-            return newHeights;
-          });
+    if (sections) {
+      // Ensure refs array matches sections length
+      contentRefs.current = sections.map((_, index) => 
+        contentRefs.current[index] || React.createRef()
+      );
+      
+      // Initialize expanded sections if not already set
+      if (expandedSections.length === 0) {
+        setExpandedSections(sections.map((_, index) => index === 0));
+      } else if (expandedSections.length < sections.length) {
+        // Add new sections as expanded (you can change this behavior)
+        setExpandedSections(prev => [
+          ...prev,
+          ...new Array(sections.length - prev.length).fill(true)
+        ]);
+      }
+      
+      // Initialize content heights array
+      if (contentHeights.length < sections.length) {
+        setContentHeights(prev => [
+          ...prev,
+          ...new Array(sections.length - prev.length).fill(0)
+        ]);
+      }
+    }
+  }, [sections?.length]);
+
+  // Calculate heights for all sections including new ones
+  useEffect(() => {
+    if (!isLoading && sections && contentRefs.current.length > 0) {
+      const timer = setTimeout(() => {
+        const newHeights = [...contentHeights];
+        let heightsUpdated = false;
+
+        contentRefs.current.forEach((ref, index) => {
+          if (ref?.current && index < sections.length) {
+            const scrollHeight = ref.current.scrollHeight;
+            if (newHeights[index] !== scrollHeight) {
+              newHeights[index] = scrollHeight;
+              heightsUpdated = true;
+            }
+          }
+        });
+
+        if (heightsUpdated) {
+          setContentHeights(newHeights);
         }
-      });
+      }, 100); // Small delay to ensure DOM is updated
+
+      return () => clearTimeout(timer);
+    }
+  }, [sections, isLoading, expandedSections]);
+
+  // Additional effect to recalculate heights when sections change significantly
+  useEffect(() => {
+    if (!isLoading && sections) {
+      const timer = setTimeout(() => {
+        setContentHeights(prev => {
+          const newHeights = [...prev];
+          
+          contentRefs.current.forEach((ref, index) => {
+            if (ref?.current && index < sections.length) {
+              newHeights[index] = ref.current.scrollHeight;
+            }
+          });
+          
+          return newHeights;
+        });
+      }, 200);
+
+      return () => clearTimeout(timer);
     }
   }, [sections, isLoading]);
 
-  // Reset expanded sections when data changes
-  // useEffect(() => {
-  //   if (!isLoading && sections?.length > 0) {
-  //     setExpandedSections(sections.map((_, index) => index === 0));
-  //   }
-  // }, [sections]);
-
   const toggleSection = (index) => {
-    const newExpandedSections = [...expandedSections];
-    newExpandedSections[index] = !newExpandedSections[index];
-    setExpandedSections(newExpandedSections);
+    setExpandedSections(prev => {
+      const newExpandedSections = [...prev];
+      newExpandedSections[index] = !newExpandedSections[index];
+      return newExpandedSections;
+    });
   };
 
   // If loading is true, show shimmer effect
@@ -90,7 +141,7 @@ const CollapsablePaymentTable = ({
   return (
     <div className="w-full flex flex-col gap-4 mobile:gap-2">
       {sections.map((section, sectionIndex) => (
-        <div key={sectionIndex} className="mb-1 overflow-hidden">
+        <div key={`section-${sectionIndex}-${section.title}`} className="mb-1 overflow-hidden">
           {/* Section Header */}
           <div
             className={`flex items-center justify-between ${
@@ -127,7 +178,7 @@ const CollapsablePaymentTable = ({
             className="overflow-hidden transition-all duration-300 ease-in-out rounded-b-[6px] border-b border-[#E0E1EA]"
             style={{
               maxHeight: expandedSections[sectionIndex]
-                ? `${contentHeights[sectionIndex]}px`
+                ? `${contentHeights[sectionIndex] || 'auto'}px`
                 : "0px",
               opacity: expandedSections[sectionIndex] ? 1 : 0,
             }}
@@ -157,7 +208,7 @@ const CollapsablePaymentTable = ({
                     const isLastRow = rowIndex === section.data.length - 1;
 
                     return (
-                      <tr key={rowIndex} className="mobile:text-xs">
+                      <tr key={`row-${sectionIndex}-${rowIndex}-${row.id || rowIndex}`} className="mobile:text-xs">
                         {Object.entries(row).map(([key, values], cellIndex) => {
                           if (key === "id") return null;
 
@@ -230,7 +281,7 @@ const CollapsablePaymentTable = ({
                                     }`
                                   : ""
                               }`}
-                              key={cellIndex}
+                              key={`cell-${sectionIndex}-${rowIndex}-${cellIndex}`}
                             >
                               {key === "eye" && values ? (
                                 <IconStore.eye className="stroke-black size-4 mobile:size-3" />

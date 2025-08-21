@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import ukFlag from "../../../public/uk.svg";
 import usFlag from "../../../public/us.svg";
 import euFlag from "../../../public/eu.svg";
@@ -14,14 +14,14 @@ import OrderViewPopup from "./components/orderViewPopup";
 import {
   fetchBankAccountDetails,
   fetchPayoutHistoryMonthly,
-  getLMTPayPrefill, // You'll need to create this API function
+  getLMTPayPrefill,
   getPayoutDetails,
   getPayoutHistoryReport,
   getPayoutOrderDetails,
   getPayoutOrderReport,
   payOutBankAccount,
   payOutHistory,
-  payOutOrderHistory, // You'll need to create this API function
+  payOutOrderHistory,
 } from "@/utils/apiHandler/request";
 import Button from "../commonComponents/button";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
@@ -38,18 +38,30 @@ const PayoutPage = (props) => {
   const { apiData } = props;
   const { payout_overview, payoutHistory, payoutOrders, countriesList } =
     apiData;
+
   const flagMap = {
     GBP: ukFlag,
     USD: usFlag,
     EUR: euFlag,
     AED: Flag,
   };
-console.log(apiData,'apiDataapiData')
+
+  console.log(apiData, "apiDataapiData");
+
   const [toggleDropDown, setToggleDropDown] = useState(true);
-  const [selectedTab, setSelectedTab] = useState("payout"); // New state for tab selection
+  const [selectedTab, setSelectedTab] = useState("payout");
   const [currentHistoryData, setCurrentHistoryData] = useState(
     payoutHistory?.payout_history || []
   );
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMoreData, setHasMoreData] = useState(true);
+  const [meta, setMeta] = useState(
+    selectedTab === "payout" ? payoutHistory?.meta : payoutOrders?.meta
+  );
+
   const [payOutPopup, setPayOutPopup] = useState({
     flag: false,
     data: "",
@@ -65,31 +77,125 @@ console.log(apiData,'apiDataapiData')
   const [statusFilter, setStatusFilter] = useState("");
   const [dateRange, setDateRange] = useState({ startDate: "", endDate: "" });
 
+  // Scroll detection ref
+  const scrollContainerRef = useRef(null);
+
   // Update history data when tab changes
   useEffect(() => {
     if (selectedTab === "payout") {
       setCurrentHistoryData(payoutHistory?.payout_history || []);
+      setMeta(payoutHistory?.meta);
     } else {
       setCurrentHistoryData(payoutOrders?.payout_history || []);
+      setMeta(payoutOrders?.meta);
     }
-    // Reset filters when switching tabs
+
+    // Reset pagination and filters when switching tabs
+    setCurrentPage(1);
     setPaymentReference("");
     setStatusFilter("");
     setDateRange({ startDate: "", endDate: "" });
+    setHasMoreData(true);
   }, [selectedTab, payoutHistory, payoutOrders]);
 
-  // Transform payout overview data for ViewComponent - Updated to match Wallet Overview
+  // Update hasMoreData based on meta
+  useEffect(() => {
+    if (meta) {
+      setHasMoreData(meta.current_page < meta.last_page);
+    }
+  }, [meta]);
+
+  // Function to load more data
+  const loadMoreData = useCallback(async () => {
+    if (isLoadingMore || !hasMoreData) return;
+
+    setIsLoadingMore(true);
+    const nextPage = currentPage + 1;
+
+    try {
+      const params = {
+        page: nextPage,
+        ...(paymentReference && {
+          [selectedTab === "payout" ? "payout_reference" : "reference"]:
+            paymentReference,
+        }),
+        ...(statusFilter && { status: statusFilter }),
+        ...(dateRange?.startDate && { start_date: dateRange?.startDate }),
+        ...(dateRange?.endDate && { end_date: dateRange?.endDate }),
+      };
+
+      const filteredParams = Object.fromEntries(
+        Object.entries(params).filter(([_, v]) => v != null)
+      );
+
+      let response;
+      if (selectedTab === "payout") {
+        response = await payOutHistory("", filteredParams);
+      } else {
+        response = await payOutOrderHistory("", filteredParams);
+      }
+
+      if (response?.payout_history?.length > 0) {
+        // Append new data to existing data
+        setCurrentHistoryData((prev) => [...prev, ...response.payout_history]);
+        setCurrentPage(nextPage);
+        setMeta(response.meta);
+
+        // Check if there's more data
+        setHasMoreData(response.meta.current_page < response.meta.last_page);
+      } else {
+        setHasMoreData(false);
+      }
+    } catch (error) {
+      console.error("Error loading more data:", error);
+      toast.error("Failed to load more data. Please try again.");
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [
+    selectedTab,
+    currentPage,
+    isLoadingMore,
+    hasMoreData,
+    paymentReference,
+    statusFilter,
+    dateRange,
+  ]);
+console.log(currentHistoryData,'currentHistoryDatacurrentHistoryData')
+  // Scroll event handler
+  const handleScroll = useCallback(
+    (e) => {
+      const { scrollTop, scrollHeight, clientHeight } = e.target;
+      const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
+
+      // Load more when user scrolls to 90% of the content
+      if (scrollPercentage >= 0.9 && hasMoreData && !isLoadingMore) {
+        loadMoreData();
+      }
+    },
+    [hasMoreData, isLoadingMore, loadMoreData]
+  );
+
+  // Attach scroll listener
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener("scroll", handleScroll);
+      return () => scrollContainer.removeEventListener("scroll", handleScroll);
+    }
+  }, [handleScroll]);
+
+  // Transform payout overview data for ViewComponent
   const overviewValues = payout_overview?.map((item) => {
     return {
       icon: flagMap?.[item.currency],
-      amount: item?.total_amount, // This will show as "Available Balance"
-      balance: "Available Balance", // Changed from "Total Earnings" to match your UI
-      // Updated keys mapping to match the Wallet Overview structure
+      amount: item?.total_amount,
+      balance: "Available Balance",
       keys: {
         pendingDelivery:
           item?.pending_delivery?.total_ticket_amount_with_symbol,
         pendingPayment: item?.pending_payout?.total_ticket_amount_with_symbol,
-        totalRevenue: item?.total_amount, // Using total_amount as Total Revenue
+        totalRevenue: item?.total_amount,
         currency: item?.currency,
         holding: item?.holding,
       },
@@ -126,7 +232,7 @@ console.log(apiData,'apiDataapiData')
         isLoading: true,
       });
       const { bookingNo } = item ?? {};
-      const booking_id = Number(bookingNo?.replace("1BX", "")); //TODO :Hardcoded here
+      const booking_id = Number(bookingNo?.replace("1BX", ""));
       if (isOrderTab) {
         const params = {
           booking_id,
@@ -143,7 +249,7 @@ console.log(apiData,'apiDataapiData')
         });
         return;
       }
-      //PAYOUT HISTORY
+
       const { referenceNo, id } = item ?? {};
       const transData =
         currentHistoryData
@@ -225,13 +331,11 @@ console.log(apiData,'apiDataapiData')
   // Transform history data for CollapsablePaymentTable based on selected tab
   const getTransformedData = () => {
     if (selectedTab === "payout") {
-      // Payout History format
       return currentHistoryData?.map((list) => {
         return {
           title: list?.month,
           headers: [
             "Payment Reference",
-
             "To Account",
             "Amount",
             "Payout Date",
@@ -240,10 +344,8 @@ console.log(apiData,'apiDataapiData')
             "",
           ],
           data: list?.transactions?.map((listItems) => {
-            // const status = getStatusText(listItems?.status);
             return {
               referenceNo: listItems?.reference_no,
-
               to_account: listItems?.to_account,
               amount: listItems?.price_with_currency,
               payoutDate: formatDate(listItems?.payout_date, "dateOnly"),
@@ -256,7 +358,6 @@ console.log(apiData,'apiDataapiData')
         };
       });
     } else {
-      // Order History format
       return currentHistoryData?.map((list) => {
         return {
           title: list?.month,
@@ -281,7 +382,7 @@ console.log(apiData,'apiDataapiData')
               ticket: listItems?.ticket,
               status: listItems?.payout_status,
               eye: true,
-              id: listItems?.booking_no, // Using booking_no as ID for orders
+              id: listItems?.booking_no,
             };
           }),
         };
@@ -292,21 +393,31 @@ console.log(apiData,'apiDataapiData')
   const filterChange = async (params) => {
     setIsLoading(true);
 
+    // Reset pagination when filtering
+    setCurrentPage(1);
+    setHasMoreData(true);
+
     try {
-      // Uncomment when API is ready
       const { tab, reference_no = null, ...restParams } = params ?? {};
       const payoutParamsQuery = {
+        page: 1, // Always start from page 1 when filtering
         ...(reference_no && { payout_reference: reference_no }),
         ...restParams,
       };
       const orderHistoryParams = {
+        page: 1, // Always start from page 1 when filtering
         ...(reference_no && { reference: reference_no }),
         ...restParams,
       };
+
       if (selectedTab === "payout") {
         try {
           const response = await payOutHistory("", payoutParamsQuery);
-          setCurrentHistoryData(response?.payout_history);
+          setCurrentHistoryData(response?.payout_history || []);
+          setMeta(response?.meta);
+          setHasMoreData(
+            response?.meta?.current_page < response?.meta?.last_page
+          );
         } catch (error) {
           toast.error("Failed to get payout history. Please try again.");
         } finally {
@@ -316,14 +427,17 @@ console.log(apiData,'apiDataapiData')
       } else {
         try {
           const response = await payOutOrderHistory("", orderHistoryParams);
-          setCurrentHistoryData(response?.payout_history);
+          setCurrentHistoryData(response?.payout_history || []);
+          setMeta(response?.meta);
+          setHasMoreData(
+            response?.meta?.current_page < response?.meta?.last_page
+          );
         } catch (error) {
           toast.error("Failed to get order history. Please try again.");
         } finally {
           setIsLoading(false);
         }
       }
-      // For now, we'll just simulate loading
     } catch (error) {
       console.log("Error in filterChange:", error);
       setIsLoading(false);
@@ -337,7 +451,7 @@ console.log(apiData,'apiDataapiData')
       ...(statusFilter && { status: statusFilter }),
       ...(range?.startDate && { start_date: range?.startDate }),
       ...(range?.endDate && { end_date: range?.endDate }),
-      tab: selectedTab, // Include current tab in params
+      tab: selectedTab,
     };
 
     const filteredParams = Object.fromEntries(
@@ -357,7 +471,7 @@ console.log(apiData,'apiDataapiData')
       ...(statusFilter && { status: statusFilter }),
       ...(dateRange?.startDate && { start_date: dateRange?.startDate }),
       ...(dateRange?.endDate && { end_date: dateRange?.endDate }),
-      tab: selectedTab, // Include current tab in params
+      tab: selectedTab,
     };
 
     const filteredParams = Object.fromEntries(
@@ -374,7 +488,7 @@ console.log(apiData,'apiDataapiData')
       ...(value && { status: value }),
       ...(dateRange?.startDate && { start_date: dateRange?.startDate }),
       ...(dateRange?.endDate && { end_date: dateRange?.endDate }),
-      tab: selectedTab, // Include current tab in params
+      tab: selectedTab,
     };
 
     const filteredParams = Object.fromEntries(
@@ -388,7 +502,6 @@ console.log(apiData,'apiDataapiData')
     setSelectedTab(tab);
   };
 
-  // Helper function to get status label from value
   const getStatusLabel = (value) => {
     const statusMap = {
       0: "Pending",
@@ -399,12 +512,10 @@ console.log(apiData,'apiDataapiData')
     return statusMap[value] || value;
   };
 
-  // Create active filters object for ActiveFiltersBox
   const getActiveFilters = () => {
     const filters = {};
 
     if (isPayoutEntered !== null) {
-      // filters.paymentReference = paymentReference;
       filters.paymentReference = isPayoutEntered;
     }
 
@@ -419,7 +530,6 @@ console.log(apiData,'apiDataapiData')
     return filters;
   };
 
-  // Handle filter changes from ActiveFiltersBox
   const handleFilterChange = (filterKey, filterValue, allFilters) => {
     switch (filterKey) {
       case "paymentReference":
@@ -441,7 +551,6 @@ console.log(apiData,'apiDataapiData')
         break;
     }
 
-    // Trigger filter change with cleared values
     const params = {
       ...(filterKey !== "paymentReference" &&
         filterKey !== "clearAll" &&
@@ -465,18 +574,15 @@ console.log(apiData,'apiDataapiData')
     filterChange(filteredParams);
   };
 
-  // Handle clear all filters
   const handleClearAllFilters = () => {
     setPaymentReference("");
     setStatusFilter("");
     setDateRange({ startDate: "", endDate: "" });
     setIsPayoutEntered(null);
-    // Trigger filter change with no filters
     filterChange({ tab: selectedTab });
   };
 
   const [csvLoader, setCsvLoader] = useState(false);
-
   const { downloadCSV } = useCSVDownload();
 
   const handleDownloadCSV = async () => {
@@ -500,7 +606,6 @@ console.log(apiData,'apiDataapiData')
     } catch (error) {
       console.error("Error downloading CSV:", error);
       toast.error("Error downloading Report");
-      // Handle error (show toast, alert, etc.)
     } finally {
       setCsvLoader(false);
     }
@@ -536,15 +641,18 @@ console.log(apiData,'apiDataapiData')
                 key={index}
                 onClick={handleRequestPayout}
                 item={item}
-                isPayout={true} // Add this prop to differentiate payout view
+                isPayout={true}
               />
             ))}
           </div>
         </div>
       </div>
 
-      {/* History Section */}
-      <div className="p-3 md:p-4 mobile:p-2 flex-grow pb-[100px]">
+      {/* History Section with Scroll Container */}
+      <div
+        ref={scrollContainerRef}
+        className="p-3 md:p-4 mobile:p-2 flex-grow max-h-[calc(100vh-450px)] overflow-auto"
+      >
         <div className="flex flex-col h-full bg-white">
           {/* Header with Tabs */}
           <div className="flex items-center gap-3 md:gap-4 px-3 md:px-4 pt-3 md:pt-4 border-b-[1px] border-[#eaeaf1] overflow-x-auto mobile:gap-2 mobile:px-2 flex-shrink-0">
@@ -574,7 +682,6 @@ console.log(apiData,'apiDataapiData')
           <div className="p-3 md:p-4 mobile:p-2 flex flex-col gap-4">
             {/* Search and Filter Section */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-[60%] mobile:gap-2 flex-shrink-0">
-              {/* Search input */}
               <div className="border-[1px] flex gap-2 items-center px-2 py-[6px] w-full sm:w-[50%] border-[#DADBE5] rounded-md">
                 <IconStore.search className="size-4 stroke-[#130061] stroke-4" />
                 <input
@@ -592,7 +699,6 @@ console.log(apiData,'apiDataapiData')
                 />
               </div>
 
-              {/* Select and Date Range */}
               <div className="flex flex-col sm:flex-row gap-3 w-full">
                 {selectedTab != "payout" && (
                   <FloatingSelect
@@ -627,7 +733,7 @@ console.log(apiData,'apiDataapiData')
             />
 
             {/* Table Section */}
-            <div className="flex-grow pb-[10%]">
+            <div className="flex-grow">
               <CollapsablePaymentTable
                 sections={getTransformedData()}
                 selectedTab={selectedTab}
@@ -635,6 +741,25 @@ console.log(apiData,'apiDataapiData')
                 isLoading={isLoading}
                 tableType={selectedTab}
               />
+
+              {/* Loading indicator for pagination */}
+              {isLoadingMore && (
+                <div className="flex justify-center items-center py-4">
+                  <Spinner />
+                  <span className="ml-2 text-sm text-gray-600">
+                    Loading more...
+                  </span>
+                </div>
+              )}
+
+              {/* End of data indicator */}
+              {!hasMoreData && currentHistoryData.length > 0 && (
+                <div className="flex justify-center items-center py-4">
+                  <span className="text-sm text-gray-500">
+                    No more data to load
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -651,7 +776,7 @@ console.log(apiData,'apiDataapiData')
         showShimmer={payOutPopup?.isLoading}
       />
 
-      <div className="fixed bottom-0 w-full left-0 right-0 z-50  bg-[white] py-[16px] px-[16px]  border-t border-gray-200 shadow-lg ">
+      <div className="fixed bottom-0 w-full left-0 right-0 z-50 bg-[white] py-[16px] px-[16px] border-t border-gray-200 shadow-lg">
         <div className="flex items-center justify-end">
           <DownloadButton
             label={`Download ${isOrderTab ? "Order" : "Payout"} Report`}
