@@ -123,8 +123,8 @@ const ConfirmPurchasePopup = ({ onClose }) => {
         email: primaryAddress?.email,
         dialing_code: primaryAddress?.country_code,
         mobile_no: primaryAddress?.mobile_number,
-        country: primaryAddress?.country_id,
-        city: primaryAddress?.city_id,
+        country: Number(primaryAddress?.country_id),
+        city: Number(primaryAddress?.city_id),
         address: primaryAddress?.address,
       });
       console.log(address, "address");
@@ -132,7 +132,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
       toast.error("Failed to load address and payment details");
     }
   };
-
+console.log(formFieldValues,'formFieldValues')
   useEffect(() => {
     fetchAddressPaymentDetails();
   }, []);
@@ -195,7 +195,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
         confirmationPayload
       );
       if (confirmResponse?.result?.booking_status == "Success") {
-        bookingConfirm(true, "Booking Confirmed Successfully", bookingNo);
+        bookingConfirm(true, "Booking Confirmed Successfully", bookingId);
       } else {
         bookingConfirm(
           false,
@@ -217,7 +217,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
           selectedPayment?.field?.RecurringDetail?.recurringDetailReference,
       });
       if (response?.result?.status == 1) {
-        bookingConfirm(true, "Booking Confirmed Successfully", bookingNo);
+        bookingConfirm(true, "Booking Confirmed Successfully", bookingId);
       } else {
         bookingConfirm(false, response?.message || "Booking failed");
       }
@@ -373,7 +373,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
             apiResponse?.booking_no
           );
         } else {
-          bookingConfirm(false, apiResponse?.message || "Booking failed");
+          bookingConfirm(false, apiResponse?.message?.message || "Booking failed");
         }
       } else {
         bookingConfirm(false, response?.message || "Booking failed");

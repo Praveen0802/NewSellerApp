@@ -164,7 +164,7 @@ const StripeDropIn = ({
           "confirmResponseconfirmResponseconfirmResponse"
         );
         if (confirmResponse?.result?.booking_status == "Success") {
-          bookingConfirm(true, "Booking Confirmed Successfully", bookingNo);
+          bookingConfirm(true, "Booking Confirmed Successfully", bookingId);
         } else {
           bookingConfirm(
             false,

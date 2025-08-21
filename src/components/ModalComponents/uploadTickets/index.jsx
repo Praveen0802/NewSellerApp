@@ -769,7 +769,6 @@ const UploadTickets = ({
           console.log("error", err);
         }
       }
-console.log(response,'responseresponse')
       if (response.status == 200) {
       onClose();
       toast.success(

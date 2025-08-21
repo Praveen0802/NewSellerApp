@@ -16,10 +16,16 @@ const AddressDetails = ({
     "w-full border rounded-md focus:ring-1 focus:ring-blue-500 outline-none";
 
   const handleOtherAddressSelect = () => {
-    handleAddressChange("other");
+    handleAddressChange("other", {});
   };
 
-  // This will be used to render the form fields for the "Other" option
+  // Helper function to check if we should show the form
+  const shouldShowForm = () => {
+    return selectedAddress === "other" || 
+           (selectedAddress !== undefined && selectedAddress !== null && selectedAddress !== "other");
+  };
+
+  // This will be used to render the form fields for any selected address
   const userFormFields = [
     [
       {
@@ -28,10 +34,10 @@ const AddressDetails = ({
         id: "first_name",
         mandatory: true,
         name: "first_name",
-        value: formFieldValues?.first_name,
+        value: formFieldValues?.first_name || "",
         onChange: (e) => handleChange(e, "first_name"),
         className: `!py-[4px] !px-4 ${fieldStyle}`,
-        labelClassName: "!text-[12px] text-gray-600  block",
+        labelClassName: "!text-[12px] text-gray-600 block",
         placeholder: "Enter first name",
         rightIcon: formFieldValues?.first_name
           ? () => (
@@ -49,10 +55,10 @@ const AddressDetails = ({
         id: "last_name",
         mandatory: true,
         name: "last_name",
-        value: formFieldValues?.last_name,
+        value: formFieldValues?.last_name || "",
         onChange: (e) => handleChange(e, "last_name"),
         className: `!py-[4px] !px-4 ${fieldStyle}`,
-        labelClassName: "!text-[12px] text-gray-600  block",
+        labelClassName: "!text-[12px] text-gray-600 block",
         placeholder: "Enter last name",
         rightIcon: formFieldValues?.last_name
           ? () => (
@@ -70,10 +76,10 @@ const AddressDetails = ({
         id: "email",
         mandatory: true,
         name: "email",
-        value: formFieldValues?.email,
+        value: formFieldValues?.email || "",
         onChange: (e) => handleChange(e, "email"),
         className: `!py-[4px] !px-4 ${fieldStyle}`,
-        labelClassName: "!text-[12px] text-gray-600  block",
+        labelClassName: "!text-[12px] text-gray-600 block",
         placeholder: "Enter email address",
         rightIcon: formFieldValues?.email
           ? () => (
@@ -98,11 +104,12 @@ const AddressDetails = ({
                     type: "select",
                     id: "dialing_code",
                     name: "dialing_code",
-                    value: formFieldValues?.dialing_code,
+                    value: formFieldValues?.dialing_code || formFieldValues?.country_code || "",
                     onChange: (e) => handleChange(e, "dialing_code", "select"),
                     className: `!py-[4px] !px-4 ${fieldStyle}`,
                     searchable: true,
                     options: phoneCodeOptions,
+                    placeholder: "Code",
                   },
                 ]}
               />
@@ -115,7 +122,7 @@ const AddressDetails = ({
                     id: "mobile_no",
                     label: "Phone Number",
                     name: "mobile_no",
-                    value: formFieldValues?.mobile_no,
+                    value: formFieldValues?.mobile_no || "",
                     onChange: (e) => handleChange(e, "mobile_no"),
                     className: `!py-[4px] !px-4 ${fieldStyle}`,
                     placeholder: "Enter mobile number",
@@ -141,10 +148,11 @@ const AddressDetails = ({
         mandatory: true,
         id: "address",
         name: "address",
-        value: formFieldValues?.address,
+        value: formFieldValues?.address || "",
         onChange: (e) => handleChange(e, "address"),
         className: `!py-[4px] !px-4 ${fieldStyle}`,
-        labelClassName: "!text-[12px] text-gray-600  block",
+        labelClassName: "!text-[12px] text-gray-600 block",
+        placeholder: "Enter address",
       },
     ],
     [
@@ -155,13 +163,14 @@ const AddressDetails = ({
         mandatory: true,
         id: "country",
         name: "country",
-        value: formFieldValues?.country,
+        value: formFieldValues?.country || "",
         onChange: (e) => handleChange(e, "country", "select"),
         className: `!py-[4px] !px-4 ${fieldStyle}`,
-        labelClassName: "!text-[12px] text-gray-600  block",
+        labelClassName: "!text-[12px] text-gray-600 block",
         options: countryList?.length
           ? countryList
           : [{ value: "", label: "Select Country" }],
+        placeholder: "Select Country",
       },
     ],
     [
@@ -172,15 +181,16 @@ const AddressDetails = ({
         name: "city",
         searchable: true,
         mandatory: true,
-        value: formFieldValues?.city,
+        value: formFieldValues?.city || formFieldValues?.city_id || "",
         onChange: (e) => handleChange(e, "city", "select"),
-        disabled: !formFieldValues?.country,
+        disabled: !formFieldValues?.country && !formFieldValues?.country_id,
         className: `!py-[4px] !px-4 ${fieldStyle} ${
-          !formFieldValues?.country ? "opacity-60" : ""
+          !formFieldValues?.country && !formFieldValues?.country_id ? "opacity-60" : ""
         }`,
-        labelClassName: "!text-[12px] text-gray-600  block",
-        options: cityOptions,
-        rightIcon: formFieldValues?.city
+        labelClassName: "!text-[12px] text-gray-600 block",
+        options: cityOptions?.length ? cityOptions : [{ value: "", label: "Select City" }],
+        placeholder: "Select City",
+        rightIcon: (formFieldValues?.city || formFieldValues?.city_id)
           ? () => (
               <span className="text-green-500">
                 <IconStore.circleTick className="size-5" />
@@ -190,7 +200,6 @@ const AddressDetails = ({
       },
     ],
   ];
-
   return (
     <div className="border border-gray-200 rounded-md">
       <p className="px-4 py-2 border-b border-gray-200 text-[14px] font-medium">
@@ -250,8 +259,8 @@ const AddressDetails = ({
           </div>
         </label>
 
-        {/* Form for "Other" option */}
-        {selectedAddress === "other" && (
+        {/* Form for selected address (both saved and other) */}
+        {shouldShowForm() && (
           <div className="p-4 border-t border-gray-200">
             <div className="flex flex-col gap-4 rounded-md">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

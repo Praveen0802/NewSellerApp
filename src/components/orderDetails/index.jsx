@@ -23,7 +23,7 @@ const OrderDetails = ({ show, onClose, data = {} }) => {
     payment_details = {},
     tickets = {},
   } = data;
-  
+
 console.log(data,'datadata')
   const [expandedVersion, setExpandedVersion] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -37,16 +37,16 @@ console.log(data,'datadata')
   // Format date function similar to OrderInfo
   function formatTimestamp(dateString) {
     if (!dateString) return "-";
-    
+
     // If it's already in DD/MM/YYYY format, return as is
-    if (dateString.includes('/') && dateString.split('/').length === 3) {
+    if (dateString.includes("/") && dateString.split("/").length === 3) {
       return dateString;
     }
-    
+
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-      
+
       const options = {
         weekday: "short",
         day: "numeric",
@@ -80,7 +80,7 @@ console.log(data,'datadata')
   // Define OrderValueObject similar to OrderInfo
   const OrderValueObject = [
     {
-      key: "order_id", 
+      key: "order_id",
       name: "Order ID",
     },
     {
@@ -96,7 +96,7 @@ console.log(data,'datadata')
       key: "delivered_by",
     },
     {
-      name: "Days to Event", 
+      name: "Days to Event",
       key: "days_to_event",
     },
     {
@@ -104,21 +104,21 @@ console.log(data,'datadata')
       key: "payout_date",
     },
   ];
-
-
+console.log(ticket_details?.match_date)
   const transformedTicketDetails = ticket_details
-  ? {
-      venue: ticket_details?.venue_name,
-      match_date: ticket_details?.match_date,
-      match_time: ticket_details?.match_datetime,
-      seat_category: ticket_details?.seat_category,
-      ticket_types: ticket_details?.ticket_type,
-      quantity: ticket_details?.quantity,
-      ticket_price: ticket_details?.total_paid_converted,
-      order_value: ticket_details?.ticket_price_converted,
-      currency_type: ticket_details?.currency,
-    }
-  : null;
+    ? {
+        match_name: ticket_details?.match_name,
+        venue: ticket_details?.venue_name,
+        match_date: new Date(ticket_details?.match_datetime)?.toLocaleDateString(),
+        match_time: new Date(ticket_details?.match_datetime)?.toLocaleTimeString(),
+        seat_category: ticket_details?.seat_category,
+        ticket_types: ticket_details?.ticket_type,
+        quantity: ticket_details?.quantity,
+        ticket_price: ticket_details?.total_paid_converted,
+        order_value: ticket_details?.ticket_price_converted,
+        currency_type: ticket_details?.currency,
+      }
+    : null;
   const bookingId = order_details?.booking_status_id;
 
   const handleCollapseModal = () => {
@@ -216,8 +216,8 @@ console.log(data,'datadata')
                     expandedVersion ? "w-full sm:w-1/2" : "w-full"
                   }`}
                 >
-                  <OrderValues 
-                    orderObject={orderObject} 
+                  <OrderValues
+                    orderObject={orderObject}
                     OrderValueObject={OrderValueObject}
                   />
                   {(bookingId == 4 || bookingId == 5 || bookingId == 6) && (

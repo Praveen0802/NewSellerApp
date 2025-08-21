@@ -1977,7 +1977,7 @@ export const purchaseTicketsBuy = async (token, id, params = {}, data) => {
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
-    console.log("ERROR in purchaseTicketsBuy", error);
+    console.log("ERROR in purchaseTicketsBuy", error?.response);
     return error?.response?.data;
   }
 };

@@ -359,6 +359,7 @@ const OrderInfo = ({
   // Since ticket_details is now an array, we'll use the first ticket or handle multiple tickets
   const transformedTicketDetails = ticket_details?.[0]
     ? {
+      match_name:order_details?.match_name,
         venue: ticket_details[0].venue,
         match_date: ticket_details[0].match_date,
         match_time: ticket_details[0].match_time,
