@@ -45,8 +45,15 @@ const MyAccountTeam = (props) => {
     }));
   };
 
+  // const [countryCode, setCountryCode] = useState(
+  //   `${profileDetails?.country_code}`
+  // );
   const [countryCode, setCountryCode] = useState(
-    `${profileDetails?.country_code}`
+    profileDetails?.country_code
+      ? profileDetails.country_code.startsWith("+")
+        ? profileDetails.country_code
+        : `+${profileDetails.country_code}`
+      : ""
   );
 
   const handleCountryCodeChange = (code) => {
