@@ -504,7 +504,7 @@ const UploadTickets = ({
         <div className="text-xs truncate">
           {[ticketTypes].flat().includes(2) ? (
             "E-Ticket"
-          ) :ETicketsFlow ? (
+          ) : ETicketsFlow ? (
             "Mobile Ticket"
           ) : paperTicketFlow ? (
             "Paper Ticket"
@@ -762,7 +762,10 @@ const UploadTickets = ({
       setIsLoading(false);
     }
   };
-
+  console.log(
+    transferredFiles,
+    "transferredFilestransferredFilestransferredFiles"
+  );
   const handleConfirmCtaClick = useCallback(async () => {
     console.log(mySalesPage, "mySalesPagemySalesPage");
     if (mySalesPage) {
@@ -951,7 +954,7 @@ const UploadTickets = ({
     const currentTransferredFiles = proofUploadView
       ? proofTransferredFiles
       : transferredFiles;
-  
+
     // Enhanced upload message for proof upload
     const getUploadMessage = () => {
       if (proofUploadView) {
@@ -969,12 +972,12 @@ const UploadTickets = ({
         return "Add your file(s) to start uploading";
       }
     };
-  
+
     // Enhanced drag area disabled logic
     const isDragAreaDisabled = proofUploadView
       ? currentTransferredFiles.length >= 1
       : transferredFiles.length >= maxQuantity;
-  
+
     // Enhanced no files message
     const getNoFilesMessage = () => {
       if (proofUploadView) {
@@ -993,23 +996,23 @@ const UploadTickets = ({
         return "No files uploaded yet";
       }
     };
-  
+
     // NEW: Drag handlers for file items
     const handleDragStart = (e, file) => {
       if (!canTransferFile(file.id)) {
         e.preventDefault();
         return;
       }
-  
+
       // Set drag data for better compatibility
       e.dataTransfer.setData("text/plain", JSON.stringify(file));
       e.dataTransfer.effectAllowed = "move";
-  
+
       // Store dragged file globally for fallback
       window.currentDraggedFile = file;
       setIsDragging(true);
       setDraggedFile(file);
-  
+
       // Create ghost image
       const ghostElement = document.createElement("div");
       ghostElement.innerHTML = `
@@ -1032,28 +1035,28 @@ const UploadTickets = ({
       ghostElement.style.position = "absolute";
       ghostElement.style.top = "-1000px";
       document.body.appendChild(ghostElement);
-  
+
       e.dataTransfer.setDragImage(ghostElement, 10, 10);
-  
+
       setTimeout(() => {
         document.body.removeChild(ghostElement);
       }, 0);
     };
-  
+
     const handleDragEnd = () => {
       window.currentDraggedFile = null;
       setIsDragging(false);
       setDraggedFile(null);
     };
-  
+
     // NEW: Enhanced eye icon click handler for FileUploadSection
     const handleFileUploadEyeIconClick = (file, e) => {
       e?.stopPropagation();
-      
+
       // If file has URL (existing file), open in new tab
       if (file.url && file.isExisting) {
         window.open(file.url, "_blank");
-      } 
+      }
       // If file is newly uploaded (File object), show preview modal
       else if (file.file instanceof File) {
         handlePreviewClick(file, e);
@@ -1063,7 +1066,7 @@ const UploadTickets = ({
         window.open(file.url, "_blank");
       }
     };
-  
+
     console.log(uploadedFiles, "currentUploadedFiles");
     return (
       <>
@@ -1104,7 +1107,7 @@ const UploadTickets = ({
             </p>
           )}
         </div>
-  
+
         {/* Uploaded files list */}
         <div className="flex-1">
           <div className="flex justify-between items-center mb-2">
@@ -1128,7 +1131,7 @@ const UploadTickets = ({
               </label>
             </div>
           </div>
-  
+
           <div className="max-h-64 overflow-y-auto flex flex-col gap-2 rounded">
             {currentUploadedFiles.length === 0 ? (
               <div className="p-4 text-center text-gray-500 text-sm">
@@ -1158,7 +1161,7 @@ const UploadTickets = ({
                   </div>
                   <div className="flex items-center gap-1">
                     {/* NEW: Eye icon for uploaded files */}
-                  
+
                     <Button
                       onClick={() => handleTransferSingleFile(file.id)}
                       disabled={!canTransferFile(file.id)}
@@ -1197,7 +1200,7 @@ const UploadTickets = ({
               ))
             )}
           </div>
-          
+
           {/* Show assigned files section */}
           <div className="pt-2 flex flex-col gap-2">
             {showAssigned &&

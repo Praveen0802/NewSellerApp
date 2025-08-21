@@ -42,12 +42,13 @@ const DashboardPage = (props) => {
     tradeOrders: false,
     reports: false,
   });
-const [wholerLoader,setWholerLoader] = useState(false)
+  const [wholerLoader, setWholerLoader] = useState(false);
   const [filters, setFilters] = useState({
     salesOverView: "last_180days",
     awaitingDelivery: "next_24hours",
     topSelling: "last_180days",
     topSellingCategory: "", //allCategories
+    reports: "GBP", // Default currency
   });
 
   // Track current page for pagination - Added all sections
@@ -64,11 +65,15 @@ const [wholerLoader,setWholerLoader] = useState(false)
 
   const updateApiCall = async (keyValue, params, isPagination = false) => {
     let response;
+
     setLoader((prevLoader) => ({
       ...prevLoader,
       [keyValue]: true,
     }));
-    setWholerLoader(true)
+
+    if (keyValue == "reports") {
+      setWholerLoader(true);
+    }
 
     try {
       if (keyValue === "currency") {
@@ -156,7 +161,7 @@ const [wholerLoader,setWholerLoader] = useState(false)
         ...prevLoader,
         [keyValue]: false,
       }));
-      setWholerLoader(false)
+      setWholerLoader(false);
     }
   };
 
@@ -267,8 +272,6 @@ const [wholerLoader,setWholerLoader] = useState(false)
       options: [
         { value: "all", label: "All Sales" },
         { value: "today", label: "Today" },
-
-        { value: "last_login", label: "Last Login" },
         { value: "last_7days", label: "Last 7 days" },
         { value: "last_15days", label: "Last 15 days" },
         { value: "last_30days", label: "Last 30 days" },
@@ -345,7 +348,7 @@ const [wholerLoader,setWholerLoader] = useState(false)
       value: item?.code,
       label: item?.code,
     })),
-    selectedOption: "GBP",
+    selectedOption: filters?.reports,
     onChange: (value) => {
       handleSelectOptionChange("reports", value);
     },
@@ -389,7 +392,7 @@ const [wholerLoader,setWholerLoader] = useState(false)
     keyValue: "reports",
     meta: resultData?.reports?.meta,
     loader: loader.reports,
-    wholeLoader: wholerLoader
+    wholeLoader: wholerLoader,
   };
 
   const sellingEvents = {

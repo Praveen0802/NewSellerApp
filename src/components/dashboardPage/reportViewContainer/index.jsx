@@ -55,7 +55,7 @@ const ReportViewContainer = ({ reportValues }) => {
           options={options}
           onSelect={onChange}
           textSize="text-xs md:text-sm"
-          buttonPadding="px-2 md:px-3 py-1 w-[150px] md:py-1.5"
+          buttonPadding="px-2 md:px-3 py-1 w-[180px] md:py-1.5"
           dropdownItemPadding="py-1 pl-2 pr-4 md:pr-6"
         />
       </div>
