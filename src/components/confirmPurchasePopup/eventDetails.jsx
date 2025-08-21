@@ -64,7 +64,9 @@ const EventDetails = ({ data }) => {
           )}
           {renderContent(
             <Image src={blueLocation} alt="location" width={14} height={14} />,
-            `${data?.stadium_name},${data?.country_name},${data?.city_name}`
+            `${data?.stadium_name}${
+              data?.country_name ? `,${data?.country_name}` : ""
+            }${data?.city_name ? `,${data?.city_name}` : ""}`
           )}
         </div>
         <div className="flex gap-2 px-4 border-l border-gray-200 items-center py-2">

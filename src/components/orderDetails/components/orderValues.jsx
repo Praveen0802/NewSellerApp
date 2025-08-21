@@ -10,7 +10,6 @@ const OrderValues = ({
   onTicketTypeChange = () => {},
   OrderValueObject = [], // Added this prop to receive the field definitions
 }) => {
-  console.log(orderObject, "orderObject", OrderValueObject);
 
   // Function to format ISO date string to DD/MM/YYYY format
   const formatDeliveredByDate = (dateString) => {

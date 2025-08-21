@@ -33,16 +33,76 @@ const OrderDetails = ({ show, onClose, data = {} }) => {
     { title: "Additional File", cta: "Download File" },
   ];
 
+  // Format date function similar to OrderInfo
+  function formatTimestamp(dateString) {
+    if (!dateString) return "-";
+    
+    // If it's already in DD/MM/YYYY format, return as is
+    if (dateString.includes('/') && dateString.split('/').length === 3) {
+      return dateString;
+    }
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      
+      const options = {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      };
+      return date.toLocaleDateString("en-US", options);
+    } catch (error) {
+      return dateString;
+    }
+  }
+
+  // Get order status function similar to OrderInfo
+  function getOrderStatus() {
+    const { booking_status = null, ticket_status = null } = order_details ?? {};
+    return booking_status || ticket_status || "Pending";
+  }
+
+  // Updated orderObject to match OrderInfo structure
   const orderObject = {
-    match_name: order_details?.match_name,
-    match_date_time: order_details?.match_datetime,
     order_id: orderId,
-    order_date: order_details?.booking_date,
-    ticket_status: order_details?.ticket_status,
-    order_status: order_details?.booking_status,
-    delivery_by: order_details?.expected_ticket_delivery,
+    order_date: formatTimestamp(order_details?.booking_date),
+    order_status: getOrderStatus(),
+    delivered_by: order_details?.expected_ticket_delivery || "Not specified",
+    delivery_details: order_details?.delivery_status_label,
     days_to_event: order_details?.days_left_to_event,
+    ticket_type: ticket_details?.ticket_type,
+    payout_date: order_details?.expected_payout_date,
   };
+
+  // Define OrderValueObject similar to OrderInfo
+  const OrderValueObject = [
+    {
+      key: "order_id", 
+      name: "Order ID",
+    },
+    {
+      key: "order_date",
+      name: "Order Date",
+    },
+    {
+      key: "order_status",
+      name: "Order Status",
+    },
+    {
+      name: "Delivery By",
+      key: "delivered_by",
+    },
+    {
+      name: "Days to Event", 
+      key: "days_to_event",
+    },
+    {
+      name: "Expected Payout Date",
+      key: "payout_date",
+    },
+  ];
 
   const bookingId = order_details?.booking_status_id;
 
@@ -62,10 +122,10 @@ const OrderDetails = ({ show, onClose, data = {} }) => {
 
         @keyframes scale-zoom {
           0% {
-            transform: scale(expandedVersion ? 0.95 : 1);
+            transform: scale(${expandedVersion ? 0.95 : 1});
           }
           70% {
-            transform: scale(expandedVersion ? 1.01 : 0.99);
+            transform: scale(${expandedVersion ? 1.01 : 0.99});
           }
           100% {
             transform: scale(1);
@@ -141,7 +201,10 @@ const OrderDetails = ({ show, onClose, data = {} }) => {
                     expandedVersion ? "w-full sm:w-1/2" : "w-full"
                   }`}
                 >
-                  <OrderValues orderObject={orderObject} />
+                  <OrderValues 
+                    orderObject={orderObject} 
+                    OrderValueObject={OrderValueObject}
+                  />
                   {(bookingId == 4 || bookingId == 5 || bookingId == 6) && (
                     <DownLoadYourTickets
                       tickets={tickets}
