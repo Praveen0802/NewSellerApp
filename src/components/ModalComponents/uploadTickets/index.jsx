@@ -217,7 +217,7 @@ const UploadTickets = ({
           const filesToAdd = files.slice(0, remainingSlots);
 
           const newFiles = filesToAdd.map((file, index) => ({
-            id: Date.now() + index,
+            id: `Hello_${index}`,
             name: file.name,
             file: file,
           }));
@@ -596,9 +596,9 @@ const UploadTickets = ({
     if (paperTicketFlow) return ` (${maxQuantity} tickets)`;
     return ` (Max: ${maxQuantity})`;
   };
-
   const handleTicketsPageApiCall = async (updatedObject) => {
-    setIsLoading(true);
+    console.log(updatedObject, "updatedObjectupdatedObject");
+    // setIsLoading(true);
     const constructTicketFormData = (updatedObject) => {
       const formData = new FormData();
       const index = 0;
@@ -608,7 +608,22 @@ const UploadTickets = ({
         rowData?.rawTicketData?.ticket_type_id
       );
       formData.append(`data[0][match_id]`, rowData?.rawMatchData?.m_id);
-
+      if (paperTicketFlow) {
+        formData.append(`data[0][upload_id]`, updatedObject.courier_id || "0");
+        if (
+          updatedObject.upload_tickets &&
+          updatedObject.upload_tickets.length > 0 &&
+          !updatedObject?.upload_tickets?.[0]?.url
+        ) {
+          updatedObject.upload_tickets.forEach((ticket, idx) => {
+            formData.append(
+              `data[0][rows][${idx}][file]`,
+              ticket.file,
+              ticket.name
+            );
+          });
+        }
+      }
       // Common additional info fields for all flows (except proof upload)
       if (updatedObject.additional_info && !proofUploadView) {
         formData.append(
@@ -624,62 +639,73 @@ const UploadTickets = ({
       // Handle Normal Flow and Proof Upload - upload_tickets
       if (
         updatedObject.upload_tickets &&
-        updatedObject.upload_tickets.length > 0
+        updatedObject.upload_tickets.length > 0 &&
+        !paperTicketFlow
       ) {
-        const newFiles = updatedObject.upload_tickets.filter(
-          (ticket) => !ticket.isExisting
-        );
-        newFiles.forEach((ticket, ticketIndex) => {
-          if (ticket.file && ticket.file instanceof File) {
-            const fieldName = proofUploadView
-              ? `data[${index}][proof_document][${ticketIndex}]`
-              : `data[${index}][upload_tickets][${ticketIndex}]`;
-            formData.append(fieldName, ticket.file, ticket.name);
+        transferredFiles.forEach((fileObj, idx) => {
+          // Only process files that are not existing (i.e., need to be updated)
+          if (!fileObj.isExisting && fileObj.file instanceof File) {
+            // If you have an upload_id to update, use it; otherwise, use idx or fileObj.id as needed
+            const uploadId = fileObj.existingId || fileObj.id;
+            formData.append(
+              `data[0][rows][${idx - 1}][upload_id]`,
+              uploadId?.includes("Hello") ? "0" : uploadId
+            );
+            formData.append(
+              `data[0][rows][${idx - 1}][file]`,
+              fileObj.file,
+              fileObj.name
+            );
           }
         });
       }
 
       // Handle E-Ticket Flow - qr_links
+      // Handle E-Ticket Flow - qr_links (Updated version)
       if (updatedObject.qr_links && updatedObject.qr_links.length > 0) {
-        const androidLinks = [];
-        const iosLinks = [];
+        updatedObject.qr_links.forEach((link, idx) => {
+          // Only process links that have at least one QR link (android or ios)
+          if (link.qr_link_android || link.qr_link_ios) {
+            // Use the existing id if available, otherwise use 0
+            const uploadId = link.id || 0;
 
-        updatedObject.qr_links.forEach((link) => {
-          if (link.qr_link_android) {
-            androidLinks.push(link.qr_link_android);
-          }
-          if (link.qr_link_ios) {
-            iosLinks.push(link.qr_link_ios);
+            formData.append(`data[0][rows][${idx}][upload_id]`, uploadId);
+
+            // Add Android link if it exists
+            if (link.qr_link_android) {
+              formData.append(
+                `data[0][rows][${idx}][qr_link_android]`,
+                link.qr_link_android
+              );
+            }
+
+            // Add iOS link if it exists
+            if (link.qr_link_ios) {
+              formData.append(
+                `data[0][rows][${idx}][qr_link_ios]`,
+                link.qr_link_ios
+              );
+            }
           }
         });
-
-        if (androidLinks.length > 0) {
-          formData.append(
-            `data[${index}][qr_link_android]`,
-            androidLinks.join(",")
-          );
-        }
-        if (iosLinks.length > 0) {
-          formData.append(`data[${index}][qr_link_ios]`, iosLinks.join(","));
-        }
       }
 
       // Handle Paper Ticket Flow - courier details and upload_tickets
       if (updatedObject.courier_type) {
         formData.append(
-          `data[${index}][courier_type]`,
+          `data[${index}][rows][0][courier_type]`,
           updatedObject.courier_type
         );
       }
       if (updatedObject.courier_name) {
         formData.append(
-          `data[${index}][courier_name]`,
+          `data[${index}][rows][0][courier_name]`,
           updatedObject.courier_name
         );
       }
       if (updatedObject.courier_tracking_details) {
         formData.append(
-          `data[${index}][courier_tracking_details]`,
+          `data[${index}][rows][0][courier_tracking_details]`,
           updatedObject.courier_tracking_details
         );
       }
@@ -745,12 +771,12 @@ const UploadTickets = ({
       }
 
       // if (response.success) {
-      onClose();
-      toast.success(
-        proofUploadView
-          ? "Proof document uploaded successfully"
-          : "Tickets updated successfully"
-      );
+      // onClose();
+      // toast.success(
+      //   proofUploadView
+      //     ? "Proof document uploaded successfully"
+      //     : "Tickets updated successfully"
+      // );
       // } else {
       // console.error("Upload failed:", response.message);
       // toast.error(response.message || "Upload failed");
@@ -762,10 +788,7 @@ const UploadTickets = ({
       setIsLoading(false);
     }
   };
-  console.log(
-    transferredFiles,
-    "transferredFilestransferredFilestransferredFiles"
-  );
+
   const handleConfirmCtaClick = useCallback(async () => {
     console.log(mySalesPage, "mySalesPagemySalesPage");
     if (mySalesPage) {
@@ -874,17 +897,22 @@ const UploadTickets = ({
       }
     } else if (paperTicketFlow) {
       if (
-        currentPaperTicketData.courierDetails.courier_type &&
-        currentPaperTicketData.courierDetails.courier_company &&
-        currentPaperTicketData.courierDetails.tracking_details &&
+        currentPaperTicketData.courierDetails.courier_type ||
+        currentPaperTicketData.courierDetails.courier_company ||
+        currentPaperTicketData.courierDetails.tracking_details ||
         currentPaperTicketData.uploadedFiles?.length > 0
       ) {
+        console.log(
+          currentPaperTicketData,
+          "currentPaperTicketDatacurrentPaperTicketData"
+        );
         const updatedObject = {
           paper_ticket_details: currentPaperTicketData.courierDetails,
           courier_type: currentPaperTicketData.courierDetails.courier_type,
           courier_name: currentPaperTicketData.courierDetails.courier_company,
           courier_tracking_details:
             currentPaperTicketData.courierDetails.tracking_details,
+          courier_id: currentPaperTicketData.courierDetails?.id,
           upload_tickets: currentPaperTicketData.uploadedFiles,
           additional_info: currentAdditionalInfo,
         };
@@ -1242,8 +1270,6 @@ const UploadTickets = ({
     );
   };
 
-  console.log(transferredFiles, "transferredFiles");
-
   // NEW: Enhanced Ticket Assignment Section Component with Drag Drop Support
   // Replace your existing TicketAssignmentSection function with this updated version:
 
@@ -1326,7 +1352,7 @@ const UploadTickets = ({
           try {
             const response = await deleteTicketUpload("", idToDelete);
             console.log(response, "responseresponse");
-            if (response?.success) {
+            if (response?.status) {
               toast.success("File deleted successfully");
             } else {
               toast.error(`${response?.message}` || "Failed to delete file");

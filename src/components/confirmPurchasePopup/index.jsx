@@ -171,6 +171,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
   const router = useRouter();
 
   const bookingConfirm = async (success, message, booking) => {
+    console.log(success, message, booking);
     if (success) {
       toast.success(message);
       router.push(`/trade/purchase?success=true&booking_no=${booking}`);
@@ -203,7 +204,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
       }
     } else if (paymentMethod == 2) {
       // Stripe - new logic
-      console.log("hidePaymentId","hideCtalling", bookingId);
+      console.log("hidePaymentId", "hideCtalling", bookingId);
       setStripeBookingId(bookingId);
       setHideCta(true);
       setShowStripeDropIn(true);
@@ -290,7 +291,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
           });
 
           const result = convertToAttendeesFormat(guestFormFieldValues);
-          console.log({...result}, "resultresultresult");
+          console.log({ ...result }, "resultresultresult");
           if (allFieldsFilled) {
             await updateNominee("", {
               booking_id: stripeBookingId,
@@ -326,6 +327,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
         {},
         fetchOrderIdPayload
       );
+
       if (response?.status == 1) {
         const secondApiPayload = {
           cart_id: response?.cart_id,
@@ -348,6 +350,8 @@ const ConfirmPurchasePopup = ({ onClose }) => {
           {},
           secondApiPayload
         );
+
+
         setBookingNo(apiResponse?.booking_no);
         setStripeBookingId(apiResponse?.booking_id);
 
@@ -369,10 +373,10 @@ const ConfirmPurchasePopup = ({ onClose }) => {
             apiResponse?.booking_no
           );
         } else {
-          bookingConfirm(false, apiResponse?.data || "Booking failed");
+          bookingConfirm(false, apiResponse?.message || "Booking failed");
         }
       } else {
-        bookingConfirm(false, response?.data || "Booking failed");
+        bookingConfirm(false, response?.message || "Booking failed");
       }
     } catch (error) {
       bookingConfirm(

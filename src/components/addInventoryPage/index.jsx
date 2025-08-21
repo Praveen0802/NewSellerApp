@@ -480,7 +480,7 @@ const AddInventoryPage = (props) => {
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
       iconBefore: (
-        <div className="border-r-[1px] pr-4 border-[#E0E1EA]">
+        <div className="border-r-[1px] pr-2 border-[#E0E1EA]">
           <p className="text-xs sm:text-[10px] lg:text-xs">
             {matchDetails?.currency_icon?.[0] || "$"}
           </p>
@@ -918,7 +918,7 @@ const AddInventoryPage = (props) => {
   // KEEP ALL THE ORIGINAL FUNCTIONS (constructFormDataAsFields, handleDelete, handleClone, etc.)
   const constructFormDataAsFields = (publishingDataArray) => {
     const formData = new FormData();
-
+console.log(publishingDataArray,'publishingDatapublishingData')
     // Helper function to transform QR links
     const transformQRLinks = (qrLinks) => {
       if (!qrLinks || qrLinks.length === 0) {

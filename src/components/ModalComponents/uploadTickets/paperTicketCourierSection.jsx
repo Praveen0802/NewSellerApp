@@ -18,13 +18,18 @@ const PaperTicketCourierSection = React.forwardRef(
       return {
         courier_type: firstItem.courier?.type || "company",
         courier_company: firstItem.courier?.name || "",
+        id: firstItem.id || "0",
         tracking_details: firstItem.courier?.tracking_details || "",
-        upload_tickets: firstItem.upload_tickets ? [{
-          id: firstItem.id || Date.now(),
-          name: `Ticket_${firstItem.id || 'file'}.png`,
-          url: firstItem.upload_tickets,
-          isExisting: true // Flag to identify pre-existing files
-        }] : []
+        upload_tickets: firstItem.upload_tickets
+          ? [
+              {
+                id: firstItem.id || Date.now(),
+                name: `Ticket_${firstItem.id || "file"}.png`,
+                url: firstItem.upload_tickets,
+                isExisting: true, // Flag to identify pre-existing files
+              },
+            ]
+          : [],
       };
     }, []);
 
@@ -34,8 +39,8 @@ const PaperTicketCourierSection = React.forwardRef(
         return transformUpdatedData(updated);
       }
       return initialData;
-    }, [ updated, transformUpdatedData, initialData]);
-
+    }, [updated, transformUpdatedData, initialData]);
+console.log(getInitialData(),'getInitialDatagetInitialData')
     // Internal state for courier details
     const [courierDetails, setCourierDetails] = useState(() => {
       const data = getInitialData();
@@ -43,6 +48,7 @@ const PaperTicketCourierSection = React.forwardRef(
         courier_type: data?.courier_type || "company",
         courier_company: data?.courier_company || "",
         tracking_details: data?.tracking_details || "",
+        id: data?.id || "0",
       };
     });
 
@@ -97,15 +103,13 @@ const PaperTicketCourierSection = React.forwardRef(
     // Handle file upload (disabled when readonly)
     const handleFileUpload = useCallback(
       (e) => {
-       
-
         const files = Array.from(e.target.files);
         if (files.length > 0) {
           const newFiles = files.map((file, index) => ({
             id: Date.now() + index,
             name: file.name,
             file: file,
-            isExisting: false
+            isExisting: false,
           }));
 
           setUploadedFiles((prev) => {
@@ -135,7 +139,6 @@ const PaperTicketCourierSection = React.forwardRef(
     // Handle file deletion (disabled when readonly)
     const handleDeleteUploaded = useCallback(
       (id) => {
-
         setUploadedFiles((prev) => {
           const updatedFiles = prev.filter((file) => file.id !== id);
 
@@ -172,6 +175,7 @@ const PaperTicketCourierSection = React.forwardRef(
           courier_type: data.courier_type || "company",
           courier_company: data.courier_company || "",
           tracking_details: data.tracking_details || "",
+          id: data.id || "0",
         };
         const newUploadedFiles = data.upload_tickets || [];
 
@@ -248,11 +252,11 @@ const PaperTicketCourierSection = React.forwardRef(
 
         // Method to programmatically update data from parent if needed
         updateData: (newData) => {
-
           const updatedCourierDetails = {
             courier_type: newData?.courier_type || "company",
             courier_company: newData?.courier_company || "",
             tracking_details: newData?.tracking_details || "",
+            id: newData?.id || "0",
           };
           const updatedUploadedFiles = newData?.upload_tickets || [];
 
@@ -266,7 +270,6 @@ const PaperTicketCourierSection = React.forwardRef(
 
         // Method to update only courier details
         updateCourierDetails: (newDetails) => {
-
           const updatedDetails = {
             ...courierDataRef.current.courierDetails,
             ...newDetails,
@@ -280,12 +283,12 @@ const PaperTicketCourierSection = React.forwardRef(
 
         // Method to reset to initial state
         reset: () => {
-
           const data = getInitialData();
           const resetCourierDetails = {
             courier_type: data?.courier_type || "company",
             courier_company: data?.courier_company || "",
             tracking_details: data?.tracking_details || "",
+            id: data?.id || "0",
           };
           const resetUploadedFiles = data?.upload_tickets || [];
 
@@ -299,7 +302,6 @@ const PaperTicketCourierSection = React.forwardRef(
 
         // Method to clear all data
         clear: () => {
-
           const emptyData = {
             courierDetails: {
               courier_type: "company",
@@ -327,12 +329,15 @@ const PaperTicketCourierSection = React.forwardRef(
     );
 
     return (
-      <div className={`border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1 ${isDisabled ? 'bg-gray-50' : ''}`}>
+      <div
+        className={`border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1 ${
+          isDisabled ? "bg-gray-50" : ""
+        }`}
+      >
         <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA] flex items-center justify-between">
           <h4 className="text-sm font-medium text-[#323A70]">
             Courier Details ({maxQuantity} tickets)
           </h4>
-       
         </div>
 
         <div className="p-3 space-y-4">
@@ -350,9 +355,9 @@ const PaperTicketCourierSection = React.forwardRef(
                 }
                 disabled={isDisabled}
                 className={`w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent ${
-                  isDisabled 
-                    ? 'bg-gray-100 cursor-not-allowed text-gray-600' 
-                    : 'bg-white'
+                  isDisabled
+                    ? "bg-gray-100 cursor-not-allowed text-gray-600"
+                    : "bg-white"
                 }`}
               >
                 <option value="company">Company</option>
@@ -375,9 +380,9 @@ const PaperTicketCourierSection = React.forwardRef(
                 }
                 disabled={isDisabled}
                 className={`w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent ${
-                  isDisabled 
-                    ? 'bg-gray-100 cursor-not-allowed text-gray-600' 
-                    : 'bg-white'
+                  isDisabled
+                    ? "bg-gray-100 cursor-not-allowed text-gray-600"
+                    : "bg-white"
                 }`}
               />
             </div>
@@ -396,9 +401,9 @@ const PaperTicketCourierSection = React.forwardRef(
                 }
                 disabled={isDisabled}
                 className={`w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent ${
-                  isDisabled 
-                    ? 'bg-gray-100 cursor-not-allowed text-gray-600' 
-                    : 'bg-white'
+                  isDisabled
+                    ? "bg-gray-100 cursor-not-allowed text-gray-600"
+                    : "bg-white"
                 }`}
               />
             </div>
@@ -423,7 +428,12 @@ const PaperTicketCourierSection = React.forwardRef(
                     />
                   </svg>
                 </div> */}
-                <Image src={uploadIcon} alt="Upload Icon" width={42} height={42}/>
+                <Image
+                  src={uploadIcon}
+                  alt="Upload Icon"
+                  width={42}
+                  height={42}
+                />
 
                 <p className="text-sm text-[#323A70]">
                   Drag your file(s) or{" "}
@@ -463,7 +473,8 @@ const PaperTicketCourierSection = React.forwardRef(
             <div className="border border-[#E0E1EA] rounded-lg bg-white">
               <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA]">
                 <h5 className="text-xs font-medium text-[#323A70]">
-                  {isDisabled ? 'Existing Files' : 'Uploaded Files'} ({uploadedFiles.length})
+                  {isDisabled ? "Existing Files" : "Uploaded Files"} (
+                  {uploadedFiles.length})
                 </h5>
               </div>
               <div className="p-3">
@@ -472,7 +483,7 @@ const PaperTicketCourierSection = React.forwardRef(
                     <div
                       key={file.id}
                       className={`flex items-center justify-between p-2 border border-[#E0E1EA] rounded-md ${
-                        isDisabled ? 'bg-gray-50' : 'bg-[#F9F9FB]'
+                        isDisabled ? "bg-gray-50" : "bg-[#F9F9FB]"
                       }`}
                     >
                       <div className="flex items-center gap-2">

@@ -43,6 +43,7 @@ const QRLinksSection = React.forwardRef(
               qr_link_android: androidLinks[i] || "",
               qr_link_ios: iosLinks[i] || "",
               isExisting: true, // Mark as existing/prefilled
+              id: ticket.id || '0',
               originalAndroid: androidLinks[i] || "", // Store original values for comparison
               originalIos: iosLinks[i] || "",
             };
