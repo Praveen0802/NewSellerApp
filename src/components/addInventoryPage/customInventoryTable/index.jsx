@@ -10,6 +10,7 @@ import {
   MapPin,
   ChartLine,
   SquareCheck,
+  Loader2,
 } from "lucide-react";
 import ChevronRight from "@/components/commonComponents/filledChevron/chevronRight";
 import oneHand from "../../../../public/oneHand.svg";
@@ -70,6 +71,7 @@ const CommonInventoryTable = ({
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(defaultOpen ? false : true);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   // OPTIMIZED: Dynamic options state with better structure
   const [dynamicOptions, setDynamicOptions] = useState({});
@@ -1180,18 +1182,24 @@ const CommonInventoryTable = ({
                               <div className="flex justify-start pl-2 items-center h-full">
                                 <div
                                   className=""
-                                  onClick={() =>
-                                    onConfirmEdit(matchIndex, rowIndex)
-                                  }
+                                  onClick={async () => {
+                                    setConfirmLoading(true);
+                                    await onConfirmEdit(matchIndex, rowIndex);
+                                    setConfirmLoading(false);
+                                  }}
                                   title="Confirm Changes"
                                 >
-                                  <Image
-                                    src={successTick}
-                                    width={24}
-                                    height={24}
-                                    alt="tick"
-                                    className="cursor-pointer  transition-colors"
-                                  />
+                                  {confirmLoading ? (
+                                    <Loader2 className="animate-spin" />
+                                  ) : (
+                                    <Image
+                                      src={successTick}
+                                      width={24}
+                                      height={24}
+                                      alt="tick"
+                                      className="cursor-pointer  transition-colors"
+                                    />
+                                  )}
                                 </div>
                               </div>
                             </td>

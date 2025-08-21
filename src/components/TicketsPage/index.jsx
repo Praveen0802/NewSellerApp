@@ -370,6 +370,7 @@ const TicketsPage = (props) => {
       const matchInfo = item.match_info || {};
       const tickets = item.tickets || [];
 
+      // In your ticketsPage useEffect where you transform tickets data:
       const transformedTickets = tickets.map((ticket, ticketIndex) => ({
         id: `${matchIndex}-${ticketIndex}`,
         uniqueId: `${matchIndex}_${ticketIndex}`,
@@ -386,7 +387,11 @@ const TicketsPage = (props) => {
         ticket_category: ticket.ticket_category || "",
         ticket_category_id: ticket.ticket_category_id || "",
         quantity: ticket.quantity || 0,
-        price: ticket.price || 0,
+
+        // FIX: Ensure price values are properly handled
+        price: ticket.price ? String(ticket.price) : "", // Convert to string
+        web_price: ticket.web_price ? String(ticket.web_price) : "", // Convert to string
+
         price_type: ticket.price_type || "GBP",
         currency_symbol: ticket.currency_symbol || "",
         status:
@@ -399,7 +404,6 @@ const TicketsPage = (props) => {
         row: ticket.row || "",
         block: ticket.ticket_block || "",
         first_seat: ticket.first_seat || "",
-        web_price: ticket.web_price || "",
         home_town: ticket.home_town || "",
         split_type: ticket.split?.name || "",
         split_type_id: ticket.split?.id || "",
@@ -1338,225 +1342,225 @@ const TicketsPage = (props) => {
     return headers;
   }, [mockListingHistory]);
 
-  const constructHeadersForMatch = useCallback((matchIndex) => {
-    if (!ticketsByMatch[matchIndex] || !ticketsByMatch[matchIndex].filters) {
-      return [];
-    }
-  
-    const matchFilter = ticketsByMatch[matchIndex].filters;
-  
-    // Create base headers structure
-    const headers = [
-      { key: "s_no", label: "Listing ID", editable: false },
-      {
-        key: "ticket_type_id",
-        label: "Ticket Type",
-        editable: true,
-        type: "select",
-        options: [],
-      },
-      {
-        key: "ticket_category_id",
-        label: "Seating Category",
-        editable: true,
-        type: "select",
-        options: [],
-      },
-      {
-        key: "block",
-        label: "Section/Block",
-        editable: true,
-        type: "select",
-        options: [],
-        dynamicOptions: true,
-        dependentOn: ["ticket_category_id", "match_id"],
-      },
-      {
-        key: "home_town",
-        label: "Fan Area",
-        editable: true,
-        type: "select",
-        options: [],
-      },
-      {
-        key: "row",
-        label: "Row",
-        increasedWidth: "!w-[100px] !min-w-[100px] ",
-        editable: true,
-        type: "text",
-      },
-      {
-        key: "quantity",
-        label: "Quantity",
-        increasedWidth: "!w-[100px] !min-w-[100px] ",
-        editable: true,
-        type: "number",
-      },
-      {
-        key: "web_price",
-        label: "Face Value",
-        editable: true,
-        iconHandling: true,
-        currencyFormat: true,
-        type: "number",
-        iconBefore: (rowValue) => (
-          <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
-            <p className="text-xs sm:text-[10px] lg:text-xs">
-              {rowValue?.currency_symbol}
-            </p>
-          </div>
-        ),
-      },
-      {
-        key: "price",
-        label: "Price",
-        currencyFormat: true,
-        editable: true,
-        iconHandling: true,
-        type: "number",
-        iconBefore: (rowValue) => {
-          return (
+  const constructHeadersForMatch = useCallback(
+    (matchIndex) => {
+      if (!ticketsByMatch[matchIndex] || !ticketsByMatch[matchIndex].filters) {
+        return [];
+      }
+
+      const matchFilter = ticketsByMatch[matchIndex].filters;
+
+      // Create base headers structure
+      const headers = [
+        { key: "s_no", label: "Listing ID", editable: false },
+        {
+          key: "ticket_type_id",
+          label: "Ticket Type",
+          editable: true,
+          type: "select",
+          options: [],
+        },
+        {
+          key: "ticket_category_id",
+          label: "Seating Category",
+          editable: true,
+          type: "select",
+          options: [],
+        },
+        {
+          key: "block",
+          label: "Section/Block",
+          editable: true,
+          type: "select",
+          options: [],
+          dynamicOptions: true,
+          dependentOn: ["ticket_category_id", "match_id"],
+        },
+        {
+          key: "home_town",
+          label: "Fan Area",
+          editable: true,
+          type: "select",
+          options: [],
+        },
+        {
+          key: "row",
+          label: "Row",
+          increasedWidth: "!w-[100px] !min-w-[100px] ",
+          editable: true,
+          type: "text",
+        },
+        {
+          key: "quantity",
+          label: "Quantity",
+          increasedWidth: "!w-[100px] !min-w-[100px] ",
+          editable: true,
+          type: "number",
+        },
+        {
+          key: "web_price",
+          label: "Face Value",
+          editable: true,
+          iconHandling: true,
+          currencyFormat: true,
+          type: "number",
+          iconBefore: (rowValue) => (
             <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
               <p className="text-xs sm:text-[10px] lg:text-xs">
                 {rowValue?.currency_symbol}
               </p>
             </div>
-          );
+          ),
         },
-      },
-      {
-        key: "listing_note",
-        label: "Listing Note",
-        editable: true,
-        type: "multiselect",
-        options: [],
-      },
-      {
-        key: "first_seat",
-        label: "First Seat",
-        editable: true,
-        type: "text",
-      },
-      {
-        key: "ship_date",
-        label: "Date to Ship",
-        editable: true,
-        type: "date",
-      },
-      {
-        key: "split_type_id",
-        label: "Split Type",
-        editable: true,
-        type: "select",
-        options: [],
-      },
-    ];
-  
-    // Populate options for THIS specific match only
-    if (matchFilter) {
-      // Get options specific to this match
-      const matchTicketTypes = new Map();
-      const matchSplitTypes = new Map();
-      const matchHomeTowns = new Map();
-      const matchTicketCategories = new Map();
-      const matchListingNotes = new Map();
-  
-      // Ticket Types for this match
-      if (matchFilter.ticket_types) {
-        matchFilter.ticket_types.forEach((type) => {
-          matchTicketTypes.set(type.id.toString(), type.name);
-        });
-      }
-  
-      // Split Types for this match
-      if (matchFilter.split_types) {
-        matchFilter.split_types.forEach((type) => {
-          matchSplitTypes.set(type.id.toString(), type.name);
-        });
-      }
-  
-      // Home Towns for this match
-      if (matchFilter.home_town) {
-        Object.entries(matchFilter.home_town).forEach(([key, value]) => {
-          matchHomeTowns.set(key, value);
-        });
-      }
-  
-      // Block Data (Ticket Categories) for this match
-      if (matchFilter.block_data) {
-        Object.entries(matchFilter.block_data).forEach(([key, value]) => {
-          matchTicketCategories.set(key, value);
-        });
-      }
-  
-      // Listing Notes for this match
-      if (matchFilter.restriction_left || matchFilter.restriction_right) {
-        [
-          ...(matchFilter.restriction_left || []),
-          ...(matchFilter.restriction_right || []),
-          ...(matchFilter.split_details_left || []),
-          ...(matchFilter.split_details_right || []),
-          ...(matchFilter.notes_left || []),
-          ...(matchFilter.notes_right || []),
-        ].forEach((note) => {
-          matchListingNotes.set(note.id.toString(), note.name);
-        });
-      }
-  
-      // Update headers with match-specific options
-      headers.forEach((header) => {
-        if (header.key === "ticket_type_id") {
-          header.options = Array.from(matchTicketTypes.entries()).map(
-            ([value, label]) => ({
-              value,
-              label,
-            })
-          );
-        } else if (header.key === "split_type_id") {
-          header.options = Array.from(matchSplitTypes.entries()).map(
-            ([value, label]) => ({
-              value,
-              label,
-            })
-          );
-        } else if (header.key === "home_town") {
-          header.options = Array.from(matchHomeTowns.entries()).map(
-            ([value, label]) => ({
-              value,
-              label,
-            })
-          );
-        } else if (header.key === "ticket_category_id") {
-          header.options = Array.from(matchTicketCategories.entries()).map(
-            ([value, label]) => ({
-              value,
-              label,
-            })
-          );
-        } else if (header.key === "listing_note") {
-          header.options = Array.from(matchListingNotes.entries()).map(
-            ([value, label]) => ({
-              value,
-              label,
-            })
-          );
+        {
+          key: "price",
+          label: "Price",
+          currencyFormat: true,
+          editable: true,
+          iconHandling: true,
+          type: "number",
+          iconBefore: (rowValue) => {
+            return (
+              <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
+                <p className="text-xs sm:text-[10px] lg:text-xs">
+                  {rowValue?.currency_symbol}
+                </p>
+              </div>
+            );
+          },
+        },
+        {
+          key: "listing_note",
+          label: "Listing Note",
+          editable: true,
+          type: "multiselect",
+          options: [],
+        },
+        {
+          key: "first_seat",
+          label: "First Seat",
+          editable: true,
+          type: "text",
+        },
+        {
+          key: "ship_date",
+          label: "Date to Ship",
+          editable: true,
+          type: "date",
+        },
+        {
+          key: "split_type_id",
+          label: "Split Type",
+          editable: true,
+          type: "select",
+          options: [],
+        },
+      ];
+
+      // Populate options for THIS specific match only
+      if (matchFilter) {
+        // Get options specific to this match
+        const matchTicketTypes = new Map();
+        const matchSplitTypes = new Map();
+        const matchHomeTowns = new Map();
+        const matchTicketCategories = new Map();
+        const matchListingNotes = new Map();
+
+        // Ticket Types for this match
+        if (matchFilter.ticket_types) {
+          matchFilter.ticket_types.forEach((type) => {
+            matchTicketTypes.set(type.id.toString(), type.name);
+          });
         }
-      });
-  
-      console.log(`Headers for match ${matchIndex}:`, {
-        ticketTypes: matchTicketTypes.size,
-        categories: matchTicketCategories.size,
-        homeTowns: matchHomeTowns.size,
-        splitTypes: matchSplitTypes.size,
-        listingNotes: matchListingNotes.size
-      });
-    }
-  
-    return headers;
-  }, [ticketsByMatch]);
 
+        // Split Types for this match
+        if (matchFilter.split_types) {
+          matchFilter.split_types.forEach((type) => {
+            matchSplitTypes.set(type.id.toString(), type.name);
+          });
+        }
 
-  
+        // Home Towns for this match
+        if (matchFilter.home_town) {
+          Object.entries(matchFilter.home_town).forEach(([key, value]) => {
+            matchHomeTowns.set(key, value);
+          });
+        }
+
+        // Block Data (Ticket Categories) for this match
+        if (matchFilter.block_data) {
+          Object.entries(matchFilter.block_data).forEach(([key, value]) => {
+            matchTicketCategories.set(key, value);
+          });
+        }
+
+        // Listing Notes for this match
+        if (matchFilter.restriction_left || matchFilter.restriction_right) {
+          [
+            ...(matchFilter.restriction_left || []),
+            ...(matchFilter.restriction_right || []),
+            ...(matchFilter.split_details_left || []),
+            ...(matchFilter.split_details_right || []),
+            ...(matchFilter.notes_left || []),
+            ...(matchFilter.notes_right || []),
+          ].forEach((note) => {
+            matchListingNotes.set(note.id.toString(), note.name);
+          });
+        }
+
+        // Update headers with match-specific options
+        headers.forEach((header) => {
+          if (header.key === "ticket_type_id") {
+            header.options = Array.from(matchTicketTypes.entries()).map(
+              ([value, label]) => ({
+                value,
+                label,
+              })
+            );
+          } else if (header.key === "split_type_id") {
+            header.options = Array.from(matchSplitTypes.entries()).map(
+              ([value, label]) => ({
+                value,
+                label,
+              })
+            );
+          } else if (header.key === "home_town") {
+            header.options = Array.from(matchHomeTowns.entries()).map(
+              ([value, label]) => ({
+                value,
+                label,
+              })
+            );
+          } else if (header.key === "ticket_category_id") {
+            header.options = Array.from(matchTicketCategories.entries()).map(
+              ([value, label]) => ({
+                value,
+                label,
+              })
+            );
+          } else if (header.key === "listing_note") {
+            header.options = Array.from(matchListingNotes.entries()).map(
+              ([value, label]) => ({
+                value,
+                label,
+              })
+            );
+          }
+        });
+
+        console.log(`Headers for match ${matchIndex}:`, {
+          ticketTypes: matchTicketTypes.size,
+          categories: matchTicketCategories.size,
+          homeTowns: matchHomeTowns.size,
+          splitTypes: matchSplitTypes.size,
+          listingNotes: matchListingNotes.size,
+        });
+      }
+
+      return headers;
+    },
+    [ticketsByMatch]
+  );
 
   // Enhanced updateCellValues function with better error handling
   const updateCellValues = async (updatedParams, id) => {
@@ -1602,7 +1606,7 @@ const TicketsPage = (props) => {
       const matchIndex = matchIndexParam.toString();
       const rowKey = `${matchIndex}_${rowIndex}`;
       console.log(rowIndex, columnKey, value, "rowKeyrowKey");
-      
+
       // Check if trying to edit a cloned ticket
       const currentTicket = ticketsByMatch[matchIndex]?.tickets[rowIndex];
       if (currentTicket?.isCloned) {
@@ -1611,13 +1615,13 @@ const TicketsPage = (props) => {
         );
         return;
       }
-  
+
       // Find header config from match-specific headers
       const matchSpecificHeaders = constructHeadersForMatch(matchIndex);
       const headerConfig = matchSpecificHeaders.find(
         (h) => h.key === columnKey
       );
-  
+
       let processedValue = value;
       if (headerConfig?.type === "select" && headerConfig?.options) {
         const isValidValue = headerConfig.options.some(
@@ -1632,36 +1636,42 @@ const TicketsPage = (props) => {
           }
         }
       }
-  
+
       // NEW: Handle dependent field clearing
-      const handleDependentFields = (updatedTicket, changedColumnKey, changedValue) => {
+      const handleDependentFields = (
+        updatedTicket,
+        changedColumnKey,
+        changedValue
+      ) => {
         let finalTicket = { ...updatedTicket };
-        
+
         // If ticket_category_id changes, clear the block field
-        if (changedColumnKey === 'ticket_category_id') {
-          finalTicket.block = '';
-          console.log(`🔄 Cleared block field due to ticket_category_id change for match ${matchIndex}, row ${rowIndex}`);
-          
+        if (changedColumnKey === "ticket_category_id") {
+          finalTicket.block = "";
+          console.log(
+            `🔄 Cleared block field due to ticket_category_id change for match ${matchIndex}, row ${rowIndex}`
+          );
+
           // Also add block to pending edits if we're in single edit mode
           if (!isGlobalEditMode || globalEditingTickets.length === 0) {
             setPendingEdits((prev) => ({
               ...prev,
               [rowKey]: {
                 ...prev[rowKey],
-                block: '', // Clear block in pending edits
+                block: "", // Clear block in pending edits
               },
             }));
           }
         }
-        
+
         return finalTicket;
       };
-  
+
       if (isGlobalEditMode && globalEditingTickets.length > 0) {
         // BULK EDIT LOGIC with dependency handling
         setTicketsByMatch((prevData) => {
           const newData = { ...prevData };
-  
+
           const ticketsByMatchIndex = {};
           globalEditingTickets.forEach((uniqueId) => {
             const [ticketMatchIndex, originalIndex] = uniqueId.split("_");
@@ -1670,7 +1680,7 @@ const TicketsPage = (props) => {
             }
             ticketsByMatchIndex[ticketMatchIndex].push(parseInt(originalIndex));
           });
-  
+
           Object.entries(ticketsByMatchIndex).forEach(
             ([editMatchIndex, indices]) => {
               if (newData[editMatchIndex]) {
@@ -1680,11 +1690,18 @@ const TicketsPage = (props) => {
                     (ticketItem, index) => {
                       if (indices.includes(index)) {
                         // Apply the main change
-                        let updatedTicket = { ...ticketItem, [columnKey]: processedValue };
-                        
+                        let updatedTicket = {
+                          ...ticketItem,
+                          [columnKey]: processedValue,
+                        };
+
                         // Handle dependent fields
-                        updatedTicket = handleDependentFields(updatedTicket, columnKey, processedValue);
-                        
+                        updatedTicket = handleDependentFields(
+                          updatedTicket,
+                          columnKey,
+                          processedValue
+                        );
+
                         return updatedTicket;
                       }
                       return ticketItem;
@@ -1694,29 +1711,29 @@ const TicketsPage = (props) => {
               }
             }
           );
-  
+
           return newData;
         });
-  
+
         const allTickets = getAllTicketsFromMatches();
         const selectedTickets = allTickets.filter((t) =>
           globalEditingTickets.includes(t.uniqueId)
         );
-        
+
         // Prepare API update params
         const updateParams = { [columnKey]: processedValue };
-        
+
         // If ticket_category_id is being changed, also clear block in API call
-        if (columnKey === 'ticket_category_id') {
-          updateParams.block = '';
+        if (columnKey === "ticket_category_id") {
+          updateParams.block = "";
         }
-  
+
         selectedTickets.forEach((selectedTicket) => {
           updateCellValues(updateParams, selectedTicket?.rawTicketData?.s_no);
         });
       } else {
         // SINGLE EDIT MODE with dependency handling
-  
+
         // Store original value if not already stored
         if (!originalValues[rowKey]) {
           const currentTicket = ticketsByMatch[matchIndex]?.tickets[rowIndex];
@@ -1727,7 +1744,7 @@ const TicketsPage = (props) => {
             }));
           }
         }
-  
+
         // Store the pending edit
         setPendingEdits((prev) => {
           const newPendingEdits = {
@@ -1737,15 +1754,15 @@ const TicketsPage = (props) => {
               [columnKey]: processedValue,
             },
           };
-  
+
           // If ticket_category_id changes, also clear block in pending edits
-          if (columnKey === 'ticket_category_id') {
-            newPendingEdits[rowKey].block = '';
+          if (columnKey === "ticket_category_id") {
+            newPendingEdits[rowKey].block = "";
           }
-  
+
           return newPendingEdits;
         });
-  
+
         // Update the UI immediately to show the change (optimistic update)
         setTicketsByMatch((prevData) => {
           const updatedData = {
@@ -1755,18 +1772,25 @@ const TicketsPage = (props) => {
               tickets: prevData[matchIndex].tickets.map((ticketItem, index) => {
                 if (index === rowIndex) {
                   // Apply the main change
-                  let updatedTicket = { ...ticketItem, [columnKey]: processedValue };
-                  
+                  let updatedTicket = {
+                    ...ticketItem,
+                    [columnKey]: processedValue,
+                  };
+
                   // Handle dependent fields
-                  updatedTicket = handleDependentFields(updatedTicket, columnKey, processedValue);
-                  
+                  updatedTicket = handleDependentFields(
+                    updatedTicket,
+                    columnKey,
+                    processedValue
+                  );
+
                   return updatedTicket;
                 }
                 return ticketItem;
               }),
             },
           };
-          
+
           return updatedData;
         });
       }
@@ -1825,30 +1849,29 @@ const TicketsPage = (props) => {
     async (matchIndex, rowIndex) => {
       const rowKey = `${matchIndex}_${rowIndex}`;
       const pendingChanges = pendingEdits[rowKey];
-  
+
       if (!pendingChanges || Object.keys(pendingChanges).length === 0) return;
-  
+
       try {
         const ticket = ticketsByMatch[matchIndex]?.tickets[rowIndex];
         if (!ticket) return;
-  
+
         // Get match-specific headers for this particular match
         const matchSpecificHeaders = constructHeadersForMatch(matchIndex);
-  
+
         // Transform field keys and values for API
         const transformedParams = {};
-  
+
         // Check if ticket_category_id is being changed to handle block dependency
-        const isTicketCategoryChanged = pendingChanges.hasOwnProperty('ticket_category_id');
-        
+        const isTicketCategoryChanged =
+          pendingChanges.hasOwnProperty("ticket_category_id");
+
         Object.entries(pendingChanges).forEach(([key, value]) => {
           // Find the header configuration for this field from match-specific headers
-          const headerConfig = matchSpecificHeaders.find(
-            (h) => h.key === key
-          );
-  
+          const headerConfig = matchSpecificHeaders.find((h) => h.key === key);
+
           let processedValue = value;
-  
+
           // Handle select fields - ensure we're using the value, not the label
           if (headerConfig?.type === "select" && headerConfig?.options) {
             // Check if the current value is a label instead of a value
@@ -1858,7 +1881,7 @@ const TicketsPage = (props) => {
             const optionByLabel = headerConfig.options.find(
               (opt) => opt.label === value
             );
-  
+
             if (optionByValue) {
               // Value is already correct
               processedValue = optionByValue.value;
@@ -1876,7 +1899,7 @@ const TicketsPage = (props) => {
               processedValue = value;
             }
           }
-  
+
           // Handle multiselect fields (like listing_note)
           if (headerConfig?.type === "multiselect" && headerConfig?.options) {
             if (Array.isArray(value)) {
@@ -1887,7 +1910,7 @@ const TicketsPage = (props) => {
                 const optionByLabel = headerConfig.options.find(
                   (opt) => opt.label === item
                 );
-  
+
                 if (optionByValue) {
                   return optionByValue.value;
                 } else if (optionByLabel) {
@@ -1900,7 +1923,7 @@ const TicketsPage = (props) => {
               });
             }
           }
-  
+
           // Transform field keys for API (ticket_type_id -> ticket_type, etc.)
           const transformedKey =
             key === "ticket_type_id"
@@ -1912,26 +1935,34 @@ const TicketsPage = (props) => {
               : key === "block"
               ? "ticket_block" // Transform block to ticket_block for API
               : key;
-  
+
           transformedParams[transformedKey] = processedValue;
         });
-  
+
         // NEW: If ticket_category_id changed and block is not explicitly in pending changes,
         // ensure block is cleared in the API call
-        if (isTicketCategoryChanged && !pendingChanges.hasOwnProperty('block')) {
-          transformedParams.ticket_block = '';
-          console.log(`🔄 Auto-clearing block (ticket_block) in API call due to ticket_category change for match ${matchIndex}`);
+        if (
+          isTicketCategoryChanged &&
+          !pendingChanges.hasOwnProperty("block")
+        ) {
+          transformedParams.ticket_block = "";
+          console.log(
+            `🔄 Auto-clearing block (ticket_block) in API call due to ticket_category change for match ${matchIndex}`
+          );
         }
-  
-        console.log(`📤 Sending to API for match ${matchIndex}:`, transformedParams);
-  
+
+        console.log(
+          `📤 Sending to API for match ${matchIndex}:`,
+          transformedParams
+        );
+
         // Make single API call with all transformed parameters
         const update = await updateMyListing(
           "",
           ticket?.rawTicketData?.s_no,
           transformedParams
         );
-  
+
         if (update?.success) {
           // Update the local state with the correct values
           setTicketsByMatch((prevData) => ({
@@ -1942,14 +1973,14 @@ const TicketsPage = (props) => {
                 if (index === rowIndex) {
                   // Update with the processed values (not the original pending changes)
                   const updatedTicket = { ...ticketItem };
-                  
+
                   Object.entries(pendingChanges).forEach(([key, value]) => {
                     const headerConfig = matchSpecificHeaders.find(
                       (h) => h.key === key
                     );
-  
+
                     let finalValue = value;
-  
+
                     // Apply the same transformation logic for the UI update
                     if (
                       headerConfig?.type === "select" &&
@@ -1962,14 +1993,14 @@ const TicketsPage = (props) => {
                       const optionByLabel = headerConfig.options.find(
                         (opt) => opt.label === value
                       );
-  
+
                       if (optionByValue) {
                         finalValue = optionByValue.value;
                       } else if (optionByLabel) {
                         finalValue = optionByLabel.value;
                       }
                     }
-  
+
                     if (
                       headerConfig?.type === "multiselect" &&
                       headerConfig?.options &&
@@ -1983,7 +2014,7 @@ const TicketsPage = (props) => {
                         const optionByLabel = headerConfig.options.find(
                           (opt) => opt.label === item
                         );
-  
+
                         if (optionByValue) {
                           return optionByValue.value;
                         } else if (optionByLabel) {
@@ -1992,40 +2023,46 @@ const TicketsPage = (props) => {
                         return item;
                       });
                     }
-  
+
                     updatedTicket[key] = finalValue;
                   });
-  
+
                   // NEW: Ensure block is cleared in UI if ticket_category_id changed
-                  if (isTicketCategoryChanged && !pendingChanges.hasOwnProperty('block')) {
-                    updatedTicket.block = '';
-                    console.log(`🔄 Auto-cleared block in UI due to ticket_category change for match ${matchIndex}`);
+                  if (
+                    isTicketCategoryChanged &&
+                    !pendingChanges.hasOwnProperty("block")
+                  ) {
+                    updatedTicket.block = "";
+                    console.log(
+                      `🔄 Auto-cleared block in UI due to ticket_category change for match ${matchIndex}`
+                    );
                   }
-  
+
                   return updatedTicket;
                 }
                 return ticketItem;
               }),
             },
           }));
-  
+
           // Clear pending edits and original values for this row
           setPendingEdits((prev) => {
             const newPending = { ...prev };
             delete newPending[rowKey];
             return newPending;
           });
-  
+
           setOriginalValues((prev) => {
             const newOriginal = { ...prev };
             delete newOriginal[rowKey];
             return newOriginal;
           });
-  
+
           // Update success message to reflect dependent field changes
           const changedFieldsCount = Object.keys(pendingChanges).length;
-          const hasAutoCleared = isTicketCategoryChanged && !pendingChanges.hasOwnProperty('block');
-          
+          const hasAutoCleared =
+            isTicketCategoryChanged && !pendingChanges.hasOwnProperty("block");
+
           if (hasAutoCleared) {
             toast.success(
               changedFieldsCount > 1
@@ -2052,12 +2089,7 @@ const TicketsPage = (props) => {
         handleCancelEdit(matchIndex, rowIndex);
       }
     },
-    [
-      pendingEdits,
-      ticketsByMatch,
-      constructHeadersForMatch,
-      handleCancelEdit,
-    ]
+    [pendingEdits, ticketsByMatch, constructHeadersForMatch, handleCancelEdit]
   );
 
   // NEW: Check if a row has pending edits
@@ -2803,128 +2835,131 @@ const TicketsPage = (props) => {
 
   const totalTicketCount = getTotalTicketCount();
 
-  const getFilteredHeadersForMatch = useCallback((matchIndex) => {
-    const matchHeaders = constructHeadersForMatch(matchIndex);
-    
-    // Apply column visibility and ordering
-    const visibleHeadersMap = new Map();
-    matchHeaders.forEach((header) => {
-      if (visibleColumns[header.key]) {
-        visibleHeadersMap.set(header.key, header);
+  const getFilteredHeadersForMatch = useCallback(
+    (matchIndex) => {
+      const matchHeaders = constructHeadersForMatch(matchIndex);
+
+      // Apply column visibility and ordering
+      const visibleHeadersMap = new Map();
+      matchHeaders.forEach((header) => {
+        if (visibleColumns[header.key]) {
+          visibleHeadersMap.set(header.key, header);
+        }
+      });
+
+      // If we have a custom column order, apply it
+      if (columnOrder.length > 0) {
+        const orderedHeaders = [];
+        const usedKeys = new Set();
+
+        // Add headers in the custom order (only if they're visible)
+        columnOrder.forEach((columnKey) => {
+          const header = visibleHeadersMap.get(columnKey);
+          if (header) {
+            orderedHeaders.push(header);
+            usedKeys.add(columnKey);
+          }
+        });
+
+        // Add any new visible headers that weren't in the ordered list
+        Array.from(visibleHeadersMap.values()).forEach((header) => {
+          if (!usedKeys.has(header.key)) {
+            orderedHeaders.push(header);
+          }
+        });
+
+        return orderedHeaders;
       }
-    });
-  
-    // If we have a custom column order, apply it
-    if (columnOrder.length > 0) {
-      const orderedHeaders = [];
-      const usedKeys = new Set();
-  
-      // Add headers in the custom order (only if they're visible)
-      columnOrder.forEach((columnKey) => {
-        const header = visibleHeadersMap.get(columnKey);
-        if (header) {
-          orderedHeaders.push(header);
-          usedKeys.add(columnKey);
-        }
-      });
-  
-      // Add any new visible headers that weren't in the ordered list
-      Array.from(visibleHeadersMap.values()).forEach((header) => {
-        if (!usedKeys.has(header.key)) {
-          orderedHeaders.push(header);
-        }
-      });
-  
-      return orderedHeaders;
-    }
-  
-    // Fallback to original order if no custom order exists
-    return matchHeaders.filter((header) => visibleColumns[header.key]);
-  }, [constructHeadersForMatch, visibleColumns, columnOrder]);
+
+      // Fallback to original order if no custom order exists
+      return matchHeaders.filter((header) => visibleColumns[header.key]);
+    },
+    [constructHeadersForMatch, visibleColumns, columnOrder]
+  );
 
   // Render match tables using ticketsByMatch
-// Update your renderMatchTables function to use match-specific headers
-const renderMatchTables = useCallback(() => {
-  return Object.entries(ticketsByMatch).map(([matchIndex, matchData]) => {
-    // Get headers specific to this match
-    const matchSpecificHeaders = getFilteredHeadersForMatch(matchIndex);
-    
-    return (
-      <div key={`match-${matchIndex}`} className="not-last:mb-4">
-        <CommonInventoryTable
-          inventoryData={matchData.tickets}
-          headers={matchSpecificHeaders} // Use match-specific headers
-          selectedRows={getSelectedRowsForMatch(parseInt(matchIndex))}
-          setSelectedRows={(newSelectedRows) =>
-            handleSetSelectedRowsForMatch(
-              parseInt(matchIndex),
-              newSelectedRows
-            )
-          }
-          handleCellEdit={(rowIndex, columnKey, value, ticket) =>
-            handleCellEdit(rowIndex, columnKey, value, ticket, matchIndex)
-          }
-          handleHandAction={handleHandAction}
-          handleUploadAction={handleUploadAction}
-          handleSelectAll={() => handleSelectAllForMatch(matchIndex)}
-          handleDeselectAll={() => handleDeselectAllForMatch(matchIndex)}
-          matchDetails={{
-            match_name: matchData.matchInfo?.match_name,
-            match_date_format: matchData.matchInfo?.match_date,
-            match_time: matchData.matchInfo?.match_time,
-            stadium_name: matchData.matchInfo?.stadium_name,
-            country_name: matchData.matchInfo?.country_name,
-            city_name: matchData.matchInfo?.city_name,
-            match_id: matchData.matchInfo?.m_id,
-            tournament_name: matchData.matchInfo?.tournament_name,
-            publishedTickets: `${matchData?.matchInfo?.published}`,
-            listingTickets: `${matchData?.matchInfo?.listings}`,
-            totalTickets: `${matchData?.matchInfo?.tickets}`,
-            unPublishedTickets: matchData?.matchInfo?.unpublished,
-          }}
-          filters={matchData.filters}
-          isEditMode={isGlobalEditMode}
-          editingRowIndex={
-            isGlobalEditMode
-              ? matchData.tickets
-                  .map((_, index) =>
-                    isTicketInEditMode(matchIndex, index) ? index : null
-                  )
-                  .filter((index) => index !== null)
-              : null
-          }
-          mode="multiple"
-          showAccordion={true}
-          matchIndex={matchIndex}
-          getStickyColumnsForRow={getStickyColumnsForRow}
-          stickyHeaders={["", "", "", ""]}
-          myListingPage={true}
-          stickyColumnsWidth={140}
-          // Pass the pending edits and handlers
-          pendingEdits={pendingEdits}
-          onConfirmEdit={handleConfirmEdit}
-          onCancelEdit={handleCancelEdit}
-        />
-      </div>
-    );
-  });
-}, [
-  ticketsByMatch,
-  getFilteredHeadersForMatch, // Add this dependency
-  getSelectedRowsForMatch,
-  handleSetSelectedRowsForMatch,
-  handleCellEdit,
-  handleHandAction,
-  handleUploadAction,
-  handleSelectAllForMatch,
-  handleDeselectAllForMatch,
-  isGlobalEditMode,
-  isTicketInEditMode,
-  getStickyColumnsForRow,
-  pendingEdits,
-  handleConfirmEdit,
-  handleCancelEdit,
-]);
+  // Update your renderMatchTables function to use match-specific headers
+  const renderMatchTables = useCallback(() => {
+    return Object.entries(ticketsByMatch).map(([matchIndex, matchData]) => {
+      // Get headers specific to this match
+      const matchSpecificHeaders = getFilteredHeadersForMatch(matchIndex);
+
+      return (
+        <div key={`match-${matchIndex}`} className="not-last:mb-4">
+          <CommonInventoryTable
+            inventoryData={matchData.tickets}
+            headers={matchSpecificHeaders} // Use match-specific headers
+            selectedRows={getSelectedRowsForMatch(parseInt(matchIndex))}
+            setSelectedRows={(newSelectedRows) =>
+              handleSetSelectedRowsForMatch(
+                parseInt(matchIndex),
+                newSelectedRows
+              )
+            }
+            handleCellEdit={(rowIndex, columnKey, value, ticket) =>
+              handleCellEdit(rowIndex, columnKey, value, ticket, matchIndex)
+            }
+            handleHandAction={handleHandAction}
+            handleUploadAction={handleUploadAction}
+            handleSelectAll={() => handleSelectAllForMatch(matchIndex)}
+            handleDeselectAll={() => handleDeselectAllForMatch(matchIndex)}
+            matchDetails={{
+              match_name: matchData.matchInfo?.match_name,
+              match_date_format: matchData.matchInfo?.match_date,
+              match_time: matchData.matchInfo?.match_time,
+              stadium_name: matchData.matchInfo?.stadium_name,
+              country_name: matchData.matchInfo?.country_name,
+              city_name: matchData.matchInfo?.city_name,
+              match_id: matchData.matchInfo?.m_id,
+              tournament_name: matchData.matchInfo?.tournament_name,
+              publishedTickets: `${matchData?.matchInfo?.published}`,
+              listingTickets: `${matchData?.matchInfo?.listings}`,
+              totalTickets: `${matchData?.matchInfo?.tickets}`,
+              unPublishedTickets: matchData?.matchInfo?.unpublished,
+            }}
+            filters={matchData.filters}
+            isEditMode={isGlobalEditMode}
+            editingRowIndex={
+              isGlobalEditMode
+                ? matchData.tickets
+                    .map((_, index) =>
+                      isTicketInEditMode(matchIndex, index) ? index : null
+                    )
+                    .filter((index) => index !== null)
+                : null
+            }
+            mode="multiple"
+            showAccordion={true}
+            matchIndex={matchIndex}
+            getStickyColumnsForRow={getStickyColumnsForRow}
+            stickyHeaders={["", "", "", ""]}
+            myListingPage={true}
+            stickyColumnsWidth={140}
+            // Pass the pending edits and handlers
+            pendingEdits={pendingEdits}
+            onConfirmEdit={handleConfirmEdit}
+            onCancelEdit={handleCancelEdit}
+          />
+        </div>
+      );
+    });
+  }, [
+    ticketsByMatch,
+    getFilteredHeadersForMatch, // Add this dependency
+    getSelectedRowsForMatch,
+    handleSetSelectedRowsForMatch,
+    handleCellEdit,
+    handleHandAction,
+    handleUploadAction,
+    handleSelectAllForMatch,
+    handleDeselectAllForMatch,
+    isGlobalEditMode,
+    isTicketInEditMode,
+    getStickyColumnsForRow,
+    pendingEdits,
+    handleConfirmEdit,
+    handleCancelEdit,
+  ]);
 
   const handleCheckBoxChange = async (key, value) => {
     let params = { ...filtersApplied };

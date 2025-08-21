@@ -518,24 +518,29 @@ const SimpleEditableCell = ({
   const [shouldFocusInput, setShouldFocusInput] = useState(false);
 
   // Currency formatting functions
-  const formatCurrency = (num) => {
-    if (!num || num === "") return "";
-    // Remove any existing commas and convert to number
-    const cleanNum = typeof num === 'string' ? num.replace(/,/g, '') : num;
-    const number = parseFloat(cleanNum);
-    if (isNaN(number)) return "";
-    // Format with commas
-    return number.toLocaleString('en-US', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    });
-  };
+const formatCurrency = (num) => {
+  if (!num && num !== 0) return "";
+  
+  // Convert to string first, then remove any existing commas and convert to number
+  const cleanNum = typeof num === 'string' ? num.replace(/,/g, '') : String(num);
+  const number = parseFloat(cleanNum);
+  
+  if (isNaN(number)) return "";
+  
+  // Format with commas
+  return number.toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  });
+};
 
   // Remove currency formatting to get raw number
-  const unformatCurrency = (formattedValue) => {
-    if (!formattedValue) return "";
-    return formattedValue.replace(/,/g, '');
-  };
+const unformatCurrency = (formattedValue) => {
+  if (!formattedValue && formattedValue !== 0) return "";
+  
+  // Convert to string first to handle numbers, then remove commas
+  return String(formattedValue).replace(/,/g, '');
+};
 
   // Date formatting helper functions
   const formatDateForDisplay = (dateString) => {
