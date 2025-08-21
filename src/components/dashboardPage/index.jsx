@@ -432,7 +432,7 @@ const DashboardPage = (props) => {
     const { matchId = null } = item ?? {};
     router.push(`/add-listings${matchId ? `/${matchId}` : ""}`);
   };
-
+console.log(resultData,'resultDataresultData')
   return (
     <div className="flex flex-col h-full">
       <Subheader />

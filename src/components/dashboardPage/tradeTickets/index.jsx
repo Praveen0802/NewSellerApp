@@ -23,24 +23,65 @@ const TradeTickets = ({ resultData, handleScrollEnd, loader }) => {
 
   function formatDateTime(datetime) {
     if (!datetime) return "";
-
-    const date = new Date(datetime);
-
-    // Format options
-    const options = {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    };
-
-    return date
-      .toLocaleDateString("en-GB", options)
-      .replace(/,/g, ",")
-      .replace(/(\d{2}:\d{2})/, "$1");
+  
+    try {
+      let date;
+      
+      // Handle different date formats
+      if (datetime.includes('/')) {
+        // Handle DD/MM/YYYY HH:mm format
+        const [datePart, timePart] = datetime.split(' ');
+        const [day, month, year] = datePart.split('/');
+        
+        // Validate parts exist and are numbers
+        if (!day || !month || !year || isNaN(day) || isNaN(month) || isNaN(year)) {
+          throw new Error('Invalid date parts');
+        }
+        
+        // Create date object (month is 0-indexed in JavaScript)
+        date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        
+        // Add time if present
+        if (timePart) {
+          const [hours, minutes] = timePart.split(':');
+          if (hours && minutes) {
+            date.setHours(parseInt(hours), parseInt(minutes));
+          }
+        }
+      } else if (datetime.includes('-')) {
+        // Handle YYYY-MM-DD HH:mm format
+        date = new Date(datetime);
+      } else {
+        // Try direct parsing for other formats
+        date = new Date(datetime);
+      }
+  
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date after parsing:', datetime);
+        return "Invalid Date";
+      }
+  
+      // Format options
+      const options = {
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      };
+  
+      return date
+        .toLocaleDateString("en-GB", options)
+        .replace(/,/g, "")
+        .replace(/(\d{2}:\d{2})/, "$1");
+        
+    } catch (error) {
+      console.error('Error formatting date:', datetime, error);
+      return "Invalid Date";
+    }
   }
 
   const tracking = {
@@ -58,7 +99,7 @@ const TradeTickets = ({ resultData, handleScrollEnd, loader }) => {
 
   const purchases = {
     title: "Purchases",
-    count: resultData?.tradeOrders?.total_count || "0",
+    count: resultData?.tradeOrders?.data?.total || "0",
     subHeading: "Event Date",
     listItems:
       resultData?.tradeOrders?.data?.data?.map((item) => ({

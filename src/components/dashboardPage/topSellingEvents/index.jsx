@@ -240,7 +240,7 @@ const TopSellingEvents = (props) => {
       <div className="flex flex-col flex-1 min-h-0">
         <div
           ref={tableContainerRef}
-          className="flex-1 overflow-auto max-h-[300px]"
+          className="flex-1 overflow-auto max-h-[500px]"
           role="region"
           aria-label="Top selling events table"
         >
