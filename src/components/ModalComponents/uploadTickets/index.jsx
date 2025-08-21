@@ -770,17 +770,17 @@ const UploadTickets = ({
         }
       }
 
-      // if (response.success) {
-      // onClose();
-      // toast.success(
-      //   proofUploadView
-      //     ? "Proof document uploaded successfully"
-      //     : "Tickets updated successfully"
-      // );
-      // } else {
-      // console.error("Upload failed:", response.message);
-      // toast.error(response.message || "Upload failed");
-      // }
+      if (response.success) {
+      onClose();
+      toast.success(
+        proofUploadView
+          ? "Proof document uploaded successfully"
+          : "Tickets updated successfully"
+      );
+      } else {
+      console.error("Upload failed:", response.message);
+      toast.error(response.message || "Upload failed");
+      }
     } catch (error) {
       // console.error("API call failed:", error);
       toast.error("Upload failed. Please try again.");
