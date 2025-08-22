@@ -71,7 +71,7 @@ const DashboardPage = (props) => {
       [keyValue]: true,
     }));
 
-    if (keyValue == "reports") {
+    if (keyValue == "reports" && !isPagination) {
       setWholerLoader(true);
     }
 

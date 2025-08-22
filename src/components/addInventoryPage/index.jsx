@@ -455,7 +455,7 @@ const AddInventoryPage = (props) => {
         "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[140px] lg:max-w-[212px]",
       iconBefore: (
         <div className="border-r-[1px] pr-2 border-[#E0E1EA]">
-          <p className="text-xs sm:text-[10px] lg:text-xs"> 
+          <p className="text-xs sm:text-[10px] lg:text-xs">
             {matchDetails?.currency_icon?.[0] || "$"}
           </p>
         </div>
@@ -736,6 +736,8 @@ const AddInventoryPage = (props) => {
   // Updated handleCellEdit to work with the common component
   const handleCellEdit = (rowIndex, columnKey, value, row, matchIndex) => {
     let updateValues = {};
+
+    // Handle ticket_types changes
     if (columnKey === "ticket_types") {
       updateValues = {
         additional_file_type: "",
@@ -745,7 +747,9 @@ const AddInventoryPage = (props) => {
         paper_ticket_details: {},
       };
     }
-    if (columnKey == "ticket_category") {
+
+    // Handle ticket_category changes
+    if (columnKey === "ticket_category") {
       updateValues = {
         ticket_block: "",
       };
@@ -757,19 +761,43 @@ const AddInventoryPage = (props) => {
         if (isEditMode && Array.isArray(editingRowIndex)) {
           // Bulk edit mode: update all selected rows
           if (editingRowIndex.includes(index)) {
-            return { ...item, [columnKey]: value, ...updateValues };
+            let updatedItem = { ...item, [columnKey]: value, ...updateValues };
+
+            // Handle split_type and split_details interrelation for bulk edit
+            if (columnKey === "split_type") {
+              if (value === "6") {
+                updatedItem.split_details = "27";
+              } else if (item.split_details === "27") {
+                updatedItem.split_details = "";
+              }
+            } else if (columnKey === "split_details") {
+              if (item.split_type === "6" && value !== "27") {
+                updatedItem.split_type = "5";
+              }
+            }
+
+            return updatedItem;
           }
           return item;
         }
         // Single row edit mode: update only the specific row
         else if (index === rowIndex) {
-          let data ={...item}
-          if (value === "6" && columnKey === "split_type") {
-            data.split_details = "27";
-          } else if (item.split_details === "27") {
-            data.split_details = "";
+          let data = { ...item, [columnKey]: value, ...updateValues };
+
+          // Handle split_type and split_details interrelation for single edit
+          if (columnKey === "split_type") {
+            if (value === "6") {
+              data.split_details = "27";
+            } else if (item.split_details === "27") {
+              data.split_details = "";
+            }
+          } else if (columnKey === "split_details") {
+            if (item.split_type === "6" && value !== "27") {
+              data.split_type = "5";
+            }
           }
-          return { ...data, [columnKey]: value, ...updateValues };
+
+          return data;
         }
         return item;
       })
@@ -918,7 +946,7 @@ const AddInventoryPage = (props) => {
   // KEEP ALL THE ORIGINAL FUNCTIONS (constructFormDataAsFields, handleDelete, handleClone, etc.)
   const constructFormDataAsFields = (publishingDataArray) => {
     const formData = new FormData();
-console.log(publishingDataArray,'publishingDatapublishingData')
+    console.log(publishingDataArray, "publishingDatapublishingData");
     // Helper function to transform QR links
     const transformQRLinks = (qrLinks) => {
       if (!qrLinks || qrLinks.length === 0) {

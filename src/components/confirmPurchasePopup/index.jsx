@@ -52,7 +52,9 @@ const ConfirmPurchasePopup = ({ onClose }) => {
   const [selectedQuantity, setSelectedQuantity] = useState(
     data?.purchase?.price_breakdown?.ticket_quantity
   );
-
+  const [totalAmount, setTotalAmount] = useState(
+    data?.purchase?.price_breakdown?.grand_total
+  );
   const [formFieldValues, setFormFieldValues] = useState({
     first_name: "",
     last_name: "",
@@ -62,7 +64,6 @@ const ConfirmPurchasePopup = ({ onClose }) => {
     country_id: "",
     city: "",
   });
-
   const handlePaymentChange = (name) => {
     setSelectedPayment(name);
   };
@@ -132,7 +133,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
       toast.error("Failed to load address and payment details");
     }
   };
-console.log(formFieldValues,'formFieldValues')
+  console.log(formFieldValues, "formFieldValues");
   useEffect(() => {
     fetchAddressPaymentDetails();
   }, []);
@@ -351,7 +352,6 @@ console.log(formFieldValues,'formFieldValues')
           secondApiPayload
         );
 
-
         setBookingNo(apiResponse?.booking_no);
         setStripeBookingId(apiResponse?.booking_id);
 
@@ -373,7 +373,10 @@ console.log(formFieldValues,'formFieldValues')
             apiResponse?.booking_no
           );
         } else {
-          bookingConfirm(false, apiResponse?.message?.message || "Booking failed");
+          bookingConfirm(
+            false,
+            apiResponse?.message?.message || "Booking failed"
+          );
         }
       } else {
         bookingConfirm(false, response?.message || "Booking failed");
@@ -413,6 +416,8 @@ console.log(formFieldValues,'formFieldValues')
           data={data}
           setSelectedQuantity={setSelectedQuantity}
           selectedQuantity={selectedQuantity}
+          setTotalAmount={setTotalAmount}
+          totalAmount={totalAmount}
         />
         <AddessDetails
           data={data}
@@ -473,9 +478,11 @@ console.log(formFieldValues,'formFieldValues')
           bookingId={stripeBookingId}
           paymentMethod={2}
           bookingConfirm={bookingConfirm}
+          setLoader={setLoader}
           setHideCta={setHideCta}
+          setShowStripeDropIn={setShowStripeDropIn}
           bookingNo={bookingNo}
-          amount={data?.purchase?.price_breakdown?.grand_total || 0}
+          amount={totalAmount || 0}
           currency={data?.purchase?.price_breakdown?.currency || "usd"}
           formFieldValues={formFieldValues}
         />

@@ -2,9 +2,14 @@ import React, { useState } from "react";
 import FormFields from "../formFieldsComponent";
 import { PriceUpdatewithQuantity } from "@/utils/apiHandler/request";
 
-const PurchaseCard = ({ data,selectedQuantity,setSelectedQuantity }) => {
+const PurchaseCard = ({
+  data,
+  selectedQuantity,
+  setSelectedQuantity,
+  totalAmount,
+  setTotalAmount,
+}) => {
   const { purchase = {} } = data;
-
 
   const [priceDetails, setPriceDetails] = useState(purchase?.price_breakdown);
   const handleChange = async (e, key) => {
@@ -14,6 +19,8 @@ const PurchaseCard = ({ data,selectedQuantity,setSelectedQuantity }) => {
       quantity: e,
     });
     setPriceDetails(response?.purchase?.price_breakdown);
+ 
+    setTotalAmount(response?.purchase?.price_breakdown?.grand_total);
   };
 
   const quantityOptions = purchase?.split_list?.map((item) => {

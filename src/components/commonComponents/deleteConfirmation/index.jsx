@@ -7,18 +7,18 @@ const DeleteConfirmation = ({
   handleClose,
   loader,
 }) => {
-  return (
-    <div
-      className="bg-black/75 h-dvh w-dvw flex  justify-center items-center fixed top-0 left-0 z-[999]"
+    return (
+          <div
+        className="bg-black/75 h-dvh w-dvw flex  justify-center items-center fixed top-0 left-0 z-[999]"
       // onClick={handleClose}
-    >
-      <div
+                  >
+                    <div
         className={`bg-white absolute flex max-md:flex-col max-md:gap-3 w-[300px]  rounded-sm justify-between p-2 items-center md:w-[500px]`}
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="text-[#231F20] font-medium text-[14px] text-center">
-          {content}
-        </p>
+        <p className="text-[#231F20] font-medium max-w-[330px] text-[14px] text-center">
+                      {content}
+                    </p>
         <div className="flex gap-4">
           <Button
             type="secondary"
@@ -41,7 +41,7 @@ const DeleteConfirmation = ({
           />
         </div>
       </div>
-    </div>
+</div>
   );
 };
 

@@ -36,7 +36,7 @@ const NotificationPopup = ({ item, onClose, isVisible } = {}) => {
             {item.title}
           </p>
 
-          {item.type === "seller_notification" && (
+          {/* {item.type === "seller_notification" && (
             <div className="bg-gray-50 p-3 rounded-lg">
               <div className="text-xs text-gray-600 space-y-1">
                 {item.artist && (
@@ -56,7 +56,7 @@ const NotificationPopup = ({ item, onClose, isVisible } = {}) => {
                 )}
               </div>
             </div>
-          )}
+          )} */}
 
           {isActivity && (
             <div className="bg-gray-50 p-3 rounded-lg">
