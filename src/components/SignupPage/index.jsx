@@ -441,13 +441,18 @@ const SignupFlow = ({ refer_code, currentScreen = null, currencies } = {}) => {
   const startRegistrationProcess = async (formData) => {
     // Parse DOB from YYYY-MM-DD to D-M-YYYY format (without leading zeros)
     const formatDOB = (dateObj) => {
-      const dateString =
-        typeof dateObj === "string" ? dateObj : dateObj?.startDate;
+      const dateString = typeof dateObj === "string" ? dateObj : dateObj?.startDate;
       if (!dateString || typeof dateString !== "string") return "";
+      
       const [year, month, day] = dateString.split("-");
-      return `${parseInt(day)}-${
-        parseInt(month) > 9 ? parseInt(month) : "0" + parseInt(month)
-      }-${year}`;
+      
+      // Format day with leading zero if needed
+      const formattedDay = parseInt(day) < 10 ? "0" + parseInt(day) : parseInt(day);
+      
+      // Format month with leading zero if needed  
+      const formattedMonth = parseInt(month) < 10 ? "0" + parseInt(month) : parseInt(month);
+      
+      return `${formattedDay}-${formattedMonth}-${year}`;
     };
 
     // Create payload with formatted DOB and exclude confirm_password
@@ -456,7 +461,6 @@ const SignupFlow = ({ refer_code, currentScreen = null, currencies } = {}) => {
       ...apiFormData,
       dob: formatDOB(apiFormData.dob),
     };
-
     const resp = await RegisterUser("", formattedFormData);
     return resp;
   };
