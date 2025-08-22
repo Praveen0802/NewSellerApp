@@ -473,7 +473,9 @@ console.log(formFieldValues,'formFieldValues')
           bookingId={stripeBookingId}
           paymentMethod={2}
           bookingConfirm={bookingConfirm}
+          setLoader={setLoader}
           setHideCta={setHideCta}
+          setShowStripeDropIn={setShowStripeDropIn}
           bookingNo={bookingNo}
           amount={data?.purchase?.price_breakdown?.grand_total || 0}
           currency={data?.purchase?.price_breakdown?.currency || "usd"}
