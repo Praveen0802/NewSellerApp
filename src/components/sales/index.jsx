@@ -677,7 +677,7 @@ const SalesPage = (props) => {
   ]);
 
   const getCountByStatus = (status) => {
-    return salesCount?.find((item) => item.status === status)?.orders || 0;
+    return salesCount?.find((item) => item.status === status)?.orders || "0";
   };
 
   // Helper function to get amount by status
