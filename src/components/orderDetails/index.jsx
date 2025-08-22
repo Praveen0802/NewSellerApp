@@ -14,6 +14,9 @@ import DownLoadYourTickets from "./components/downLoadYourTickets";
 import RightViewModal from "../commonComponents/rightViewModal";
 
 const OrderDetails = ({ show, onClose, data = {} }) => {
+  // Handle case where data might be an array or null/undefined
+  const normalizedData = Array.isArray(data) || !data ? {} : data;
+  
   const {
     order_details = {},
     customer_details = {},
@@ -22,24 +25,29 @@ const OrderDetails = ({ show, onClose, data = {} }) => {
     attendee_details = [],
     payment_details = {},
     tickets = {},
-  } = data;
+  } = normalizedData;
 
-console.log(data,'datadata')
+  console.log(normalizedData, 'datadata');
+  
   const [expandedVersion, setExpandedVersion] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const orderId = order_details?.booking_no || order_details?.order_id;
+  // Safe access to nested properties
+  const orderId = order_details?.booking_no || order_details?.order_id || "N/A";
+  
   const ctaText = [
     { title: "Order Notes", cta: "+ Add Note" },
     { title: "Additional File", cta: "Download File" },
   ];
 
-  // Format date function similar to OrderInfo
+  // Format date function with better error handling
   function formatTimestamp(dateString) {
-    if (!dateString) return "-";
+    if (!dateString || dateString === "" || dateString === "null" || dateString === "undefined") {
+      return "-";
+    }
 
     // If it's already in DD/MM/YYYY format, return as is
-    if (dateString.includes("/") && dateString.split("/").length === 3) {
+    if (typeof dateString === 'string' && dateString.includes("/") && dateString.split("/").length === 3) {
       return dateString;
     }
 
@@ -55,29 +63,34 @@ console.log(data,'datadata')
       };
       return date.toLocaleDateString("en-US", options);
     } catch (error) {
-      return dateString;
+      console.warn("Date formatting error:", error);
+      return dateString || "-";
     }
   }
 
-  // Get order status function similar to OrderInfo
+  // Get order status with better null handling
   function getOrderStatus() {
-    const { booking_status = null, ticket_status = null } = order_details ?? {};
+    if (!order_details || typeof order_details !== 'object') {
+      return "Pending";
+    }
+    
+    const { booking_status = null, ticket_status = null } = order_details;
     return booking_status || ticket_status || "Pending";
   }
 
-  // Updated orderObject to match OrderInfo structure
+  // Updated orderObject with safe property access
   const orderObject = {
     order_id: orderId,
     order_date: formatTimestamp(order_details?.booking_date),
     order_status: getOrderStatus(),
     delivered_by: order_details?.expected_ticket_delivery || "Not specified",
-    delivery_details: order_details?.delivery_status_label,
-    days_to_event: order_details?.days_left_to_event,
-    ticket_type: ticket_details?.ticket_type,
-    payout_date: order_details?.expected_payout_date,
+    delivery_details: order_details?.delivery_status_label || "-",
+    days_to_event: order_details?.days_left_to_event || "-",
+    ticket_type: ticket_details?.ticket_type || "-",
+    payout_date: formatTimestamp(order_details?.expected_payout_date) || "-",
   };
 
-  // Define OrderValueObject similar to OrderInfo
+  // Define OrderValueObject
   const OrderValueObject = [
     {
       key: "order_id",
@@ -104,29 +117,54 @@ console.log(data,'datadata')
       key: "payout_date",
     },
   ];
-console.log(ticket_details?.match_date)
-  const transformedTicketDetails = ticket_details
+
+  console.log(ticket_details?.match_date);
+
+  // Safe transformation of ticket details with comprehensive null checks
+  const transformedTicketDetails = ticket_details && typeof ticket_details === 'object' && Object.keys(ticket_details).length > 0
     ? {
-        match_name: ticket_details?.match_name,
-        venue: ticket_details?.venue_name,
-        match_date: new Date(ticket_details?.match_datetime)?.toLocaleDateString(),
-        match_time: new Date(ticket_details?.match_datetime)?.toLocaleTimeString(),
-        seat_category: ticket_details?.seat_category,
-        ticket_types: ticket_details?.ticket_type,
-        quantity: ticket_details?.quantity,
-        ticket_price: ticket_details?.total_paid_converted,
-        order_value: ticket_details?.ticket_price_converted,
-        currency_type: ticket_details?.currency,
+        match_name: ticket_details.match_name || "-",
+        venue: ticket_details.venue_name || "-",
+        match_date: ticket_details.match_datetime 
+          ? (() => {
+              try {
+                const date = new Date(ticket_details.match_datetime);
+                return isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
+              } catch (e) {
+                return "-";
+              }
+            })()
+          : "-",
+        match_time: ticket_details.match_datetime 
+          ? (() => {
+              try {
+                const date = new Date(ticket_details.match_datetime);
+                return isNaN(date.getTime()) ? "-" : date.toLocaleTimeString();
+              } catch (e) {
+                return "-";
+              }
+            })()
+          : "-",
+        seat_category: ticket_details.seat_category || "-",
+        ticket_types: ticket_details.ticket_type || "-",
+        quantity: ticket_details.quantity || 0,
+        ticket_price: ticket_details.total_paid_converted || 0,
+        order_value: ticket_details.ticket_price_converted || 0,
+        currency_type: ticket_details.currency || "USD",
       }
     : null;
+
   const bookingId = order_details?.booking_status_id;
 
   const handleCollapseModal = () => {
     setIsTransitioning(true);
     setExpandedVersion(!expandedVersion);
-    // Reset transitioning state after animation completes with a longer duration
+    // Reset transitioning state after animation completes
     setTimeout(() => setIsTransitioning(false), 600);
   };
+
+  // Check if we have valid data
+  const hasValidData = normalizedData && Object.keys(normalizedData).length > 0;
 
   return (
     <>
@@ -178,24 +216,27 @@ console.log(ticket_details?.match_date)
               transformOrigin: "center",
             }}
           >
+            {/* Header - Always rendered for close functionality */}
             <div className="flex items-center border-b-[1px] p-3 border-[#E0E1EA] justify-between">
               <p className="text-[16px] sm:text-[18px] text-[#343432]">
-                Order ID: {orderId}
+                {hasValidData ? `Order ID: ${orderId}` : "Order Details"}
               </p>
               <div className="flex items-center gap-2">
-                <button className="cursor-pointer">
-                  {expandedVersion ? (
-                    <IconStore.collapse
-                      onClick={handleCollapseModal}
-                      className="size-4 cursor-pointer stroke-[#130061] transition-transform duration-300 hover:scale-110"
-                    />
-                  ) : (
-                    <IconStore.expand
-                      onClick={handleCollapseModal}
-                      className="size-4 cursor-pointer stroke-[#130061] transition-transform duration-300 hover:scale-110"
-                    />
-                  )}
-                </button>
+                {hasValidData && (
+                  <button className="cursor-pointer">
+                    {expandedVersion ? (
+                      <IconStore.collapse
+                        onClick={handleCollapseModal}
+                        className="size-4 cursor-pointer stroke-[#130061] transition-transform duration-300 hover:scale-110"
+                      />
+                    ) : (
+                      <IconStore.expand
+                        onClick={handleCollapseModal}
+                        className="size-4 cursor-pointer stroke-[#130061] transition-transform duration-300 hover:scale-110"
+                      />
+                    )}
+                  </button>
+                )}
                 <button className="cursor-pointer">
                   <IconStore.close
                     onClick={onClose}
@@ -204,53 +245,87 @@ console.log(ticket_details?.match_date)
                 </button>
               </div>
             </div>
-            <div className="p-[16px] sm:p-[24px] flex flex-col gap-4">
-              {/* <CtaValues ctaText={ctaText} /> */}
-              <div
-                className={`flex gap-4 transition-custom ${
-                  expandedVersion ? "" : "flex-col"
-                }`}
-              >
+
+            {/* Content */}
+            {hasValidData ? (
+              <div className="p-[16px] sm:p-[24px] flex flex-col gap-4">
+                {/* <CtaValues ctaText={ctaText} /> */}
                 <div
-                  className={`transition-custom flex flex-col gap-4 ${
-                    expandedVersion ? "w-full sm:w-1/2" : "w-full"
+                  className={`flex gap-4 transition-custom ${
+                    expandedVersion ? "" : "flex-col"
                   }`}
                 >
-                  <OrderValues
-                    orderObject={orderObject}
-                    OrderValueObject={OrderValueObject}
-                  />
-                  {(bookingId == 4 || bookingId == 5 || bookingId == 6) && (
-                    <DownLoadYourTickets
-                      tickets={tickets}
-                      bookingId={order_details?.booking_id}
+                  <div
+                    className={`transition-custom flex flex-col gap-4 ${
+                      expandedVersion ? "w-full sm:w-1/2" : "w-full"
+                    }`}
+                  >
+                    <OrderValues
+                      orderObject={orderObject}
+                      OrderValueObject={OrderValueObject}
                     />
-                  )}
-                </div>
-                <div
-                  className={`flex flex-col gap-4  ${`transition-custom ${
-                    expandedVersion ? "w-full sm:w-1/2 h-full" : "w-full"
-                  }`}`}
-                >
-                  <CustomerDetails
-                    customerEmail={customer_details?.email}
-                    customerName={customer_details?.first_name}
-                    mobileNumber={customer_details?.mobile_no}
-                  />
+                    {(bookingId == 4 || bookingId == 5 || bookingId == 6) && 
+                     tickets && 
+                     typeof tickets === 'object' && 
+                     Object.keys(tickets).length > 0 && (
+                      <DownLoadYourTickets
+                        tickets={tickets}
+                        bookingId={order_details?.booking_id}
+                      />
+                    )}
+                  </div>
+                  <div
+                    className={`flex flex-col gap-4 ${`transition-custom ${
+                      expandedVersion ? "w-full sm:w-1/2 h-full" : "w-full"
+                    }`}`}
+                  >
+                    {customer_details && typeof customer_details === 'object' && (
+                      <CustomerDetails
+                        customerEmail={customer_details.email || ""}
+                        customerName={customer_details.first_name || ""}
+                        mobileNumber={customer_details.mobile_no || ""}
+                      />
+                    )}
 
-                  <PaymentOrderDetails payment_details={payment_details} />
+                    {payment_details && typeof payment_details === 'object' && (
+                      <PaymentOrderDetails payment_details={payment_details} />
+                    )}
+                  </div>
+                </div>
+                
+                {transformedTicketDetails && (
+                  <OrderedTickets ticket_details={transformedTicketDetails} />
+                )}
+                
+                {benefits_restrictions && Array.isArray(benefits_restrictions) && benefits_restrictions.length > 0 && (
+                  <Benifits
+                    expandedVersion={expandedVersion}
+                    benefits_restrictions={benefits_restrictions}
+                  />
+                )}
+                
+                {attendee_details && Array.isArray(attendee_details) && attendee_details.length > 0 && (
+                  <AttendeeDetails
+                    attendee_details={attendee_details}
+                    bookingId={order_details?.booking_id}
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="p-6 flex flex-col items-center justify-center min-h-[200px]">
+                <div className="text-center">
+                  <div className="mb-3">
+                    <div className="w-12 h-12 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-gray-400 text-xl">!</span>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Order Data Available</h3>
+                  <p className="text-gray-500 text-sm">
+                    The order information could not be loaded. Please try again later.
+                  </p>
                 </div>
               </div>
-              <OrderedTickets ticket_details={transformedTicketDetails} />
-              <Benifits
-                expandedVersion={expandedVersion}
-                benefits_restrictions={benefits_restrictions}
-              />
-              <AttendeeDetails
-                attendee_details={attendee_details}
-                bookingId={order_details?.booking_id}
-              />
-            </div>
+            )}
           </div>
         </div>
       </RightViewModal>

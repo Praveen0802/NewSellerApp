@@ -18,6 +18,7 @@ const PurchaseFolder = (props) => {
   const [listTicketDetails, setListTicketDetails] = useState(
     response?.data?.data
   );
+
   const [selectedTicketStatus, setSelectedTicketStatus] = useState("");
   const [selectedBookingStatus, setSelectedBookingStatus] = useState("");
 
@@ -69,7 +70,7 @@ const PurchaseFolder = (props) => {
   useEffect(() => {
     if (success == "true") {
       toast.success("Booking Completed successfully");
-      eyeIconClick({ booking_no: booking_no });
+      eyeIconClick({ booking_id: booking_no });
     }
   }, []);
   const eyeIconClick = async (item) => {
@@ -80,16 +81,16 @@ const PurchaseFolder = (props) => {
     }
 
     // Check if booking_id exists
-    if (!item.booking_no) {
+    if (!item.booking_id) {
       console.error("Booking ID is missing");
       return;
     }
 
     try {
       const response = await purchaseHistory("", {
-        booking_no: item.booking_no.includes("1BX")
-          ? item.booking_no.replace("1BX", "")
-          : `${item.booking_no}`,
+        booking_no: item.booking_id
+          ? item.booking_id
+          : `${item.booking_id}`,
       });
 
       // Check if response exists and has data
