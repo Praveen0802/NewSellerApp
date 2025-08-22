@@ -6,7 +6,7 @@ import grayCalendar from "../../../../public/gray-calendar.svg";
 import { desiredFormatDate, formatDateTime } from "@/utils/helperFunctions";
 
 const SearchedList = ({ item }) => {
-  const renderIconText = (icon, text,className='') => {
+  const renderIconText = (icon, text, className = "") => {
     return (
       <div className="flex gap-2 items-center">
         {icon}
@@ -28,19 +28,21 @@ const SearchedList = ({ item }) => {
         {renderIconText(
           <Image src={grayCalendar} width={16} height={16} alt="logo" />,
           desiredFormatDate(item?.match_date),
-          'whitespace-nowrap'
+          "whitespace-nowrap"
         )}
         {renderIconText(
           <Image src={grayClock} width={16} height={16} alt="logo" />,
           item?.match_time
         )}
-</div>
-        {renderIconText(
-          <Image src={grayLocation} width={16} height={16} alt="logo" />,
-          `${item?.stadium} , ${item?.city} , ${item?.country}`,
-          'truncate'
-        )}
-          </div>
+      </div>
+      {renderIconText(
+        <Image src={grayLocation} width={16} height={16} alt="logo" />,
+        `${item?.stadium}  ${item?.city ? `,${item?.city}` : ""}  ${
+          item?.country ? `,${item?.country}` : ""
+        }`,
+        "truncate"
+      )}
+    </div>
   );
 };
 
