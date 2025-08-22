@@ -54,7 +54,6 @@ const SalesPage = (props) => {
     order_status: profile,
     page: 1,
   });
-  console.log(filtersApplied, "filtersAppliedfiltersApplied");
   const { teamMembers } = useTeamMembersDetails();
 
   const [activeTab, setActiveTab] = useState(profile || "pending");
@@ -250,6 +249,9 @@ const SalesPage = (props) => {
   const formatTabName = (tabKey) => {
     if (!tabKey || typeof tabKey !== "string") {
       return "Pending";
+    }
+    if (tabKey == "confirmed") {
+      return "Awaiting Delivery";
     }
     return (
       tabKey.charAt(0).toUpperCase() + tabKey.slice(1).replace(/[-_]/g, " ")
