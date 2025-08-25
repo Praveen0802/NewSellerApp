@@ -1491,7 +1491,7 @@ const AddInventoryPage = (props) => {
   };
 
   return (
-    <div className="bg-[#F5F7FA] w-full max-h-[calc(100vh-100px)] overflow-auto relative min-h-screen">
+    <div className="bg-[#F5F7FA] w-full max-md:pb-[150px] max-h-[calc(100vh-100px)] overflow-auto relative min-h-screen">
       {/* Header with selected match info */}
       <ViewMapPopup
         image={matchDetails?.venue_image}
@@ -1502,8 +1502,8 @@ const AddInventoryPage = (props) => {
         blockDataColor={response?.block_data_color}
       />
       <div className="bg-white">
-        <div className="border-b-[1px] p-3 sm:p-4 lg:p-5 border-[#E0E1EA] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-5">
-          <div className="w-full flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
+        <div className="border-b-[1px] p-3 sm:p-4 lg:p-5 border-[#E0E1EA] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 lg:gap-5">
+          <div className="w-full flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 lg:gap-5">
             <FloatingLabelInput
               key="searchMatch"
               id="searchMatch"
@@ -1545,7 +1545,7 @@ const AddInventoryPage = (props) => {
                 setShowSearchDropdown(false);
                 setHasSearched(false);
               }}
-              parentClassName={`${"!w-[40%]"}`}
+              parentClassName={`${isMobile ? "!w-full" : isTablet ? "!w-[50%]" : "!w-[40%]"}`}
               data-search-container="true" // Add this
               labelClassName="text-[#7D82A4]"
             />
@@ -1553,13 +1553,13 @@ const AddInventoryPage = (props) => {
             {matchDetails && (
               <div
                 className={`flex ${
-                  isMobile ? "flex-col gap-2" : "gap-4"
+                  isMobile ? "flex-col gap-2" : isTablet ? "flex-wrap gap-3" : "gap-4"
                 } items-start ${isMobile ? "" : "sm:items-center"}`}
               >
                 <div
                   className={`flex ${
-                    isMobile ? "flex-wrap" : "gap-4"
-                  } items-center ${isMobile ? "gap-3" : ""}`}
+                    isMobile ? "flex-wrap gap-2" : isTablet ? "flex-wrap gap-3" : "gap-4"
+                  } items-center`}
                 >
                   <div
                     className={`flex gap-2 items-center ${
@@ -1635,17 +1635,19 @@ const AddInventoryPage = (props) => {
         </div>
         {matchDetails && (
           <>
-            {/* Mobile Filter Toggle Button */}
-            {isMobile && (
+            {/* Mobile/Tablet Filter Toggle Button */}
+            {(isMobile || isTablet) && (
               <div className="border-b-[1px] border-[#DADBE5] p-3">
                 <button
                   onClick={() => setShowMobileFilters(!showMobileFilters)}
-                  className="flex items-center gap-2 text-[#343432] font-medium text-sm"
+                  className={`flex items-center gap-2 text-[#343432] font-medium ${
+                    isMobile ? "text-sm" : "text-base"
+                  }`}
                 >
-                  <Menu size={16} />
+                  <Menu size={isMobile ? 16 : 18} />
                   {showMobileFilters ? "Hide Filters" : "Show Filters"}
                   <ChevronDown
-                    size={14}
+                    size={isMobile ? 14 : 16}
                     className={`transform transition-transform ${
                       showMobileFilters ? "rotate-180" : ""
                     }`}
@@ -1657,13 +1659,13 @@ const AddInventoryPage = (props) => {
             {/* Filter Section with Control Icons */}
             <div
               className={`border-b-[1px] border-[#DADBE5] p-3 sm:p-4 lg:p-5 ${
-                isMobile && !showMobileFilters ? "hidden" : ""
+                (isMobile || isTablet) && !showMobileFilters ? "hidden" : ""
               }`}
             >
               <div className="flex items-center justify-between">
                 <div
                   className={`flex ${
-                    isMobile ? "flex-col gap-3" : "flex-wrap gap-5"
+                    isMobile ? "flex-col gap-3" : isTablet ? "flex-wrap gap-4" : "flex-wrap gap-5"
                   } items-start ${isMobile ? "" : "sm:items-center"}`}
                 >
                   <FormFields

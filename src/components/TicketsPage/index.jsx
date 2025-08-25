@@ -61,20 +61,29 @@ import CommonInventoryTable from "../addInventoryPage/customInventoryTable";
 import BulkActionBar from "../addInventoryPage/bulkActionBar";
 import Tooltip from "../addInventoryPage/simmpleTooltip";
 
-const ShimmerCard = () => (
+const ShimmerCard = ({ isMobile, isSmallMobile }) => (
   <div className="border border-gray-200 rounded-lg mb-4 overflow-hidden animate-pulse">
     {/* Header Shimmer */}
-    <div className="bg-gray-300 px-3 py-2.5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+    <div className={`bg-gray-300 ${isSmallMobile ? 'px-2 py-2' : 'px-3 py-2.5'}`}>
+      <div className={`flex items-center ${isMobile ? 'flex-col space-y-2' : 'justify-between'}`}>
+        <div className={`flex items-center ${isMobile ? 'w-full justify-between' : 'space-x-3'}`}>
           <div className="w-4 h-4 bg-gray-400 rounded"></div>
-          <div className="w-48 h-4 bg-gray-400 rounded"></div>
-          <div className="flex items-center space-x-3">
+          <div className={`${isMobile ? 'w-32' : 'w-48'} h-4 bg-gray-400 rounded`}></div>
+          {!isMobile && (
+            <div className="flex items-center space-x-3">
+              <div className="w-20 h-3 bg-gray-400 rounded"></div>
+              <div className="w-16 h-3 bg-gray-400 rounded"></div>
+              <div className="w-24 h-3 bg-gray-400 rounded"></div>
+            </div>
+          )}
+        </div>
+        {isMobile && (
+          <div className="flex items-center space-x-3 w-full">
             <div className="w-20 h-3 bg-gray-400 rounded"></div>
             <div className="w-16 h-3 bg-gray-400 rounded"></div>
             <div className="w-24 h-3 bg-gray-400 rounded"></div>
           </div>
-        </div>
+        )}
         <div className="w-16 h-3 bg-gray-400 rounded"></div>
       </div>
     </div>
@@ -83,24 +92,24 @@ const ShimmerCard = () => (
     <div className="w-full bg-white">
       <div className="relative">
         {/* Table Header Shimmer */}
-        <div className="bg-gray-100 border-b border-gray-200 p-3">
-          <div className="flex space-x-4">
+        <div className={`bg-gray-100 border-b border-gray-200 ${isSmallMobile ? 'p-2' : 'p-3'}`}>
+          <div className={`flex ${isMobile ? 'space-x-2' : 'space-x-4'}`}>
             <div className="w-4 h-4 bg-gray-300 rounded"></div>
-            {Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="w-24 h-4 bg-gray-300 rounded"></div>
+            {Array.from({ length: isMobile ? 4 : 8 }).map((_, index) => (
+              <div key={index} className={`${isMobile ? 'w-16' : 'w-24'} h-4 bg-gray-300 rounded`}></div>
             ))}
           </div>
         </div>
 
         {/* Table Rows Shimmer */}
         {Array.from({ length: 3 }).map((_, rowIndex) => (
-          <div key={rowIndex} className="border-b border-gray-200 p-3">
-            <div className="flex space-x-4 items-center">
+          <div key={rowIndex} className={`border-b border-gray-200 ${isSmallMobile ? 'p-2' : 'p-3'}`}>
+            <div className={`flex ${isMobile ? 'space-x-2' : 'space-x-4'} items-center`}>
               <div className="w-4 h-4 bg-gray-200 rounded"></div>
-              {Array.from({ length: 8 }).map((_, colIndex) => (
+              {Array.from({ length: isMobile ? 4 : 8 }).map((_, colIndex) => (
                 <div
                   key={colIndex}
-                  className="w-24 h-4 bg-gray-200 rounded"
+                  className={`${isMobile ? 'w-16' : 'w-24'} h-4 bg-gray-200 rounded`}
                 ></div>
               ))}
             </div>
@@ -111,10 +120,10 @@ const ShimmerCard = () => (
   </div>
 );
 
-const ShimmerLoader = () => (
-  <div className="m-6 max-h-[calc(100vh-300px)] overflow-y-auto">
+const ShimmerLoader = ({ isMobile, isSmallMobile }) => (
+  <div className={`${isSmallMobile ? 'm-3' : 'm-6'} max-h-[calc(100vh-300px)] overflow-y-auto`}>
     {Array.from({ length: 2 }).map((_, index) => (
-      <ShimmerCard key={index} />
+      <ShimmerCard key={index} isMobile={isMobile} isSmallMobile={isSmallMobile} />
     ))}
   </div>
 );
@@ -125,6 +134,8 @@ const ActiveFilterPills = ({
   onFilterChange,
   onClearAllFilters,
   currentTab,
+  isMobile = false,
+  isSmallMobile = false,
 }) => {
   console.log(activeFilters, "activeFiltersactiveFilters");
   const getFilterDisplayValue = (filterKey, value, config) => {
@@ -177,8 +188,8 @@ const ActiveFilterPills = ({
         <Image
           onClick={onClearAllFilters}
           src={reloadIcon}
-          width={30}
-          height={30}
+          width={isSmallMobile ? 24 : 30}
+          height={isSmallMobile ? 24 : 30}
           className="cursor-pointer"
           alt="image-logo"
         />
@@ -186,17 +197,17 @@ const ActiveFilterPills = ({
       {activeEntries.map(({ key, value, displayValue }) => (
         <div
           key={key}
-          className="inline-flex items-center gap-1 px-3 py-1 border-1 border-gray-300  rounded-sm text-sm"
+          className={`inline-flex items-center gap-1 ${isSmallMobile ? 'px-2 py-0.5' : 'px-3 py-1'} border-1 border-gray-300 rounded-sm ${isSmallMobile ? 'text-xs' : 'text-sm'}`}
         >
           <span className="font-medium capitalize">
-            {key.replace(/_/g, " ")}:
+            {isMobile ? key.replace(/_/g, " ").split(" ")[0] : key.replace(/_/g, " ")}:
           </span>
-          <span>{displayValue}</span>
+          <span className={`${isMobile ? 'truncate max-w-16' : ''}`}>{displayValue}</span>
           <button
             onClick={() => onFilterChange(key, "", activeFilters, currentTab)}
             className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
           >
-            <X size={14} />
+            <X size={isSmallMobile ? 12 : 14} />
           </button>
         </div>
       ))}
@@ -216,37 +227,41 @@ const Pagination = ({
   onFilterChange,
   onClearAllFilters,
   currentTab,
+  isMobile = false,
+  isSmallMobile = false,
 }) => {
   return (
-    <div className="flex items-center justify-between px-6 bg-white ">
+    <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center justify-between'} ${isSmallMobile ? 'px-3' : 'px-6'} bg-white`}>
       {/* Left side - Total items count */}
-      <div className="flex items-center gap-4">
-        <div className="py-3 pr-4 border-r-[1px] border-r-[#E0E1EA] text-sm text-[#323A70] font-medium">
+      <div className={`flex items-center ${isMobile ? 'justify-between w-full' : 'gap-4'}`}>
+        <div className={`${isSmallMobile ? 'py-2 pr-2' : 'py-3 pr-4'} ${!isMobile ? 'border-r-[1px] border-r-[#E0E1EA]' : ''} ${isSmallMobile ? 'text-xs' : 'text-sm'} text-[#323A70] font-medium`}>
           {totalItems} Events
         </div>
-        <div className="flex items-center gap-4">
+        <div className={`flex items-center ${isMobile ? 'flex-1 justify-end' : 'gap-4'}`}>
           <ActiveFilterPills
             activeFilters={activeFilters}
             filterConfig={filterConfig}
             onFilterChange={onFilterChange}
             onClearAllFilters={onClearAllFilters}
             currentTab="tickets"
+            isMobile={isMobile}
+            isSmallMobile={isSmallMobile}
           />
         </div>
       </div>
 
       {/* Right side - View selector, page info and navigation */}
-      <div className="flex items-center space-x-6 py-3 border-l-[1px] border-l-[#E0E1EA] pl-4">
+      <div className={`flex items-center ${isMobile ? 'justify-between w-full space-x-2' : 'space-x-6'} ${isSmallMobile ? 'py-2' : 'py-3'} ${!isMobile ? 'border-l-[1px] border-l-[#E0E1EA] pl-4' : ''}`}>
         {/* View selector */}
-        <div className="flex items-center space-x-2 text-sm text-gray-700">
-          <span>View</span>
+        <div className={`flex items-center space-x-2 ${isSmallMobile ? 'text-xs' : 'text-sm'} text-gray-700`}>
+          {!isSmallMobile && <span>View</span>}
           <select
             value={itemsPerPage}
             onChange={(e) =>
               onItemsPerPageChange &&
               onItemsPerPageChange(parseInt(e.target.value))
             }
-            className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500 bg-white"
+            className={`border border-gray-300 rounded ${isSmallMobile ? 'px-1 py-0.5 text-xs' : 'px-2 py-1 text-sm'} focus:outline-none focus:border-blue-500 bg-white`}
           >
             <option value={10}>10</option>
             <option value={25}>25</option>
@@ -303,6 +318,24 @@ const TicketsPage = (props) => {
     () => response?.overview || {},
     [response?.overview]
   );
+
+  // Mobile breakpoint detection
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSmallMobile, setIsSmallMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      setIsSmallMobile(width < 480);
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width < 1024);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   const [listingHistoryData, setListingHistoryData] = useState(
     response?.listingHistory
@@ -3016,6 +3049,8 @@ const TicketsPage = (props) => {
             filterConfig={filterConfig}
             onFilterChange={handleFilterChange}
             onClearAllFilters={handleClearAllFilters}
+            isMobile={isMobile}
+            isSmallMobile={isSmallMobile}
             currentTab="tickets"
           />
         </div>
@@ -3023,7 +3058,7 @@ const TicketsPage = (props) => {
 
       {/* Main Content Area */}
       {isLoading ? (
-        <ShimmerLoader />
+        <ShimmerLoader isMobile={isMobile} isSmallMobile={isSmallMobile} />
       ) : (
         <div className="m-6 pb-[100px]">
           {Object.keys(ticketsByMatch).length > 0 ? (

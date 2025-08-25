@@ -52,6 +52,24 @@ const UploadTickets = ({
 }) => {
   const proofUploadView = rowData?.handleProofUpload || false;
   console.log(rowData, "rowDatarowData");
+  
+  // Mobile breakpoint detection
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSmallMobile, setIsSmallMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      setIsSmallMobile(width < 480);
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width < 1024);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
   const ticketTypes = !isNaN(parseInt(rowData?.ticket_type))
     ? rowData?.ticket_type
     : rowData?.ticket_types || rowData?.ticket_type_id;
@@ -435,35 +453,37 @@ const UploadTickets = ({
 
   // Common Match Header Component
   const MatchHeader = () => (
-    <div className="bg-[#343432] text-xs rounded-t-md text-white px-4 flex items-center justify-between min-w-0">
-      <div className="grid grid-cols-4 gap-2">
-        <h3 className="font-medium truncate py-3 flex-shrink-0 max-w-[200px] border-r border-[#51428E]">
+    <div className={`bg-[#343432] ${isSmallMobile ? 'text-[10px]' : 'text-xs'} rounded-t-md text-white ${isSmallMobile ? 'px-2' : 'px-4'} flex items-center justify-between min-w-0`}>
+      <div className={`${isMobile ? 'grid-cols-2 gap-1' : 'grid-cols-4 gap-2'} grid`}>
+        <h3 className={`font-medium truncate ${isSmallMobile ? 'py-2' : 'py-3'} flex-shrink-0 ${isSmallMobile ? 'max-w-[120px]' : isMobile ? 'max-w-[150px]' : 'max-w-[200px]'} ${isMobile ? 'col-span-2' : ''} border-r border-[#51428E]`}>
           {matchDetails?.match_name}
         </h3>
-        <div className="flex items-center gap-1 py-3 border-r border-[#51428E]">
-          <Calendar className="w-4 h-4 flex-shrink-0" />
-          <span className="text-xs whitespace-nowrap">
+        <div className={`flex items-center gap-1 ${isSmallMobile ? 'py-2' : 'py-3'} ${isMobile ? '' : 'border-r border-[#51428E]'}`}>
+          <Calendar className={`${isSmallMobile ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`} />
+          <span className={`${isSmallMobile ? 'text-[9px]' : 'text-xs'} whitespace-nowrap ${isMobile ? 'hidden sm:inline' : ''}`}>
             {matchDetails?.match_date_format ||
               rowData?.matchDate ||
               separateDateTime(matchDetails?.match_date)?.date}
           </span>
         </div>
-        <div className="flex items-center gap-1 border-r border-[#51428E]">
-          <Clock className="w-4 h-4 flex-shrink-0" />
-          <span className="text-xs whitespace-nowrap">
+        <div className={`flex items-center gap-1 ${isMobile ? '' : 'border-r border-[#51428E]'}`}>
+          <Clock className={`${isSmallMobile ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`} />
+          <span className={`${isSmallMobile ? 'text-[9px]' : 'text-xs'} whitespace-nowrap ${isMobile ? 'hidden sm:inline' : ''}`}>
             {matchDetails?.match_time || rowData?.matchTime}
           </span>
         </div>
-        <div className="flex items-center gap-1">
-          <MapPin className="w-4 h-4 flex-shrink-0" />
-          <span className="text-xs whitespace-nowrap">
-            {matchDetails?.stadium_name || rowData?.venue}
-          </span>
-        </div>
+        {!isMobile && (
+          <div className="flex items-center gap-1">
+            <MapPin className={`${isSmallMobile ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`} />
+            <span className={`${isSmallMobile ? 'text-[9px]' : 'text-xs'} whitespace-nowrap`}>
+              {matchDetails?.stadium_name || rowData?.venue}
+            </span>
+          </div>
+        )}
       </div>
       <div className="flex items-center gap-4 flex-shrink-0">
         <button className="flex-shrink-0">
-          <ChevronUp className="w-4 h-4" />
+          <ChevronUp className={`${isSmallMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
         </button>
       </div>
     </div>
@@ -471,58 +491,109 @@ const UploadTickets = ({
 
   // Common Ticket Details Component
   const TicketDetails = () => (
-    <div className="border-[1px] border-[#E0E1EA]  flex-shrink-0">
-      <div className="grid grid-cols-4 bg-gray-100 px-3 py-2 border-b border-gray-200">
-        <div className="text-xs font-medium text-[#323A70]">Listing ID</div>
-        <div className="text-xs font-medium text-[#323A70]">
+    <div className="border-[1px] border-[#E0E1EA] flex-shrink-0">
+      <div className={`${isMobile ? 'grid-cols-2' : 'grid-cols-4'} grid bg-gray-100 ${isSmallMobile ? 'px-2 py-1' : 'px-3 py-2'} border-b border-gray-200`}>
+        <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} font-medium text-[#323A70]`}>Listing ID</div>
+        <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} font-medium text-[#323A70]`}>
           {proofUploadView ? "Proof Required" : "Quantity"}
         </div>
-        <div className="text-xs font-medium text-[#323A70]">Ticket Details</div>
-        <div className="text-xs font-medium text-[#323A70]">
-          {ETicketsFlow
-            ? "Type"
-            : paperTicketFlow
-            ? "Type"
-            : proofUploadView
-            ? "Status"
-            : "Row (Seat)"}
-        </div>
+        {!isMobile && (
+          <>
+            <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} font-medium text-[#323A70]`}>Ticket Details</div>
+            <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} font-medium text-[#323A70]`}>
+              {ETicketsFlow
+                ? "Type"
+                : paperTicketFlow
+                ? "Type"
+                : proofUploadView
+                ? "Status"
+                : "Row (Seat)"}
+            </div>
+          </>
+        )}
       </div>
 
-      <div className="grid grid-cols-4 bg-[#F9F9FB] py-2 px-3 ">
-        <div className="text-xs truncate">
+      <div className={`${isMobile ? 'grid-cols-2' : 'grid-cols-4'} grid bg-[#F9F9FB] ${isSmallMobile ? 'py-1 px-2' : 'py-2 px-3'}`}>
+        <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} truncate`}>
           {myListingPage
             ? rowData?.rawTicketData?.s_no || rowData?.id || "N/A"
             : "-"}
         </div>
-        <div className="text-xs truncate">
+        <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} truncate`}>
           {proofUploadView ? "1 Document" : maxQuantity}
         </div>
-        <div className="text-xs truncate">
-          {rowData?.ticket_category || "N/A"}, {rowData?.ticket_block || ""}
-        </div>
-        <div className="text-xs truncate">
-          {[ticketTypes].flat().includes(2) ? (
-            "E-Ticket"
-          ) : ETicketsFlow ? (
-            "Mobile Ticket"
-          ) : paperTicketFlow ? (
-            "Paper Ticket"
-          ) : proofUploadView ? (
-            <>
-              {existingProofTickets ? (
-                <span className="text-[#323A70]">{"Uploaded"}</span>
-              ) : (
-                <span className="text-[#323A70]">{"Pending"}</span>
-              )}
-            </>
-          ) : (
-            <div className="flex gap-5 items-center justify-start">
-              <span>{rowData?.row || "0"} (0)</span>
+        {!isMobile && (
+          <>
+            <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} truncate`}>
+              {rowData?.ticket_category || "N/A"}, {rowData?.ticket_block || ""}
             </div>
-          )}
-        </div>
+            <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} truncate`}>
+              {[ticketTypes].flat().includes(2) ? (
+                "E-Ticket"
+              ) : ETicketsFlow ? (
+                "Mobile Ticket"
+              ) : paperTicketFlow ? (
+                "Paper Ticket"
+              ) : proofUploadView ? (
+                <>
+                  {existingProofTickets ? (
+                    <span className="text-[#323A70]">{"Uploaded"}</span>
+                  ) : (
+                    <span className="text-[#323A70]">{"Pending"}</span>
+                  )}
+                </>
+              ) : (
+                <div className="flex gap-5 items-center justify-start">
+                  <span>{rowData?.row || "0"} (0)</span>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
+      {/* Mobile additional info row */}
+      {isMobile && (
+        <div className="grid grid-cols-2 bg-[#F9F9FB] border-t border-gray-200 px-2 py-1">
+          <div>
+            <div className={`${isSmallMobile ? 'text-[9px]' : 'text-[10px]'} text-gray-600 font-medium`}>Details</div>
+            <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} truncate`}>
+              {rowData?.ticket_category || "N/A"}, {rowData?.ticket_block || ""}
+            </div>
+          </div>
+          <div>
+            <div className={`${isSmallMobile ? 'text-[9px]' : 'text-[10px]'} text-gray-600 font-medium`}>
+              {ETicketsFlow
+                ? "Type"
+                : paperTicketFlow
+                ? "Type"
+                : proofUploadView
+                ? "Status"
+                : "Row (Seat)"}
+            </div>
+            <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} truncate`}>
+              {[ticketTypes].flat().includes(2) ? (
+                "E-Ticket"
+              ) : ETicketsFlow ? (
+                "Mobile Ticket"
+              ) : paperTicketFlow ? (
+                "Paper Ticket"
+              ) : proofUploadView ? (
+                <>
+                  {existingProofTickets ? (
+                    <span className="text-[#323A70]">{"Uploaded"}</span>
+                  ) : (
+                    <span className="text-[#323A70]">{"Pending"}</span>
+                  )}
+                </>
+              ) : (
+                <div className="flex gap-5 items-center justify-start">
+                  <span>{rowData?.row || "0"} (0)</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -1099,20 +1170,20 @@ const UploadTickets = ({
       <>
         {/* Drag and drop area */}
         <div
-          className={`border-1 bg-[#F9F9FB] border-dashed border-[#130061] rounded-lg p-4 flex flex-col gap-1 items-center justify-center ${
+          className={`border-1 bg-[#F9F9FB] border-dashed border-[#130061] rounded-lg ${isSmallMobile ? 'p-2' : 'p-4'} flex flex-col gap-1 items-center justify-center ${
             isDragAreaDisabled ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
-          <Image src={uploadImage} width={42} height={42} alt="Upload" />
-          <p className="text-xs text-[#323A70] mb-1">{getUploadMessage()}</p>
+          <Image src={uploadImage} width={isSmallMobile ? 32 : 42} height={isSmallMobile ? 32 : 42} alt="Upload" />
+          <p className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} text-[#323A70] mb-1 text-center`}>{getUploadMessage()}</p>
           {!isDragAreaDisabled && (
             <>
-              <p className="text-xs text-gray-500">OR</p>
+              <p className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} text-gray-500`}>OR</p>
               <Button
                 onClick={handleBrowseFiles}
                 classNames={{
-                  root: "py-2 border-1 border-[#0137D5] rounded-sm ",
-                  label_: "text-[12px] font-medium !text-[#343432]",
+                  root: `${isSmallMobile ? 'py-1' : 'py-2'} border-1 border-[#0137D5] rounded-sm`,
+                  label_: `${isSmallMobile ? 'text-[10px]' : 'text-[12px]'} font-medium !text-[#343432]`,
                 }}
               >
                 Browse Files
@@ -1138,13 +1209,13 @@ const UploadTickets = ({
         {/* Uploaded files list */}
         <div className="flex-1">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="text-sm font-medium text-[#323A70]">
+            <h3 className={`${isSmallMobile ? 'text-xs' : 'text-sm'} font-medium text-[#323A70] truncate`}>
               {proofUploadView
-                ? `Proof Document (${currentUploadedFiles.length}/1)`
-                : `Uploaded Files (${currentUploadedFiles.length})`}
+                ? (isMobile ? `Proof (${currentUploadedFiles.length}/1)` : `Proof Document (${currentUploadedFiles.length}/1)`)
+                : (isMobile ? `Files (${currentUploadedFiles.length})` : `Uploaded Files (${currentUploadedFiles.length})`)}
             </h3>
-            <div className="flex items-center gap-x-2">
-              <span className="text-xs text-[#323A70]">Show assigned</span>
+            <div className="flex items-center gap-x-2 flex-shrink-0">
+              <span className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} text-[#323A70] ${isMobile ? 'hidden' : ''}`}>Show assigned</span>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -1154,7 +1225,7 @@ const UploadTickets = ({
                     setShowAssigned((prev) => !prev);
                   }}
                 />
-                <div className="w-7 h-3 bg-gray-200 peer-checked:bg-[#64EAA540] rounded-full transition-all peer peer-checked:after:translate-x-full peer-checked:after:bg-[#64EAA5] after:content-[''] after:absolute after:-top-0.5 after:-left-0.5 after:bg-gray-400 after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md peer-checked:bg-100"></div>
+                <div className={`${isSmallMobile ? 'w-6 h-2.5' : 'w-7 h-3'} bg-gray-200 peer-checked:bg-[#64EAA540] rounded-full transition-all peer peer-checked:after:translate-x-full peer-checked:after:bg-[#64EAA5] after:content-[''] after:absolute ${isSmallMobile ? 'after:-top-0.5 after:-left-0.5 after:h-3.5 after:w-3.5' : 'after:-top-0.5 after:-left-0.5 after:h-4 after:w-4'} after:bg-gray-400 after:rounded-full after:transition-all after:shadow-md peer-checked:bg-100`}></div>
               </label>
             </div>
           </div>
@@ -1171,7 +1242,7 @@ const UploadTickets = ({
                   draggable={canTransferFile(file.id)}
                   onDragStart={(e) => handleDragStart(e, file)}
                   onDragEnd={handleDragEnd}
-                  className={`flex items-center border border-[#eaeaf1] bg-[#F9F9FB] justify-between px-[8px] py-[5px]  transition-all duration-200 ${
+                  className={`flex items-center border border-[#eaeaf1] bg-[#F9F9FB] justify-between ${isSmallMobile ? 'px-1 py-1' : 'px-[8px] py-[5px]'} transition-all duration-200 ${
                     canTransferFile(file.id)
                       ? "cursor-grab hover:bg-blue-50 hover:border-l-4 hover:border-l-blue-500"
                       : "cursor-not-allowed opacity-60"
@@ -1182,7 +1253,7 @@ const UploadTickets = ({
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-[12px] text-[#323A70] truncate max-w-32">
+                    <span className={`${isSmallMobile ? 'text-[10px] max-w-20' : 'text-[12px] max-w-32'} text-[#323A70] truncate`}>
                       {file.name}
                     </span>
                   </div>
@@ -1193,17 +1264,17 @@ const UploadTickets = ({
                       onClick={() => handleTransferSingleFile(file.id)}
                       disabled={!canTransferFile(file.id)}
                       classNames={{
-                        root: `py-[4px] px-[6px] cursor-pointer rounded-sm text-[10px] ${
+                        root: `${isSmallMobile ? 'py-1 px-1' : 'py-[4px] px-[6px]'} cursor-pointer rounded-sm ${isSmallMobile ? 'text-[8px]' : 'text-[10px]'} ${
                           canTransferFile(file.id)
                             ? "bg-[#343432] text-white hover:bg-[#343432]/90"
                             : "bg-gray-300 text-gray-500 cursor-not-allowed"
                         }`,
                         label_:
-                          "text-[10px] font-medium flex items-center gap-1",
+                          `${isSmallMobile ? 'text-[8px]' : 'text-[10px]'} font-medium flex items-center gap-1`,
                       }}
                     >
                       {proofUploadView ? "Attach" : "Add"}{" "}
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight className={`${isSmallMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                     </Button>
                     <button
                       className="pl-2 text-[#130061]  cursor-pointer hover:text-blue-700"
@@ -1214,13 +1285,13 @@ const UploadTickets = ({
                           : "Preview file"
                       }
                     >
-                      <Eye className="w-3.5 h-3.5" />
+                      <Eye className={`${isSmallMobile ? 'w-3 h-3' : 'w-3.5 h-3.5'}`} />
                     </button>
                     <button
-                      className="p-1 text-[#130061] cursor-pointer"
+                      className={`${isSmallMobile ? 'p-0.5' : 'p-1'} text-[#130061] cursor-pointer`}
                       onClick={() => handleDeleteUploaded(file.id)}
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className={`${isSmallMobile ? 'w-2.5 h-2.5' : 'w-3 h-3'}`} />
                     </button>
                   </div>
                 </div>
@@ -1538,19 +1609,19 @@ const UploadTickets = ({
   return (
     <div>
       <RightViewModal
-        className="!w-[80vw]"
+        className={isMobile ? "!w-[95vw] !h-[95vh]" : isTablet ? "!w-[90vw]" : "!w-[80vw]"}
         show={show}
         onClose={() => onClose(false)}
       >
         <div className="w-full h-full bg-white rounded-lg relative flex flex-col">
           {/* Header */}
-          <div className="flex justify-between items-center p-4 border-b border-[#E0E1EA] flex-shrink-0">
-            <h2 className="text-lg font-medium text-[#323A70]">
+          <div className={`flex justify-between items-center ${isSmallMobile ? 'p-2' : 'p-4'} border-b border-[#E0E1EA] flex-shrink-0`}>
+            <h2 className={`${isSmallMobile ? 'text-base' : isMobile ? 'text-lg' : 'text-lg'} font-medium text-[#323A70] ${isMobile ? 'truncate' : ''}`}>
               {getModalTitle()}
-              {getModalSubtitle()}
+              {!isSmallMobile && getModalSubtitle()}
             </h2>
-            <button onClick={() => onClose(false)} className="text-gray-500">
-              <X className="w-5 h-5 cursor-pointer" />
+            <button onClick={() => onClose(false)} className="text-gray-500 flex-shrink-0">
+              <X className={`${isSmallMobile ? 'w-4 h-4' : 'w-5 h-5'} cursor-pointer`} />
             </button>
           </div>
 
@@ -1575,23 +1646,23 @@ const UploadTickets = ({
           />
 
           {/* Footer */}
-          <div className="flex justify-between items-center p-3 bg-gray-50 border-t border-gray-200 flex-shrink-0">
-            <div className="flex gap-4 justify-end w-full">
+          <div className={`flex justify-between items-center ${isSmallMobile ? 'p-2' : 'p-3'} bg-gray-50 border-t border-gray-200 flex-shrink-0`}>
+            <div className={`flex ${isMobile ? 'gap-2 flex-col w-full' : 'gap-4 justify-end w-full'}`}>
               <button
                 onClick={() => onClose(false)}
-                className="px-4 py-2 border border-gray-300 rounded text-gray-700 text-sm hover:bg-gray-50"
+                className={`${isSmallMobile ? 'px-3 py-1.5' : 'px-4 py-2'} border border-gray-300 rounded text-gray-700 ${isSmallMobile ? 'text-xs' : 'text-sm'} hover:bg-gray-50 ${isMobile ? 'order-2' : ''}`}
               >
                 Cancel
               </button>
               <Button
-                className={`px-4 py-2 ${
+                className={`${isSmallMobile ? 'px-3 py-1.5' : 'px-4 py-2'} ${
                   isConfirmDisabled ? "bg-gray-300" : "bg-green-500"
-                } text-white rounded text-sm disabled:bg-gray-300 flex gap-2 items-center disabled:cursor-not-allowed`}
+                } text-white rounded ${isSmallMobile ? 'text-xs' : 'text-sm'} disabled:bg-gray-300 flex gap-2 items-center disabled:cursor-not-allowed ${isMobile ? 'order-1' : ''}`}
                 disabled={isConfirmDisabled}
                 loading={isLoading}
                 onClick={handleConfirmCtaClick}
               >
-                {proofUploadView ? "Submit Proof" : "Confirm"}
+                {proofUploadView ? (isMobile ? "Submit" : "Submit Proof") : "Confirm"}
               </Button>
             </div>
           </div>

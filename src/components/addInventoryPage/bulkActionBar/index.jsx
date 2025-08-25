@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Check,
   X,
@@ -38,9 +38,26 @@ const BulkActionBar = ({
   hasAnyClonedSelected = false,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSmallMobile, setIsSmallMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
   // NEW: State for delete confirmation modal
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Mobile breakpoint detection
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      setIsSmallMobile(width < 480);
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width < 1024);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   const { showFullDisplay } = useSelector((state) => state.common);
 
@@ -105,14 +122,14 @@ const BulkActionBar = ({
     <>
       <div
         className={`fixed bottom-0 ${
-          showFullDisplay ? "left-40" : "left-10"
+          showFullDisplay ? (isMobile ? "left-0" : "left-40") : (isMobile ? "left-0" : "left-10")
         } right-0 border-t border-gray-200 shadow-lg z-50 ${
           disabled ? "bg-gray-100 " : "bg-white"
         }`}
       >
-        <div className="flex items-center justify-between px-10 py-2">
+        <div className={`flex ${isMobile ? 'flex-col space-y-2 px-2 py-2' : 'items-center justify-between px-10 py-2'}`}>
           {/* Left side - Action buttons */}
-          <div className="flex items-center gap-6">
+          <div className={`flex items-center ${isMobile ? 'flex-wrap gap-2' : isTablet ? 'gap-4' : 'gap-6'} ${isMobile ? 'w-full justify-center' : ''}`}>
             {!isEditMode ? (
               <>
                 {/* Normal mode buttons */}
@@ -120,7 +137,7 @@ const BulkActionBar = ({
                 <button
                   onClick={onSelectAll}
                   disabled={selectAllDisabled}
-                  className={`flex px-2 py-1 cursor-pointer items-center space-x-2 text-[13px] rounded-md transition-colors ${
+                  className={`flex ${isSmallMobile ? 'px-1 py-0.5' : 'px-2 py-1'} cursor-pointer items-center space-x-2 ${isSmallMobile ? 'text-[11px]' : 'text-[13px]'} rounded-md transition-colors ${
                     selectAllDisabled
                       ? "text-gray-400 cursor-not-allowed bg-gray-200"
                       : "text-gray-600 hover:text-blue-800 hover:bg-blue-50"
@@ -136,14 +153,14 @@ const BulkActionBar = ({
                         : "border-[#DADBE5] bg-white hover:bg-blue-50"
                     }`}
                   >
-                    {allSelected && <Check size={12} className="text-white" />}
+                    {allSelected && <Check size={isSmallMobile ? 10 : 12} className="text-white" />}
                   </div>
                   <span
-                    className={`text-[14px] ${
+                    className={`${isSmallMobile ? 'text-[12px]' : 'text-[14px]'} ${
                       selectAllDisabled ? "text-gray-400" : "text-[#323A70]"
                     }`}
                   >
-                    Select all
+                    {isMobile ? 'Select' : 'Select all'}
                   </span>
                 </button>
 
@@ -151,7 +168,7 @@ const BulkActionBar = ({
                 <button
                   onClick={onDeselectAll}
                   disabled={disabled || selectedCount === 0}
-                  className={`flex items-center bg-[#F0F1F5] cursor-pointer px-2 py-1 space-x-2 text-[13px] rounded-md transition-colors ${
+                  className={`flex items-center bg-[#F0F1F5] cursor-pointer ${isSmallMobile ? 'px-1 py-0.5' : 'px-2 py-1'} space-x-2 ${isSmallMobile ? 'text-[11px]' : 'text-[13px]'} rounded-md transition-colors ${
                     disabled || selectedCount === 0
                       ? "text-gray-400 cursor-not-allowed bg-gray-200"
                       : "text-gray-600 hover:text-gray-800 hover:bg-gray-100"
@@ -163,16 +180,16 @@ const BulkActionBar = ({
                         ? "text-gray-400"
                         : "text-[#343432]"
                     }
-                    size={16}
+                    size={isSmallMobile ? 14 : 16}
                   />
                   <span
-                    className={`text-[14px] ${
+                    className={`${isSmallMobile ? 'text-[12px]' : 'text-[14px]'} ${
                       disabled || selectedCount === 0
                         ? "text-gray-400"
                         : "text-[#323A70]"
                     }`}
                   >
-                    Deselect all
+                    {isMobile ? 'Deselect' : 'Deselect all'}
                   </span>
                 </button>
 
@@ -183,7 +200,7 @@ const BulkActionBar = ({
                     disabled={
                       disabled || selectedCount === 0 || areAllSelectedCloned
                     }
-                    className={`flex items-center bg-[#F0F1F5] cursor-pointer px-2 py-1 space-x-2 text-[13px] rounded-md transition-colors ${
+                    className={`flex items-center bg-[#F0F1F5] cursor-pointer ${isSmallMobile ? 'px-1 py-0.5' : 'px-2 py-1'} space-x-2 ${isSmallMobile ? 'text-[11px]' : 'text-[13px]'} rounded-md transition-colors ${
                       disabled || selectedCount === 0 || areAllSelectedCloned
                         ? "text-gray-400 cursor-not-allowed bg-gray-200"
                         : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
@@ -195,10 +212,10 @@ const BulkActionBar = ({
                           ? "text-gray-400"
                           : "text-[#343432]"
                       }
-                      size={16}
+                      size={isSmallMobile ? 14 : 16}
                     />
                     <span
-                      className={`text-[14px] ${
+                      className={`${isSmallMobile ? 'text-[12px]' : 'text-[14px]'} ${
                         disabled || selectedCount === 0 || areAllSelectedCloned
                           ? "text-gray-400"
                           : "text-[#323A70]"
@@ -209,8 +226,8 @@ const BulkActionBar = ({
                   </button>
                   {/* Tooltip for disabled clone */}
                   {areAllSelectedCloned && (
-                    <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                      Cannot clone already cloned tickets
+                    <div className={`absolute ${isMobile ? 'top-full mt-2' : 'bottom-full mb-2'} left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50`}>
+                      {isMobile ? 'Cannot clone cloned tickets' : 'Cannot clone already cloned tickets'}
                     </div>
                   )}
                 </div>
@@ -220,7 +237,7 @@ const BulkActionBar = ({
                   <button
                     onClick={onEdit}
                     disabled={editDisabled}
-                    className={`flex items-center space-x-2 bg-[#F0F1F5] cursor-pointer px-2 py-1 text-[13px] rounded-md transition-colors ${
+                    className={`flex items-center space-x-2 bg-[#F0F1F5] cursor-pointer ${isSmallMobile ? 'px-1 py-0.5' : 'px-2 py-1'} ${isSmallMobile ? 'text-[11px]' : 'text-[13px]'} rounded-md transition-colors ${
                       editDisabled
                         ? "text-gray-400 cursor-not-allowed bg-gray-200"
                         : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
@@ -230,19 +247,19 @@ const BulkActionBar = ({
                       className={
                         editDisabled ? "text-gray-400" : "text-[#343432]"
                       }
-                      size={16}
+                      size={isSmallMobile ? 14 : 16}
                     />
                     <span
-                      className={`text-[14px] ${
+                      className={`${isSmallMobile ? 'text-[12px]' : 'text-[14px]'} ${
                         editDisabled ? "text-gray-400" : "text-[#323A70]"
                       }`}
                     >
-                      {selectedCount > 1 ? "Bulk Edit" : "Edit"}
+                      {isMobile ? "Edit" : (selectedCount > 1 ? "Bulk Edit" : "Edit")}
                     </span>
                   </button>
                   {/* Tooltip for disabled edit */}
                   {hasAnyClonedSelected && !areAllSelectedCloned && (
-                    <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    <div className={`absolute ${isMobile ? 'top-full mt-2' : 'bottom-full mb-2'} left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50`}>
                       Cannot edit cloned tickets
                     </div>
                   )}
@@ -252,7 +269,7 @@ const BulkActionBar = ({
                 <button
                   onClick={handleDeleteClick} // Changed from onDelete to handleDeleteClick
                   disabled={disabled || selectedCount === 0}
-                  className={`flex items-center space-x-2 bg-[#F0F1F5] cursor-pointer px-2 py-1 text-[13px] rounded-md transition-colors ${
+                  className={`flex items-center space-x-2 bg-[#F0F1F5] cursor-pointer ${isSmallMobile ? 'px-1 py-0.5' : 'px-2 py-1'} ${isSmallMobile ? 'text-[11px]' : 'text-[13px]'} rounded-md transition-colors ${
                     disabled || selectedCount === 0
                       ? "text-gray-400 cursor-not-allowed bg-gray-200"
                       : "hover:bg-red-50"
@@ -264,10 +281,10 @@ const BulkActionBar = ({
                         ? "text-gray-400"
                         : "text-[#343432]"
                     }
-                    size={16}
+                    size={isSmallMobile ? 14 : 16}
                   />
                   <span
-                    className={`text-[14px] ${
+                    className={`${isSmallMobile ? 'text-[12px]' : 'text-[14px]'} ${
                       disabled || selectedCount === 0
                         ? "text-gray-400"
                         : "text-[#323A70]"
@@ -282,7 +299,7 @@ const BulkActionBar = ({
                   <button
                     onClick={onPublishCloned}
                     disabled={disabled || loading || selectedClonedCount === 0}
-                    className={`flex items-center space-x-2 px-3 py-1 text-[13px] rounded-md transition-colors font-medium ${
+                    className={`flex items-center space-x-2 ${isSmallMobile ? 'px-2 py-0.5' : 'px-3 py-1'} ${isSmallMobile ? 'text-[11px]' : 'text-[13px]'} rounded-md transition-colors font-medium ${
                       disabled || loading || selectedClonedCount === 0
                         ? "bg-gray-400 text-white cursor-not-allowed"
                         : "bg-blue-600 hover:bg-blue-700 text-white"
@@ -296,7 +313,7 @@ const BulkActionBar = ({
                     ) : (
                       <>
                         <Upload size={16} />
-                        <span>Publish Cloned ({selectedClonedCount})</span>
+                        <span>{isMobile ? `Publish (${selectedClonedCount})` : `Publish Cloned (${selectedClonedCount})`}</span>
                       </>
                     )}
                   </button>
@@ -305,12 +322,12 @@ const BulkActionBar = ({
             ) : (
               <>
                 {/* Edit mode buttons */}
-                <div className="flex items-center space-x-2 text-sm font-medium bg-blue-50 px-3 py-1 rounded-md">
+                <div className={`flex items-center space-x-2 ${isSmallMobile ? 'text-xs' : 'text-sm'} font-medium bg-blue-50 ${isSmallMobile ? 'px-2 py-0.5' : 'px-3 py-1'} rounded-md`}>
                   {selectedCount > 1 ? (
                     <>
-                      <Users size={16} className="text-gray-600" />
+                      <Users size={isSmallMobile ? 14 : 16} className="text-gray-600" />
                       <span className="text-gray-600">
-                        Bulk Edit Mode Active
+                        {isMobile ? 'Bulk Edit' : 'Bulk Edit Mode Active'}
                       </span>
                       <span className="text-blue-500 text-xs">
                         ({selectedCount} rows)
@@ -318,15 +335,15 @@ const BulkActionBar = ({
                     </>
                   ) : (
                     <>
-                      <Edit size={16} className="text-gray-600" />
-                      <span className="text-gray-600">Edit Mode Active</span>
+                      <Edit size={isSmallMobile ? 14 : 16} className="text-gray-600" />
+                      <span className="text-gray-600">{isMobile ? 'Edit Mode' : 'Edit Mode Active'}</span>
                     </>
                   )}
                 </div>
 
                 {/* Bulk edit info */}
-                {selectedCount > 1 && (
-                  <div className="text-sm text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-200">
+                {selectedCount > 1 && !isMobile && (
+                  <div className={`${isSmallMobile ? 'text-xs' : 'text-sm'} text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-200`}>
                     <span className="font-medium">💡 Tip:</span> Changes to any
                     field will apply to all selected rows
                   </div>
@@ -335,32 +352,32 @@ const BulkActionBar = ({
                 {/* Save Button */}
                 <button
                   onClick={onSaveEdit}
-                  className="flex items-center space-x-2 bg-green-600 text-white px-3 py-1 text-[13px] rounded-md transition-colors hover:bg-green-700"
+                  className={`flex items-center space-x-2 bg-green-600 text-white ${isSmallMobile ? 'px-2 py-0.5' : 'px-3 py-1'} ${isSmallMobile ? 'text-[11px]' : 'text-[13px]'} rounded-md transition-colors hover:bg-green-700`}
                 >
-                  <Save size={16} />
-                  <span>Save Changes</span>
+                  <Save size={isSmallMobile ? 14 : 16} />
+                  <span>{isMobile ? 'Save' : 'Save Changes'}</span>
                 </button>
 
                 {/* Cancel Button */}
                 <button
                   onClick={onCancelEdit}
-                  className="flex items-center space-x-2 bg-gray-500 text-white px-3 py-1 text-[13px] rounded-md transition-colors hover:bg-gray-600"
+                  className={`flex items-center space-x-2 bg-gray-500 text-white ${isSmallMobile ? 'px-2 py-0.5' : 'px-3 py-1'} ${isSmallMobile ? 'text-[11px]' : 'text-[13px]'} rounded-md transition-colors hover:bg-gray-600`}
                 >
-                  <X size={16} />
-                  <span>Cancel Edit</span>
+                  <X size={isSmallMobile ? 14 : 16} />
+                  <span>{isMobile ? 'Cancel' : 'Cancel Edit'}</span>
                 </button>
               </>
             )}
           </div>
 
           {/* Right side - Selection info and actions */}
-          <div className="flex items-center space-x-4">
+          <div className={`flex items-center ${isMobile ? 'flex-wrap gap-2 w-full justify-center mt-2' : isTablet ? 'space-x-3' : 'space-x-4'}`}>
             {!isEditMode ? (
               <>
                 {/* Normal mode right side */}
                 {/* Selection count info with clone status */}
-                <div className="flex items-center space-x-2">
-                  <div className="text-sm text-gray-600">
+                <div className={`flex items-center space-x-2 ${isMobile ? 'w-full justify-center' : ''}`}>
+                  <div className={`${isSmallMobile ? 'text-xs' : 'text-sm'} text-gray-600`}>
                     <span className="font-medium">
                       {getSelectionStatusText()}
                     </span>
@@ -368,13 +385,13 @@ const BulkActionBar = ({
 
                   {/* NEW: Clone status indicators */}
                   {hasAnyClonedSelected && !areAllSelectedCloned && (
-                    <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">
-                      Mixed selection
+                    <span className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} text-orange-600 bg-orange-100 ${isSmallMobile ? 'px-1 py-0.5' : 'px-2 py-1'} rounded`}>
+                      {isMobile ? 'Mixed' : 'Mixed selection'}
                     </span>
                   )}
                   {areAllSelectedCloned && (
-                    <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                      Cloned tickets
+                    <span className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} text-blue-600 bg-blue-100 ${isSmallMobile ? 'px-1 py-0.5' : 'px-2 py-1'} rounded`}>
+                      {isMobile ? 'Cloned' : 'Cloned tickets'}
                     </span>
                   )}
                 </div>
@@ -385,7 +402,7 @@ const BulkActionBar = ({
                     <button
                       onClick={onDeselectAll}
                       disabled={disabled || selectedCount === 0}
-                      className={`px-4 py-2 text-sm border rounded-md transition-colors font-medium ${
+                      className={`${isSmallMobile ? 'px-2 py-1' : 'px-4 py-2'} ${isSmallMobile ? 'text-xs' : 'text-sm'} border rounded-md transition-colors font-medium ${
                         disabled || selectedCount === 0
                           ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
                           : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
@@ -399,7 +416,7 @@ const BulkActionBar = ({
                       <button
                         onClick={onPublishLive}
                         disabled={disabled || loading || selectedCount === 0}
-                        className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                        className={`${isSmallMobile ? 'px-3 py-1' : 'px-6 py-2'} rounded-md ${isSmallMobile ? 'text-xs' : 'text-sm'} font-medium transition-colors ${
                           disabled || loading || selectedCount === 0
                             ? "bg-gray-400 text-white cursor-not-allowed"
                             : "bg-green-600 hover:bg-green-700 text-white"
@@ -407,13 +424,15 @@ const BulkActionBar = ({
                       >
                         {loading ? (
                           <div className="flex items-center space-x-2">
-                            <Loader2 size={16} className="animate-spin" />
-                            <span>PUBLISHING...</span>
+                            <Loader2 size={isSmallMobile ? 14 : 16} className="animate-spin" />
+                            <span>{isMobile ? 'Publishing...' : 'PUBLISHING...'}</span>
                           </div>
                         ) : (
-                          `PUBLISH LIVE ${
-                            selectedCount > 0 ? `(${selectedCount})` : ""
-                          }`
+                          isMobile 
+                            ? `PUBLISH (${selectedCount})`
+                            : `PUBLISH LIVE ${
+                                selectedCount > 0 ? `(${selectedCount})` : ""
+                              }`
                         )}
                       </button>
                     )}
@@ -425,7 +444,7 @@ const BulkActionBar = ({
                   <button
                     onClick={onDeselectAll}
                     disabled={disabled || selectedCount === 0}
-                    className={`px-4 py-2 text-sm border rounded-md transition-colors font-medium ${
+                    className={`${isSmallMobile ? 'px-2 py-1' : 'px-4 py-2'} ${isSmallMobile ? 'text-xs' : 'text-sm'} border rounded-md transition-colors font-medium ${
                       disabled || selectedCount === 0
                         ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
                         : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
@@ -438,7 +457,7 @@ const BulkActionBar = ({
             ) : (
               <>
                 {/* Edit mode right side */}
-                <div className="text-sm text-gray-600">
+                <div className={`${isSmallMobile ? 'text-xs' : 'text-sm'} text-gray-600 ${isMobile ? 'text-center w-full' : ''}`}>
                   Editing {selectedCount} row{selectedCount !== 1 ? "s" : ""} of{" "}
                   {totalCount}
                 </div>

@@ -70,6 +70,7 @@ const CommonInventoryTable = ({
   const [showMarketPlaceModal, setShowMarketPlaceModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
+  const [isSmallMobile, setIsSmallMobile] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(defaultOpen ? false : true);
   const [confirmLoading, setConfirmLoading] = useState(false);
 
@@ -160,8 +161,8 @@ const CommonInventoryTable = ({
 
     // Default responsive widths
     return {
-      minWidth: isMobile ? "100px" : "130px",
-      width: isMobile ? "100px" : "130px",
+      minWidth: isSmallMobile ? "80px" : isMobile ? "100px" : isTablet ? "120px" : "130px",
+      width: isSmallMobile ? "80px" : isMobile ? "100px" : isTablet ? "120px" : "130px",
     };
   };
 
@@ -169,6 +170,7 @@ const CommonInventoryTable = ({
   useEffect(() => {
     const checkScreenSize = () => {
       const width = window.innerWidth;
+      setIsSmallMobile(width < 480);
       setIsMobile(width < 768);
       setIsTablet(width >= 768 && width < 1024);
     };
@@ -838,7 +840,7 @@ const CommonInventoryTable = ({
             className={`absolute top-0 left-0 h-full bg-white border-r border-[#DADBE5] z-30 transition-shadow duration-200 ${
               hasScrolledLeft ? "shadow-md" : ""
             }`}
-            style={{ width: isMobile ? `40px` : `50px` }}
+            style={{ width: isSmallMobile ? `35px` : isMobile ? `40px` : `50px` }}
           >
             <div className="h-full">
               <table className="w-full h-full border-collapse">
@@ -846,9 +848,9 @@ const CommonInventoryTable = ({
                   <tr className="bg-gray-50 border-b border-[#DADBE5]">
                     <th
                       className={`${
-                        isMobile ? "px-2 py-2" : "px-3 py-3"
+                        isSmallMobile ? "px-1 py-1.5" : isMobile ? "px-2 py-2" : "px-3 py-3"
                       } text-center text-[#7D82A4] font-medium whitespace-nowrap ${
-                        isMobile ? "text-[10px]" : "text-xs"
+                        isSmallMobile ? "text-[9px]" : isMobile ? "text-[10px]" : "text-xs"
                       } border-r border-[#DADBE5]`}
                     >
                       <div className="flex justify-center items-center">
@@ -937,14 +939,14 @@ const CommonInventoryTable = ({
             ref={scrollContainerRef}
             className="w-full overflow-x-auto hideScrollbar"
             style={{
-              paddingLeft: isMobile ? `40px` : `50px`,
+              paddingLeft: isSmallMobile ? `35px` : isMobile ? `40px` : `50px`,
               paddingRight: `${dynamicStickyWidth}px`,
             }}
           >
             <table
               ref={mainTableRef}
               className="w-full border-none"
-              style={{ minWidth: isMobile ? "800px" : "1200px" }}
+              style={{ minWidth: isSmallMobile ? "600px" : isMobile ? "800px" : isTablet ? "1000px" : "1200px" }}
             >
               <thead>
                 <tr className="bg-gray-50 border-b border-[#DADBE5]">
@@ -954,9 +956,9 @@ const CommonInventoryTable = ({
                       <th
                         key={header.key}
                         className={`${
-                          isMobile ? "px-2 py-2" : "px-3 py-3"
+                          isSmallMobile ? "px-1 py-1.5" : isMobile ? "px-2 py-2" : "px-3 py-3"
                         } text-left text-[#7D82A4] font-medium whitespace-nowrap ${
-                          isMobile ? "text-[10px]" : "text-xs"
+                          isSmallMobile ? "text-[9px]" : isMobile ? "text-[10px]" : "text-xs"
                         } border-r border-[#DADBE5]`}
                         style={columnStyles}
                       >

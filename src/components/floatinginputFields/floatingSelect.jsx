@@ -26,6 +26,21 @@ const FloatingSelect = ({
   multiselect = false, // New prop for multiselect functionality
   openUpward = false, // New prop to control dropdown direction
 }) => {
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSmallMobile, setIsSmallMobile] = useState(false);
+
+  // Mobile breakpoint detection
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      setIsSmallMobile(width < 480);
+      setIsMobile(width < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
   const [isOpen, setIsOpen] = useState(false);
   const [selected, setSelected] = useState(
     multiselect
@@ -241,8 +256,8 @@ const FloatingSelect = ({
     });
   };
 
-  // Base classes without padding (which is now customizable)
-  const baseClasses = `block w-full text-[14px] rounded border-[1px] focus:outline-none ${
+  // Base classes without padding (which is now customizable) - responsive text sizing
+  const baseClasses = `block w-full ${isSmallMobile ? 'text-[12px]' : isMobile ? 'text-[13px]' : 'text-[14px]'} rounded border-[1px] focus:outline-none ${
     error ? "border-red-500" : "border-[#DADBE5]"
   } text-[#231F20] ${
     error
@@ -264,7 +279,7 @@ const FloatingSelect = ({
     <>
     {staticLabel && (
       <div className="mb-2">
-        <label className="text-[14px] font-medium text-gray-800">{label}</label>
+        <label className={`${isSmallMobile ? 'text-[12px]' : isMobile ? 'text-[13px]' : 'text-[14px]'} font-medium text-gray-800`}>{label}</label>
       </div>
     )}
     <div className={`relative w-full ${className}`} ref={dropdownRef}>
@@ -325,7 +340,7 @@ const FloatingSelect = ({
             </div>
           )}
           <svg
-            className={`w-5 h-5 text-[#130061] transition-transform duration-200 ${
+            className={`${isSmallMobile ? 'w-4 h-4' : 'w-5 h-5'} text-[#130061] transition-transform duration-200 ${
               isOpen
                 ? openUpward
                   ? "transform rotate-0"
@@ -350,22 +365,22 @@ const FloatingSelect = ({
       {isOpen && !disabled && (
         <div className={getDropdownPositionClasses()}>
           {multiselect && (
-            <div className="flex items-center px-3 py-2 border-b border-gray-100 cursor-pointer hover:bg-gray-50" onClick={handleToggleSelectAll}>
+            <div className={`flex items-center ${isSmallMobile ? 'px-2 py-1.5' : 'px-3 py-2'} border-b border-gray-100 cursor-pointer hover:bg-gray-50`} onClick={handleToggleSelectAll}>
               <div className="mr-3">
                 <input
                   type="checkbox"
                   checked={areAllSelected()}
                   onChange={() => {}}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className={`${isSmallMobile ? 'w-3 h-3' : 'w-4 h-4'} text-blue-600 border-gray-300 rounded focus:ring-blue-500`}
                 />
               </div>
-              <span className="text-sm text-gray-700 select-none">
+              <span className={`${isSmallMobile ? 'text-xs' : 'text-sm'} text-gray-700 select-none`}>
                 Select all
               </span>
             </div>
           )}
           <ul
-            className="py-1 overflow-auto text-[14px] rounded-md max-h-60 focus:outline-none"
+            className={`py-1 overflow-auto ${isSmallMobile ? 'text-[12px]' : isMobile ? 'text-[13px]' : 'text-[14px]'} rounded-md ${isMobile ? 'max-h-48' : 'max-h-60'} focus:outline-none`}
             role="listbox"
             id={`${id}-listbox`}
           >
@@ -382,7 +397,7 @@ const FloatingSelect = ({
                 return (
                   <li
                     key={index}
-                    className={`cursor-pointer flex justify-between items-center select-none relative py-2 px-3 hover:bg-indigo-50 ${
+                    className={`cursor-pointer flex justify-between items-center select-none relative ${isSmallMobile ? 'py-1.5 px-2' : 'py-2 px-3'} hover:bg-indigo-50 ${
                       isSelectedOption
                         ? "bg-indigo-100 text-[#130061]"
                         : "text-gray-900"
@@ -412,7 +427,7 @@ const FloatingSelect = ({
                             type="checkbox"
                             checked={isSelectedOption}
                             onChange={() => {}}
-                            className="w-4 h-4 text-gray-600 border-gray-300 rounded focus:ring-blue-500"
+                            className={`${isSmallMobile ? 'w-3 h-3' : 'w-4 h-4'} text-gray-600 border-gray-300 rounded focus:ring-blue-500`}
                           />
                         </div>
                       )}
@@ -453,7 +468,7 @@ const FloatingSelect = ({
                 );
               })
             ) : (
-              <li className="cursor-default select-none relative py-2 pl-3 pr-9 text-gray-500">
+              <li className={`cursor-default select-none relative ${isSmallMobile ? 'py-1.5 pl-2 pr-6' : 'py-2 pl-3 pr-9'} text-gray-500 ${isSmallMobile ? 'text-xs' : ''}`}>
                 No options found
               </li>
             )}
@@ -461,7 +476,7 @@ const FloatingSelect = ({
         </div>
       )}
 
-      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+      {error && <p className={`mt-1 ${isSmallMobile ? 'text-xs' : 'text-sm'} text-red-500`}>{error}</p>}
     </div>
     </>
   );

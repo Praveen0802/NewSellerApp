@@ -63,11 +63,29 @@ import Tooltip from "../addInventoryPage/simmpleTooltip";
 
 const BulkInventory = (props) => {
   const { matchId, response } = props;
+  
+  // Mobile breakpoint detection
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSmallMobile, setIsSmallMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      setIsSmallMobile(width < 480);
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width < 1024);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   if (Object.keys(response) == 0) {
     return (
-      <div className="bg-[#F5F7FA] w-full max-h-[calc(100vh-100px)] overflow-auto relative min-h-screen">
-        <div className="m-6 bg-white rounded-lg shadow-sm p-12 text-center">
+      <div className={`bg-[#F5F7FA] w-full ${isMobile ? 'max-md:pb-[150px]' : ''} max-h-[calc(100vh-100px)] overflow-auto relative min-h-screen`}>
+        <div className={`${isSmallMobile ? 'm-3' : 'm-6'} bg-white rounded-lg shadow-sm ${isSmallMobile ? 'p-6' : 'p-12'} text-center`}>
           <div className="max-w-md mx-auto">
             <div className="mb-6">
               <svg
@@ -84,10 +102,10 @@ const BulkInventory = (props) => {
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
+            <h3 className={`${isSmallMobile ? 'text-lg' : 'text-xl'} font-semibold text-gray-900 mb-3`}>
               No Data Available
             </h3>
-            <p className="text-gray-600 mb-6 leading-relaxed">
+            <p className={`text-gray-600 mb-6 leading-relaxed ${isSmallMobile ? 'text-sm' : ''}`}>
               Unable to load match data. Please try again or contact support.
             </p>
           </div>
@@ -1502,7 +1520,7 @@ console.log(updated,'updatedupdated')
   const [showRequestPopup, setShowRequestPopup] = useState(false);
 
   return (
-    <div className="bg-[#F5F7FA] w-full max-h-[calc(100vh-100px)] overflow-auto relative min-h-screen">
+    <div className={`bg-[#F5F7FA] w-full ${isMobile ? 'max-md:pb-[150px]' : ''} max-h-[calc(100vh-100px)] overflow-auto relative min-h-screen`}>
       {/* Header with selected match info */}
       <ViewMapPopup
         image={allMatchDetails[0]?.venue_image}
@@ -1690,9 +1708,9 @@ console.log(updated,'updatedupdated')
 
       {/* Show message when no matches are available */}
       {allMatchDetails.length === 0 && (
-        <div className="m-6 bg-white rounded-lg shadow-sm p-12 text-center">
+        <div className={`${isSmallMobile ? 'm-3' : 'm-6'} bg-white rounded-lg shadow-sm ${isSmallMobile ? 'p-6' : 'p-12'} text-center`}>
           <div className="max-w-md mx-auto">
-            <div className="mb-6">
+            <div className={`${isSmallMobile ? 'mb-4' : 'mb-6'}`}>
               <svg
                 className="mx-auto h-16 w-16 text-gray-400"
                 fill="none"
@@ -1719,9 +1737,9 @@ console.log(updated,'updatedupdated')
 
       {/* Show message when no tickets added yet */}
       {allMatchDetails.length > 0 && totalTicketCount === 0 && (
-        <div className="m-6 bg-white rounded-lg shadow-sm p-12 text-center">
+        <div className={`${isSmallMobile ? 'm-3' : 'm-6'} bg-white rounded-lg shadow-sm ${isSmallMobile ? 'p-6' : 'p-12'} text-center`}>
           <div className="max-w-md mx-auto">
-            <div className="mb-6">
+            <div className={`${isSmallMobile ? 'mb-4' : 'mb-6'}`}>
               <svg
                 className="mx-auto h-16 w-16 text-gray-400"
                 fill="none"
