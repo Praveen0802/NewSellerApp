@@ -26,6 +26,7 @@ const FloatingSelect = ({
   multiselect = false, // New prop for multiselect functionality
   openUpward = false, // New prop to control dropdown direction
 }) => {
+  console.log(selectedValue,'selectedValue',options);
   const [isMobile, setIsMobile] = useState(false);
   const [isSmallMobile, setIsSmallMobile] = useState(false);
 

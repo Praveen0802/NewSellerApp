@@ -278,6 +278,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
       setSelectedPaymentMethod(paymentMethod);
 
       if (guestDetails?.length > 0) {
+        console.log(guestFormFieldValues,'guestFormFieldValuesguestFormFieldValues')
         try {
           const allFieldsFilled = guestDetails.every((guest) => {
             console.log(guest, "guestguest");

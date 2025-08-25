@@ -31,6 +31,7 @@ const SubUploadParent = React.forwardRef(
     },
     ref
   ) => {
+    console.log(existingUploadedTickets[0]?.additional_file_type,'existingUploadedTicketsexistingUploadedTickets')
     const [templateData, setTemplateData] = useState();
     const [showPopupView, setShowPopupView] = useState(false);
 
@@ -51,10 +52,8 @@ const SubUploadParent = React.forwardRef(
     const [additionalTemplateData, setAdditionalTemplateData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [selectedTemplateContent, setSelectedTemplateContent] = useState("");
-
     // Ref to store the latest additional info data for instant access
     const additionalInfoRef = useRef(additionalInfo);
-    console.log(additionalInfo, "additionalInfoadditionalInfo");
 
     // Update ref whenever additional info state changes
     useEffect(() => {
@@ -533,6 +532,7 @@ const SubUploadParent = React.forwardRef(
       value: template.id,
       label: template.template_name,
     }))
+    console.log(additionalInfo.templateId,'templateOptionstemplateOptions')
     return (
       <div className="flex flex-1 overflow-hidden">
         <LeftPanelContent />
@@ -578,7 +578,7 @@ const SubUploadParent = React.forwardRef(
                     // keyValue={}
                     options={templateOptions || []}
                     // mandatory={mandatory}
-                    selectedValue={additionalInfo.templateId}
+                    selectedValue={Number(additionalInfo.templateId)}
                     // multiselect={multiselect}
                     // labelClassName={labelClassName}
                     // searchable={searchable}

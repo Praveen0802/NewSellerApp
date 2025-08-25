@@ -1,4 +1,10 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+} from "react";
 import oneHand from "../../../public/oneHand.svg";
 import greenHand from "../../../public/greenHand.svg";
 
@@ -67,6 +73,7 @@ import CommonInventoryTable from "./customInventoryTable";
 import ListingsMarketplace from "../ModalComponents/listSalesModal";
 import Tooltip from "./simmpleTooltip";
 import RequestEvent from "./requestFeaturePopup";
+import FilterColumnControls from "./filterControls";
 
 const AddInventoryPage = (props) => {
   const { matchId, response } = props;
@@ -75,6 +82,7 @@ const AddInventoryPage = (props) => {
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+
   // Extract the original response structure (KEEP EXACTLY THE SAME)
   const {
     block_data = {},
@@ -605,12 +613,12 @@ const AddInventoryPage = (props) => {
     "ticket_in_hand",
   ];
 
-  const orderedFilters = columnOrder
+  const orderedFilterValues = columnOrder
     .map((name) => filters.find((f) => f.name === name))
     .filter(Boolean);
 
   // KEEP THE ORIGINAL allHeaders generation (EXACT SAME)
-  const allHeaders = orderedFilters.map((filter) => {
+  const allHeaders = orderedFilterValues.map((filter) => {
     const baseHeader = {
       increasedWidth: filter.increasedWidth || "",
       key: filter.name,
@@ -642,14 +650,26 @@ const AddInventoryPage = (props) => {
   const headers = allHeaders.filter(
     (header) => visibleColumns.includes(header.key) && !header?.hideFromTable
   );
+  const [orderedColumns, setOrderedColumns] = useState(() => {
+    if (columnOrder && columnOrder.length > 0) {
+      return columnOrder;
+    }
+    return allHeaders.map((h) => h.key);
+  });
 
-  // Filter the filters array based on active filters
-  const getActiveFilters = () => {
-    const activeFiltersList = filters.filter((filter) =>
-      activeFilters.includes(filter.name)
+  // Initialize with the original filter order
+  const [orderedFilters, setOrderedFilters] = useState(() => {
+    return filters.map((f) => f.name);
+  });
+
+  useEffect(() => {
+    console.log("Current orderedFilters:", orderedFilters);
+    console.log("Current activeFilters:", activeFilters);
+    console.log(
+      "Visible filters result:",
+      getVisibleFilters().map((f) => f.name)
     );
-    return activeFiltersList;
-  };
+  }, [orderedFilters, activeFilters]);
 
   // Custom sticky columns configuration for AddInventory
   const getStickyColumnsForRow = (rowData, rowIndex) => {
@@ -732,6 +752,206 @@ const AddInventoryPage = (props) => {
       },
     ];
   };
+
+  // Filter the filters array based on active filters
+  const getActiveFilters = () => {
+    const activeFiltersList = filters.filter((filter) =>
+      activeFilters.includes(filter.name)
+    );
+    return activeFiltersList;
+  };
+
+  const getAvailableColumns = () => {
+    const baseColumns = allHeaders.map((header) => ({
+      key: header.key,
+      label: header.label,
+      isVisible: visibleColumns.includes(header.key),
+    }));
+
+    // Apply custom ordering
+    const orderedItems = [];
+    const usedKeys = new Set();
+
+    // Add columns in the custom order
+    orderedColumns.forEach((orderedKey) => {
+      const item = baseColumns.find((col) => col.key === orderedKey);
+      if (item) {
+        orderedItems.push(item);
+        usedKeys.add(orderedKey);
+      }
+    });
+
+    // Add any columns that weren't in the ordered list
+    baseColumns.forEach((item) => {
+      if (!usedKeys.has(item.key)) {
+        orderedItems.push(item);
+      }
+    });
+
+    return orderedItems;
+  };
+
+  // Function to get available filters with proper ordering
+  const getAvailableFilters = () => {
+    const baseFilters = filters.map((filter) => ({
+      key: filter.name,
+      label: filter.label,
+      type: filter.type,
+      isActive: activeFilters.includes(filter.name),
+    }));
+
+    // Apply custom ordering
+    const orderedItems = [];
+    const usedKeys = new Set();
+
+    // Add filters in the custom order
+    orderedFilters.forEach((orderedKey) => {
+      const item = baseFilters.find((filter) => filter.key === orderedKey);
+      if (item) {
+        orderedItems.push(item);
+        usedKeys.add(orderedKey);
+      }
+    });
+
+    // Add any filters that weren't in the ordered list
+    baseFilters.forEach((item) => {
+      if (!usedKeys.has(item.key)) {
+        orderedItems.push(item);
+      }
+    });
+
+    return orderedItems;
+  };
+
+  // Get visible filters in the correct order
+  const getVisibleFilters = () => {
+    // Create a map for quick lookup of filter objects
+    const filterMap = filters.reduce((map, filter) => {
+      map[filter.name] = filter;
+      return map;
+    }, {});
+
+    // Get ordered visible filters
+    const orderedVisibleFilters = [];
+
+    orderedFilters.forEach((filterName) => {
+      // Only include if it's active and exists in the filter map
+      if (activeFilters.includes(filterName) && filterMap[filterName]) {
+        orderedVisibleFilters.push(filterMap[filterName]);
+      }
+    });
+
+    // Add any active filters that weren't in the ordered list
+    const usedKeys = new Set(orderedVisibleFilters.map((f) => f.name));
+    filters.forEach((filter) => {
+      if (activeFilters.includes(filter.name) && !usedKeys.has(filter.name)) {
+        orderedVisibleFilters.push(filter);
+      }
+    });
+
+    console.log(
+      "getVisibleFilters result:",
+      orderedVisibleFilters.map((f) => f.name)
+    );
+    return orderedVisibleFilters;
+  };
+
+  // Get visible headers in the correct order
+  const getVisibleHeaders = () => {
+    // Create a map for quick lookup of header objects
+    const headerMap = allHeaders.reduce((map, header) => {
+      map[header.key] = header;
+      return map;
+    }, {});
+
+    // Get ordered visible headers
+    const orderedVisibleHeaders = [];
+
+    orderedColumns.forEach((columnKey) => {
+      // Only include if it's visible and exists in the header map
+      if (
+        visibleColumns.includes(columnKey) &&
+        headerMap[columnKey] &&
+        !headerMap[columnKey]?.hideFromTable
+      ) {
+        orderedVisibleHeaders.push(headerMap[columnKey]);
+      }
+    });
+
+    // Add any visible headers that weren't in the ordered list
+    const usedKeys = new Set(orderedVisibleHeaders.map((h) => h.key));
+    allHeaders.forEach((header) => {
+      if (
+        visibleColumns.includes(header.key) &&
+        !usedKeys.has(header.key) &&
+        !header?.hideFromTable
+      ) {
+        orderedVisibleHeaders.push(header);
+      }
+    });
+
+    return orderedVisibleHeaders;
+  };
+
+  // Handle filter toggle
+  const handleFilterToggle = (filterKey) => {
+    console.log("Toggling filter:", filterKey);
+    setActiveFilters((prev) => {
+      const newActiveFilters = prev.includes(filterKey)
+        ? prev.filter((key) => key !== filterKey)
+        : [...prev, filterKey];
+      console.log("New activeFilters:", newActiveFilters);
+      return newActiveFilters;
+    });
+  };
+
+  // Handle column toggle
+  const handleColumnToggle = (columnKey) => {
+    console.log("Toggling column:", columnKey);
+    setVisibleColumns((prev) => {
+      const newVisibleColumns = prev.includes(columnKey)
+        ? prev.filter((key) => key !== columnKey)
+        : [...prev, columnKey];
+      console.log("New visibleColumns:", newVisibleColumns);
+      return newVisibleColumns;
+    });
+  };
+
+  // Handle filters reordering with proper debugging
+  const handleFiltersReorder = (reorderedItems) => {
+    const newOrder = reorderedItems.map((item) => item.key);
+    console.log("Reordering filters from:", orderedFilters);
+    console.log("Reordering filters to:", newOrder);
+
+    setOrderedFilters(newOrder);
+
+    // Force a re-render to ensure the changes are applied immediately
+    setTimeout(() => {
+      console.log(
+        "Filter order updated. Current visible filters:",
+        getVisibleFilters().map((f) => f.name)
+      );
+    }, 100);
+  };
+
+  // Handle columns reordering with proper debugging
+  const handleColumnsReorder = (reorderedItems) => {
+    const newOrder = reorderedItems.map((item) => item.key);
+    console.log("Reordering columns from:", orderedColumns);
+    console.log("Reordering columns to:", newOrder);
+
+    setOrderedColumns(newOrder);
+  };
+
+  // Memoize the visible filters to prevent unnecessary re-renders
+  const memoizedVisibleFilters = useMemo(() => {
+    return getVisibleFilters();
+  }, [orderedFilters, activeFilters, filters]);
+
+  // Memoize the visible headers to prevent unnecessary re-renders
+  const memoizedVisibleHeaders = useMemo(() => {
+    return getVisibleHeaders();
+  }, [orderedColumns, visibleColumns, allHeaders]);
 
   // Updated handleCellEdit to work with the common component
   const handleCellEdit = (rowIndex, columnKey, value, row, matchIndex) => {
@@ -1529,7 +1749,7 @@ const AddInventoryPage = (props) => {
                     show={showRequestPopup}
                     setShow={setShowRequestPopup}
                     handleBulkNavigateClick={handleBulkNavigateClick}
-                    onItemSelect={() => setShowSearchDropdown(false)} // Add this prop
+                    onItemSelect={() => setShowSearchDropdown(false)}
                   />
                 </div>
               }
@@ -1545,20 +1765,30 @@ const AddInventoryPage = (props) => {
                 setShowSearchDropdown(false);
                 setHasSearched(false);
               }}
-              parentClassName={`${isMobile ? "!w-full" : isTablet ? "!w-[50%]" : "!w-[40%]"}`}
-              data-search-container="true" // Add this
+              parentClassName={`${
+                isMobile ? "!w-full" : isTablet ? "!w-[50%]" : "!w-[40%]"
+              }`}
+              data-search-container="true"
               labelClassName="text-[#7D82A4]"
             />
 
             {matchDetails && (
               <div
                 className={`flex ${
-                  isMobile ? "flex-col gap-2" : isTablet ? "flex-wrap gap-3" : "gap-4"
+                  isMobile
+                    ? "flex-col gap-2"
+                    : isTablet
+                    ? "flex-wrap gap-3"
+                    : "gap-4"
                 } items-start ${isMobile ? "" : "sm:items-center"}`}
               >
                 <div
                   className={`flex ${
-                    isMobile ? "flex-wrap gap-2" : isTablet ? "flex-wrap gap-3" : "gap-4"
+                    isMobile
+                      ? "flex-wrap gap-2"
+                      : isTablet
+                      ? "flex-wrap gap-3"
+                      : "gap-4"
                   } items-center`}
                 >
                   <div
@@ -1608,7 +1838,7 @@ const AddInventoryPage = (props) => {
           </div>
           <div
             className={`flex items-center ${
-              isMobile ? "w-full justify-between" : ""
+              isMobile ? "w-full justify-between" : "gap-4"
             }`}
           >
             {matchDetails && (
@@ -1623,40 +1853,31 @@ const AddInventoryPage = (props) => {
                 View Map
               </p>
             )}
-            {/* <CompactInfoCard
-              title="Listing Visibility"
-              progress={20}
-              segments={5}
-              tooltipText="Click to learn more"
-              handleClick={handleOpenTicketInfoPopup}
-            /> */}
-            {/* Control Icons */}
+            {/* Move FilterColumnControls here - in the header but after View Map */}
+            <FilterColumnControls
+              // Filter props
+              showFilters={true}
+              availableFilters={getAvailableFilters()}
+              onFilterToggle={handleFilterToggle}
+              onFiltersReorder={handleFiltersReorder}
+              isDraggableFilters={true}
+              showFilterSearch={true}
+              // Column props
+              showColumns={true}
+              availableColumns={getAvailableColumns()}
+              onColumnToggle={handleColumnToggle}
+              onColumnsReorder={handleColumnsReorder}
+              isDraggableColumns={true}
+              showColumnSearch={true}
+              // Container props - Updated positioning
+              className="flex gap-2"
+            />
           </div>
         </div>
+
+        {/* Rest of your component remains the same */}
         {matchDetails && (
           <>
-            {/* Mobile/Tablet Filter Toggle Button */}
-            {(isMobile || isTablet) && (
-              <div className="border-b-[1px] border-[#DADBE5] p-3">
-                <button
-                  onClick={() => setShowMobileFilters(!showMobileFilters)}
-                  className={`flex items-center gap-2 text-[#343432] font-medium ${
-                    isMobile ? "text-sm" : "text-base"
-                  }`}
-                >
-                  <Menu size={isMobile ? 16 : 18} />
-                  {showMobileFilters ? "Hide Filters" : "Show Filters"}
-                  <ChevronDown
-                    size={isMobile ? 14 : 16}
-                    className={`transform transition-transform ${
-                      showMobileFilters ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-            )}
-
-            {/* Filter Section with Control Icons */}
             <div
               className={`border-b-[1px] border-[#DADBE5] p-3 sm:p-4 lg:p-5 ${
                 (isMobile || isTablet) && !showMobileFilters ? "hidden" : ""
@@ -1665,19 +1886,22 @@ const AddInventoryPage = (props) => {
               <div className="flex items-center justify-between">
                 <div
                   className={`flex ${
-                    isMobile ? "flex-col gap-3" : isTablet ? "flex-wrap gap-4" : "flex-wrap gap-5"
+                    isMobile
+                      ? "flex-col gap-3"
+                      : isTablet
+                      ? "flex-wrap gap-4"
+                      : "flex-wrap gap-5"
                   } items-start ${isMobile ? "" : "sm:items-center"}`}
                 >
                   <FormFields
-                    formFields={getActiveFilters()}
+                    key={`form-fields-${orderedFilters.join("-")}`}
+                    formFields={memoizedVisibleFilters}
                     filtersApplied={filtersApplied}
                     setFiltersApplied={setFiltersApplied}
                   />
                 </div>
               </div>
             </div>
-
-            {/* Add Listings Button */}
             {inventoryData.length === 0 && (
               <div
                 className={`flex ${
@@ -1702,20 +1926,15 @@ const AddInventoryPage = (props) => {
       {/* Main Content Area with Common Table - Only show when table should be visible */}
       {matchDetails && showTable && inventoryData.length > 0 && (
         <div
-          style={
-            {
-              // maxHeight: isMobile ? "calc(100vh - 400px)" : "calc(100vh - 450px)",
-              // overflowY: "auto",
-            }
-          }
           className={`${
             isMobile ? "m-3" : "m-4 lg:m-6"
           } pb-[100px] bg-white rounded-lg shadow-sm`}
         >
           <div>
             <CommonInventoryTable
+              key={`inventory-table-${orderedColumns.join("-")}`} // Force re-render when order changes
               inventoryData={inventoryData}
-              headers={headers}
+              headers={memoizedVisibleHeaders}
               selectedRows={selectedRows}
               setSelectedRows={setSelectedRows}
               handleCellEdit={handleCellEdit}

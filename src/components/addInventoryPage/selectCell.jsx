@@ -19,6 +19,8 @@ const MultiSelectEditableCell = ({
   const [editValue, setEditValue] = useState(value);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredOptions, setFilteredOptions] = useState(options);
   const [dropdownPosition, setDropdownPosition] = useState({
     top: 0,
     left: 0,
@@ -27,6 +29,7 @@ const MultiSelectEditableCell = ({
   });
   const dropdownRef = useRef(null);
   const containerRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   // Enhanced function to convert various value formats to array
   const normalizeValue = (val) => {
@@ -89,24 +92,42 @@ const MultiSelectEditableCell = ({
     return normalizedArray;
   };
 
+  // Filter options based on search term
+  const filterOptions = useCallback((searchTerm) => {
+    if (!searchTerm.trim()) {
+      setFilteredOptions(options);
+      return;
+    }
+
+    const filtered = options.filter((option) =>
+      option.label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredOptions(filtered);
+  }, [options]);
+
   // Update editValue when value prop changes
   useEffect(() => {
     setEditValue(normalizeValue(value));
   }, [value]);
+
+  // Update filtered options when options change
+  useEffect(() => {
+    filterOptions(searchTerm);
+  }, [options, searchTerm, filterOptions]);
 
   // Calculate dropdown position with fixed smaller width
   const calculateDropdownPosition = useCallback(() => {
     if (!dropdownRef.current) return;
 
     const rect = dropdownRef.current.getBoundingClientRect();
-    const dropdownHeight = 300;
+    const dropdownHeight = 350; // Increased to accommodate search
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
     const spaceBelow = viewportHeight - rect.bottom;
     const spaceAbove = rect.top;
 
     // Set a fixed, smaller width for the dropdown
-    const fixedWidth = 240;
+    const fixedWidth = 280; // Slightly wider for search
     const maxAllowedWidth = Math.min(
       viewportWidth - rect.left - 20,
       fixedWidth
@@ -117,7 +138,7 @@ const MultiSelectEditableCell = ({
 
     const position = {
       left: rect.left + window.scrollX,
-      width: Math.max(maxAllowedWidth, 200),
+      width: Math.max(maxAllowedWidth, 220),
       showAbove,
     };
 
@@ -154,6 +175,15 @@ const MultiSelectEditableCell = ({
     }
   }, [isDropdownOpen, calculateDropdownPosition]);
 
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (isDropdownOpen && searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current.focus();
+      }, 100);
+    }
+  }, [isDropdownOpen]);
+
   const handleClick = useCallback(
     (e) => {
       if (disabled) return;
@@ -163,6 +193,7 @@ const MultiSelectEditableCell = ({
 
       setIsEditing(true);
       setIsDropdownOpen(true);
+      setSearchTerm(""); // Reset search when opening
     },
     [disabled]
   );
@@ -179,8 +210,12 @@ const MultiSelectEditableCell = ({
       if (!isEditing) {
         setIsEditing(true);
       }
+
+      if (!isDropdownOpen) {
+        setSearchTerm(""); // Reset search when opening
+      }
     },
-    [disabled, isEditing]
+    [disabled, isEditing, isDropdownOpen]
   );
 
   // Close dropdown when clicking outside
@@ -195,6 +230,7 @@ const MultiSelectEditableCell = ({
           return;
         }
         setIsDropdownOpen(false);
+        setSearchTerm("");
         if (isDropdownOpen) {
           setIsEditing(false);
         }
@@ -205,6 +241,7 @@ const MultiSelectEditableCell = ({
       if (event.key === "Escape" && isDropdownOpen) {
         setIsDropdownOpen(false);
         setIsEditing(false);
+        setSearchTerm("");
       }
     };
 
@@ -230,12 +267,14 @@ const MultiSelectEditableCell = ({
     }
     setIsEditing(false);
     setIsDropdownOpen(false);
+    setSearchTerm("");
   };
 
   const handleCancel = () => {
     setEditValue(normalizeValue(value));
     setIsEditing(false);
     setIsDropdownOpen(false);
+    setSearchTerm("");
   };
 
   const debouncedOnSave = useCallback(
@@ -269,21 +308,28 @@ const MultiSelectEditableCell = ({
     }
   };
 
-  // Check if all options are selected
+  // Check if all filtered options are selected
   const areAllSelected = () => {
     const currentValues = normalizeValue(editValue);
-    return options.length > 0 && currentValues.length === options.length;
+    return filteredOptions.length > 0 && 
+           filteredOptions.every(option => currentValues.includes(getOptionValue(option)));
   };
 
-  // Handle select all checkbox toggle
+  // Handle select all checkbox toggle for filtered options
   const handleSelectAllToggle = () => {
     const allSelected = areAllSelected();
+    const currentValues = normalizeValue(editValue);
+    const filteredValues = filteredOptions.map(opt => getOptionValue(opt));
+    
     let newValues;
 
     if (allSelected) {
-      newValues = [];
+      // Remove all filtered options from selection
+      newValues = currentValues.filter(val => !filteredValues.includes(val));
     } else {
-      newValues = options.map((opt) => opt.value);
+      // Add all filtered options to selection (avoid duplicates)
+      const newSelections = filteredValues.filter(val => !currentValues.includes(val));
+      newValues = [...currentValues, ...newSelections];
     }
 
     setEditValue(newValues);
@@ -291,6 +337,20 @@ const MultiSelectEditableCell = ({
     if (saveOnChange) {
       const valueToSave = denormalizeValue(newValues);
       onSave(valueToSave);
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    filterOptions(term);
+  };
+
+  const clearSearch = () => {
+    setSearchTerm("");
+    filterOptions("");
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
     }
   };
 
@@ -355,7 +415,7 @@ const MultiSelectEditableCell = ({
         {isDropdownOpen && (
           <div
             data-multiselect-dropdown
-            className={`fixed bg-white border border-[#DADBE5] rounded shadow-lg max-h-64 overflow-y-auto ${
+            className={`fixed bg-white border border-[#DADBE5] rounded shadow-lg max-h-80 overflow-hidden ${
               dropdownPosition.showAbove ? "shadow-lg" : "shadow-lg"
             }`}
             style={{
@@ -364,60 +424,91 @@ const MultiSelectEditableCell = ({
               left: dropdownPosition.left,
               width: dropdownPosition.width,
             }}
-            onScroll={(e) => {
-              e.stopPropagation();
-            }}
           >
-            {/* Select All Header */}
-            <div className="border-b border-[#DADBE5] p-3 sticky top-0 bg-white">
-              <div
-                className="flex items-start space-x-2 cursor-pointer hover:bg-gray-50 rounded p-1 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSelectAllToggle();
-                }}
-              >
+            {/* Search Input */}
+            <div className="p-3 border-b border-[#DADBE5] sticky top-0 bg-white">
+              <div className="relative">
+                <Search size={14} className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
-                  type="checkbox"
-                  checked={areAllSelected()}
-                  onChange={() => {}}
-                  className="w-3 h-3 text-blue-600 border-[#DADBE5] mt-0.5 flex-shrink-0"
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  placeholder="Search options..."
+                  className="w-full pl-8 pr-8 py-1.5 text-xs border border-[#DADBE5] rounded focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  onClick={(e) => e.stopPropagation()}
                 />
-                <span className="text-xs font-medium text-[#323A70]">
-                  Select All ({options.length} items)
-                </span>
+                {searchTerm && (
+                  <button
+                    onClick={clearSearch}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* Options List */}
-            {options.map((option) => {
-              const optionValue = getOptionValue(option);
-              const isSelected =
-                normalizeValue(editValue).includes(optionValue);
-
-              return (
+            {/* Select All Header */}
+            {filteredOptions.length > 0 && (
+              <div className="border-b border-[#DADBE5] p-3 sticky top-[60px] bg-white">
                 <div
-                  key={option.value}
-                  className={`px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-start space-x-2 transition-colors ${
-                    isSelected ? "bg-blue-50" : ""
-                  }`}
+                  className="flex items-start space-x-2 cursor-pointer hover:bg-gray-50 rounded p-1 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleOptionToggle(optionValue);
+                    handleSelectAllToggle();
                   }}
                 >
                   <input
                     type="checkbox"
-                    checked={isSelected}
+                    checked={areAllSelected()}
                     onChange={() => {}}
                     className="w-3 h-3 text-blue-600 border-[#DADBE5] mt-0.5 flex-shrink-0"
                   />
-                  <span className="text-xs text-[#323A70] leading-tight break-words whitespace-normal">
-                    {option.label}
+                  <span className="text-xs font-medium text-[#323A70]">
+                    Select All {searchTerm ? `(${filteredOptions.length} filtered)` : `(${options.length} items)`}
                   </span>
                 </div>
-              );
-            })}
+              </div>
+            )}
+
+            {/* Options List */}
+            <div className="max-h-48 overflow-y-auto">
+              {filteredOptions.length > 0 ? (
+                filteredOptions.map((option) => {
+                  const optionValue = getOptionValue(option);
+                  const isSelected =
+                    normalizeValue(editValue).includes(optionValue);
+
+                  return (
+                    <div
+                      key={option.value}
+                      className={`px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-start space-x-2 transition-colors ${
+                        isSelected ? "bg-blue-50" : ""
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOptionToggle(optionValue);
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => {}}
+                        className="w-3 h-3 text-blue-600 border-[#DADBE5] mt-0.5 flex-shrink-0"
+                      />
+                      <span className="text-xs text-[#323A70] leading-tight break-words whitespace-normal">
+                        {option.label}
+                      </span>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="px-3 py-4 text-center text-xs text-gray-500">
+                  No options found for "{searchTerm}"
+                </div>
+              )}
+            </div>
 
             {!saveOnChange && (
               <div className="border-t border-[#DADBE5] p-2 flex justify-end space-x-2 sticky bottom-0 bg-white">

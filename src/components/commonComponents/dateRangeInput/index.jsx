@@ -770,75 +770,64 @@ const FloatingDateRange = ({
           <p className="mt-0.5 text-xs text-red-500">{error}</p>
         )}
 
-        {isOpen && (
-          <div
-            className={`fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-xl p-2 min-w-[280px]`}
-            style={{
-              top: dropdownPosition.top
-                ? `${
-                    inputRef.current?.getBoundingClientRect().bottom +
-                    window.scrollY
-                  }px`
-                : `${
-                    inputRef.current?.getBoundingClientRect().top +
-                    window.scrollY -
-                    350 +60
-                  }px`,
-              left: `${
-                inputRef.current?.getBoundingClientRect().left +
-                window.scrollX +
-                dropdownPosition.left -40
-              }px`,
-              width: `${inputRef.current?.getBoundingClientRect().width}px`,
-              maxWidth: "95vw",
-            }}
-          >
-            <div className="space-y-2">
-              <div className="text-xs font-medium text-gray-700">
-                {singleDateMode
-                  ? tempStartDate
-                    ? `${formatDate(toLocalDateString(tempStartDate))}`
-                    : "Select date"
-                  : tempStartDate && tempEndDate
-                  ? `${formatDate(
-                      toLocalDateString(tempStartDate)
-                    )} - ${formatDate(toLocalDateString(tempEndDate))}`
-                  : tempStartDate
-                  ? `${formatDate(
-                      toLocalDateString(tempStartDate)
-                    )} - Select end date`
-                  : "Select start date"}
-              </div>
+{isOpen && (
+  <div
+    className={`absolute z-[9999] bg-white border border-gray-200 rounded-lg shadow-xl p-2 min-w-[280px]`}
+    style={{
+      top: dropdownPosition.top ? '100%' : 'auto',
+      bottom: dropdownPosition.top ? 'auto' : '100%',
+      left: `${dropdownPosition.left}px`,
+      right: 'auto',
+      width: `${inputRef.current?.getBoundingClientRect().width || 280}px`,
+      maxWidth: '95vw',
+    }}
+  >
+    <div className="space-y-2">
+      <div className="text-xs font-medium text-gray-700">
+        {singleDateMode
+          ? tempStartDate
+            ? `${formatDate(toLocalDateString(tempStartDate))}`
+            : "Select date"
+          : tempStartDate && tempEndDate
+          ? `${formatDate(
+              toLocalDateString(tempStartDate)
+            )} - ${formatDate(toLocalDateString(tempEndDate))}`
+          : tempStartDate
+          ? `${formatDate(
+              toLocalDateString(tempStartDate)
+            )} - Select end date`
+          : "Select start date"}
+      </div>
 
-              {renderCalendar()}
+      {renderCalendar()}
 
-              <div className="flex justify-between pt-2">
-                <button
-                  onClick={handleClear}
-                  className="px-2 py-1 cursor-pointer text-xs text-gray-700 hover:bg-gray-100 rounded"
-                >
-                  Reset
-                </button>
-                {!singleDateMode && (
-                  <div className="flex gap-1">
-                    <button
-                      onClick={handleApply}
-                      className="px-2 py-1 text-xs cursor-pointer bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                      disabled={
-                        !tempStartDate ||
-                        !tempEndDate ||
-                        !isDateInRange(tempStartDate) ||
-                        !isDateInRange(tempEndDate)
-                      }
-                    >
-                      Confirm
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+      <div className="flex justify-between pt-2">
+        <button
+          onClick={handleClear}
+          className="px-2 py-1 cursor-pointer text-xs text-gray-700 hover:bg-gray-100 rounded"
+        >
+          Reset
+        </button>
+        {!singleDateMode && (
+          <div className="flex gap-1">
+            <button
+              onClick={handleApply}
+              className="px-2 py-1 text-xs cursor-pointer bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              disabled={
+                !tempStartDate ||
+                !tempEndDate ||
+                !isDateInRange(tempStartDate) ||
+                !isDateInRange(tempEndDate)
+              }
+            >
+              Confirm
+            </button>
           </div>
         )}
+      </div>
+    </div>
+  </div>
+)}
       </div>
     </>
   );

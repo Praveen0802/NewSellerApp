@@ -29,7 +29,7 @@ import {
   uploadPopInstruction,
 } from "@/utils/apiHandler/request";
 import { toast } from "react-toastify";
-import { max, set } from "lodash";
+import { has, max, set } from "lodash";
 import AdditionalInfoSection from "./AdditionalInfo";
 import QRLinksSection from "./QRLinkSection";
 import PaperTicketCourierSection from "./paperTicketCourierSection";
@@ -52,7 +52,7 @@ const UploadTickets = ({
 }) => {
   const proofUploadView = rowData?.handleProofUpload || false;
   console.log(rowData, "rowDatarowData");
-  
+
   // Mobile breakpoint detection
   const [isMobile, setIsMobile] = useState(false);
   const [isSmallMobile, setIsSmallMobile] = useState(false);
@@ -67,8 +67,8 @@ const UploadTickets = ({
     };
 
     checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
   const ticketTypes = !isNaN(parseInt(rowData?.ticket_type))
     ? rowData?.ticket_type
@@ -97,6 +97,9 @@ const UploadTickets = ({
   const [assignedFiles, setAssignedFiles] = useState([]);
   const [transferredFiles, setTransferredFiles] = useState([]);
 
+  const [draggedAssignedFile, setDraggedAssignedFile] = useState(null);
+  const [draggedFromIndex, setDraggedFromIndex] = useState(null);
+
   // Proof upload flow states
   const [proofUploadedFiles, setProofUploadedFiles] = useState([]);
   const [proofTransferredFiles, setProofTransferredFiles] = useState([]);
@@ -116,7 +119,6 @@ const UploadTickets = ({
 
   const additionalTemplateFile =
     rowData?.rawTicketData?.additional_template_file;
-
   const fileInputRef = useRef(null);
   const paperTicketCourierRef = useRef();
 
@@ -453,29 +455,77 @@ const UploadTickets = ({
 
   // Common Match Header Component
   const MatchHeader = () => (
-    <div className={`bg-[#343432] ${isSmallMobile ? 'text-[10px]' : 'text-xs'} rounded-t-md text-white ${isSmallMobile ? 'px-2' : 'px-4'} flex items-center justify-between min-w-0`}>
-      <div className={`${isMobile ? 'grid-cols-2 gap-1' : 'grid-cols-4 gap-2'} grid`}>
-        <h3 className={`font-medium truncate ${isSmallMobile ? 'py-2' : 'py-3'} flex-shrink-0 ${isSmallMobile ? 'max-w-[120px]' : isMobile ? 'max-w-[150px]' : 'max-w-[200px]'} ${isMobile ? 'col-span-2' : ''} border-r border-[#51428E]`}>
+    <div
+      className={`bg-[#343432] ${
+        isSmallMobile ? "text-[10px]" : "text-xs"
+      } rounded-t-md text-white ${
+        isSmallMobile ? "px-2" : "px-4"
+      } flex items-center justify-between min-w-0`}
+    >
+      <div
+        className={`${
+          isMobile ? "grid-cols-2 gap-1" : "grid-cols-4 gap-2"
+        } grid`}
+      >
+        <h3
+          className={`font-medium truncate ${
+            isSmallMobile ? "py-2" : "py-3"
+          } flex-shrink-0 ${
+            isSmallMobile
+              ? "max-w-[120px]"
+              : isMobile
+              ? "max-w-[150px]"
+              : "max-w-[200px]"
+          } ${isMobile ? "col-span-2" : ""} border-r border-[#51428E]`}
+        >
           {matchDetails?.match_name}
         </h3>
-        <div className={`flex items-center gap-1 ${isSmallMobile ? 'py-2' : 'py-3'} ${isMobile ? '' : 'border-r border-[#51428E]'}`}>
-          <Calendar className={`${isSmallMobile ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`} />
-          <span className={`${isSmallMobile ? 'text-[9px]' : 'text-xs'} whitespace-nowrap ${isMobile ? 'hidden sm:inline' : ''}`}>
+        <div
+          className={`flex items-center gap-1 ${
+            isSmallMobile ? "py-2" : "py-3"
+          } ${isMobile ? "" : "border-r border-[#51428E]"}`}
+        >
+          <Calendar
+            className={`${isSmallMobile ? "w-3 h-3" : "w-4 h-4"} flex-shrink-0`}
+          />
+          <span
+            className={`${
+              isSmallMobile ? "text-[9px]" : "text-xs"
+            } whitespace-nowrap ${isMobile ? "hidden sm:inline" : ""}`}
+          >
             {matchDetails?.match_date_format ||
               rowData?.matchDate ||
               separateDateTime(matchDetails?.match_date)?.date}
           </span>
         </div>
-        <div className={`flex items-center gap-1 ${isMobile ? '' : 'border-r border-[#51428E]'}`}>
-          <Clock className={`${isSmallMobile ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`} />
-          <span className={`${isSmallMobile ? 'text-[9px]' : 'text-xs'} whitespace-nowrap ${isMobile ? 'hidden sm:inline' : ''}`}>
+        <div
+          className={`flex items-center gap-1 ${
+            isMobile ? "" : "border-r border-[#51428E]"
+          }`}
+        >
+          <Clock
+            className={`${isSmallMobile ? "w-3 h-3" : "w-4 h-4"} flex-shrink-0`}
+          />
+          <span
+            className={`${
+              isSmallMobile ? "text-[9px]" : "text-xs"
+            } whitespace-nowrap ${isMobile ? "hidden sm:inline" : ""}`}
+          >
             {matchDetails?.match_time || rowData?.matchTime}
           </span>
         </div>
         {!isMobile && (
           <div className="flex items-center gap-1">
-            <MapPin className={`${isSmallMobile ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`} />
-            <span className={`${isSmallMobile ? 'text-[9px]' : 'text-xs'} whitespace-nowrap`}>
+            <MapPin
+              className={`${
+                isSmallMobile ? "w-3 h-3" : "w-4 h-4"
+              } flex-shrink-0`}
+            />
+            <span
+              className={`${
+                isSmallMobile ? "text-[9px]" : "text-xs"
+              } whitespace-nowrap`}
+            >
               {matchDetails?.stadium_name || rowData?.venue}
             </span>
           </div>
@@ -483,7 +533,7 @@ const UploadTickets = ({
       </div>
       <div className="flex items-center gap-4 flex-shrink-0">
         <button className="flex-shrink-0">
-          <ChevronUp className={`${isSmallMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
+          <ChevronUp className={`${isSmallMobile ? "w-3 h-3" : "w-4 h-4"}`} />
         </button>
       </div>
     </div>
@@ -492,15 +542,41 @@ const UploadTickets = ({
   // Common Ticket Details Component
   const TicketDetails = () => (
     <div className="border-[1px] border-[#E0E1EA] flex-shrink-0">
-      <div className={`${isMobile ? 'grid-cols-2' : 'grid-cols-4'} grid bg-gray-100 ${isSmallMobile ? 'px-2 py-1' : 'px-3 py-2'} border-b border-gray-200`}>
-        <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} font-medium text-[#323A70]`}>Listing ID</div>
-        <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} font-medium text-[#323A70]`}>
+      <div
+        className={`${
+          isMobile ? "grid-cols-2" : "grid-cols-4"
+        } grid bg-gray-100 ${
+          isSmallMobile ? "px-2 py-1" : "px-3 py-2"
+        } border-b border-gray-200`}
+      >
+        <div
+          className={`${
+            isSmallMobile ? "text-[10px]" : "text-xs"
+          } font-medium text-[#323A70]`}
+        >
+          Listing ID
+        </div>
+        <div
+          className={`${
+            isSmallMobile ? "text-[10px]" : "text-xs"
+          } font-medium text-[#323A70]`}
+        >
           {proofUploadView ? "Proof Required" : "Quantity"}
         </div>
         {!isMobile && (
           <>
-            <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} font-medium text-[#323A70]`}>Ticket Details</div>
-            <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} font-medium text-[#323A70]`}>
+            <div
+              className={`${
+                isSmallMobile ? "text-[10px]" : "text-xs"
+              } font-medium text-[#323A70]`}
+            >
+              Ticket Details
+            </div>
+            <div
+              className={`${
+                isSmallMobile ? "text-[10px]" : "text-xs"
+              } font-medium text-[#323A70]`}
+            >
               {ETicketsFlow
                 ? "Type"
                 : paperTicketFlow
@@ -513,21 +589,37 @@ const UploadTickets = ({
         )}
       </div>
 
-      <div className={`${isMobile ? 'grid-cols-2' : 'grid-cols-4'} grid bg-[#F9F9FB] ${isSmallMobile ? 'py-1 px-2' : 'py-2 px-3'}`}>
-        <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} truncate`}>
+      <div
+        className={`${
+          isMobile ? "grid-cols-2" : "grid-cols-4"
+        } grid bg-[#F9F9FB] ${isSmallMobile ? "py-1 px-2" : "py-2 px-3"}`}
+      >
+        <div
+          className={`${isSmallMobile ? "text-[10px]" : "text-xs"} truncate`}
+        >
           {myListingPage
             ? rowData?.rawTicketData?.s_no || rowData?.id || "N/A"
             : "-"}
         </div>
-        <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} truncate`}>
+        <div
+          className={`${isSmallMobile ? "text-[10px]" : "text-xs"} truncate`}
+        >
           {proofUploadView ? "1 Document" : maxQuantity}
         </div>
         {!isMobile && (
           <>
-            <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} truncate`}>
+            <div
+              className={`${
+                isSmallMobile ? "text-[10px]" : "text-xs"
+              } truncate`}
+            >
               {rowData?.ticket_category || "N/A"}, {rowData?.ticket_block || ""}
             </div>
-            <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} truncate`}>
+            <div
+              className={`${
+                isSmallMobile ? "text-[10px]" : "text-xs"
+              } truncate`}
+            >
               {[ticketTypes].flat().includes(2) ? (
                 "E-Ticket"
               ) : ETicketsFlow ? (
@@ -555,13 +647,27 @@ const UploadTickets = ({
       {isMobile && (
         <div className="grid grid-cols-2 bg-[#F9F9FB] border-t border-gray-200 px-2 py-1">
           <div>
-            <div className={`${isSmallMobile ? 'text-[9px]' : 'text-[10px]'} text-gray-600 font-medium`}>Details</div>
-            <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} truncate`}>
+            <div
+              className={`${
+                isSmallMobile ? "text-[9px]" : "text-[10px]"
+              } text-gray-600 font-medium`}
+            >
+              Details
+            </div>
+            <div
+              className={`${
+                isSmallMobile ? "text-[10px]" : "text-xs"
+              } truncate`}
+            >
               {rowData?.ticket_category || "N/A"}, {rowData?.ticket_block || ""}
             </div>
           </div>
           <div>
-            <div className={`${isSmallMobile ? 'text-[9px]' : 'text-[10px]'} text-gray-600 font-medium`}>
+            <div
+              className={`${
+                isSmallMobile ? "text-[9px]" : "text-[10px]"
+              } text-gray-600 font-medium`}
+            >
               {ETicketsFlow
                 ? "Type"
                 : paperTicketFlow
@@ -570,7 +676,11 @@ const UploadTickets = ({
                 ? "Status"
                 : "Row (Seat)"}
             </div>
-            <div className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} truncate`}>
+            <div
+              className={`${
+                isSmallMobile ? "text-[10px]" : "text-xs"
+              } truncate`}
+            >
               {[ticketTypes].flat().includes(2) ? (
                 "E-Ticket"
               ) : ETicketsFlow ? (
@@ -670,6 +780,7 @@ const UploadTickets = ({
   const handleTicketsPageApiCall = async (updatedObject) => {
     console.log(updatedObject, "updatedObjectupdatedObject");
     // setIsLoading(true);
+    let hasChanges = false;
     const constructTicketFormData = (updatedObject) => {
       const formData = new FormData();
       const index = 0;
@@ -686,6 +797,8 @@ const UploadTickets = ({
           updatedObject.upload_tickets.length > 0 &&
           !updatedObject?.upload_tickets?.[0]?.url
         ) {
+          hasChanges = true;
+
           updatedObject.upload_tickets.forEach((ticket, idx) => {
             formData.append(
               `data[0][rows][${idx}][file]`,
@@ -697,14 +810,26 @@ const UploadTickets = ({
       }
       // Common additional info fields for all flows (except proof upload)
       if (updatedObject.additional_info && !proofUploadView) {
-        formData.append(
-          `data[${index}][additional_file_type]`,
-          updatedObject.additional_info.template || ""
-        );
-        formData.append(
-          `data[${index}][additional_dynamic_content]`,
-          updatedObject.additional_info.dynamicContent || ""
-        );
+        if (
+          existingUploadedTickets[0]?.additional_file_type !=
+          updatedObject.additional_info.template
+        ) {
+          hasChanges = true;
+          formData.append(
+            `data[${index}][additional_file_type]`,
+            updatedObject.additional_info.template || ""
+          );
+        }
+        if (
+          existingUploadedTickets[0]?.additional_dynamic_content !=
+          updatedObject.additional_info.dynamicContent
+        ) {
+          hasChanges = true;
+          formData.append(
+            `data[${index}][additional_dynamic_content]`,
+            updatedObject.additional_info.dynamicContent || ""
+          );
+        }
       }
 
       // Handle Normal Flow and Proof Upload - upload_tickets
@@ -713,6 +838,7 @@ const UploadTickets = ({
         updatedObject.upload_tickets.length > 0 &&
         !paperTicketFlow
       ) {
+        hasChanges = true;
         transferredFiles.forEach((fileObj, idx) => {
           // Only process files that are not existing (i.e., need to be updated)
           if (!fileObj.isExisting && fileObj.file instanceof File) {
@@ -734,6 +860,8 @@ const UploadTickets = ({
       // Handle E-Ticket Flow - qr_links
       // Handle E-Ticket Flow - qr_links (Updated version)
       if (updatedObject.qr_links && updatedObject.qr_links.length > 0) {
+        hasChanges = true;
+
         updatedObject.qr_links.forEach((link, idx) => {
           // Only process links that have at least one QR link (android or ios)
           if (link.qr_link_android || link.qr_link_ios) {
@@ -763,27 +891,28 @@ const UploadTickets = ({
 
       // Handle Paper Ticket Flow - courier details and upload_tickets
       if (updatedObject.courier_type) {
+        hasChanges = true;
+
         formData.append(
           `data[${index}][rows][0][courier_type]`,
           updatedObject.courier_type
         );
       }
       if (updatedObject.courier_name) {
+        hasChanges = true;
+
         formData.append(
           `data[${index}][rows][0][courier_name]`,
           updatedObject.courier_name
         );
       }
       if (updatedObject.courier_tracking_details) {
+        hasChanges = true;
+
         formData.append(
           `data[${index}][rows][0][courier_tracking_details]`,
           updatedObject.courier_tracking_details
         );
-      }
-
-      // Add row ID if available
-      if (rowData?.id) {
-        formData.append(`data[${index}][id]`, rowData.id);
       }
 
       // Add proof upload flag if applicable
@@ -830,26 +959,34 @@ const UploadTickets = ({
 
     try {
       const formData = constructTicketFormData(updatedObject);
-      const response = await myListingUploadTickets("", formData);
+      console.log(updatedObject, "updatedObjectupdatedObject", formData);
+      if (hasChanges) {
+        const response = await myListingUploadTickets("", formData);
+      }
 
       if (updatedObject.additional_info) {
         try {
           const newFormData = constructNewFormData(updatedObject);
-          const data = await updateAdditionalFile("", newFormData);
+          if (
+            updatedObject.additional_info?.templateFile &&
+            typeof updateAdditionalFile === "file"
+          ) {
+            const data = await updateAdditionalFile("", newFormData);
+          }
         } catch (err) {
           console.log("error", err);
         }
       }
       if (response.status == 200) {
-      onClose();
-      toast.success(
-        proofUploadView
-          ? "Proof document uploaded successfully"
-          : "Tickets updated successfully"
-      );
+        onClose();
+        toast.success(
+          proofUploadView
+            ? "Proof document uploaded successfully"
+            : "Tickets updated successfully"
+        );
       } else {
-      console.error("Upload failed:", response.message);
-      toast.error(response.message || "Upload failed");
+        console.error("Upload failed:", response.message);
+        toast.error(response.message || "Upload failed");
       }
     } catch (error) {
       // console.error("API call failed:", error);
@@ -1170,20 +1307,43 @@ const UploadTickets = ({
       <>
         {/* Drag and drop area */}
         <div
-          className={`border-1 bg-[#F9F9FB] border-dashed border-[#130061] rounded-lg ${isSmallMobile ? 'p-2' : 'p-4'} flex flex-col gap-1 items-center justify-center ${
+          className={`border-1 bg-[#F9F9FB] border-dashed border-[#130061] rounded-lg ${
+            isSmallMobile ? "p-2" : "p-4"
+          } flex flex-col gap-1 items-center justify-center ${
             isDragAreaDisabled ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
-          <Image src={uploadImage} width={isSmallMobile ? 32 : 42} height={isSmallMobile ? 32 : 42} alt="Upload" />
-          <p className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} text-[#323A70] mb-1 text-center`}>{getUploadMessage()}</p>
+          <Image
+            src={uploadImage}
+            width={isSmallMobile ? 32 : 42}
+            height={isSmallMobile ? 32 : 42}
+            alt="Upload"
+          />
+          <p
+            className={`${
+              isSmallMobile ? "text-[10px]" : "text-xs"
+            } text-[#323A70] mb-1 text-center`}
+          >
+            {getUploadMessage()}
+          </p>
           {!isDragAreaDisabled && (
             <>
-              <p className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} text-gray-500`}>OR</p>
+              <p
+                className={`${
+                  isSmallMobile ? "text-[10px]" : "text-xs"
+                } text-gray-500`}
+              >
+                OR
+              </p>
               <Button
                 onClick={handleBrowseFiles}
                 classNames={{
-                  root: `${isSmallMobile ? 'py-1' : 'py-2'} border-1 border-[#0137D5] rounded-sm`,
-                  label_: `${isSmallMobile ? 'text-[10px]' : 'text-[12px]'} font-medium !text-[#343432]`,
+                  root: `${
+                    isSmallMobile ? "py-1" : "py-2"
+                  } border-1 border-[#0137D5] rounded-sm`,
+                  label_: `${
+                    isSmallMobile ? "text-[10px]" : "text-[12px]"
+                  } font-medium !text-[#343432]`,
                 }}
               >
                 Browse Files
@@ -1209,13 +1369,27 @@ const UploadTickets = ({
         {/* Uploaded files list */}
         <div className="flex-1">
           <div className="flex justify-between items-center mb-2">
-            <h3 className={`${isSmallMobile ? 'text-xs' : 'text-sm'} font-medium text-[#323A70] truncate`}>
+            <h3
+              className={`${
+                isSmallMobile ? "text-xs" : "text-sm"
+              } font-medium text-[#323A70] truncate`}
+            >
               {proofUploadView
-                ? (isMobile ? `Proof (${currentUploadedFiles.length}/1)` : `Proof Document (${currentUploadedFiles.length}/1)`)
-                : (isMobile ? `Files (${currentUploadedFiles.length})` : `Uploaded Files (${currentUploadedFiles.length})`)}
+                ? isMobile
+                  ? `Proof (${currentUploadedFiles.length}/1)`
+                  : `Proof Document (${currentUploadedFiles.length}/1)`
+                : isMobile
+                ? `Files (${currentUploadedFiles.length})`
+                : `Uploaded Files (${currentUploadedFiles.length})`}
             </h3>
             <div className="flex items-center gap-x-2 flex-shrink-0">
-              <span className={`${isSmallMobile ? 'text-[10px]' : 'text-xs'} text-[#323A70] ${isMobile ? 'hidden' : ''}`}>Show assigned</span>
+              <span
+                className={`${
+                  isSmallMobile ? "text-[10px]" : "text-xs"
+                } text-[#323A70] ${isMobile ? "hidden" : ""}`}
+              >
+                Show assigned
+              </span>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -1225,7 +1399,15 @@ const UploadTickets = ({
                     setShowAssigned((prev) => !prev);
                   }}
                 />
-                <div className={`${isSmallMobile ? 'w-6 h-2.5' : 'w-7 h-3'} bg-gray-200 peer-checked:bg-[#64EAA540] rounded-full transition-all peer peer-checked:after:translate-x-full peer-checked:after:bg-[#64EAA5] after:content-[''] after:absolute ${isSmallMobile ? 'after:-top-0.5 after:-left-0.5 after:h-3.5 after:w-3.5' : 'after:-top-0.5 after:-left-0.5 after:h-4 after:w-4'} after:bg-gray-400 after:rounded-full after:transition-all after:shadow-md peer-checked:bg-100`}></div>
+                <div
+                  className={`${
+                    isSmallMobile ? "w-6 h-2.5" : "w-7 h-3"
+                  } bg-gray-200 peer-checked:bg-[#64EAA540] rounded-full transition-all peer peer-checked:after:translate-x-full peer-checked:after:bg-[#64EAA5] after:content-[''] after:absolute ${
+                    isSmallMobile
+                      ? "after:-top-0.5 after:-left-0.5 after:h-3.5 after:w-3.5"
+                      : "after:-top-0.5 after:-left-0.5 after:h-4 after:w-4"
+                  } after:bg-gray-400 after:rounded-full after:transition-all after:shadow-md peer-checked:bg-100`}
+                ></div>
               </label>
             </div>
           </div>
@@ -1242,7 +1424,9 @@ const UploadTickets = ({
                   draggable={canTransferFile(file.id)}
                   onDragStart={(e) => handleDragStart(e, file)}
                   onDragEnd={handleDragEnd}
-                  className={`flex items-center border border-[#eaeaf1] bg-[#F9F9FB] justify-between ${isSmallMobile ? 'px-1 py-1' : 'px-[8px] py-[5px]'} transition-all duration-200 ${
+                  className={`flex items-center border border-[#eaeaf1] bg-[#F9F9FB] justify-between ${
+                    isSmallMobile ? "px-1 py-1" : "px-[8px] py-[5px]"
+                  } transition-all duration-200 ${
                     canTransferFile(file.id)
                       ? "cursor-grab hover:bg-blue-50 hover:border-l-4 hover:border-l-blue-500"
                       : "cursor-not-allowed opacity-60"
@@ -1253,7 +1437,13 @@ const UploadTickets = ({
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className={`${isSmallMobile ? 'text-[10px] max-w-20' : 'text-[12px] max-w-32'} text-[#323A70] truncate`}>
+                    <span
+                      className={`${
+                        isSmallMobile
+                          ? "text-[10px] max-w-20"
+                          : "text-[12px] max-w-32"
+                      } text-[#323A70] truncate`}
+                    >
                       {file.name}
                     </span>
                   </div>
@@ -1264,17 +1454,24 @@ const UploadTickets = ({
                       onClick={() => handleTransferSingleFile(file.id)}
                       disabled={!canTransferFile(file.id)}
                       classNames={{
-                        root: `${isSmallMobile ? 'py-1 px-1' : 'py-[4px] px-[6px]'} cursor-pointer rounded-sm ${isSmallMobile ? 'text-[8px]' : 'text-[10px]'} ${
+                        root: `${
+                          isSmallMobile ? "py-1 px-1" : "py-[4px] px-[6px]"
+                        } cursor-pointer rounded-sm ${
+                          isSmallMobile ? "text-[8px]" : "text-[10px]"
+                        } ${
                           canTransferFile(file.id)
                             ? "bg-[#343432] text-white hover:bg-[#343432]/90"
                             : "bg-gray-300 text-gray-500 cursor-not-allowed"
                         }`,
-                        label_:
-                          `${isSmallMobile ? 'text-[8px]' : 'text-[10px]'} font-medium flex items-center gap-1`,
+                        label_: `${
+                          isSmallMobile ? "text-[8px]" : "text-[10px]"
+                        } font-medium flex items-center gap-1`,
                       }}
                     >
                       {proofUploadView ? "Attach" : "Add"}{" "}
-                      <ArrowRight className={`${isSmallMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                      <ArrowRight
+                        className={`${isSmallMobile ? "w-3 h-3" : "w-4 h-4"}`}
+                      />
                     </Button>
                     <button
                       className="pl-2 text-[#130061]  cursor-pointer hover:text-blue-700"
@@ -1285,13 +1482,23 @@ const UploadTickets = ({
                           : "Preview file"
                       }
                     >
-                      <Eye className={`${isSmallMobile ? 'w-3 h-3' : 'w-3.5 h-3.5'}`} />
+                      <Eye
+                        className={`${
+                          isSmallMobile ? "w-3 h-3" : "w-3.5 h-3.5"
+                        }`}
+                      />
                     </button>
                     <button
-                      className={`${isSmallMobile ? 'p-0.5' : 'p-1'} text-[#130061] cursor-pointer`}
+                      className={`${
+                        isSmallMobile ? "p-0.5" : "p-1"
+                      } text-[#130061] cursor-pointer`}
                       onClick={() => handleDeleteUploaded(file.id)}
                     >
-                      <Trash2 className={`${isSmallMobile ? 'w-2.5 h-2.5' : 'w-3 h-3'}`} />
+                      <Trash2
+                        className={`${
+                          isSmallMobile ? "w-2.5 h-2.5" : "w-3 h-3"
+                        }`}
+                      />
                     </button>
                   </div>
                 </div>
@@ -1343,13 +1550,38 @@ const UploadTickets = ({
   // NEW: Enhanced Ticket Assignment Section Component with Drag Drop Support
   // Replace your existing TicketAssignmentSection function with this updated version:
 
+  const handleReorderTransferredFiles = useCallback(
+    (fromIndex, toIndex) => {
+      if (fromIndex === toIndex) return;
+
+      if (proofUploadView) {
+        // For proof upload, no reordering needed since it's always 1 item
+        return;
+      } else {
+        setTransferredFiles((prev) => {
+          const newArray = [...prev];
+          const draggedItem = newArray[fromIndex];
+
+          // Remove the item from its current position
+          newArray.splice(fromIndex, 1);
+
+          // Insert it at the new position
+          newArray.splice(toIndex, 0, draggedItem);
+
+          return newArray;
+        });
+      }
+    },
+    [proofUploadView]
+  );
+
   const TicketAssignmentSection = () => {
     // Use the appropriate state variables based on proof upload view
     const currentTransferredFiles = proofUploadView
       ? proofTransferredFiles
       : transferredFiles;
 
-    // NEW: Drop handlers for assignment area
+    // Existing drop handlers for assignment area (unchanged)
     const handleDragOver = (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
@@ -1363,13 +1595,26 @@ const UploadTickets = ({
       }
     };
 
-    // NEW: Drop handler with target slot support
+    // Enhanced drop handler to handle both new files and reordering
     const handleDrop = (e, targetSlot = null) => {
       e.preventDefault();
       setDragOver(false);
       setDragOverSlot(null);
 
-      // Get drag data
+      // Check if we're reordering an assigned file
+      if (
+        draggedAssignedFile &&
+        draggedFromIndex !== null &&
+        targetSlot !== null
+      ) {
+        const toIndex = targetSlot - 1;
+        handleReorderTransferredFiles(draggedFromIndex, toIndex);
+        setDraggedAssignedFile(null);
+        setDraggedFromIndex(null);
+        return;
+      }
+
+      // Handle new file drops (existing logic)
       let draggedFileData = null;
       try {
         const dragData = e.dataTransfer.getData("text/plain");
@@ -1380,7 +1625,6 @@ const UploadTickets = ({
         console.warn("Failed to parse drag data, using fallback");
       }
 
-      // Fallback to global variable if drag data parsing fails
       const fileToTransfer = draggedFileData || window.currentDraggedFile;
 
       if (fileToTransfer && canTransferFile(fileToTransfer.id)) {
@@ -1388,7 +1632,7 @@ const UploadTickets = ({
       }
     };
 
-    // NEW: Individual slot drag handlers
+    // Enhanced slot drag handlers
     const handleSlotDragOver = (e, slotNumber) => {
       e.preventDefault();
       e.stopPropagation();
@@ -1403,25 +1647,74 @@ const UploadTickets = ({
       }
     };
 
-    // NEW: Slot-specific drop handler
     const handleSlotDrop = (e, slotNumber) => {
       e.stopPropagation();
       handleDrop(e, slotNumber);
     };
 
+    // NEW: Drag handlers for assigned files (for reordering)
+    const handleAssignedFileDragStart = (e, file, index) => {
+      if (proofUploadView) {
+        // No reordering for proof upload
+        e.preventDefault();
+        return;
+      }
+
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData(
+        "text/plain",
+        JSON.stringify({ type: "reorder", file, index })
+      );
+
+      setDraggedAssignedFile(file);
+      setDraggedFromIndex(index);
+
+      // Create a custom drag image
+      const ghostElement = document.createElement("div");
+      ghostElement.innerHTML = `
+        <div style="
+          background: rgba(255, 255, 255, 0.95);
+          border: 2px solid #03BA8A;
+          border-radius: 6px;
+          padding: 8px 12px;
+          font-size: 12px;
+          color: #323A70;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          max-width: 200px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        ">
+          🔄 ${file.name}
+        </div>
+      `;
+      ghostElement.style.position = "absolute";
+      ghostElement.style.top = "-1000px";
+      document.body.appendChild(ghostElement);
+
+      e.dataTransfer.setDragImage(ghostElement, 10, 10);
+
+      setTimeout(() => {
+        document.body.removeChild(ghostElement);
+      }, 0);
+    };
+
+    const handleAssignedFileDragEnd = () => {
+      setDraggedAssignedFile(null);
+      setDraggedFromIndex(null);
+    };
+
+    // Existing functions (unchanged)
     const handleDeleteUpload = async (assignedFile) => {
       try {
-        // If the file has an existing ID, call the API first
         if (
           assignedFile?.url &&
           (assignedFile?.existingId || assignedFile?.id) &&
           !mySalesPage
         ) {
           const idToDelete = assignedFile.existingId || assignedFile.id;
-          console.log(idToDelete, "idToDelete");
           try {
             const response = await deleteTicketUpload("", idToDelete);
-            console.log(response, "responseresponse");
             if (response?.status) {
               toast.success("File deleted successfully");
             } else {
@@ -1431,40 +1724,31 @@ const UploadTickets = ({
           } catch (error) {
             console.error("Failed to delete from server:", error);
             toast.error("Failed to delete file from server");
-            return; // Don't update state if API call failed
+            return;
           }
         }
 
-        // Remove from the appropriate state array
         if (proofUploadView) {
-          // For proof upload view
           setProofTransferredFiles((prev) =>
             prev.filter((file) => {
-              // If assignedFile has existingId, match by existingId
               if (assignedFile.existingId) {
                 return file.existingId !== assignedFile.existingId;
               }
-              // If assignedFile has id, match by id
               if (assignedFile.id) {
                 return file.id !== assignedFile.id;
               }
-              // Fallback: this shouldn't happen, but keep all files if no identifier
               return true;
             })
           );
         } else {
-          // For normal flow
           setTransferredFiles((prev) =>
             prev.filter((file) => {
-              // If assignedFile has existingId, match by existingId
               if (assignedFile.existingId) {
                 return file.existingId !== assignedFile.existingId;
               }
-              // If assignedFile has id, match by id
               if (assignedFile.id) {
                 return file.id !== assignedFile.id;
               }
-              // Fallback: this shouldn't happen, but keep all files if no identifier
               return true;
             })
           );
@@ -1476,20 +1760,14 @@ const UploadTickets = ({
       }
     };
 
-    // NEW: Enhanced eye icon click handler
     const handleEyeIconClick = (assignedFile, e) => {
       e?.stopPropagation();
 
-      // If file has URL (existing file), open in new tab
       if (assignedFile.url && assignedFile.isExisting) {
         window.open(assignedFile.url, "_blank");
-      }
-      // If file is newly uploaded (File object), show preview modal
-      else if (assignedFile.file instanceof File) {
+      } else if (assignedFile.file instanceof File) {
         handlePreviewClick(assignedFile, e);
-      }
-      // Fallback for any other cases
-      else if (assignedFile.url) {
+      } else if (assignedFile.url) {
         window.open(assignedFile.url, "_blank");
       }
     };
@@ -1511,7 +1789,9 @@ const UploadTickets = ({
           </h4>
           {dragOver && (
             <div className="text-xs text-blue-600 animate-pulse">
-              Drop file here to assign
+              {draggedAssignedFile
+                ? "Drop to reorder"
+                : "Drop file here to assign"}
             </div>
           )}
         </div>
@@ -1527,6 +1807,8 @@ const UploadTickets = ({
               const assignedFile = currentTransferredFiles[index];
               const isSlotDraggedOver = dragOverSlot === itemNumber;
               const isEmpty = !assignedFile;
+              const isDraggedFile =
+                draggedAssignedFile && draggedFromIndex === index;
 
               // Check if this specific slot can accept drops
               const canAcceptDrop =
@@ -1534,11 +1816,20 @@ const UploadTickets = ({
                 window.currentDraggedFile &&
                 canTransferFile(window.currentDraggedFile.id);
 
-              console.log(assignedFile, "assignedFileassignedFile");
+              // Check if this slot can accept reordering
+              const canAcceptReorder =
+                draggedAssignedFile &&
+                draggedFromIndex !== null &&
+                draggedFromIndex !== index;
+
               return (
                 <div
                   key={itemNumber}
-                  className="flex items-center border-b border-gray-200 last:border-b-0"
+                  className={`flex items-center border-b border-gray-200 last:border-b-0 transition-all duration-200 ${
+                    isSlotDraggedOver && (canAcceptDrop || canAcceptReorder)
+                      ? "bg-blue-50 border-l-4 border-l-blue-500"
+                      : ""
+                  } ${isDraggedFile ? "opacity-50" : ""}`}
                   onDragOver={(e) => handleSlotDragOver(e, itemNumber)}
                   onDragLeave={(e) => handleSlotDragLeave(e, itemNumber)}
                   onDrop={(e) => handleSlotDrop(e, itemNumber)}
@@ -1550,14 +1841,28 @@ const UploadTickets = ({
                   </div>
                   <div className="px-3 w-[85%] py-2 flex items-center">
                     {assignedFile ? (
-                      <div className="flex bg-[#F2FBF9] border  border-[#03BA8A] rounded px-2 py-1 items-center justify-between w-full">
+                      <div
+                        className={`flex bg-[#F2FBF9] border border-[#03BA8A] rounded px-2 py-1 items-center justify-between w-full transition-all duration-200 ${
+                          !proofUploadView
+                            ? "cursor-grab hover:shadow-md active:cursor-grabbing"
+                            : ""
+                        } ${isDraggedFile ? "transform scale-95" : ""}`}
+                        draggable={!proofUploadView}
+                        onDragStart={(e) =>
+                          handleAssignedFileDragStart(e, assignedFile, index)
+                        }
+                        onDragEnd={handleAssignedFileDragEnd}
+                        title={!proofUploadView ? "Drag to reorder" : ""}
+                      >
                         <div className="flex items-center gap-2 flex-1">
+                          {!proofUploadView && (
+                            <div className="text-gray-400 cursor-grab">⋮⋮</div>
+                          )}
                           <span className="text-xs text-gray-700 truncate max-w-24">
                             {assignedFile.name}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          {/* UPDATED: Always show eye icon, but behavior depends on file type */}
                           <button
                             className="p-1 text-gray-900 cursor-pointer hover:text-blue-700"
                             onClick={(e) => handleEyeIconClick(assignedFile, e)}
@@ -1571,9 +1876,7 @@ const UploadTickets = ({
                           </button>
                           <button
                             className="p-1 text-gray-900 cursor-pointer hover:text-red-700"
-                            onClick={() => {
-                              handleDeleteUpload(assignedFile);
-                            }}
+                            onClick={() => handleDeleteUpload(assignedFile)}
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -1584,11 +1887,15 @@ const UploadTickets = ({
                         className={`text-xs w-full border-[1px] border-dashed rounded-md px-2 py-1 transition-all duration-200 ${
                           isSlotDraggedOver && canAcceptDrop
                             ? "border-blue-500 bg-blue-50 text-blue-600"
+                            : isSlotDraggedOver && canAcceptReorder
+                            ? "border-green-500 bg-green-50 text-green-600"
                             : "border-[#E0E1EA] bg-white text-gray-400"
                         }`}
                       >
                         {isSlotDraggedOver && canAcceptDrop ? (
                           <span className="animate-pulse">Drop here...</span>
+                        ) : isSlotDraggedOver && canAcceptReorder ? (
+                          <span className="animate-pulse">Move here...</span>
                         ) : proofUploadView ? (
                           "Waiting for proof document..."
                         ) : (
@@ -1609,19 +1916,40 @@ const UploadTickets = ({
   return (
     <div>
       <RightViewModal
-        className={isMobile ? "!w-[95vw] !h-[95vh]" : isTablet ? "!w-[90vw]" : "!w-[80vw]"}
+        className={
+          isMobile
+            ? "!w-[95vw] !h-[95vh]"
+            : isTablet
+            ? "!w-[90vw]"
+            : "!w-[80vw]"
+        }
         show={show}
         onClose={() => onClose(false)}
       >
         <div className="w-full h-full bg-white rounded-lg relative flex flex-col">
           {/* Header */}
-          <div className={`flex justify-between items-center ${isSmallMobile ? 'p-2' : 'p-4'} border-b border-[#E0E1EA] flex-shrink-0`}>
-            <h2 className={`${isSmallMobile ? 'text-base' : isMobile ? 'text-lg' : 'text-lg'} font-medium text-[#323A70] ${isMobile ? 'truncate' : ''}`}>
+          <div
+            className={`flex justify-between items-center ${
+              isSmallMobile ? "p-2" : "p-4"
+            } border-b border-[#E0E1EA] flex-shrink-0`}
+          >
+            <h2
+              className={`${
+                isSmallMobile ? "text-base" : isMobile ? "text-lg" : "text-lg"
+              } font-medium text-[#323A70] ${isMobile ? "truncate" : ""}`}
+            >
               {getModalTitle()}
               {!isSmallMobile && getModalSubtitle()}
             </h2>
-            <button onClick={() => onClose(false)} className="text-gray-500 flex-shrink-0">
-              <X className={`${isSmallMobile ? 'w-4 h-4' : 'w-5 h-5'} cursor-pointer`} />
+            <button
+              onClick={() => onClose(false)}
+              className="text-gray-500 flex-shrink-0"
+            >
+              <X
+                className={`${
+                  isSmallMobile ? "w-4 h-4" : "w-5 h-5"
+                } cursor-pointer`}
+              />
             </button>
           </div>
 
@@ -1646,23 +1974,43 @@ const UploadTickets = ({
           />
 
           {/* Footer */}
-          <div className={`flex justify-between items-center ${isSmallMobile ? 'p-2' : 'p-3'} bg-gray-50 border-t border-gray-200 flex-shrink-0`}>
-            <div className={`flex ${isMobile ? 'gap-2 flex-col w-full' : 'gap-4 justify-end w-full'}`}>
+          <div
+            className={`flex justify-between items-center ${
+              isSmallMobile ? "p-2" : "p-3"
+            } bg-gray-50 border-t border-gray-200 flex-shrink-0`}
+          >
+            <div
+              className={`flex ${
+                isMobile ? "gap-2 flex-col w-full" : "gap-4 justify-end w-full"
+              }`}
+            >
               <button
                 onClick={() => onClose(false)}
-                className={`${isSmallMobile ? 'px-3 py-1.5' : 'px-4 py-2'} border border-gray-300 rounded text-gray-700 ${isSmallMobile ? 'text-xs' : 'text-sm'} hover:bg-gray-50 ${isMobile ? 'order-2' : ''}`}
+                className={`${
+                  isSmallMobile ? "px-3 py-1.5" : "px-4 py-2"
+                } border border-gray-300 rounded text-gray-700 ${
+                  isSmallMobile ? "text-xs" : "text-sm"
+                } hover:bg-gray-50 ${isMobile ? "order-2" : ""}`}
               >
                 Cancel
               </button>
               <Button
-                className={`${isSmallMobile ? 'px-3 py-1.5' : 'px-4 py-2'} ${
+                className={`${isSmallMobile ? "px-3 py-1.5" : "px-4 py-2"} ${
                   isConfirmDisabled ? "bg-gray-300" : "bg-green-500"
-                } text-white rounded ${isSmallMobile ? 'text-xs' : 'text-sm'} disabled:bg-gray-300 flex gap-2 items-center disabled:cursor-not-allowed ${isMobile ? 'order-1' : ''}`}
+                } text-white rounded ${
+                  isSmallMobile ? "text-xs" : "text-sm"
+                } disabled:bg-gray-300 flex gap-2 items-center disabled:cursor-not-allowed ${
+                  isMobile ? "order-1" : ""
+                }`}
                 disabled={isConfirmDisabled}
                 loading={isLoading}
                 onClick={handleConfirmCtaClick}
               >
-                {proofUploadView ? (isMobile ? "Submit" : "Submit Proof") : "Confirm"}
+                {proofUploadView
+                  ? isMobile
+                    ? "Submit"
+                    : "Submit Proof"
+                  : "Confirm"}
               </Button>
             </div>
           </div>

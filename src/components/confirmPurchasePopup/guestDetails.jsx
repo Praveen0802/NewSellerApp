@@ -29,7 +29,9 @@ const GuestDetails = ({
   // Updated handleChange to store data in array format
   const handleChange = (e, fieldName, guestIndex, type) => {
     const selectType = type === "select";
-    const value = selectType ? e : e.target.value;
+    console.log(type, "type");
+    const value =
+      type == "date" ? e?.startDate : selectType ? e : e?.target?.value;
 
     // Create a copy of current form field values
     const updatedValues = { ...formFieldValues };
@@ -161,7 +163,10 @@ const GuestDetails = ({
         id: fieldKey,
         name: fieldKey,
         mandatory: config.mandatory,
-        value: fieldValue,
+        value:
+          config.type == "date" && fieldValue
+            ? { startDate: fieldValue, endDate: fieldValue }
+            : fieldValue,
         onChange: (e) => handleChange(e, fieldName, guestIndex, config.type),
         className: `!py-2 !px-4 ${fieldStyle}`,
         labelClassName: "text-sm text-gray-600 mb-1 block",
@@ -239,9 +244,7 @@ const GuestDetails = ({
   };
   return (
     <div className="flex flex-col gap-4">
-      {guestDetails?.map((guest, index) =>
-        renderGuestForm(guest, index)
-      )}
+      {guestDetails?.map((guest, index) => renderGuestForm(guest, index))}
     </div>
   );
 };

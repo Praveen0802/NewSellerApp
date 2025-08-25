@@ -13,19 +13,19 @@ const DeleteConfirmation = ({
       // onClick={handleClose}
                   >
                     <div
-        className={`bg-white absolute flex max-md:flex-col max-md:gap-3 w-[300px]  rounded-sm justify-between p-2 items-center md:w-[500px]`}
+        className={`bg-white absolute flex flex-col gap-4 w-[400px]  rounded-lg justify-between p-6 items-center md:w-[600px]  shadow-2xl`}
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="text-[#231F20] font-medium max-w-[330px] text-[14px] text-center">
+        <p className="text-[#231F20] font-medium max-w-[450px] text-[16px] md:text-[18px] text-center leading-relaxed">
                       {content}
                     </p>
-        <div className="flex gap-4">
+        <div className="flex gap-6 mt-4 md:mt-0">
           <Button
             type="secondary"
             label="Cancel"
             classNames={{
-              root: "py-[4px] justify-center",
-              label_: "text-[12px] px-[2]",
+              root: "py-[8px] px-[16px] justify-center min-w-[100px]",
+              label_: "text-[14px] md:text-[16px]",
             }}
             onClick={handleClose}
           />
@@ -34,8 +34,8 @@ const DeleteConfirmation = ({
             label="Delete"
             loading={loader}
             classNames={{
-              root: "py-[4px] justify-center",
-              label_: "text-[12px] px-[10px]",
+              root: "py-[8px] px-[16px] justify-center min-w-[100px]",
+              label_: "text-[14px] md:text-[16px]",
             }}
             onClick={handleDelete}
           />

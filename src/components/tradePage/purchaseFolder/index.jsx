@@ -66,6 +66,7 @@ const PurchaseFolder = (props) => {
   const [loader, setLoader] = useState(false);
   const isMobile = useIsMobile();
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+  const [orderDetailsLoader, setOrderDetailsLoader] = useState(false);
 
   useEffect(() => {
     if (success == "true") {
@@ -87,10 +88,15 @@ const PurchaseFolder = (props) => {
     }
 
     try {
+      // Show shimmer loader immediately
+      setOrderDetailsLoader(true);
+      setShowOrderPopup({
+        flag: true,
+        data: null, // Set to null to show shimmer
+      });
+
       const response = await purchaseHistory("", {
-        booking_no: item.booking_id
-          ? item.booking_id
-          : `${item.booking_id}`,
+        booking_no: item.booking_id ? item.booking_id : `${item.booking_id}`,
       });
 
       // Check if response exists and has data
@@ -101,7 +107,7 @@ const PurchaseFolder = (props) => {
         });
       } else {
         console.warn("No data received from purchaseHistory");
-        // Optionally set popup with empty data or show error message
+        // Show popup with empty data or error message
         setShowOrderPopup({
           flag: true,
           data: null,
@@ -110,6 +116,13 @@ const PurchaseFolder = (props) => {
     } catch (error) {
       console.error("Error fetching purchase history:", error);
       // Handle error appropriately
+      setShowOrderPopup({
+        flag: true,
+        data: null,
+      });
+    } finally {
+      // Hide shimmer loader
+      setOrderDetailsLoader(false);
     }
   };
 
@@ -604,7 +617,11 @@ const PurchaseFolder = (props) => {
       <OrderDetails
         show={showOrderPopup?.flag}
         data={showOrderPopup?.data}
-        onClose={() => setShowOrderPopup({ flag: false, data: {} })}
+        showShimmer={orderDetailsLoader}
+        onClose={() => {
+          setShowOrderPopup({ flag: false, data: {} });
+          setOrderDetailsLoader(false); // Reset loader when closing
+        }}
       />
     </div>
   );
