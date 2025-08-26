@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 import { debounce } from "lodash";
 import CustomSelectEditableCell from "./customSimpleEditableCell";
 import FloatingDateRange from "../commonComponents/dateRangeInput";
