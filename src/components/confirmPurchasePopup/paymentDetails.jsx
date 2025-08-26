@@ -45,30 +45,30 @@ const PaymentDetails = ({
         </div>
       ),
     },
-    ...linkedCards.map((item) => ({
-      name: `${
-        item.RecurringDetail.paymentMethodVariant === "mc"
-          ? "Mastercard"
-          : item.RecurringDetail.paymentMethodVariant === "visacredit"
-          ? "Visa"
-          : item.RecurringDetail.paymentMethodVariant === "amex"
-          ? "American Express"
-          : item.RecurringDetail.paymentMethodVariant
-      } ****${item.RecurringDetail.card.number}`,
-      component: (
-        <div className="flex items-center">
-          <img
-            src={`https://cdf6519016.cdn.adyen.com/checkoutshopper/images/logos/${item.RecurringDetail.variant}.svg`}
-            alt="Card Image"
-            style={{ width: "50px", height: "auto", margin: "0 10px" }}
-          />
-          <p className="text-[12px] text-gray-700">
-            **** **** **** {item.RecurringDetail.card.number}
-          </p>
-        </div>
-      ),
-      field: item,
-    })),
+    // ...linkedCards.map((item) => ({
+    //   name: `${
+    //     item.RecurringDetail.paymentMethodVariant === "mc"
+    //       ? "Mastercard"
+    //       : item.RecurringDetail.paymentMethodVariant === "visacredit"
+    //       ? "Visa"
+    //       : item.RecurringDetail.paymentMethodVariant === "amex"
+    //       ? "American Express"
+    //       : item.RecurringDetail.paymentMethodVariant
+    //   } ****${item.RecurringDetail.card.number}`,
+    //   component: (
+    //     <div className="flex items-center">
+    //       <img
+    //         src={`https://cdf6519016.cdn.adyen.com/checkoutshopper/images/logos/${item.RecurringDetail.variant}.svg`}
+    //         alt="Card Image"
+    //         style={{ width: "50px", height: "auto", margin: "0 10px" }}
+    //       />
+    //       <p className="text-[12px] text-gray-700">
+    //         **** **** **** {item.RecurringDetail.card.number}
+    //       </p>
+    //     </div>
+    //   ),
+    //   field: item,
+    // })),
     {
       name: "New Credit or Debit Card",
       component: (
