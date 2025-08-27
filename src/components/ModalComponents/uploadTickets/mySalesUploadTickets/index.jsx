@@ -43,6 +43,7 @@ import MySalesPaperTicketCourierSection from "./mySalesPaperTicketsSection";
 import MyQRLinksSection from "./MyQrLinkSection";
 import QRLinksSection from "../QRLinkSection";
 import FilePreviewModal from "../previewFile";
+import useIsMobile from "@/utils/helperFunctions/useIsmobile";
 
 const MySalesUploadTickets = ({
   show,
@@ -1684,10 +1685,15 @@ const MySalesUploadTickets = ({
       </div>
     );
   };
+  const isMobile = useIsMobile();
   return (
     <div>
       <RightViewModal
-        className="!w-[80vw]"
+        className={
+          isMobile
+            ? "!w-[100vw] !h-[100vh]"
+            : "!w-[80vw]"
+        }
         show={show}
         onClose={() => onClose()}
       >

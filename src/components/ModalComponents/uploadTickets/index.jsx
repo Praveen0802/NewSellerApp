@@ -1918,7 +1918,7 @@ const UploadTickets = ({
       <RightViewModal
         className={
           isMobile
-            ? "!w-[95vw] !h-[95vh]"
+            ? "!w-[100vw] !h-[100vh]"
             : isTablet
             ? "!w-[90vw]"
             : "!w-[80vw]"
