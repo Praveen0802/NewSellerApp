@@ -288,7 +288,7 @@ const FloatingLabelInput = ({
     return iconBefore ? "pr-3" : "";
   };
 
-  const baseClasses = `block w-full ${getLeftPadding()} py-[14px] font-medium text-[14px] rounded border-[1px] focus:outline-none ${
+  const baseClasses = `block w-full ${getLeftPadding()} py-[12px] xs:py-[14px] font-medium text-[13px] xs:text-[14px] rounded border-[1px] focus:outline-none ${
     error ? "border-red-500" : "border-[#DADBE5]"
   } text-[#231F20] caret-[#022B50] ${
     error
@@ -305,8 +305,8 @@ const FloatingLabelInput = ({
   return (
     <>
     {staticLabel && (
-      <div className="mb-2">
-        <label className="text-[14px] font-medium text-gray-800">{label}</label>
+      <div className="mb-1.5 xs:mb-2">
+        <label className="text-[13px] xs:text-[14px] font-medium text-gray-800">{label}</label>
       </div>
     )}
     <div className={`relative w-full ${parentClassName}`} ref={containerRef}>

@@ -65,23 +65,23 @@ const Header = () => {
   };
 
   return (
-    <div className="px-4 sm:px-[24px] h-auto max-md:flex-row min-h-[60px] sm:h-[80px] py-3 sm:py-0 bg-white border-b-[1px] flex flex-col sm:flex-row w-full justify-between items-start sm:items-center border-[#eaeaf1] gap-3 sm:gap-0">
-      <p className="text-[18px] sm:text-[24px] font-semibold text-[#343432]">
+    <div className="px-3 xs:px-4 sm:px-[24px] h-auto min-h-[56px] xs:min-h-[60px] sm:h-[80px] py-2 xs:py-3 sm:py-0 bg-white border-b-[1px] flex flex-col xs:flex-row sm:flex-row w-full justify-between items-start xs:items-center sm:items-center border-[#eaeaf1] gap-2 xs:gap-3 sm:gap-0">
+      <p className="text-[16px] xs:text-[18px] sm:text-[24px] font-semibold text-[#343432] leading-tight xs:leading-normal">
         {title()}
       </p>
-      <div className="flex gap-3 items-center self-end sm:self-auto">
+      <div className="flex gap-2 xs:gap-3 items-center self-end xs:self-auto sm:self-auto">
         <button
           onClick={() => {
             handleModalPopupClick();
           }}
-          className="cursor-pointer"
+          className="cursor-pointer p-1 xs:p-0 hover:opacity-80 transition-opacity"
         >
           <Image
             src={botIcon}
             width={36}
             height={36}
             alt="boticon"
-            className="w-9 h-9 sm:w-12 sm:h-12"
+            className="w-8 h-8 xs:w-9 xs:h-9 sm:w-12 sm:h-12"
           />
         </button>
       </div>

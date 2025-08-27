@@ -248,11 +248,11 @@ const LogDetailsModal = ({
   }
 
   return (
-    <RightViewModal className={"!w-[670px]"} show={show} onClose={onClose}>
-      <div className="w-2xl bg-white rounded-lg">
-        <div className="flex justify-between items-center p-4 border-b border-gray-200 sticky top-0 bg-white z-99">
-          <p className="text-lg font-medium text-gray-800">Log Details</p>
-          <div onClick={() => onClose()} className="cursor-pointer">
+    <RightViewModal className={"!w-[95vw] xs:!w-[90vw] sm:!w-[670px]"} show={show} onClose={onClose}>
+      <div className="w-full bg-white rounded-lg">
+        <div className="flex justify-between items-center p-3 xs:p-4 border-b border-gray-200 sticky top-0 bg-white z-99">
+          <p className="text-base xs:text-lg font-medium text-gray-800">Log Details</p>
+          <div onClick={() => onClose()} className="cursor-pointer p-1 hover:bg-gray-100 rounded">
             <IconStore.close />
           </div>
         </div>
@@ -260,7 +260,7 @@ const LogDetailsModal = ({
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-200">
           <button
-            className={`px-6 py-3 text-sm font-medium transition-colors duration-200 ${
+            className={`px-3 xs:px-6 py-2 xs:py-3 text-xs xs:text-sm font-medium transition-colors duration-200 ${
               activeTab === "order"
                 ? "text-gray-600 border-b-2 border-green-600 bg-blue-50"
                 : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
@@ -273,7 +273,7 @@ const LogDetailsModal = ({
             Order Logs ({orderLogs.length})
           </button>
           <button
-            className={`px-6 py-3 text-sm font-medium transition-colors duration-200 ${
+            className={`px-3 xs:px-6 py-2 xs:py-3 text-xs xs:text-sm font-medium transition-colors duration-200 ${
               activeTab === "inventory"
                 ? "text-gray-600 border-b-2 border-green-600 bg-blue-50"
                 : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
@@ -288,27 +288,27 @@ const LogDetailsModal = ({
         </div>
 
         {/* Log Content */}
-        <div className="max-h-[90vh] overflow-y-auto p-4">
+        <div className="max-h-[80vh] xs:max-h-[90vh] overflow-y-auto p-2 xs:p-4">
           {currentLogEntries.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-6 xs:py-8 text-gray-500 text-sm xs:text-base">
               No {activeTab} logs available
             </div>
           ) : (
             currentLogEntries.map((entry, index) => (
               <div
                 key={index}
-                className="mb-4 border border-blue-200 rounded-lg overflow-hidden"
+                className="mb-3 xs:mb-4 border border-blue-200 rounded-lg overflow-hidden"
               >
                 <div
-                  className="bg-[#343432] flex justify-between items-center px-4 py-3 cursor-pointer"
+                  className="bg-[#343432] flex flex-col xs:flex-row xs:justify-between xs:items-center p-3 xs:px-4 xs:py-3 cursor-pointer gap-2 xs:gap-0"
                   onClick={() => toggleSection(index)}
                 >
-                  <p className="text-white text-sm font-medium">
+                  <p className="text-white text-xs xs:text-sm font-medium break-words">
                     {entry.title}
                   </p>
-                  <div className="flex items-center">
-                    <p className="text-white text-sm">{entry.date}</p>
-                    <div className="pl-4 ml-2 border-l border-gray-400 text-white">
+                  <div className="flex items-center justify-between xs:justify-end gap-2">
+                    <p className="text-white text-xs xs:text-sm truncate">{entry.date}</p>
+                    <div className="pl-2 xs:pl-4 xs:ml-2 xs:border-l border-gray-400 text-white">
                       {expandedSections.includes(index) ? (
                         <IconStore.chevronUp />
                       ) : (
@@ -318,34 +318,34 @@ const LogDetailsModal = ({
                   </div>
                 </div>
                 {expandedSections.includes(index) && (
-                  <div className="grid grid-cols-2 p-4 gap-4 divide-blue-100">
-                    <div className="col-span-1 border border-blue-100 rounded-md">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 p-2 xs:p-4 gap-2 xs:gap-4 divide-blue-100">
+                    <div className="col-span-1 border border-blue-100 rounded-md overflow-hidden">
                       {entry.leftColumns.map((item, i) => (
                         <div
                           key={`left-${i}`}
-                          className="grid grid-cols-2 border-b border-blue-100 last:border-b-0"
+                          className="grid grid-cols-1 xs:grid-cols-2 border-b border-blue-100 last:border-b-0"
                         >
-                          <div className="p-3 text-sm truncate text-gray-600">
+                          <div className="p-2 xs:p-3 text-xs xs:text-sm text-gray-600 font-medium xs:font-normal">
                             {item.key}
                           </div>
-                          <div className="p-3 text-sm truncate text-gray-800 font-medium">
+                          <div className="p-2 xs:p-3 text-xs xs:text-sm text-gray-800 font-medium break-words">
                             {item.value || "-"}
                           </div>
                         </div>
                       ))}
                     </div>
 
-                    <div className="col-span-1 border border-blue-100 rounded-md">
+                    <div className="col-span-1 border border-blue-100 rounded-md overflow-hidden">
                       {entry.rightColumns.map((item, i) => (
                         <div
                           key={`right-${i}`}
-                          className="grid grid-cols-2 border-b border-blue-100 last:border-b-0"
+                          className="grid grid-cols-1 xs:grid-cols-2 border-b border-blue-100 last:border-b-0"
                         >
-                          <div className="p-3 text-sm truncate text-gray-600">
+                          <div className="p-2 xs:p-3 text-xs xs:text-sm text-gray-600 font-medium xs:font-normal">
                             {item.key}
                           </div>
                           <div
-                            className="p-3 text-sm truncate text-gray-800 font-medium"
+                            className="p-2 xs:p-3 text-xs xs:text-sm text-gray-800 font-medium break-words"
                             title={item.value || ""}
                           >
                             {item.value || "-"}

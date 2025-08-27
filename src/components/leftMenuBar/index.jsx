@@ -1191,30 +1191,30 @@ const LeftMenuBar = () => {
     return (
       <>
         {/* Mobile Header */}
-        <div className="fixed top-0 left-0 right-0 bg-[#343432] h-16 flex items-center justify-between px-4 z-20">
-          <Image src={logo} alt="logo" width={60} height={32} />
-          <button onClick={toggleMobileMenu} className="p-2 text-white">
-            <Menu size={24} />
+        <div className="fixed top-0 left-0 right-0 bg-[#343432] h-14 xs:h-16 flex items-center justify-between px-3 xs:px-4 z-20">
+          <Image src={logo} alt="logo" width={50} height={28} className="xs:w-[60px] xs:h-[32px]" />
+          <button onClick={toggleMobileMenu} className="p-1.5 xs:p-2 text-white hover:bg-[#5f6365] rounded-md transition-colors">
+            <Menu size={20} className="xs:w-6 xs:h-6" />
           </button>
         </div>
 
         {/* Mobile Slide-in Menu */}
         <div
-          className={`fixed top-0 right-0 h-full bg-[#343432] w-64 transform z-[9999] transition-transform duration-300 ease-in-out ${
+          className={`fixed top-0 right-0 h-full bg-[#343432] w-60 xs:w-64 transform z-[9999] transition-transform duration-300 ease-in-out ${
             mobileMenuOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <div className="h-16 flex items-center justify-between px-4 border-b border-[#51428E]">
-            <Image src={logo} alt="logo" width={32} height={32} />
-            <button onClick={toggleMobileMenu} className="p-2 text-white">
-              <span className="text-2xl">&times;</span>
+          <div className="h-14 xs:h-16 flex items-center justify-between px-3 xs:px-4 border-b border-[#51428E]">
+            <Image src={logo} alt="logo" width={28} height={28} className="xs:w-8 xs:h-8" />
+            <button onClick={toggleMobileMenu} className="p-1.5 xs:p-2 text-white hover:bg-[#5f6365] rounded-md transition-colors">
+              <span className="text-xl xs:text-2xl">&times;</span>
             </button>
           </div>
 
           {/* Scrollable menu content with proper flex layout */}
-          <div className="flex flex-col h-[calc(100%-4rem)]">
+          <div className="flex flex-col h-[calc(100%-3.5rem)] xs:h-[calc(100%-4rem)]">
             {/* Main menu items - scrollable area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-3 xs:p-4 space-y-3 xs:space-y-4">
               {leftPaneValues
                 .filter((_, index) => index !== 0)
                 .map((item, idx) => {
@@ -1224,7 +1224,7 @@ const LeftMenuBar = () => {
                       <Tooltip content={item?.name} position="left">
                         <div
                           onClick={() => handleSelectedClick(index, item)}
-                          className={`cursor-pointer flex gap-3 items-center p-3 transition-colors duration-200 ${
+                          className={`cursor-pointer flex gap-2 xs:gap-3 items-center p-2 xs:p-3 text-sm xs:text-base transition-colors duration-200 ${
                             item?.key === active ||
                             (item?.key === "sales" &&
                               active?.startsWith("sales-"))
@@ -1307,14 +1307,14 @@ const LeftMenuBar = () => {
             </div>
 
             {/* Fixed logout button at bottom */}
-            <div className="border-t border-[#51428E] p-4">
+            <div className="border-t border-[#51428E] p-3 xs:p-4">
               <Tooltip content="Logout" position="left">
                 <div
                   onClick={handleLogout}
-                  className="flex items-center gap-3 cursor-pointer p-3 hover:bg-[#5f6365] rounded-md"
+                  className="flex items-center gap-2 xs:gap-3 cursor-pointer p-2 xs:p-3 hover:bg-[#5f6365] rounded-md"
                 >
-                  <Image src={logout} alt="logout" width={24} height={24} />
-                  <span className="text-white text-[14px]">Logout</span>
+                  <Image src={logout} alt="logout" width={20} height={20} className="xs:w-6 xs:h-6" />
+                  <span className="text-white text-[13px] xs:text-[14px]">Logout</span>
                 </div>
               </Tooltip>
             </div>
@@ -1339,7 +1339,7 @@ const LeftMenuBar = () => {
           />
         )}
 
-        <div className="pt-16 pb-16"></div>
+        <div className="pt-14 xs:pt-16 pb-16"></div>
       </>
     );
   }

@@ -139,7 +139,7 @@ const CollapsablePaymentTable = ({
   };
 
   return (
-    <div className="w-full flex flex-col gap-4 mobile:gap-2">
+    <div className="w-full flex flex-col gap-3 xs:gap-4">
       {sections.map((section, sectionIndex) => (
         <div key={`section-${sectionIndex}-${section.title}`} className="mb-1 overflow-hidden">
           {/* Section Header */}
@@ -148,14 +148,14 @@ const CollapsablePaymentTable = ({
               !expandedSections[sectionIndex]
                 ? "rounded-[6px]"
                 : "rounded-t-[6px]"
-            } bg-[#343432] text-white px-4 py-3 cursor-pointer mobile:px-3 mobile:py-2`}
+            } bg-[#343432] text-white px-3 xs:px-4 py-2 xs:py-3 cursor-pointer hover:bg-[#4a4a48] transition-colors`}
             onClick={() => toggleSection(sectionIndex)}
           >
-            <h3 className="text-[14px] font-semibold mobile:text-xs">
+            <h3 className="text-[12px] xs:text-[14px] font-semibold leading-tight">
               {section.title}
             </h3>
             <svg
-              className={`w-5 h-5 mobile:w-4 mobile:h-4 transition-transform duration-300 ${
+              className={`w-4 h-4 xs:w-5 xs:h-5 transition-transform duration-300 flex-shrink-0 ${
                 expandedSections[sectionIndex] ? "rotate-180" : ""
               }`}
               fill="none"
@@ -184,7 +184,7 @@ const CollapsablePaymentTable = ({
             }}
           >
             <div className="overflow-x-auto">
-              <table className="min-w-full bg-white mobile:text-xs">
+              <table className="min-w-full bg-white text-xs xs:text-sm">
                 <thead>
                   <tr>
                     {section.headers.map((header, idx) => (
@@ -196,7 +196,7 @@ const CollapsablePaymentTable = ({
                             : idx === section.headers.length - 1
                             ? "border-r border-[#E0E1EA]"
                             : ""
-                        } p-3 mobile:p-2 text-left text-[12px] mobile:text-[10px] text-[#7D82A4] font-normal border-b-[1px] border-[#E0E1EA]`}
+                        } p-2 xs:p-3 text-left text-[10px] xs:text-[12px] text-[#7D82A4] font-normal border-b-[1px] border-[#E0E1EA] whitespace-nowrap`}
                       >
                         {header}
                       </th>
@@ -208,7 +208,7 @@ const CollapsablePaymentTable = ({
                     const isLastRow = rowIndex === section.data.length - 1;
 
                     return (
-                      <tr key={`row-${sectionIndex}-${rowIndex}-${row.id || rowIndex}`} className="mobile:text-xs">
+                      <tr key={`row-${sectionIndex}-${rowIndex}-${row.id || rowIndex}`} className="text-xs xs:text-sm hover:bg-gray-50 transition-colors">
                         {Object.entries(row).map(([key, values], cellIndex) => {
                           if (key === "id") return null;
 
@@ -251,9 +251,9 @@ const CollapsablePaymentTable = ({
                               onClick={() => {
                                 eyeKey && onRowClick(row, getTransactionType());
                               }}
-                              className={`py-3 pl-4 mobile:py-2 mobile:pl-2 ${
-                                key === "eye" && "w-[56px] hover:bg-gray-100"
-                              } text-left text-[12px] mobile:text-[10px] ${
+                              className={`py-2 xs:py-3 pl-2 xs:pl-4 ${
+                                key === "eye" && "w-[40px] xs:w-[56px] hover:bg-gray-200 transition-colors"
+                              } text-left text-[10px] xs:text-[12px] ${
                                 isLastRow ? "border-b-0" : "border-b"
                               } border-[#E0E1EA] ${
                                 eyeKey && "border-l-[1px] cursor-pointer"

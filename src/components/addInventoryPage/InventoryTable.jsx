@@ -167,11 +167,11 @@ const InventoryTable = ({ listArrayValues, dynamicKeys = [] }) => {
               className="bg-[#343432] text-white p-4 rounded-t-md flex justify-between items-center cursor-pointer"
               onClick={() => toggleAccordion(index)}
             >
-              <div className="flex flex-col md:flex-row md:gap-4 items-start md:items-center min-w-0 flex-1">
-                <h3 className="text-lg font-medium truncate max-w-full md:max-w-xs">
+              <div className="flex flex-col xs:flex-row xs:gap-2 sm:gap-4 items-start xs:items-center min-w-0 flex-1">
+                <h3 className="text-sm xs:text-base sm:text-lg font-medium truncate max-w-full xs:max-w-[180px] sm:max-w-xs">
                   {item.accordionTitle?.title}
                 </h3>
-                <div className="flex flex-wrap items-center gap-4 text-sm min-w-0">
+                <div className="flex flex-wrap items-center gap-2 xs:gap-3 sm:gap-4 text-xs xs:text-sm min-w-0">
                   {item.accordionTitle?.date && (
                     <div className="flex items-center gap-2 min-w-0">
                       <Image
@@ -181,7 +181,7 @@ const InventoryTable = ({ listArrayValues, dynamicKeys = [] }) => {
                         height={14}
                         className="invert flex-shrink-0"
                       />
-                      <span className="text-[12px] font-normal text-white truncate">
+                      <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-normal text-white truncate">
                         {item.accordionTitle.date}
                       </span>
                     </div>
@@ -195,7 +195,7 @@ const InventoryTable = ({ listArrayValues, dynamicKeys = [] }) => {
                         height={14}
                         className="invert flex-shrink-0"
                       />
-                      <span className="text-[12px] font-normal text-white truncate">
+                      <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-normal text-white truncate">
                         {item.accordionTitle.time}
                       </span>
                     </div>
@@ -209,19 +209,19 @@ const InventoryTable = ({ listArrayValues, dynamicKeys = [] }) => {
                         height={14}
                         className="invert flex-shrink-0"
                       />
-                      <span className="text-[12px] font-normal text-white truncate max-w-[200px]">
+                      <span className="text-[10px] xs:text-[11px] sm:text-[12px] font-normal text-white truncate max-w-[120px] xs:max-w-[150px] sm:max-w-[200px]">
                         {item.accordionTitle.location}
                       </span>
                     </div>
                   )}
                 </div>
               </div>
-              <div className="flex items-center flex-shrink-0 ml-2">
+              <div className="flex items-center flex-shrink-0 ml-1 xs:ml-2">
                 <span>
                   {expandedAccordions.includes(index) ? (
-                    <IconStore.chevronUp className="size-5" />
+                    <IconStore.chevronUp className="size-4 xs:size-5" />
                   ) : (
-                    <IconStore.chevronDown className="size-5" />
+                    <IconStore.chevronDown className="size-4 xs:size-5" />
                   )}
                 </span>
               </div>
@@ -230,21 +230,21 @@ const InventoryTable = ({ listArrayValues, dynamicKeys = [] }) => {
             {expandedAccordions.includes(index) && (
               <div className="border border-t-0 border-[#E0E1EA] rounded-b-md relative">
                 <div className="overflow-x-auto">
-                  <table className="w-full" style={{ minWidth: `${minTableWidth}px` }}>
+                  <table className="w-full" style={{ minWidth: `${Math.min(minTableWidth, 600)}px` }}>
                     <thead>
                       <tr className="bg-[#F5F7FA] border-b border-[#E0E1EA]">
-                        <th className="w-10 px-2 py-3 sticky left-0 bg-[#F5F7FA] z-10">
-                          <input type="checkbox" className="rounded" />
+                        <th className="w-6 xs:w-8 sm:w-10 px-1 xs:px-2 py-2 xs:py-3 sticky left-0 bg-[#F5F7FA] z-10">
+                          <input type="checkbox" className="rounded w-3 h-3 xs:w-4 xs:h-4" />
                         </th>
                         {displayKeys.map((header, headerIndex) => (
                           <th
                             key={headerIndex}
-                            className="px-2 py-3 text-left text-sm font-medium text-[#323A70] whitespace-nowrap"
+                            className="px-1 xs:px-2 py-2 xs:py-3 text-left text-xs xs:text-sm font-medium text-[#323A70] whitespace-nowrap"
                           >
                             {typeof header === 'object' ? header.title : header}
                           </th>
                         ))}
-                        <th className="px-2 py-3 text-left text-sm font-medium text-[#323A70] sticky right-0 bg-[#F5F7FA] z-10">
+                        <th className="px-1 xs:px-2 py-2 xs:py-3 text-left text-xs xs:text-sm font-medium text-[#323A70] sticky right-0 bg-[#F5F7FA] z-10">
                           Actions
                         </th>
                       </tr>
@@ -255,8 +255,8 @@ const InventoryTable = ({ listArrayValues, dynamicKeys = [] }) => {
                           key={rowIndex}
                           className="border-b border-[#E0E1EA] hover:bg-gray-50"
                         >
-                          <td className="px-2 py-2 sticky left-0 bg-white z-10">
-                            <input type="checkbox" className="rounded" />
+                          <td className="px-1 xs:px-2 py-1 xs:py-2 sticky left-0 bg-white z-10">
+                            <input type="checkbox" className="rounded w-3 h-3 xs:w-4 xs:h-4" />
                           </td>
                           {displayKeys.map((header, colIndex) => {
                             const key = typeof header === 'object' ? header.key : header;
@@ -264,9 +264,9 @@ const InventoryTable = ({ listArrayValues, dynamicKeys = [] }) => {
 
                             if (key === 'uploadTickets') {
                               return (
-                                <td key={colIndex} className="px-2 py-2">
-                                  <div className="w-24">
-                                    <button className="bg-blue-50 text-gray-600 px-3 py-1 rounded text-sm">
+                                <td key={colIndex} className="px-1 xs:px-2 py-1 xs:py-2">
+                                  <div className="w-16 xs:w-20 sm:w-24">
+                                    <button className="bg-blue-50 text-gray-600 px-2 xs:px-3 py-1 rounded text-xs xs:text-sm w-full">
                                       Upload
                                     </button>
                                   </div>
@@ -276,8 +276,8 @@ const InventoryTable = ({ listArrayValues, dynamicKeys = [] }) => {
 
                             if (key === 'ticketsInHand') {
                               return (
-                                <td key={colIndex} className="px-2 py-2">
-                                  <div className="w-24 flex justify-center">
+                                <td key={colIndex} className="px-1 xs:px-2 py-1 xs:py-2">
+                                  <div className="w-16 xs:w-20 sm:w-24 flex justify-center">
                                     <FormFields
                                       formFields={[createFormField(key, value)]}
                                     />
@@ -287,7 +287,7 @@ const InventoryTable = ({ listArrayValues, dynamicKeys = [] }) => {
                             }
 
                             return (
-                              <td key={colIndex} className="px-2 py-2">
+                              <td key={colIndex} className="px-1 xs:px-2 py-1 xs:py-2">
                                 <div className={getColumnWidth(key)}>
                                   <FormFields
                                     formFields={[createFormField(key, value)]}
@@ -296,13 +296,13 @@ const InventoryTable = ({ listArrayValues, dynamicKeys = [] }) => {
                               </td>
                             );
                           })}
-                          <td className="px-2 py-2 sticky right-0 bg-white z-10">
-                            <div className="flex space-x-2">
-                              <button className="text-gray-500 hover:text-gray-600">
-                                <IconStore.copy className="size-5" />
+                          <td className="px-1 xs:px-2 py-1 xs:py-2 sticky right-0 bg-white z-10">
+                            <div className="flex space-x-1 xs:space-x-2">
+                              <button className="text-gray-500 hover:text-gray-600 p-1">
+                                <IconStore.copy className="size-4 xs:size-5" />
                               </button>
-                              <button className="text-gray-500 hover:text-gray-600">
-                                <IconStore.download className="size-5" />
+                              <button className="text-gray-500 hover:text-gray-600 p-1">
+                                <IconStore.download className="size-4 xs:size-5" />
                               </button>
                             </div>
                           </td>

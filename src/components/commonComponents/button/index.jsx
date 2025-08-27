@@ -26,7 +26,7 @@ const Button = (props) => {
   /* Style mapping for (primary, primary-disable, secondary, secondary-disable) Button */
 
   const classNameMapping = {
-    primary: "bg-[#343432] text-white py-[12.5px] text-white",
+    primary: "bg-[#343432] text-white py-[10px] xs:py-[12.5px] text-white",
     "primary-disable":
       "bg-[#E6EAEE] border-[1px] border-[#E6EAEE] text-[#CCD5DC]",
     blueType: "bg-[#343432] text-white",
@@ -37,13 +37,13 @@ const Button = (props) => {
   const { eventName, screen, custom } = tracking;
 
   const rootStyle = twMerge(
-    `font-medium text-[14px]  rounded-[4px] flex items-center gap-[5px] bg-[none] p-[7px] px-[10px] relative overflow-hidden`,
+    `font-medium text-[13px] xs:text-[14px] rounded-[4px] flex items-center gap-[4px] xs:gap-[5px] bg-[none] p-[6px] xs:p-[7px] px-[8px] xs:px-[10px] relative overflow-hidden min-h-[36px] xs:min-h-[40px]`,
     classNameMapping[type] || "border-[#E6EAEE] border-[1px]",
     root,
     tracking ? "event-track" : "",
     disabled
       ? `!cursor-not-allowed ${classNameMapping[`${type}-disable`]}`
-      : "cursor-pointer hover:bg-opacity-90"
+      : "cursor-pointer hover:bg-opacity-90 active:bg-opacity-95 transition-colors"
   );
 
   return (
