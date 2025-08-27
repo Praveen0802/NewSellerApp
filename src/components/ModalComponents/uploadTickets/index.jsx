@@ -781,6 +781,7 @@ const UploadTickets = ({
     console.log(updatedObject, "updatedObjectupdatedObject");
     // setIsLoading(true);
     let hasChanges = false;
+    
     const constructTicketFormData = (updatedObject) => {
       const formData = new FormData();
       const index = 0;
@@ -790,6 +791,7 @@ const UploadTickets = ({
         rowData?.rawTicketData?.ticket_type_id
       );
       formData.append(`data[0][match_id]`, rowData?.rawMatchData?.m_id);
+      
       if (paperTicketFlow) {
         formData.append(`data[0][upload_id]`, updatedObject.courier_id || "0");
         if (
@@ -798,7 +800,7 @@ const UploadTickets = ({
           !updatedObject?.upload_tickets?.[0]?.url
         ) {
           hasChanges = true;
-
+  
           updatedObject.upload_tickets.forEach((ticket, idx) => {
             formData.append(
               `data[0][rows][${idx}][file]`,
@@ -808,6 +810,7 @@ const UploadTickets = ({
           });
         }
       }
+      
       // Common additional info fields for all flows (except proof upload)
       if (updatedObject.additional_info && !proofUploadView) {
         if (
@@ -831,45 +834,47 @@ const UploadTickets = ({
           );
         }
       }
-
+  
       // Handle Normal Flow and Proof Upload - upload_tickets
+      // FIXED: Only process new files (non-existing) from updatedObject
       if (
         updatedObject.upload_tickets &&
         updatedObject.upload_tickets.length > 0 &&
         !paperTicketFlow
       ) {
         hasChanges = true;
-        transferredFiles.forEach((fileObj, idx) => {
-          // Only process files that are not existing (i.e., need to be updated)
-          if (!fileObj.isExisting && fileObj.file instanceof File) {
-            // If you have an upload_id to update, use it; otherwise, use idx or fileObj.id as needed
-            const uploadId = fileObj.existingId || fileObj.id;
-            formData.append(
-              `data[0][rows][${idx - 1}][upload_id]`,
-              uploadId?.includes("Hello") ? "0" : uploadId
-            );
-            formData.append(
-              `data[0][rows][${idx - 1}][file]`,
-              fileObj.file,
-              fileObj.name
-            );
-          }
+        
+        // Filter only new files that need to be uploaded
+        const newFilesToUpload = updatedObject.upload_tickets.filter(
+          (fileObj) => !fileObj.isExisting && fileObj.file instanceof File
+        );
+        
+        newFilesToUpload.forEach((fileObj, idx) => {
+          const uploadId = fileObj.existingId || fileObj.id;
+          formData.append(
+            `data[0][rows][${idx}][upload_id]`,
+            uploadId?.includes("Hello") ? "0" : uploadId
+          );
+          formData.append(
+            `data[0][rows][${idx}][file]`,
+            fileObj.file,
+            fileObj.name
+          );
         });
       }
-
+  
       // Handle E-Ticket Flow - qr_links
-      // Handle E-Ticket Flow - qr_links (Updated version)
       if (updatedObject.qr_links && updatedObject.qr_links.length > 0) {
         hasChanges = true;
-
+  
         updatedObject.qr_links.forEach((link, idx) => {
           // Only process links that have at least one QR link (android or ios)
           if (link.qr_link_android || link.qr_link_ios) {
             // Use the existing id if available, otherwise use 0
             const uploadId = link.id || 0;
-
+  
             formData.append(`data[0][rows][${idx}][upload_id]`, uploadId);
-
+  
             // Add Android link if it exists
             if (link.qr_link_android) {
               formData.append(
@@ -877,7 +882,7 @@ const UploadTickets = ({
                 link.qr_link_android
               );
             }
-
+  
             // Add iOS link if it exists
             if (link.qr_link_ios) {
               formData.append(
@@ -888,11 +893,10 @@ const UploadTickets = ({
           }
         });
       }
-
+  
       // Handle Paper Ticket Flow - courier details and upload_tickets
       if (updatedObject.courier_type) {
         hasChanges = true;
-
         formData.append(
           `data[${index}][rows][0][courier_type]`,
           updatedObject.courier_type
@@ -900,7 +904,6 @@ const UploadTickets = ({
       }
       if (updatedObject.courier_name) {
         hasChanges = true;
-
         formData.append(
           `data[${index}][rows][0][courier_name]`,
           updatedObject.courier_name
@@ -908,24 +911,23 @@ const UploadTickets = ({
       }
       if (updatedObject.courier_tracking_details) {
         hasChanges = true;
-
         formData.append(
           `data[${index}][rows][0][courier_tracking_details]`,
           updatedObject.courier_tracking_details
         );
       }
-
+  
       // Add proof upload flag if applicable
       if (proofUploadView) {
         formData.append(`data[${index}][is_proof_upload]`, "1");
       }
-
+  
       return formData;
     };
-
+  
     const constructNewFormData = () => {
       const newFormData = new FormData();
-
+  
       if (updatedObject.additional_info) {
         if (updatedObject.additional_info?.templateFile) {
           newFormData.append(
@@ -934,7 +936,7 @@ const UploadTickets = ({
             "additional_file"
           );
         }
-
+  
         newFormData.append(
           "additional_file_type",
           updatedObject.additional_info.template || ""
@@ -947,23 +949,34 @@ const UploadTickets = ({
         newFormData.append(`match_id`, rowData?.rawMatchData?.m_id);
         newFormData.append(`user_id`, readCookie("user_token"));
         newFormData.append(`ticket_id`, rowData?.rawTicketData?.s_no);
-        // Fix: Provide a value for template_id
         newFormData.append(
           "template_id",
           updatedObject.additional_info.template || ""
         );
       }
-
+  
       return newFormData;
     };
-
+  
     try {
       const formData = constructTicketFormData(updatedObject);
       console.log(updatedObject, "updatedObjectupdatedObject", formData);
+      
       if (hasChanges) {
         const response = await myListingUploadTickets("", formData);
+        if (response.status == 200) {
+          onClose();
+          toast.success(
+            proofUploadView
+              ? "Proof document uploaded successfully"
+              : "Tickets updated successfully"
+          );
+        } else {
+          console.error("Upload failed:", response.message);
+          toast.error(response.message || "Upload failed");
+        }
       }
-
+  
       if (updatedObject.additional_info) {
         try {
           const newFormData = constructNewFormData(updatedObject);
@@ -977,19 +990,7 @@ const UploadTickets = ({
           console.log("error", err);
         }
       }
-      if (response.status == 200) {
-        onClose();
-        toast.success(
-          proofUploadView
-            ? "Proof document uploaded successfully"
-            : "Tickets updated successfully"
-        );
-      } else {
-        console.error("Upload failed:", response.message);
-        toast.error(response.message || "Upload failed");
-      }
     } catch (error) {
-      // console.error("API call failed:", error);
       toast.error("Upload failed. Please try again.");
     } finally {
       setIsLoading(false);
@@ -997,7 +998,6 @@ const UploadTickets = ({
   };
 
   const handleConfirmCtaClick = useCallback(async () => {
-    console.log(mySalesPage, "mySalesPagemySalesPage");
     if (mySalesPage) {
       onClose();
       return;

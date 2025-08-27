@@ -1039,6 +1039,17 @@ const SignupFlow = ({ refer_code, currentScreen = null, currencies } = {}) => {
                     />
                   </div>
                   <div>
+                  {/* <FloatingLabelInput
+                    label="City"
+                    id="city"
+                    keyValue="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                    error={errors.city}
+                    showError={true}
+                    staticLabel={true}
+                    className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
+                  /> */}
                     <FloatingSelect
                       label={isLoadingCities ? "Loading Cities..." : "City"}
                       options={cityOptions}

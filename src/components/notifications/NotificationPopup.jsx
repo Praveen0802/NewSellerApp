@@ -58,7 +58,7 @@ const NotificationPopup = ({ item, onClose, isVisible } = {}) => {
             </div>
           )} */}
 
-          {isActivity && (
+          {/* {isActivity && (
             <div className="bg-gray-50 p-3 rounded-lg">
               <div className="text-xs text-gray-600 space-y-1">
                 {item.userName && (
@@ -76,7 +76,7 @@ const NotificationPopup = ({ item, onClose, isVisible } = {}) => {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
 
         <div className="p-4 border-t border-gray-200 flex justify-end">

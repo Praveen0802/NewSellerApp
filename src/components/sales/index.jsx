@@ -1317,20 +1317,23 @@ const SalesPage = (props) => {
         scrollThreshold={100}
         onClearAllFilters={handleClearAllFilters}
       />
-      <InventoryLogsInfo
-        show={showLogDetailsModal?.flag}
-        onClose={() =>
-          setShowLogDetailsModal({
-            flag: false,
-            orderLogs: [],
-            inventoryLogs: [],
-          })
-        }
-        orderLogs={showLogDetailsModal?.orderLogs}
-        inventoryLogs={showLogDetailsModal?.inventoryLogs}
-        isLoading={showLogDetailsModal?.isLoading}
-        showTabs={true} // Enable tab functionality
-      />
+      {showLogDetailsModal?.flag && (
+        <InventoryLogsInfo
+          show={showLogDetailsModal?.flag}
+          onClose={() =>
+            setShowLogDetailsModal({
+              flag: false,
+              orderLogs: [],
+              inventoryLogs: [],
+            })
+          }
+          orderLogs={showLogDetailsModal?.orderLogs}
+          inventoryLogs={showLogDetailsModal?.inventoryLogs}
+          isLoading={showLogDetailsModal?.isLoading}
+          showTabs={true} // Enable tab functionality
+        />
+      )}
+
       <OrderInfo
         show={showInfoPopup?.flag}
         data={showInfoPopup?.data}

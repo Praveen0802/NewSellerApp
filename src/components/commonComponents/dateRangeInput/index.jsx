@@ -28,6 +28,7 @@ const FloatingDateRange = ({
   showMonth = false,
   parentClassNameUpdate=''
 }) => {
+  console.log(showYear,'showMonth')
   const [isFocused, setIsFocused] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [startDate, setStartDate] = useState(value.startDate || "");

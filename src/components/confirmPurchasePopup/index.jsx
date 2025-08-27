@@ -75,7 +75,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
       first_name: field?.first_name,
       last_name: field?.last_name,
       email: field?.email,
-      dialing_code: field?.country_code,
+      dialing_code: field?.country_code?.includes("+") ? field?.country_code : `+${field?.country_code}`,
       mobile_no: field?.mobile_number,
       country: field?.country_id,
       city: field?.city_id,
@@ -122,7 +122,9 @@ const ConfirmPurchasePopup = ({ onClose }) => {
         first_name: primaryAddress?.first_name,
         last_name: primaryAddress?.last_name,
         email: primaryAddress?.email,
-        dialing_code: primaryAddress?.country_code,
+        dialing_code: primaryAddress?.country_code?.includes("+")
+          ? primaryAddress?.country_code
+          : `+${primaryAddress?.country_code}`,
         mobile_no: primaryAddress?.mobile_number,
         country: Number(primaryAddress?.country_id),
         city: Number(primaryAddress?.city_id),
@@ -278,7 +280,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
       setSelectedPaymentMethod(paymentMethod);
 
       if (guestDetails?.length > 0) {
-        console.log(guestFormFieldValues,'guestFormFieldValuesguestFormFieldValues')
+
         try {
           const allFieldsFilled = guestDetails.every((guest) => {
             console.log(guest, "guestguest");

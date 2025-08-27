@@ -53,6 +53,17 @@ const ViewContainer = ({
     </div>
   );
 
+  // Shimmer component for list values (the icon + text + count section)
+  const ShimmerListValue = () => (
+    <div className="flex items-center justify-between animate-pulse">
+      <div className="flex gap-2 items-center">
+        <div className="bg-gray-200 p-1 rounded-md w-8 h-8"></div>
+        <div className="h-3 bg-gray-200 rounded w-16"></div>
+      </div>
+      <div className="h-4 bg-gray-200 rounded w-12"></div>
+    </div>
+  );
+
   return (
     <div className="bg-white flex flex-col gap-3 md:gap-4 w-full rounded-md p-4">
       <div className="flex justify-between items-center flex-wrap gap-1">
@@ -71,34 +82,43 @@ const ViewContainer = ({
 
       <div className="border border-[#eaeaf1] rounded-md">
         <div className="grid md:grid-cols-1 p-4 gap-4">
-          {listValues?.map((listItem, listIndex) => {
-            return (
-              <div
-                className="flex items-center justify-between"
-                key={listIndex}
-              >
-                <div className="flex gap-2 items-center">
-                  <div className="bg-[#F2F5FD] p-1 rounded-md">
-                    <Image
-                      src={listItem?.image}
-                      width={16}
-                      height={16}
-                      alt="image"
-                      className="w-4 h-4"
-                    />
+          {loader ? (
+            // Show shimmer for list values when loading
+            <>
+              <ShimmerListValue />
+              <ShimmerListValue />
+            </>
+          ) : (
+            listValues?.map((listItem, listIndex) => {
+              return (
+                <div
+                  className="flex items-center justify-between"
+                  key={listIndex}
+                >
+                  <div className="flex gap-2 items-center">
+                    <div className="bg-[#F2F5FD] p-1 rounded-md">
+                      <Image
+                        src={listItem?.image}
+                        width={16}
+                        height={16}
+                        alt="image"
+                        className="w-4 h-4"
+                      />
+                    </div>
+                    <p className="text-[#343432] text-xs">
+                      {listItem?.text}
+                    </p>
                   </div>
-                  <p className="text-[#343432] text-xs">
-                    {listItem?.text}
+                  <p className="text-[#343432] text-sm  font-semibold">
+                    {listItem?.count}
                   </p>
                 </div>
-                <p className="text-[#343432] text-sm  font-semibold">
-                  {listItem?.count}
-                </p>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
+        {/* Uncomment and modify this section if you want to show the table view with shimmer */}
         {/* {displayValues?.length > 0 ? (
           <div className="border-t border-[#eaeaf1]">
             <div className="flex items-center p-2 border-b border-[#eaeaf1] justify-between bg-gray-50">
@@ -136,12 +156,10 @@ const ViewContainer = ({
                   ))}
                 </div>
               )}
-
-             
             </div>
           </div>
         ) : loader ? (
-          // Initial loading state
+          // Initial loading state for table view
           <div className="border-t border-[#eaeaf1]">
             <div className="flex items-center p-2 border-b border-[#eaeaf1] justify-between bg-gray-50">
               <p className="text-gray-400 font-medium text-xs">

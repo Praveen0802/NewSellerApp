@@ -52,6 +52,8 @@ const FormFields = ({ formFields }) => {
           count,
           deleteFunction,
           multiselect = false,
+          showMonth=false,
+          showYear=false,
           onKeyDown = () => {},
         } = field;
 
@@ -155,6 +157,8 @@ const FormFields = ({ formFields }) => {
                 parentClassName={parentClassName}
                 label={label}
                 className={className}
+                showMonth={showMonth}
+                showYear={showYear}
                 hideLabel={hideLabel}
                 value={value}
                 minDate={field?.minDate}

@@ -228,28 +228,61 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
     { title: "Additional File", cta: "Download File" },
   ];
 
-  // Format date function with better error handling
-  function formatTimestamp(dateString) {
+  // Improved date formatting function with better error handling and multiple date formats
+  function formatTimestamp(dateString, format = 'full') {
     if (!dateString || dateString === "" || dateString === "null" || dateString === "undefined") {
       return "-";
     }
 
-    // If it's already in DD/MM/YYYY format, return as is
+    // Handle different input formats
+    let dateToFormat;
+    
+    // If it's already in DD/MM/YYYY format, convert to a Date object
     if (typeof dateString === 'string' && dateString.includes("/") && dateString.split("/").length === 3) {
-      return dateString;
+      const parts = dateString.split(" ");
+      const datePart = parts[0]; // DD/MM/YYYY
+      const timePart = parts[1]; // HH:MM (if exists)
+      
+      const [day, month, year] = datePart.split("/");
+      
+      if (timePart) {
+        dateToFormat = new Date(`${year}-${month}-${day}T${timePart}:00`);
+      } else {
+        dateToFormat = new Date(`${year}-${month}-${day}`);
+      }
+    } else {
+      dateToFormat = new Date(dateString);
+    }
+
+    // Check if date is valid
+    if (isNaN(dateToFormat.getTime())) {
+      console.warn("Invalid date:", dateString);
+      return dateString; // Return original string if can't parse
     }
 
     try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return dateString;
-
-      const options = {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      };
-      return date.toLocaleDateString("en-US", options);
+      if (format === 'date') {
+        return dateToFormat.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
+      } else if (format === 'time') {
+        return dateToFormat.toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        });
+      } else {
+        // Full format
+        const options = {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        };
+        return dateToFormat.toLocaleDateString("en-US", options);
+      }
     } catch (error) {
       console.warn("Date formatting error:", error);
       return dateString || "-";
@@ -306,41 +339,58 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
     },
   ];
 
-  console.log(ticket_details?.match_date);
+  console.log("Raw ticket_details.match_datetime:", ticket_details?.match_datetime);
 
-  // Safe transformation of ticket details with comprehensive null checks
+  // IMPROVED: Enhanced transformation of ticket details with comprehensive null checks and better date handling
   const transformedTicketDetails = ticket_details && typeof ticket_details === 'object' && Object.keys(ticket_details).length > 0
     ? {
         match_name: ticket_details.match_name || "-",
         venue: ticket_details.venue_name || "-",
-        match_date: ticket_details.match_datetime 
-          ? (() => {
-              try {
-                const date = new Date(ticket_details.match_datetime);
-                return isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
-              } catch (e) {
-                return "-";
-              }
-            })()
-          : "-",
-        match_time: ticket_details.match_datetime 
-          ? (() => {
-              try {
-                const date = new Date(ticket_details.match_datetime);
-                return isNaN(date.getTime()) ? "-" : date.toLocaleTimeString();
-              } catch (e) {
-                return "-";
-              }
-            })()
-          : "-",
+        match_date: (() => {
+          // Try multiple sources for the match date
+          const rawDateTime = ticket_details.match_datetime || 
+                             order_details?.match_datetime || 
+                             ticket_details.match_date ||
+                             order_details?.match_date;
+          
+          console.log("Processing match_date from:", rawDateTime);
+          
+          if (!rawDateTime || rawDateTime === "" || rawDateTime === "null" || rawDateTime === "undefined") {
+            return "-";
+          }
+          
+          return formatTimestamp(rawDateTime, 'date');
+        })(),
+        match_time: (() => {
+          // Try multiple sources for the match time
+          const rawDateTime = ticket_details.match_datetime || 
+                             order_details?.match_datetime || 
+                             ticket_details.match_date ||
+                             order_details?.match_date;
+          
+          console.log("Processing match_time from:", rawDateTime);
+          
+          if (!rawDateTime || rawDateTime === "" || rawDateTime === "null" || rawDateTime === "undefined") {
+            return "-";
+          }
+          
+          return formatTimestamp(rawDateTime, 'time');
+        })(),
         seat_category: ticket_details.seat_category || "-",
         ticket_types: ticket_details.ticket_type || "-",
         quantity: ticket_details.quantity || 0,
-        ticket_price: ticket_details.total_paid_converted || 0,
-        order_value: ticket_details.ticket_price_converted || 0,
+        ticket_price: ticket_details.total_paid_converted || ticket_details.ticket_price_converted || 0,
+        order_value: ticket_details.ticket_price_converted || ticket_details.total_paid_converted || 0,
         currency_type: ticket_details.currency || "USD",
       }
     : null;
+
+  // Debug logging for match_datetime
+  console.log("Final transformedTicketDetails:", transformedTicketDetails);
+  if (transformedTicketDetails) {
+    console.log("Match Date:", transformedTicketDetails.match_date);
+    console.log("Match Time:", transformedTicketDetails.match_time);
+  }
 
   const bookingId = order_details?.booking_status_id;
 

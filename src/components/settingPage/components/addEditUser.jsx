@@ -375,6 +375,11 @@ const AddEditUser = ({
             toast.error(
               response?.message?.email?.[0] || "Error in adding user"
             );
+          }
+          if (response?.message?.confirm_password) {
+            toast.error(
+              response?.message?.confirm_password?.[0] || "Error in adding user"
+            );
           } else {
             toast.error("Error in adding user");
           }

@@ -91,6 +91,8 @@ const GuestDetails = ({
         type: "date",
         mandatory: true,
         singleDateMode: true,
+        showYear:true,
+        showMonth:true
       },
       passport_number: {
         label: "Passport Number",
@@ -171,6 +173,8 @@ const GuestDetails = ({
         className: `!py-2 !px-4 ${fieldStyle}`,
         labelClassName: "text-sm text-gray-600 mb-1 block",
         singleDateMode: true,
+        showYear: true,
+        showMonth: true
       };
 
       // Add type-specific properties

@@ -1,96 +1,261 @@
-import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { ChevronDown, ChevronUp, X, Info } from "lucide-react";
 import { useState } from "react";
 import RightViewModal from "../commonComponents/rightViewModal";
-import InventoryLogsShimmer from "./InventoryLogsShimmer.jsx"; // Import the shimmer component
+
+// Mock shimmer component
+const InventoryLogsShimmer = ({ count }) => (
+  <div className="p-3">
+    {Array.from({ length: count }).map((_, i) => (
+      <div key={i} className="mb-3 animate-pulse">
+        <div className="h-12 bg-gray-200 rounded mb-2"></div>
+      </div>
+    ))}
+  </div>
+);
+
+// Utility function for formatting key names
+const formatKeyName = (key) => {
+  return key
+    .replace(/_/g, " ")
+    .replace(/([A-Z])/g, " $1")
+    .replace(/\b\w/g, (l) => l.toUpperCase())
+    .trim();
+};
+
+// Fixed Truncated Display Component for Arrays
+const TruncatedArrayDisplay = ({ items, maxVisible = 3, keyName }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return <span className="text-gray-400 italic text-xs">Empty</span>;
+  }
+
+  const visibleItems = items.slice(0, maxVisible);
+  const hiddenItems = items.slice(maxVisible);
+  const hasMoreItems = hiddenItems.length > 0;
+
+  return (
+    <div className="space-y-1">
+      {/* Always visible items */}
+      {visibleItems.map((item, idx) => (
+        <span
+          key={idx}
+          className="block px-2 py-1 rounded text-[#323A70] text-[12px] break-all max-w-full font-light"
+        >
+          {String(item)}
+        </span>
+      ))}
+
+      {/* Show more indicator with tooltip */}
+      {hasMoreItems && (
+        <div className="relative">
+          <div
+            className="flex items-center gap-1 px-2 py-1 rounded text-blue-600 text-[12px] cursor-help hover:bg-blue-50 transition-colors"
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowTooltip(!showTooltip);
+            }}
+          >
+            <Info className="w-3 h-3" />
+            <span>+{hiddenItems.length} more items</span>
+          </div>
+
+          {/* Fixed Tooltip with Portal-like behavior */}
+          {showTooltip && (
+            <div
+              className="fixed z-[9999] w-80 max-w-screen-sm pointer-events-none"
+              style={{
+                left: "50%",
+                top: "50%",
+                transform: "translate(-50%, -50%)",
+              }}
+            >
+              <div className="bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl border border-gray-700 pointer-events-auto">
+                <div className="font-medium mb-2 text-gray-200 flex justify-between items-center">
+                  <span>
+                    Additional {formatKeyName(keyName)} ({hiddenItems.length}{" "}
+                    items):
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowTooltip(false);
+                    }}
+                    className="text-gray-400 hover:text-white ml-2"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+                <div className="max-h-60 overflow-y-auto space-y-1">
+                  {hiddenItems.map((item, idx) => (
+                    <div key={idx} className="text-gray-100 break-words">
+                      • {String(item)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const InventoryLogsInfo = ({
-  show,
-  onClose,
-  data = [], // Original prop - for backward compatibility (tickets page)
-  orderLogs = [], // New prop for order logs (sales page)
-  inventoryLogs = [], // New prop for inventory logs (sales page)
+  show = true,
+  onClose = () => {},
+  data = [],
+  orderLogs = [],
+  inventoryLogs = [],
   isLoading = false,
-  showTabs = false, // New prop to enable tab functionality (sales page)
+  showTabs = false,
 }) => {
-
-  console.log(data,'datadatadata')
-
   const [expandedLogs, setExpandedLogs] = useState(new Set());
-  const [activeTab, setActiveTab] = useState("order"); // "order" or "inventory"
+  const [activeTab, setActiveTab] = useState("order");
 
-  // Define the specific fields and their order for inventory logs (matching Figma design)
-  const inventoryFieldsOrder = [
-    'benefits_restrictions',
-    'category', 
-    'date_of_ship',
-    'face_value',
-    'first_seat',
-    'in_hand',
-    'listing_owner',
-    'max_display_quantity',
-    'ticket_files_status',
-    'mobile_links_status',
-    'fan_area',
-    'payout_price',
-    'quantity',
-    'sold_tickets',
-    'section',
-    'row',
-    'seating_arrangement',
-    'split_type',
-    'status',
-    'ticket_type'
+  // Sample data for demonstration
+  const sampleData = [
+    {
+      ticket_id: 626376,
+      user_id: 25,
+      json_payload: {
+        home_town: "Manchester City",
+        ticket_category: "Longside Lower Tier",
+        ticket_block: "31179",
+        add_web_price_addlist: "100",
+        max_display_qty: "5",
+        first_seat: "1",
+        row: "10A",
+        split_type: "No Preferences",
+        ship_date: "2025-09-12",
+        additional_file_type: null,
+        additional_dynamic_content: null,
+        match_id: "6784",
+        event: "Event",
+        ticket_details: [
+          "Tickets not available for purchase by Italian citizens",
+          "Adult + Junior",
+          "Concession Ticket - Child",
+          "Family Stand - 1 x Adult & 1 x Junior",
+          "Concession Ticket - Senior Citizen",
+          "Under 21 Ticket",
+          "Under 18 Ticket",
+          "No under 14s",
+          "Wheelchair User Only",
+          "Over 18 Ticket",
+          "21 And Over Ticket",
+          "Under 15s accompanied by An Adult",
+          "Meet Up With Seller",
+          "Limited Or Restricted View",
+          "Side Or Rear View",
+          "Restricted Leg Room",
+          "Away team passport holders not allowed - Passport copy required",
+          "Includes Parking",
+          "Access To VIP Lounge",
+          "Ticket with meal",
+          "Includes VIP Pass",
+          "Sponsor / Federation Tickets",
+          "Screenshot",
+          "Event Day Delivery",
+          "Passo card required",
+          "Alcohol Free Area",
+        ],
+        ticket_details1: "Not Seated Together",
+        quantity: 5,
+        price_type: "GBP",
+        price: 400,
+        in_hand: true,
+        ticket_type: "E-Ticket",
+      },
+      created_at: "2025-08-22T12:41:53.000000Z",
+    },
+    {
+      ticket_id: 626376,
+      user_id: 25,
+      json_payload: {
+        quantity: "7",
+        register_id: null,
+      },
+      created_at: "2025-08-22T12:59:32.000000Z",
+    },
   ];
 
   function convertTimestamp(isoTimestamp) {
     const date = new Date(isoTimestamp);
-
-    // Get date components
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // Month is 0-indexed
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     const year = date.getFullYear();
-
-    // Get time components
     const hours = String(date.getHours()).padStart(2, "0");
     const minutes = String(date.getMinutes()).padStart(2, "0");
     const seconds = String(date.getSeconds()).padStart(2, "0");
-
     return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
   }
 
-  // Function to clean and format key names
-  const formatKeyName = (key) => {
-    return key
-      .replace(/_/g, " ") // Replace underscores with spaces
-      .replace(/([A-Z])/g, " $1") // Add space before capital letters
-      .replace(/\b\w/g, (l) => l.toUpperCase()) // Capitalize first letter of each word
-      .trim();
-  };
-
-  // Function to format value display
-  const formatValue = (value) => {
+  // Enhanced formatValue function to handle large arrays
+  const formatValue = (value, key) => {
     if (typeof value === "boolean") {
       return value ? "Yes" : "No";
     }
     if (typeof value === "string" && value.trim() === "") {
       return "Empty";
     }
+    if (
+      key === "ticket_file_status" &&
+      typeof value === "object" &&
+      value !== null
+    ) {
+      const urls = [];
+      Object.values(value).forEach((arr) => {
+        if (Array.isArray(arr)) {
+          urls.push(...arr);
+        }
+      });
+      return urls.filter((url) => url && url.trim() !== "");
+    }
     if (Array.isArray(value)) {
-      return value.join(", ");
+      return value.filter((item) => item && String(item).trim() !== "");
     }
     return String(value);
   };
 
-  // Get the current data based on active tab or single data prop (backward compatibility)
+  const isLink = (value, key) => {
+    const linkKeys = ["additional_template", "ticket_file_status"];
+    if (linkKeys.includes(key)) return true;
+    if (key?.toLowerCase().includes("link")) return true;
+    if (
+      typeof value === "string" &&
+      (value.startsWith("http://") || value.startsWith("https://"))
+    ) {
+      return true;
+    }
+    return false;
+  };
+
+  // Check if a field is likely to contain large arrays (customize this based on your data)
+  const isLargeArrayField = (key) => {
+    const largeArrayFields = [
+      "ticket_details",
+      "restrictions",
+      "benefits",
+      "amenities",
+      "features",
+    ];
+    return largeArrayFields.some((field) =>
+      key.toLowerCase().includes(field.toLowerCase())
+    );
+  };
+
   const getCurrentData = () => {
     if (showTabs) {
       return activeTab === "order" ? orderLogs : inventoryLogs;
     }
-    // Original functionality - use data prop for tickets page
-    return data;
+    // Use sample data for demonstration if no data provided
+    return data.length > 0 ? data : sampleData;
   };
 
-  // Get the first complete json_payload as reference
   const getReferencePayload = () => {
     const currentData = getCurrentData();
     const firstEntry = currentData.find(
@@ -100,34 +265,22 @@ const InventoryLogsInfo = ({
     return firstEntry?.json_payload || {};
   };
 
-  // Get all unique fields across all logs - with specific handling for inventory logs
   const getAllFields = () => {
     const currentData = getCurrentData();
-    
-    // If we're showing inventory logs and tabs are enabled, use predefined order
-    if (showTabs && activeTab === "inventory") {
-      // Return ALL predefined inventory fields, regardless of whether they exist in data
-      return inventoryFieldsOrder;
-    }
-    
-    // For order logs or backward compatibility, get all fields as before
     const allFields = new Set();
     currentData.forEach((entry) => {
       if (entry.json_payload) {
         Object.keys(entry.json_payload).forEach((key) => allFields.add(key));
       }
     });
-    console.log(Array.from(allFields),'Array.from(allFields)Array.from(allFields)')
     return Array.from(allFields);
   };
 
-  // Get current state of all fields up to a specific log index
   const getCurrentFieldValues = (upToIndex) => {
     const referencePayload = getReferencePayload();
     const currentValues = { ...referencePayload };
     const currentData = getCurrentData();
 
-    // Apply changes from logs up to the specified index
     for (let i = 0; i <= upToIndex; i++) {
       const logEntry = currentData[i];
       if (logEntry && logEntry.json_payload) {
@@ -136,19 +289,15 @@ const InventoryLogsInfo = ({
         });
       }
     }
-
     return currentValues;
   };
 
-  // Check if a field was changed in the current log
   const isFieldChangedInCurrentLog = (key, logEntry) => {
     return logEntry.json_payload && logEntry.json_payload.hasOwnProperty(key);
   };
 
-  // Toggle accordion expansion
   const toggleLog = (index) => {
-    if (isLoading) return; // Prevent interaction during loading
-
+    if (isLoading) return;
     const newExpanded = new Set(expandedLogs);
     if (newExpanded.has(index)) {
       newExpanded.delete(index);
@@ -158,19 +307,107 @@ const InventoryLogsInfo = ({
     setExpandedLogs(newExpanded);
   };
 
-  // Handle tab change
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    setExpandedLogs(new Set()); // Reset expanded logs when switching tabs
+    setExpandedLogs(new Set());
   };
 
   const displayData = getCurrentData();
   const allFields = getAllFields();
+
+  // Enhanced render function for field values
+  const renderFieldValue = (key, currentValue, isChangedInCurrentLog) => {
+    const hasValue = currentValue !== undefined && currentValue !== null;
+
+    if (!hasValue) {
+      return <span className="text-gray-400 italic text-xs">Empty</span>;
+    }
+
+    const formattedValue = formatValue(currentValue, key);
+
+    // Handle links
+    if (isLink(currentValue, key)) {
+      return (
+        <div className="space-y-1">
+          {Array.isArray(formattedValue) ? (
+            formattedValue.map((url, idx) => (
+              <div key={idx}>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline break-all block"
+                >
+                  Click here {formattedValue.length > 1 ? `(${idx + 1})` : ""}
+                </a>
+              </div>
+            ))
+          ) : (
+            <a
+              href={currentValue}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline break-all"
+            >
+              Click here
+            </a>
+          )}
+        </div>
+      );
+    }
+
+    // Handle arrays (including large arrays like ticket_details)
+    if (Array.isArray(formattedValue)) {
+      // Check if this is a large array field
+      if (isLargeArrayField(key) && formattedValue.length > 3) {
+        return (
+          <TruncatedArrayDisplay
+            items={formattedValue}
+            maxVisible={3}
+            keyName={key}
+          />
+        );
+      } else {
+        // Regular array display for smaller arrays
+        return (
+          <div className="space-y-1">
+            {formattedValue.map((item, idx) => (
+              <span
+                key={idx}
+                className={`block px-2 py-1 rounded text-sm break-all max-w-full ${
+                  isChangedInCurrentLog
+                    ? "bg-green-200 text-green-800 font-semibold"
+                    : "font-light"
+                }`}
+              >
+                {String(item)}
+              </span>
+            ))}
+          </div>
+        );
+      }
+    }
+
+    // Handle regular values
+    return (
+      <span
+        className={`inline-block px-2 py-1 rounded text-sm break-all max-w-full ${
+          isChangedInCurrentLog
+            ? "bg-green-200 text-green-800 font-semibold"
+            : "font-light"
+        }`}
+      >
+        {formattedValue}
+      </span>
+    );
+  };
+
   return (
     <RightViewModal className="!w-[800px]" show={show} onClose={onClose}>
-      <div className="w-full bg-white rounded-lg">
+      {/* Add relative positioning and ensure overflow is visible */}
+      <div className="w-full bg-white rounded-lg relative overflow-visible">
         {/* Header */}
-        <div className="flex justify-between items-center p-3 border-b border-gray-200 sticky top-0 bg-white z-999">
+        <div className="flex justify-between items-center p-3 border-b border-gray-200 sticky top-0 bg-white z-50">
           <p className="text-lg font-medium text-gray-800">Log Details</p>
           <div
             onClick={() => onClose()}
@@ -180,7 +417,7 @@ const InventoryLogsInfo = ({
           </div>
         </div>
 
-        {/* Tab Navigation - Only show if showTabs is true (for sales page) */}
+        {/* Tab Navigation */}
         {showTabs && (
           <div className="flex border-b border-gray-200 bg-gray-50">
             <button
@@ -206,20 +443,21 @@ const InventoryLogsInfo = ({
           </div>
         )}
 
-        {/* Conditional Rendering: Shimmer or Content */}
+        {/* Content with overflow visible */}
         {isLoading ? (
           <InventoryLogsShimmer count={3} />
         ) : (
-          <div className="max-h-[90vh] overflow-y-auto p-3">
+          <div className="max-h-[90vh] overflow-y-auto p-3 relative">
             {displayData.map((logEntry, index) => {
               const isExpanded = expandedLogs.has(index);
               const payloadKeys = Object.keys(logEntry.json_payload || {});
               const hasPayload = payloadKeys.length > 0;
               const currentFieldValues = getCurrentFieldValues(index);
+
               return (
                 <div
                   key={index}
-                  className="mb-3 border border-[#E0E1EA] rounded-[6px] overflow-hidden"
+                  className="mb-3 border border-[#E0E1EA] rounded-[6px] overflow-visible relative"
                 >
                   {/* Log Header */}
                   <div
@@ -239,7 +477,7 @@ const InventoryLogsInfo = ({
                         </span>
                         {logEntry.ticket_id && (
                           <span
-                            className={`text-xs px-2 py-1 rounded-full  ${
+                            className={`text-xs px-2 py-1 rounded-full ${
                               isExpanded ? "text-white" : "text-[#323A70]"
                             }`}
                           >
@@ -262,11 +500,11 @@ const InventoryLogsInfo = ({
                         className={`pl-3 ml-2 h-full border-l-[1px] py-3 ${
                           isExpanded
                             ? "border-l-[#51428E]"
-                            : " border-l-[#E0E1EA]"
+                            : "border-l-[#E0E1EA]"
                         }`}
                       >
                         <div
-                          className={`h-6 w-6 flex items-center justify-center rounded-full  ${
+                          className={`h-6 w-6 flex items-center justify-center rounded-full ${
                             isExpanded ? "bg-[#343432]" : "bg-[#DADBE54D]"
                           }`}
                         >
@@ -280,158 +518,111 @@ const InventoryLogsInfo = ({
                     </div>
                   </div>
 
-                  {/* Accordion Content */}
+                  {/* Accordion Content with overflow visible */}
                   {isExpanded && (
-                    <div className="p-3 bg-white">
+                    <div className="p-3 bg-white overflow-visible relative">
                       {allFields.length > 0 ? (
-                        <div className="w-full">
+                        <div className="w-full overflow-visible">
                           <h4 className="text-sm font-medium text-gray-700 mb-2">
                             Current State:
                           </h4>
-                          <div className="flex flex-wrap -mx-2">
+                          <div className="flex flex-wrap gap-2 overflow-visible">
                             {/* First Table */}
-                            <div className="w-full md:w-1/2 px-2 mb-4">
-                              <table className="min-w-full rounded-md border border-gray-200">
-                                <tbody  className="bg-white divide-y divide-gray-200">
-                                  {allFields
-                                    .slice(0, Math.ceil(allFields.length / 2))
-                                    .map((key, fieldIndex) => {
-                                      const isChangedInCurrentLog =
-                                        index > 0 &&
-                                        isFieldChangedInCurrentLog(
-                                          key,
-                                          logEntry
-                                        );
-                                      const currentValue =
-                                        currentFieldValues[key];
-                                      const hasValue =
-                                        currentValue !== undefined &&
-                                        currentValue !== null;
-                                      return (
-                                        <tr
-                                          key={fieldIndex}
-                                          className={` ${
-                                            isChangedInCurrentLog
-                                              ? "bg-green-100"
-                                              : "hover:bg-gray-50"
-                                          }`}
-                                        >
-                                          <td
-                                            className="px-4 py-2 whitespace-nowrap text-[12px] text-[#7D82A4] font-light border-r border-gray-100 max-w-[150px] truncate align-center"
-                                            title={formatKeyName(key)}
+                            <div className="flex-1 min-w-0 max-w-[calc(50%-0.25rem)] overflow-visible">
+                              <div className="overflow-visible">
+                                <table className="w-full table-fixed rounded-md border border-gray-200">
+                                  <tbody className="bg-white divide-y divide-gray-200">
+                                    {allFields
+                                      .slice(0, Math.ceil(allFields.length / 2))
+                                      .map((key, fieldIndex) => {
+                                        const isChangedInCurrentLog =
+                                          index > 0 &&
+                                          isFieldChangedInCurrentLog(
+                                            key,
+                                            logEntry
+                                          );
+                                        const currentValue =
+                                          currentFieldValues[key];
+
+                                        return (
+                                          <tr
+                                            key={fieldIndex}
+                                            className={`${
+                                              isChangedInCurrentLog
+                                                ? "bg-green-100"
+                                                : "hover:bg-gray-50"
+                                            }`}
                                           >
-                                            {formatKeyName(key)}
-                                          </td>
-                                          <td className="px-4 py-2 text-[#323A70] text-[12px] font-normal break-words">
-                                            {hasValue ? (
-                                              key
-                                                ?.toLowerCase()
-                                                .includes("link") ? (
-                                                <a
-                                                  href={currentValue}
-                                                  target="_blank"
-                                                  rel="noopener noreferrer"
-                                                  className="text-blue-600 hover:underline break-all"
-                                                >
-                                                  Click here
-                                                </a>
-                                              ) : (
-                                                <span
-                                                  className={`inline-block px-2 py-1 rounded text-sm break-words ${
-                                                    isChangedInCurrentLog
-                                                      ? "bg-green-200 text-green-800 font-semibold"
-                                                      : "font-light"
-                                                  }`}
-                                                >
-                                                  {formatValue(currentValue)}
-                                                </span>
-                                              )
-                                            ) : (
-                                              <span className="text-gray-400 italic text-xs">
-                                                Empty
-                                              </span>
-                                            )}
-                                          </td>
-                                        </tr>
-                                      );
-                                    })}
-                                </tbody>
-                              </table>
+                                            <td
+                                              className="w-2/5 px-2 py-2 text-[12px] text-[#7D82A4] font-light border-r border-gray-100 truncate align-top"
+                                              title={formatKeyName(key)}
+                                            >
+                                              {formatKeyName(key)}
+                                            </td>
+                                            <td className="w-3/5 px-2 py-2 text-[#323A70] text-[12px] font-normal align-top overflow-visible">
+                                              <div className="break-all overflow-visible">
+                                                {renderFieldValue(
+                                                  key,
+                                                  currentValue,
+                                                  isChangedInCurrentLog
+                                                )}
+                                              </div>
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
+                                  </tbody>
+                                </table>
+                              </div>
                             </div>
 
                             {/* Second Table */}
-                            <div className="w-full md:w-1/2 px-2 mb-4">
-                              <table className="min-w-full rounded-md border border-gray-200">
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                  {allFields
-                                    .slice(Math.ceil(allFields.length / 2))
-                                    .map((key, fieldIndex) => {
-                                      const isChangedInCurrentLog =
-                                        index > 0 &&
-                                        isFieldChangedInCurrentLog(
-                                          key,
-                                          logEntry
+                            <div className="flex-1 min-w-0 max-w-[calc(50%-0.25rem)] overflow-visible">
+                              <div className="overflow-visible">
+                                <table className="w-full table-fixed rounded-md border border-gray-200">
+                                  <tbody className="bg-white divide-y divide-gray-200">
+                                    {allFields
+                                      .slice(Math.ceil(allFields.length / 2))
+                                      .map((key, fieldIndex) => {
+                                        const isChangedInCurrentLog =
+                                          index > 0 &&
+                                          isFieldChangedInCurrentLog(
+                                            key,
+                                            logEntry
+                                          );
+                                        const currentValue =
+                                          currentFieldValues[key];
+
+                                        return (
+                                          <tr
+                                            key={fieldIndex}
+                                            className={`${
+                                              isChangedInCurrentLog
+                                                ? "bg-green-100"
+                                                : "hover:bg-gray-50"
+                                            }`}
+                                          >
+                                            <td
+                                              className="w-2/5 px-2 py-2 text-[12px] text-[#7D82A4] font-light border-r border-gray-100 truncate align-top"
+                                              title={formatKeyName(key)}
+                                            >
+                                              {formatKeyName(key)}
+                                            </td>
+                                            <td className="w-3/5 px-2 py-2 text-[#323A70] text-[12px] font-normal align-top overflow-visible">
+                                              <div className="break-all overflow-visible">
+                                                {renderFieldValue(
+                                                  key,
+                                                  currentValue,
+                                                  isChangedInCurrentLog
+                                                )}
+                                              </div>
+                                            </td>
+                                          </tr>
                                         );
-                                      const currentValue =
-                                        currentFieldValues[key];
-                                      const hasValue =
-                                        currentValue !== undefined &&
-                                        currentValue !== null;
-                                      return (
-                                        <tr
-                                          key={fieldIndex}
-                                          className={` ${
-                                            isChangedInCurrentLog
-                                              ? "bg-green-100"
-                                              : "hover:bg-gray-50"
-                                          }`}
-                                        >
-                                          <td
-                                            className="px-4 py-2 whitespace-nowrap text-[12px] text-[#7D82A4] font-light border-r border-gray-100 max-w-[150px] truncate align-center"
-                                            title={formatKeyName(key)}
-                                          >
-                                            {formatKeyName(key)}
-                                          </td>
-                                          <td
-                                            className={`px-4 py-2  text-[#323A70]  text-[12px] ${
-                                              isChangedInCurrentLog &&
-                                              ""
-                                            } font-normal break-words`}
-                                          >
-                                            {hasValue ? (
-                                              key
-                                                ?.toLowerCase()
-                                                .includes("link") ? (
-                                                <a
-                                                  href={currentValue}
-                                                  target="_blank"
-                                                  rel="noopener noreferrer"
-                                                  className="text-blue-600 hover:underline break-all"
-                                                >
-                                                  Click here
-                                                </a>
-                                              ) : (
-                                                <span
-                                                  className={`inline-block px-2 py-1 rounded text-[#323A70]  text-[12px] break-words ${
-                                                    isChangedInCurrentLog
-                                                      ? "  font-medium"
-                                                      : "font-light"
-                                                  }`}
-                                                >
-                                                  {formatValue(currentValue)}
-                                                </span>
-                                              )
-                                            ) : (
-                                              <span className="text-gray-400 italic text-xs">
-                                                Empty
-                                              </span>
-                                            )}
-                                          </td>
-                                        </tr>
-                                      );
-                                    })}
-                                </tbody>
-                              </table>
+                                      })}
+                                  </tbody>
+                                </table>
+                              </div>
                             </div>
                           </div>
                         </div>

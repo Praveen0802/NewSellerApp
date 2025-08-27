@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   Calendar,
   Check,
@@ -87,28 +87,102 @@ const EmptyState = () => {
   );
 };
 
+// Loading indicator for pagination
+const PaginationLoader = () => (
+  <div className="flex justify-center py-4">
+    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+  </div>
+);
+
 const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
   const [listValueData, setListvalueData] = useState(null);
+  const [allListings, setAllListings] = useState([]); // Store all loaded listings
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState(null);
-  const getInsightsData = async (params = {}) => {
+  const [hasMorePages, setHasMorePages] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const scrollContainerRef = useRef(null);
+
+  // Filter states - moved up before useCallback
+  const [filtersApplied, setFiltersApplied] = useState({
+    ticket_category: "",
+    quantity: "",
+  });
+
+  const getInsightsData = async (params = {}, page = 1, isLoadMore = false) => {
     try {
-      setIsLoading(true);
+      if (!isLoadMore) {
+        setIsLoading(true);
+        setAllListings([]); // Reset listings when not loading more
+        setCurrentPage(1);
+        setHasMorePages(true);
+      } else {
+        setIsLoadingMore(true);
+      }
       setError(null);
 
       const res = await getmarketingInsights("", {
         match_id: matchInfo?.match_id,
+        page: page,
         ...params,
       });
 
+      console.log(res, 'resres');
+
       setListvalueData(res);
+
+      // Handle pagination data
+      const listings = res?.listings?.data || [];
+      const currentPageNum = res?.listings?.current_page || 1;
+      const lastPage = res?.listings?.last_page || 1;
+
+      if (isLoadMore) {
+        // Append new listings to existing ones
+        setAllListings(prevListings => [...prevListings, ...listings]);
+      } else {
+        // Replace listings with new data
+        setAllListings(listings);
+      }
+
+      setCurrentPage(currentPageNum);
+      setHasMorePages(currentPageNum < lastPage);
+
     } catch (err) {
       console.error("Error fetching insights:", err);
       setError("Failed to load ticket listings. Please try again.");
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
   };
+
+  // Load more data when scrolling to bottom
+  const loadMoreData = useCallback(() => {
+    if (!isLoadingMore && hasMorePages) {
+      const nextPage = currentPage + 1;
+      getInsightsData(filtersApplied, nextPage, true);
+    }
+  }, [isLoadingMore, hasMorePages, currentPage, filtersApplied]);
+
+  // Scroll handler with throttling
+  const handleScroll = useCallback(() => {
+    if (!scrollContainerRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+    const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
+
+    // Load more when 80% scrolled
+    if (scrollPercentage > 0.8 && hasMorePages && !isLoadingMore) {
+      loadMoreData();
+    }
+  }, [hasMorePages, isLoadingMore, loadMoreData]);
+
+  // Throttled scroll handler
+  const throttledHandleScroll = useCallback(() => {
+    clearTimeout(window.scrollTimeout);
+    window.scrollTimeout = setTimeout(handleScroll, 100);
+  }, [handleScroll]);
 
   useEffect(() => {
     if (show && matchInfo?.match_id) {
@@ -116,8 +190,18 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
     }
   }, [show, matchInfo?.match_id]);
 
-  // Safe data extraction with null checks
-  const listingsArray = listValueData?.listings?.data || [];
+  // Add scroll event listener
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', throttledHandleScroll);
+      return () => {
+        scrollContainer.removeEventListener('scroll', throttledHandleScroll);
+        clearTimeout(window.scrollTimeout);
+      };
+    }
+  }, [throttledHandleScroll]);
+
   const [selectedTab, setSelectedTab] = useState("Listings");
   const [editingRow, setEditingRow] = useState(null);
   const [editPrices, setEditPrices] = useState({});
@@ -127,10 +211,6 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
   const [venues, setVenues] = useState("All Venue Areas");
   const [quantities, setQuantities] = useState("All Quantities");
 
-  const [filtersApplied, setFiltersApplied] = useState({
-    ticket_category: "",
-    quantity: "",
-  });
   const matchDetails = {
     title: matchInfo?.match_name || "Match Details",
     date: matchInfo?.match_date || matchInfo?.match_date_format || "Date TBD",
@@ -146,11 +226,6 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
     })),
   ];
 
-  // const venueOptions = [
-  //   { value: "all", label: "All Venue Areas" },
-  //   { value: "home", label: "Home" },
-  //   { value: "away", label: "Away" },
-  // ];
   const generateQuantityOptions = (max = 50) => {
     return Array.from({ length: max }, (_, i) => ({
       value: (i + 1).toString(),
@@ -185,7 +260,6 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
     });
   };
 
-  // Function to save price and trigger callback
   // Function to save price and refresh data
   const savePrice = async (item) => {
     if (!item?.ticket_id) return;
@@ -210,8 +284,14 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
         return newPrices;
       });
 
-      // Refresh the entire dataset
-      await getInsightsData();
+      // Update the specific item in allListings instead of refetching all data
+      setAllListings(prevListings => 
+        prevListings.map(listing => 
+          listing.ticket_id === item.ticket_id 
+            ? { ...listing, price: updatedPrice }
+            : listing
+        )
+      );
 
       // Trigger callback function with updated data
       if (onPriceUpdate) {
@@ -263,7 +343,8 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
       ...filtersApplied,
       [key]: value,
     };
-    getInsightsData(updatedFilters);
+    // Reset to page 1 when filters change
+    getInsightsData(updatedFilters, 1, false);
     setFiltersApplied(updatedFilters);
   };
 
@@ -306,19 +387,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
 
           <div className="px-4 py-2 border-b border-gray-200 flex justify-between items-center">
             <div className="flex">
-              {/* {["Listings", "Sales"].map((tab) => (
-                <button
-                  key={tab}
-                  className={`px-6 py-2 text-sm cursor-pointer ${
-                    selectedTab === tab
-                      ? "border-b-2 border-[#130061] text-[#130061] font-medium"
-                      : "text-[#323A70]"
-                  }`}
-                  onClick={() => setSelectedTab(tab)}
-                >
-                  {tab}
-                </button>
-              ))} */}
+              {/* Tab buttons if needed */}
             </div>
 
             <div className="flex items-center gap-2">
@@ -335,14 +404,6 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                   buttonPadding="px-2 py-1"
                   className="!w-[120px]"
                 />
-                {/* <CustomSelect
-                  selectedValue={venues}
-                  options={venueOptions}
-                  onSelect={setVenues}
-                  placeholder="All Venue Areas"
-                  textSize="text-xs"
-                  buttonPadding="px-2 py-1"
-                /> */}
                 <CustomSelect
                   selectedValue={filtersApplied?.quantity}
                   options={quantityOptions}
@@ -358,7 +419,10 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
             </div>
           </div>
 
-          <div className="p-4 max-h-[500px] overflow-auto">
+          <div 
+            ref={scrollContainerRef}
+            className="px-4 pb-4 max-h-[500px] overflow-auto"
+          >
             {/* Error State */}
             {error && !isLoading && (
               <div className="flex flex-col items-center justify-center py-12">
@@ -372,7 +436,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                   {error}
                 </p>
                 <button
-                  onClick={getInsightsData}
+                  onClick={() => getInsightsData()}
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 >
                   Try Again
@@ -384,15 +448,15 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
             {isLoading && <ShimmerLoader />}
 
             {/* Empty State */}
-            {!isLoading && !error && listingsArray.length === 0 && (
+            {!isLoading && !error && allListings.length === 0 && (
               <EmptyState />
             )}
 
             {/* Data State */}
-            {!isLoading && !error && listingsArray.length > 0 && (
+            {!isLoading && !error && allListings.length > 0 && (
               <>
                 {/* Table header with flex layout */}
-                <div className="flex border-b border-gray-200 bg-white">
+                <div className="flex border-b border-gray-200 bg-white sticky top-0 z-10">
                   <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-32">
                     Section/Block
                   </div>
@@ -414,7 +478,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                 </div>
 
                 {/* Table rows with flex layout */}
-                {listingsArray.map((item, index) => {
+                {allListings.map((item, index) => {
                   // Null check for item
                   if (!item) return null;
 
@@ -431,7 +495,9 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                       >
                         {item.block_id || "-"}
                       </div>
-                      <div className="p-3 text-[12px] w-20">-</div>
+                      <div className="p-3 text-[12px] w-20">
+                        {item.row || "-"}
+                      </div>
                       <div className="p-3 text-[12px] w-24">
                         {item.quantity || "-"}
                       </div>
@@ -536,6 +602,16 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                     </div>
                   );
                 })}
+
+                {/* Loading more indicator */}
+                {isLoadingMore && <PaginationLoader />}
+
+                {/* End of data indicator */}
+                {!hasMorePages && allListings.length > 0 && (
+                  <div className="text-center py-4 text-gray-500 text-sm">
+                    No more listings to load
+                  </div>
+                )}
               </>
             )}
           </div>

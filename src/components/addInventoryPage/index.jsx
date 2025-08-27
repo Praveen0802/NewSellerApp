@@ -98,7 +98,6 @@ const AddInventoryPage = (props) => {
   } = response || {};
   const dispatch = useDispatch();
   const matchDetails = response?.match_data?.[0];
-
   const [selectedRows, setSelectedRows] = useState([]);
   const [showMarketPlaceModal, setShowMarketPlaceModal] = useState(false);
   const [searchEventLoader, setSearchEventLoader] = useState(false);
@@ -113,7 +112,7 @@ const AddInventoryPage = (props) => {
   const [showTable, setShowTable] = useState(false);
 
   const router = useRouter();
-  const [filtersApplied, setFiltersApplied] = useState({});
+  const [filtersApplied, setFiltersApplied] = useState({ split_type: "5" });
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showColumnDropdown, setShowColumnDropdown] = useState(false);
   const [blockDetails, setBlockDetails] = useState([]);
@@ -947,7 +946,7 @@ const AddInventoryPage = (props) => {
   const memoizedVisibleFilters = useMemo(() => {
     return getVisibleFilters();
   }, [orderedFilters, activeFilters, filters]);
-
+  console.log(memoizedVisibleFilters);
   // Memoize the visible headers to prevent unnecessary re-renders
   const memoizedVisibleHeaders = useMemo(() => {
     return getVisibleHeaders();
