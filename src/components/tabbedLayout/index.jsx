@@ -595,7 +595,7 @@ const TabbedLayout = ({
                 filterConfig={getVisibleFilters()}
                 currentTab={selectedTab}
                 onFilterChange={handleFilterChange}
-                containerClassName="md:flex flex-wrap gap-3 items-center"
+                containerClassName="md:flex max-md:flex-col md:flex-wrap gap-3 items-center"
                 initialValues={currentFilterValues}
               />
             </div>

@@ -47,7 +47,7 @@ const FilterSection = ({
   }));
 
   return (
-    <div className={containerClassName}>
+    <div className={` ${containerClassName}`}>
       <FormFields formFields={formFieldsData} />
     </div>
   );

@@ -277,25 +277,25 @@ const NotificationPage = (props) => {
             isPinned
               ? "border-l-2 border-l-green-300 bg-blue-50/30"
               : "border-b border-gray-100"
-          } ${state.activeTab === "activity" ? "gap-0" : "gap-3"}`}
+          } ${state.activeTab === "activity" ? "gap-0" : "gap-2 md:gap-3"}`}
         >
           {/* Only show checkbox for home tab (notifications) */}
           {state.activeTab === "home" && (
-            <div className="pl-4 pr-0 pt-4">
+            <div className="pl-2 md:pl-4 pr-0 pt-3 md:pt-4">
               <input
                 type="checkbox"
                 checked={isSelected}
                 onChange={() => handleMultiItemSelect(item.id)}
-                className="mt-1 rounded border-gray-300"
+                className="mt-1 rounded border-gray-300 w-4 h-4"
                 aria-label={`Select ${item.title}`}
               />
             </div>
           )}
 
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between">
               <div
-                className={`flex-1 px-4 py-2 transition-all duration-200 ${
+                className={`flex-1 min-w-0 px-2 md:px-4 py-2 transition-all duration-200 ${
                   isPinned
                     ? "border-l-2 border-l-green-200 bg-gradient-to-r from-blue-50/50 to-transparent"
                     : state.activeTab === "activity"
@@ -303,29 +303,29 @@ const NotificationPage = (props) => {
                     : "border-x-[1px] border-gray-200"
                 } ${state.activeTab === "activity" ? "ml-0" : ""}`}
               >
-                <div className="flex items-center gap-2 mb-1">
-                  {isPinned && <Pin className="w-3 h-3 text-gray-900" />}
+                <div className="flex items-center gap-1 md:gap-2 mb-1 flex-wrap">
+                  {isPinned && <Pin className="w-3 h-3 text-gray-900 flex-shrink-0" />}
                   <span
-                    className={`inline-block w-2 h-2 rounded-full ${
+                    className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
                       item.status === "new" ? "bg-green-200" : "bg-green-200"
                     }`}
                   ></span>
-                  <span className="text-xs text-gray-500 font-medium">
+                  <span className="text-xs text-gray-500 font-medium flex-shrink-0">
                     {item.status === "new"
                       ? "New"
                       : item.type === "logged_in" || item.type === "logged_out"
                       ? "Activity"
                       : "Notification"}
                   </span>
-                  <span className="text-xs text-gray-400">{item.date}</span>
+                  <span className="text-xs text-gray-400 flex-shrink-0">{item.date}</span>
                   {isPinned && (
-                    <span className="text-xs bg-white text-green-700 px-2 py-0.5 p-1 rounded-full font-medium">
+                    <span className="text-xs bg-white text-green-700 px-2 py-0.5 rounded-full font-medium flex-shrink-0">
                       Pinned
                     </span>
                   )}
                 </div>
                 <p
-                  className={`text-sm leading-relaxed transition-colors duration-200 ${
+                  className={`text-sm leading-relaxed transition-colors duration-200 break-words ${
                     isViewed
                       ? "text-gray-500"
                       : isPinned
@@ -338,10 +338,10 @@ const NotificationPage = (props) => {
               </div>
               <button
                 onClick={() => handleViewItem(item)}
-                className="hover:bg-gray-100 py-4 px-2 rounded cursor-pointer transition-colors"
+                className="hover:bg-gray-100 py-2 md:py-4 px-1 md:px-2 rounded cursor-pointer transition-colors flex-shrink-0"
                 aria-label={`View details for ${item.title}`}
               >
-                <IconStore.eye className="size-5" />
+                <IconStore.eye className="size-4 md:size-5" />
               </button>
             </div>
           </div>
@@ -361,7 +361,7 @@ const NotificationPage = (props) => {
   // Loading and error states
   if (state.isInitialLoad) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading notifications...</p>
@@ -372,7 +372,7 @@ const NotificationPage = (props) => {
 
   if (state.notifyData && !state.notifyData.success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center">
           <p className="text-red-600 mb-2">Error loading notifications</p>
         </div>
@@ -402,19 +402,11 @@ const NotificationPage = (props) => {
       />
 
       {/* List View Section */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 mx-4 mt-4 mb-24">
-        {/* List Header */}
-        {/* <div className="px-4 py-3 border-b border-gray-200 sticky top-0 bg-white z-10">
-          <h3 className="text-sm font-medium text-gray-900">
-            {currentData.length}{" "}
-            {state.activeTab === "home" ? "Notifications" : "Activity Logs"}
-          </h3>
-        </div> */}
-
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 mx-2 md:mx-4 mt-4 mb-24">
         {/* Scrollable Content Container */}
         <div
           ref={scrollContainerRef}
-          className="max-h-[calc(100dvh-380px)] overflow-y-auto !pb-[120px]"
+          className="max-h-[calc(100dvh-320px)] md:max-h-[calc(100dvh-380px)] overflow-y-auto !pb-[120px]"
           style={{ scrollBehavior: "smooth" }}
         >
           {/* List Items */}
@@ -423,11 +415,11 @@ const NotificationPage = (props) => {
               {currentData.map(renderListItem)}
             </div>
           ) : !state.isLoading ? (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-4 md:p-8 text-center text-gray-500">
               <div className="max-w-sm mx-auto">
                 <div className="mb-4">
                   <svg
-                    className="w-16 h-16 mx-auto text-gray-300"
+                    className="w-12 md:w-16 h-12 md:h-16 mx-auto text-gray-300"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -440,7 +432,7 @@ const NotificationPage = (props) => {
                     />
                   </svg>
                 </div>
-                <p className="text-lg font-medium mb-2">
+                <p className="text-base md:text-lg font-medium mb-2">
                   No{" "}
                   {state.activeTab === "home"
                     ? "notifications"
@@ -477,7 +469,7 @@ const NotificationPage = (props) => {
           {/* End of List Indicator */}
           {!state.hasMore && currentData.length > 0 && !state.isLoading && (
             <div className="p-4 text-center text-gray-500 text-sm border-t border-gray-100">
-              <p> You've reached the end</p>
+              <p>You've reached the end</p>
               <p className="text-xs mt-1 text-gray-400">
                 {currentData.length}{" "}
                 {state.activeTab === "home" ? "notifications" : "activity logs"}{" "}
@@ -495,96 +487,97 @@ const NotificationPage = (props) => {
 
       {/* Bottom Action Bar - Only show for home tab */}
       {state.activeTab === "home" && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50 shadow-lg">
-          <div className="flex items-center justify-between max-w-7xl mx-auto pl-20">
-            <div className="flex items-center gap-4">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-2 md:p-4 z-50 shadow-lg">
+          <div className="flex items-center justify-between max-w-7xl mx-auto md:pl-20">
+            <div className="flex items-center gap-2 md:gap-4 flex-wrap">
               {/* Action Checkboxes - Only show when items are selected */}
               {state.selectedItems.length > 0 && (
                 <>
-                  <div className="flex items-center">
-                    <FloatingCheckbox
-                      id="markAsViewed"
-                      name="markAsViewed"
-                      keyValue="markAsViewed"
-                      label="Mark as viewed"
-                      checked={actionBarStates.markAsViewed}
-                      onChange={handleActionBarChange}
-                      className=""
-                      labelClassName="!text-gray-700"
-                      beforeIcon={
-                        <div className="flex items-center gap-1 relative">
-                          {!actionLoadingStates.markAsViewed && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          )}
-                          {actionLoadingStates.markAsViewed && (
-                            <div className="w-2 h-2 border border-blue-500 border-dotted rounded-full animate-spin"></div>
-                          )}
-                        </div>
-                      }
-                    />
-                  </div>
+                  {/* Mobile: Stack vertically, Desktop: Horizontal */}
+                  <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 w-full md:w-auto">
+                    <div className="flex items-center">
+                      <FloatingCheckbox
+                        id="markAsViewed"
+                        name="markAsViewed"
+                        keyValue="markAsViewed"
+                        label="Mark as viewed"
+                        checked={actionBarStates.markAsViewed}
+                        onChange={handleActionBarChange}
+                        className=""
+                        labelClassName="!text-gray-700 !text-xs md:!text-sm"
+                        beforeIcon={
+                          <div className="flex items-center gap-1 relative">
+                            {!actionLoadingStates.markAsViewed && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            )}
+                            {actionLoadingStates.markAsViewed && (
+                              <div className="w-2 h-2 border border-blue-500 border-dotted rounded-full animate-spin"></div>
+                            )}
+                          </div>
+                        }
+                      />
+                    </div>
 
-                  <div className="flex items-center">
-                    <FloatingCheckbox
-                      id="markAsPinned"
-                      name="markAsPinned"
-                      keyValue="markAsPinned"
-                      label="Mark as pinned"
-                      checked={actionBarStates.markAsPinned}
-                      onChange={handleActionBarChange}
-                      className=""
-                      labelClassName="!text-gray-700"
-                      beforeIcon={
-                        <div className="flex items-center gap-1 relative">
-                          {!actionLoadingStates.markAsPinned && (
-                            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                          )}
-                          {actionLoadingStates.markAsPinned && (
-                            <div className="w-2 h-2 border border-gray-400 border-dotted rounded-full animate-spin"></div>
-                          )}
-                        </div>
-                      }
-                    />
-                  </div>
+                    <div className="flex items-center">
+                      <FloatingCheckbox
+                        id="markAsPinned"
+                        name="markAsPinned"
+                        keyValue="markAsPinned"
+                        label="Mark as pinned"
+                        checked={actionBarStates.markAsPinned}
+                        onChange={handleActionBarChange}
+                        className=""
+                        labelClassName="!text-gray-700 !text-xs md:!text-sm"
+                        beforeIcon={
+                          <div className="flex items-center gap-1 relative">
+                            {!actionLoadingStates.markAsPinned && (
+                              <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            )}
+                            {actionLoadingStates.markAsPinned && (
+                              <div className="w-2 h-2 border border-gray-400 border-dotted rounded-full animate-spin"></div>
+                            )}
+                          </div>
+                        }
+                      />
+                    </div>
 
-                  <div className="flex items-center">
-                    <FloatingCheckbox
-                      id="markAsUnpinned"
-                      name="markAsUnpinned"
-                      keyValue="markAsUnpinned"
-                      label="Mark as unpinned"
-                      checked={actionBarStates.markAsUnpinned}
-                      onChange={handleActionBarChange}
-                      className=""
-                      labelClassName="!text-gray-700"
-                      beforeIcon={
-                        <div className="flex items-center gap-1 relative">
-                          {!actionLoadingStates.markAsUnpinned && (
-                            <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                          )}
-                          {actionLoadingStates.markAsUnpinned && (
-                            <div className="w-2 h-2 border border-gray-300 border-dotted rounded-full animate-spin"></div>
-                          )}
-                        </div>
-                      }
-                    />
+                    <div className="flex items-center">
+                      <FloatingCheckbox
+                        id="markAsUnpinned"
+                        name="markAsUnpinned"
+                        keyValue="markAsUnpinned"
+                        label="Mark as unpinned"
+                        checked={actionBarStates.markAsUnpinned}
+                        onChange={handleActionBarChange}
+                        className=""
+                        labelClassName="!text-gray-700 !text-xs md:!text-sm"
+                        beforeIcon={
+                          <div className="flex items-center gap-1 relative">
+                            {!actionLoadingStates.markAsUnpinned && (
+                              <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                            )}
+                            {actionLoadingStates.markAsUnpinned && (
+                              <div className="w-2 h-2 border border-gray-300 border-dotted rounded-full animate-spin"></div>
+                            )}
+                          </div>
+                        }
+                      />
+                    </div>
                   </div>
                 </>
               )}
             </div>
 
             {/* Right side info - Show when items are selected */}
-
             {state.selectedItems.length > 0 && (
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 group hover:bg-gray-100 transition-colors">
-                  <span className="text-sm font-medium text-blue-700">
-                    {state.selectedItems.length} notification
-                    {state.selectedItems.length > 1 ? "s" : ""} selected
+              <div className="flex items-center gap-2 md:gap-4 ml-auto">
+                <div className="flex items-center gap-1 md:gap-2 bg-blue-50 border border-blue-200 rounded-lg px-2 md:px-3 py-1 md:py-2 group hover:bg-gray-100 transition-colors">
+                  <span className="text-xs md:text-sm font-medium text-blue-700 whitespace-nowrap">
+                    {state.selectedItems.length} selected
                   </span>
                   <button
                     onClick={handleClearSelection}
-                    className="text-green-500 hover:text-blue-700 hover:bg-blue-200 rounded-full p-1 transition-colors cursor-pointer"
+                    className="text-green-500 hover:text-blue-700 hover:bg-blue-200 rounded-full p-0.5 md:p-1 transition-colors cursor-pointer flex-shrink-0"
                     aria-label="Clear all selections"
                   >
                     <svg

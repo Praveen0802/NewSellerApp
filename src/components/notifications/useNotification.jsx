@@ -229,7 +229,7 @@ const useNotification = ({
           name: "team_member",
           label: "Team Member",
           options: teamMembers,
-          parentClassName: "!w-[10%]",
+          parentClassName: "md:!w-[10%]",
           className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
           labelClassName: "!text-[11px]",
         },
