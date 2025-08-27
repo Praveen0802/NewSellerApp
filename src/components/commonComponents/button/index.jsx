@@ -37,7 +37,7 @@ const Button = (props) => {
   const { eventName, screen, custom } = tracking;
 
   const rootStyle = twMerge(
-    `font-medium text-[14px]  rounded-[4px] flex items-center gap-[5px] bg-[none] p-[7px] px-[10px] relative overflow-hidden`,
+    `font-medium text-xs sm:text-[14px] rounded-[4px] flex items-center gap-1 sm:gap-[5px] bg-[none] p-[6px] sm:p-[7px] px-2 sm:px-[10px] relative overflow-hidden`,
     classNameMapping[type] || "border-[#E6EAEE] border-[1px]",
     root,
     tracking ? "event-track" : "",
@@ -57,7 +57,7 @@ const Button = (props) => {
       {iconBefore && iconBefore}
 
       {!loading ? (
-        <p className={twMerge(`text-left`, label_)}>{label}</p>
+        <p className={twMerge(`text-left text-xs sm:text-sm`, label_)}>{label}</p>
       ) : (
         <Spinner />
       )}

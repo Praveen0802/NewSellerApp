@@ -23,8 +23,8 @@ const CustomModal = (props) => {
 
   return (
     <div className={`fixed inset-0 overflow-y-auto bg-black/30 z-[99]`}>
-      <div className="flex items-center justify-center min-h-[100vh]">
-        <div ref={ref} className={props.className}>
+      <div className="flex items-center justify-center min-h-[100vh] p-2 sm:p-4">
+        <div ref={ref} className={`w-full max-w-sm sm:max-w-lg md:max-w-xl lg:max-w-2xl xl:max-w-4xl max-h-[90vh] overflow-y-auto ${props.className || ''}`}>
           {children}
         </div>
       </div>

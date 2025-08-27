@@ -139,7 +139,7 @@ const CollapsablePaymentTable = ({
   };
 
   return (
-    <div className="w-full flex flex-col gap-4 mobile:gap-2">
+    <div className="w-full flex flex-col gap-4 sm:gap-4">
       {sections.map((section, sectionIndex) => (
         <div key={`section-${sectionIndex}-${section.title}`} className="mb-1 overflow-hidden">
           {/* Section Header */}
@@ -148,14 +148,14 @@ const CollapsablePaymentTable = ({
               !expandedSections[sectionIndex]
                 ? "rounded-[6px]"
                 : "rounded-t-[6px]"
-            } bg-[#343432] text-white px-4 py-3 cursor-pointer mobile:px-3 mobile:py-2`}
+            } bg-[#343432] text-white px-3 sm:px-4 py-2 sm:py-3 cursor-pointer`}
             onClick={() => toggleSection(sectionIndex)}
           >
-            <h3 className="text-[14px] font-semibold mobile:text-xs">
+            <h3 className="text-xs sm:text-[14px] font-semibold">
               {section.title}
             </h3>
             <svg
-              className={`w-5 h-5 mobile:w-4 mobile:h-4 transition-transform duration-300 ${
+              className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300 ${
                 expandedSections[sectionIndex] ? "rotate-180" : ""
               }`}
               fill="none"
@@ -184,7 +184,7 @@ const CollapsablePaymentTable = ({
             }}
           >
             <div className="overflow-x-auto">
-              <table className="min-w-full bg-white mobile:text-xs">
+              <table className="min-w-full bg-white text-xs sm:text-sm">
                 <thead>
                   <tr>
                     {section.headers.map((header, idx) => (
@@ -196,7 +196,7 @@ const CollapsablePaymentTable = ({
                             : idx === section.headers.length - 1
                             ? "border-r border-[#E0E1EA]"
                             : ""
-                        } p-3 mobile:p-2 text-left text-[12px] mobile:text-[10px] text-[#7D82A4] font-normal border-b-[1px] border-[#E0E1EA]`}
+                        } p-2 sm:p-3 text-left text-[10px] sm:text-[12px] text-[#7D82A4] font-normal border-b-[1px] border-[#E0E1EA]`}
                       >
                         {header}
                       </th>
@@ -208,7 +208,7 @@ const CollapsablePaymentTable = ({
                     const isLastRow = rowIndex === section.data.length - 1;
 
                     return (
-                      <tr key={`row-${sectionIndex}-${rowIndex}-${row.id || rowIndex}`} className="mobile:text-xs">
+                      <tr key={`row-${sectionIndex}-${rowIndex}-${row.id || rowIndex}`} className="text-xs sm:text-sm">
                         {Object.entries(row).map(([key, values], cellIndex) => {
                           if (key === "id") return null;
 
@@ -251,9 +251,9 @@ const CollapsablePaymentTable = ({
                               onClick={() => {
                                 eyeKey && onRowClick(row, getTransactionType());
                               }}
-                              className={`py-3 pl-4 mobile:py-2 mobile:pl-2 ${
+                              className={`py-2 sm:py-3 pl-2 sm:pl-4 ${
                                 key === "eye" && "w-[56px] hover:bg-gray-100"
-                              } text-left text-[12px] mobile:text-[10px] ${
+                              } text-left text-[10px] sm:text-[12px] ${
                                 isLastRow ? "border-b-0" : "border-b"
                               } border-[#E0E1EA] ${
                                 eyeKey && "border-l-[1px] cursor-pointer"
@@ -284,7 +284,7 @@ const CollapsablePaymentTable = ({
                               key={`cell-${sectionIndex}-${rowIndex}-${cellIndex}`}
                             >
                               {key === "eye" && values ? (
-                                <IconStore.eye className="stroke-black size-4 mobile:size-3" />
+                                <IconStore.eye className="stroke-black size-3 sm:size-4" />
                               ) : statusKey ? (
                                 <StatusBadge status={values} />
                               ) : key === "paymentMethod" &&

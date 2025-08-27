@@ -570,10 +570,10 @@ const AccordionItem = ({
             </table>
           </div>
 
-          {/* Sticky right columns */}
+          {/* Sticky right columns - only show on desktop */}
           {maxStickyColumnsLength > 0 && (
             <div
-              className={`absolute top-0 right-0 h-full bg-white border-l border-gray-200 ${
+              className={`hidden sm:block absolute top-0 right-0 h-full bg-white border-l border-gray-200 ${
                 hasScrolled ? "shadow-md" : ""
               }`}
               style={{ width: `${stickyColumnsWidth}px` }}

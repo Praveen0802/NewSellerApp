@@ -72,23 +72,23 @@ const CustomSelect = ({
   const viewingValue = getSelectedLabel();
 
   return (
-    <div className={`relative w-fit ${className}`} ref={dropdownRef}>
+    <div className={`relative w-full sm:w-fit ${className}`} ref={dropdownRef}>
       <button
         type="button"
         onClick={toggleDropdown}
-        className={`flex items-center justify-between ${buttonPadding} ${textSize} text-left text-gray-700 bg-white border-[1px] border-[#DADBE5] rounded-[4px] focus:outline-none`}
+        className={`flex items-center justify-between w-full px-2 sm:px-4 py-2 text-xs sm:text-sm text-left text-gray-700 bg-white border-[1px] border-[#DADBE5] rounded-[4px] focus:outline-none min-h-[44px]`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
         <span
           className={`${
             viewingValue?.placeholder ? "text-gray-400" : "text-[#343432]"
-          } font-normal text-[12px]`}
+          } font-normal text-xs sm:text-[12px] truncate`}
         >
           {viewingValue?.placeholder ? viewingValue?.placeholder : viewingValue}
         </span>
         <svg
-          className={`w-5 h-5 ml-2 ${
+          className={`w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0 ${
             viewingValue?.placeholder ? "text-gray-400" : "text-[#130061]"
           } transition-transform duration-200 ${
             isOpen ? "transform rotate-180" : ""
@@ -106,9 +106,9 @@ const CustomSelect = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-[999] w-full mt-1 bg-white rounded-md shadow-lg">
+        <div className="absolute z-[999] w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200">
           <ul
-            className={`py-1 overflow-auto ${textSize} rounded-md max-h-60 focus:outline-none`}
+            className={`py-1 overflow-auto text-xs sm:text-sm rounded-md max-h-48 sm:max-h-60 focus:outline-none`}
             role="listbox"
           >
             {options.map((option, index) => {
@@ -120,7 +120,7 @@ const CustomSelect = ({
               return (
                 <li
                   key={index}
-                  className={`cursor-pointer select-none flex justify-between items-center relative ${dropdownItemPadding} hover:bg-indigo-50 ${
+                  className={`cursor-pointer select-none flex justify-between items-center relative py-2 pl-2 sm:pl-3 pr-8 sm:pr-9 hover:bg-indigo-50 min-h-[44px] sm:min-h-auto ${
                     isSelectedOption
                       ? "bg-indigo-100 text-[#130061]"
                       : "text-gray-900"
@@ -131,7 +131,7 @@ const CustomSelect = ({
                   onClick={() => handleSelect(option)}
                 >
                   <span
-                    className={`block truncate ${
+                    className={`block truncate text-xs sm:text-sm ${
                       isSelectedOption ? "font-medium" : "font-normal"
                     }`}
                   >
@@ -144,19 +144,19 @@ const CustomSelect = ({
                         e.stopPropagation();
                         handleSelect("");
                       }}
-                      className="rounded-full cursor-pointer hover:bg-gray-200 p-2"
+                      className="rounded-full cursor-pointer hover:bg-gray-200 p-1 sm:p-2 min-w-[32px] min-h-[32px] flex items-center justify-center"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
-                        stroke-width="1.5"
+                        strokeWidth="1.5"
                         stroke="currentColor"
-                        class="size-4"
+                        className="size-3 sm:size-4"
                       >
                         <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                           d="M6 18 18 6M6 6l12 12"
                         />
                       </svg>

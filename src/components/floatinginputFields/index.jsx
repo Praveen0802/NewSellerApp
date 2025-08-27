@@ -276,19 +276,19 @@ const FloatingLabelInput = ({
 
   const getLeftPadding = () => {
     return value?.length <= 3 && iconBefore && checkLength
-      ? "pl-12"
+      ? "pl-10 sm:pl-12"
       : iconBefore && !checkLength
-      ? "pl-12"
-      : "px-3";
+      ? "pl-10 sm:pl-12"
+      : "px-2 sm:px-3";
   };
 
   const getRightPadding = () => {
-    if (type === "password" && shouldShowDelete) return "pr-16";
-    if (type === "password" || shouldShowDelete || rightIcon) return "pr-10";
-    return iconBefore ? "pr-3" : "";
+    if (type === "password" && shouldShowDelete) return "pr-14 sm:pr-16";
+    if (type === "password" || shouldShowDelete || rightIcon) return "pr-8 sm:pr-10";
+    return iconBefore ? "pr-2 sm:pr-3" : "";
   };
 
-  const baseClasses = `block w-full ${getLeftPadding()} py-[14px] font-medium text-[14px] rounded border-[1px] focus:outline-none ${
+  const baseClasses = `block w-full ${getLeftPadding()} py-3 sm:py-[14px] font-medium text-sm sm:text-[14px] rounded border-[1px] focus:outline-none ${
     error ? "border-red-500" : "border-[#DADBE5]"
   } text-[#231F20] caret-[#022B50] ${
     error
@@ -335,14 +335,14 @@ const FloatingLabelInput = ({
         {((value?.length <= 3 && iconBefore && checkLength) ||
           (iconBefore && !checkLength)) && (
           <div
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer hover:text-gray-600 transition-colors"
+            className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer hover:text-gray-600 transition-colors"
             onMouseEnter={() => iconBeforeTooltip && setShowTooltip(true)}
             onMouseLeave={() => setShowTooltip(false)}
           >
             {typeof iconBefore === "function" ? iconBefore() : iconBefore}
 
             {iconBeforeTooltip && showTooltip && (
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg whitespace-nowrap z-50">
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded shadow-lg whitespace-nowrap z-50 hidden sm:block">
                 {iconBeforeTooltip}
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-gray-800"></div>
               </div>
@@ -380,7 +380,7 @@ const FloatingLabelInput = ({
           <button
             type="button"
             onClick={handleDelete}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer transition-colors"
+            className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer transition-colors"
             aria-label="Clear input"
           >
             <svg
@@ -406,7 +406,7 @@ const FloatingLabelInput = ({
             type="button"
             onClick={togglePasswordVisibility}
             className={`absolute top-1/2 transform -translate-y-1/2 text-gray-500 focus:outline-none cursor-pointer ${
-              shouldShowDelete ? "right-9" : "right-3"
+              shouldShowDelete ? "right-8 sm:right-9" : "right-2 sm:right-3"
             }`}
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
@@ -455,10 +455,10 @@ const FloatingLabelInput = ({
           <div
             className={`absolute top-1/2 transform -translate-y-1/2 ${
               type === "password" && shouldShowDelete
-                ? "right-16"
+                ? "right-14 sm:right-16"
                 : type === "password" || shouldShowDelete
-                ? "right-9"
-                : "right-3"
+                ? "right-8 sm:right-9"
+                : "right-2 sm:right-3"
             }`}
           >
             {typeof rightIcon === "function" ? rightIcon() : rightIcon}
@@ -469,7 +469,7 @@ const FloatingLabelInput = ({
         {showDropdown && dropDownComponent && (
           <div 
             ref={dropdownRef}
-            className="absolute z-[999] shadow-md w-full bg-white"
+            className="absolute z-[999] shadow-md w-full bg-white rounded-md border border-gray-200 max-h-60 overflow-y-auto"
             onClick={handleDropdownClick}
             onMouseDown={(e) => e.preventDefault()} // Prevent input from losing focus
           >

@@ -222,135 +222,243 @@ const EventsTable = ({ events, headers, selectedRows, setSelectedRows, loader })
     <div className="w-full h-full">
       {/* Show selected team and stadium info */}
       {(selectedTeamId || selectedStadium) && selectedRows.length > 0 && (
-        <div className="bg-green-50 border border-green-200 p-2 mb-2 rounded text-sm">
-          <span className="text-green-800">
-            Selected: <strong>{getSelectedTeamName()}</strong> at{" "}
-            <strong>{selectedStadium}</strong>
-            <span className="ml-2">
-              ({selectedRows.length} of {selectableEvents.length} events
-              selected)
+        <div className="bg-green-50 border border-green-200 p-2 sm:p-3 mb-2 rounded text-xs sm:text-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <span className="text-green-800">
+              Selected: <strong>{getSelectedTeamName()}</strong> at{" "}
+              <strong>{selectedStadium}</strong>
+              <span className="block sm:inline sm:ml-2">
+                ({selectedRows.length} of {selectableEvents.length} events
+                selected)
+              </span>
             </span>
-          </span>
-          <button
-            onClick={() => {
-              setSelectedRows([]);
-              setSelectedTeamId(null);
-              setSelectedStadium(null);
-            }}
-            className="ml-2 text-green-600 hover:text-green-800 underline"
-          >
-            Clear Selection
-          </button>
+            <button
+              onClick={() => {
+                setSelectedRows([]);
+                setSelectedTeamId(null);
+                setSelectedStadium(null);
+              }}
+              className="self-start sm:ml-2 text-green-600 hover:text-green-800 underline text-xs sm:text-sm"
+            >
+              Clear Selection
+            </button>
+          </div>
         </div>
       )}
 
-      <table className="w-full border-collapse">
-        <thead className="sticky top-0 bg-white z-10">
-          <tr className="border-b border-[#DADBE5]">
-            <th className="px-2 py-2 border-r-[1px] cursor-pointer border-[#DADBE5] w-10">
-              {events.length > 0 && (
-                <input
-                  type="checkbox"
-                  onChange={handleSelectAll}
-                  checked={
-                    selectedRows.length === selectableEvents.length &&
-                    selectableEvents.length > 0
-                  }
-                  ref={(input) => {
-                    if (input) {
-                      input.indeterminate =
-                        selectedRows.length > 0 &&
-                        selectedRows.length < selectableEvents.length;
-                    }
-                  }}
-                  className="h-3.5 w-3.5"
-                />
-              )}
-            </th>
-            {headers.map((header, index) => (
-              <th
-                key={index}
-                className="px-4 py-2 text-left text-[#7D82A4] font-medium text-sm whitespace-nowrap"
-              >
-                {header.title}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="overflow-y-auto">
-          {events.length === 0 ? (
-            <NoResultsFound headers={headers} />
-          ) : (
-            events.map((event, rowIndex) => {
+      {/* Mobile: Hide table, show card layout on small screens */}
+      <div className="block sm:hidden">
+        {events.length === 0 ? (
+          <div className="p-4 text-center">
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <svg
+                  className="w-8 h-8 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.467-.881-6.077-2.33M15 17.5a6.5 6.5 0 11-6.5-6.5 6.5 6.5 0 013.25-.87M19.5 10.5c0 7.142-7.153 11.25-11.25-4s4.108-11.25 11.25-4z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-[#323A70] mb-2">No matches found</h3>
+              <p className="text-sm text-[#7D82A4] max-w-sm">
+                We couldn't find any events matching your current filters. Try adjusting your search criteria or clearing some filters.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {events.map((event, rowIndex) => {
               const isSelected = selectedRows.includes(event.m_id);
               const isDisabled = isRowDisabled(event);
               const isSelectable = isRowSelectable(event);
 
               return (
-                <tr
+                <div
                   key={event.m_id}
                   onClick={() => isSelectable && handleRowSelection(event.m_id)}
-                  className={`border-b border-[#DADBE5] transition-colors duration-150 ${
+                  className={`border rounded-lg p-3 transition-colors duration-150 ${
                     isSelectable
-                      ? "hover:bg-[#F5F7FA] cursor-pointer"
-                      : "cursor-not-allowed"
-                  } ${isSelected ? "bg-[#F2F5FD]" : ""} ${
+                      ? "cursor-pointer border-gray-200 hover:border-blue-300 hover:bg-blue-50"
+                      : "cursor-not-allowed border-gray-100"
+                  } ${isSelected ? "bg-[#F2F5FD] border-blue-400" : "bg-white"} ${
                     isDisabled ? "bg-gray-50 opacity-50" : ""
                   }`}
                 >
-                  <td className="px-2 py-2 border-r-[1px] text-center border-[#DADBE5]">
-                    <input
-                      type="checkbox"
-                      onChange={() =>
-                        isSelectable && handleRowSelection(event.m_id)
-                      }
-                      checked={isSelected}
-                      disabled={!isSelectable}
-                      className="h-3.5 w-3.5"
-                    />
-                  </td>
-                  {headers.map((header, colIndex) => (
-                    <td
-                      key={colIndex}
-                      className={`px-4 py-2 text-[12px] font-normal text-sm ${
-                        isDisabled ? "text-gray-400" : "text-[#323A70]"
-                      }`}
-                    >
-                      {header.key === "team_1" ? (
-                        <span
-                          className={`px-2 py-1 rounded text-xs ${
-                            event.team_1 === selectedTeamId
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {getTeamNameById(event.team_1)}
-                        </span>
-                      ) : header.key === "stadium" ? (
-                        <span
-                          className={`px-2 py-1 rounded text-xs ${
-                            event.stadium === selectedStadium
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {event[header.key]}
-                        </span>
-                      ) : header.key === "match_date" ? (
-                        new Date(event[header.key]).toLocaleDateString()
-                      ) : (
-                        header.key === "match_time"
-                          ? event[header.key]?.slice(0, 5) // keeps only HH:MM
-                          : event[header.key]
-                      )}
-                    </td>
-                  ))}
-                </tr>
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        onChange={() =>
+                          isSelectable && handleRowSelection(event.m_id)
+                        }
+                        checked={isSelected}
+                        disabled={!isSelectable}
+                        className="h-4 w-4 mt-0.5"
+                      />
+                      <div>
+                        <h3 className="font-medium text-sm text-[#323A70]">
+                          {event.match_name || 'Event Name'}
+                        </h3>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          <span
+                            className={`px-2 py-0.5 rounded text-xs ${
+                              event.team_1 === selectedTeamId
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            {getTeamNameById(event.team_1)}
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded text-xs ${
+                              event.stadium === selectedStadium
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            {event.stadium}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs text-[#7D82A4]">
+                    <div>
+                      <span className="font-medium">Date:</span> {new Date(event.match_date).toLocaleDateString()}
+                    </div>
+                    <div>
+                      <span className="font-medium">Time:</span> {event.match_time?.slice(0, 5)}
+                    </div>
+                    {headers.slice(3).map((header, idx) => (
+                      <div key={idx}>
+                        <span className="font-medium">{header.title}:</span> {event[header.key]}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               );
-            })
-          )}
-        </tbody>
-      </table>
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop: Show table on larger screens */}
+      <div className="hidden sm:block overflow-x-auto">
+        <table className="w-full border-collapse min-w-[800px]">
+          <thead className="sticky top-0 bg-white z-10">
+            <tr className="border-b border-[#DADBE5]">
+              <th className="px-2 py-2 border-r-[1px] cursor-pointer border-[#DADBE5] w-10">
+                {events.length > 0 && (
+                  <input
+                    type="checkbox"
+                    onChange={handleSelectAll}
+                    checked={
+                      selectedRows.length === selectableEvents.length &&
+                      selectableEvents.length > 0
+                    }
+                    ref={(input) => {
+                      if (input) {
+                        input.indeterminate =
+                          selectedRows.length > 0 &&
+                          selectedRows.length < selectableEvents.length;
+                      }
+                    }}
+                    className="h-3.5 w-3.5"
+                  />
+                )}
+              </th>
+              {headers.map((header, index) => (
+                <th
+                  key={index}
+                  className="px-2 sm:px-4 py-2 text-left text-[#7D82A4] font-medium text-xs sm:text-sm whitespace-nowrap"
+                >
+                  {header.title}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="overflow-y-auto">
+            {events.length === 0 ? (
+              <NoResultsFound headers={headers} />
+            ) : (
+              events.map((event, rowIndex) => {
+                const isSelected = selectedRows.includes(event.m_id);
+                const isDisabled = isRowDisabled(event);
+                const isSelectable = isRowSelectable(event);
+
+                return (
+                  <tr
+                    key={event.m_id}
+                    onClick={() => isSelectable && handleRowSelection(event.m_id)}
+                    className={`border-b border-[#DADBE5] transition-colors duration-150 ${
+                      isSelectable
+                        ? "hover:bg-[#F5F7FA] cursor-pointer"
+                        : "cursor-not-allowed"
+                    } ${isSelected ? "bg-[#F2F5FD]" : ""} ${
+                      isDisabled ? "bg-gray-50 opacity-50" : ""
+                    }`}
+                  >
+                    <td className="px-2 py-2 border-r-[1px] text-center border-[#DADBE5]">
+                      <input
+                        type="checkbox"
+                        onChange={() =>
+                          isSelectable && handleRowSelection(event.m_id)
+                        }
+                        checked={isSelected}
+                        disabled={!isSelectable}
+                        className="h-3.5 w-3.5"
+                      />
+                    </td>
+                    {headers.map((header, colIndex) => (
+                      <td
+                        key={colIndex}
+                        className={`px-2 sm:px-4 py-2 text-xs sm:text-sm font-normal ${
+                          isDisabled ? "text-gray-400" : "text-[#323A70]"
+                        }`}
+                      >
+                        {header.key === "team_1" ? (
+                          <span
+                            className={`px-2 py-1 rounded text-xs ${
+                              event.team_1 === selectedTeamId
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            {getTeamNameById(event.team_1)}
+                          </span>
+                        ) : header.key === "stadium" ? (
+                          <span
+                            className={`px-2 py-1 rounded text-xs ${
+                              event.stadium === selectedStadium
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            {event[header.key]}
+                          </span>
+                        ) : header.key === "match_date" ? (
+                          new Date(event[header.key]).toLocaleDateString()
+                        ) : (
+                          header.key === "match_time"
+                            ? event[header.key]?.slice(0, 5) // keeps only HH:MM
+                            : event[header.key]
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

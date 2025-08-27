@@ -437,10 +437,10 @@ console.log(resultData,'resultDataresultData')
     <div className="flex flex-col h-full">
       <Subheader />
 
-      <div className="overflow-auto p-4 md:p-6 w-full h-full flex flex-col gap-4 md:gap-5 bg-[#F5F7FA]">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="overflow-auto p-3 sm:p-4 md:p-6 w-full h-full flex flex-col gap-3 sm:gap-4 md:gap-5 bg-[#F5F7FA]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {listValues?.map((listItem, listIndex) => {
                 return (
                   <ViewContainer
@@ -476,8 +476,8 @@ console.log(resultData,'resultDataresultData')
           handleScrollEnd={handleScrollEnd}
           loader={loader}
         />
-        <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
-          <div className="w-full md::w-1/2 flex flex-col gap-4 md:gap-6">
+        <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 md:gap-6">
+          <div className="w-full lg:w-1/2 flex flex-col gap-3 sm:gap-4 md:gap-6">
             <NotificationActivityList
               notificationsList={resultData?.notifications}
               activities={resultData?.activity}
