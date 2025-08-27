@@ -841,7 +841,7 @@ const SalesPage = (props) => {
         value: filtersApplied?.query,
         label: "Search Match event or Booking number",
         className: "!py-[7px] !px-[12px] !text-[#343432] !text-[14px]",
-        parentClassName: "!w-[300px]",
+        parentClassName: "!w-[300px] max-sm:!w-full",
       },
       {
         type: "select",
@@ -852,7 +852,7 @@ const SalesPage = (props) => {
           value: type?.id,
           label: type?.name,
         })),
-        parentClassName: "!w-[15%]",
+        parentClassName: "!w-[15%] max-sm:!w-full",
         className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
         labelClassName: "!text-[11px]",
       },
@@ -864,7 +864,7 @@ const SalesPage = (props) => {
         value: filtersApplied?.team_members,
         multiselect: true,
         options: teamMembers,
-        parentClassName: "!w-[15%]",
+        parentClassName: "!w-[15%] max-sm:!w-full",
         className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
         labelClassName: "!text-[11px]",
       },
@@ -873,7 +873,7 @@ const SalesPage = (props) => {
         name: "ticket_in_hand",
         label: "Tickets In Hand",
         value: filtersApplied?.ticket_in_hand || false,
-        parentClassName: " !w-[15%] ",
+        parentClassName: " !w-[15%] max-sm:!w-full",
         className:
           "!py-[3px] !px-[12px] pr-[20px] w-full text-xs sm:text-[10px] lg:text-xs",
         labelClassName:
@@ -887,7 +887,7 @@ const SalesPage = (props) => {
         singleDateMode: false,
         value: filtersApplied?.orderDate,
         label: "Order Date",
-        parentClassName: "!w-[150px]",
+        parentClassName: "!w-[150px] max-sm:!w-full",
         className: "!py-[8px] !px-[16px] mobile:text-xs",
       },
       {
@@ -895,7 +895,7 @@ const SalesPage = (props) => {
         name: "delivery_date",
         singleDateMode: false,
         label: "Delivery Date",
-        parentClassName: "!w-[150px]",
+        parentClassName: "!w-[150px] max-sm:!w-full",
         className: "!py-[8px] !px-[16px] mobile:text-xs",
       },
       {
@@ -903,47 +903,10 @@ const SalesPage = (props) => {
         name: "event_Date",
         singleDateMode: false,
         label: "Event Date",
-        parentClassName: "!w-[150px]",
+        parentClassName: "!w-[150px] max-sm:!w-full",
         className: "!py-[8px] !px-[16px] mobile:text-xs",
       },
 
-      // {
-      //   type: "select",
-      //   name: "tournament",
-      //   label: "Tournament",
-      //   value: filtersApplied?.tournament,
-      //   options: tournamentOptions,
-      //   parentClassName: "!w-[15%]",
-      //   className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
-      //   labelClassName: "!text-[11px]",
-      // },
-
-      // {
-      //   type: "select",
-      //   name: "order_status",
-      //   label: "Order Status",
-      //   value: filtersApplied?.order_status,
-      //   options: [
-      //     { value: "paid", label: "Paid" },
-      //     { value: "completed", label: "Completed" },
-      //   ],
-      //   parentClassName: "!w-[12%]",
-      //   className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-      //   labelClassName: "!text-[11px]",
-      // },
-      // {
-      //   type: "select",
-      //   name: "payment_status",
-      //   label: "Payment Status",
-      //   value: filtersApplied?.payment_status,
-      //   options: [
-      //     { value: "paid", label: "Paid" },
-      //     { value: "unpaid", label: "Unpaid" },
-      //   ],
-      //   parentClassName: "!w-[12%]",
-      //   className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-      //   labelClassName: "!text-[11px]",
-      // },
       {
         type: "select",
         value: filtersApplied?.category,
@@ -953,7 +916,7 @@ const SalesPage = (props) => {
           value: type?.id,
           label: type?.name,
         })),
-        parentClassName: "!w-[15%]",
+        parentClassName: "!w-[15%] max-sm:!w-full",
         className: "!py-[6px] !px-[12px] w-full max-md:text-xs",
         labelClassName: "!text-[11px]",
       },
@@ -1232,15 +1195,15 @@ const SalesPage = (props) => {
 
   const customTableComponent = () => {
     return (
-      <div className="p-4">
+      <div className="p-4 max-sm:p-2">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-4 border-b flex justify-between border-gray-200">
+          <div className="p-4 max-sm:p-3 border-b flex flex-col sm:flex-row justify-between border-gray-200 gap-3 sm:gap-0">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold">
+              <h2 className="text-lg max-sm:text-base font-semibold">
                 {formatTabName(activeTab)} Orders ({overViewData?.orders})
               </h2>
               {hasNextPage && (
-                <span className="text-sm text-gray-500">
+                <span className="text-sm max-sm:text-xs text-gray-500">
                   Page {currentPage} of {totalPages}
                 </span>
               )}
@@ -1250,8 +1213,8 @@ const SalesPage = (props) => {
               variant="primary"
               loading={csvLoader}
               classNames={{
-                root: "py-[4px] justify-center cursor-pointer",
-                label_: "text-[12px] px-[2]",
+                root: "py-[4px] justify-center cursor-pointer max-sm:text-xs max-sm:py-[6px]",
+                label_: "text-[12px] max-sm:text-[11px] px-[2]",
               }}
             >
               Export to CSV
@@ -1259,7 +1222,7 @@ const SalesPage = (props) => {
           </div>
 
           {/* StickyDataTable with sorting functionality */}
-          <div className="max-h-[calc(100vh-410px)] overflow-auto">
+          <div className="max-h-[calc(100vh-410px)] max-sm:max-h-[calc(100vh-350px)] overflow-auto">
             <StickyDataTable
               headers={headers}
               data={listData}

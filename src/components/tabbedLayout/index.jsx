@@ -1,4 +1,4 @@
-// Updated TabbedLayout component with scroll handling for pagination
+// Updated TabbedLayout component with mobile responsiveness and scroll handling for pagination
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState, useCallback } from "react";
 import AvailableList from "../tradePage/components/availableList";
@@ -56,7 +56,7 @@ const TabbedLayout = ({
   headerV2ClassName,
   tabCurrencies = {},
   className = "bg-[#ECEDF2] w-full h-full relative",
-  containerClassName = "flex flex-col gap-[24px]",
+  containerClassName = "flex flex-col gap-[24px] max-sm:gap-[16px]",
   showFilters = true,
   currentFilterValues = {},
   onClearAllFilters,
@@ -468,7 +468,7 @@ const TabbedLayout = ({
     return (
       <div className={containerClassName}>
         <div className="bg-white">
-          <p className="px-6 pt-4 text-[#323A70] text-[18px] font-semibold">
+          <p className="px-6 max-sm:px-4 pt-4 max-sm:pt-3 text-[#323A70] text-[18px] max-sm:text-[16px] font-semibold">
             Overview
           </p>
 
@@ -476,8 +476,8 @@ const TabbedLayout = ({
           <div
             className={`transition-all duration-300 ease-in-out overflow-hidden border-b-[1px] border-[#E0E1EA] ${
               showListItems
-                ? "max-h-[500px] opacity-100 px-6 pb-3 pt-3"
-                : "max-h-0 opacity-0 px-6 py-0"
+                ? "max-h-[500px] opacity-100 px-6 max-sm:px-4 pb-3 pt-3 max-sm:pb-2 max-sm:pt-2"
+                : "max-h-0 opacity-0 px-6 max-sm:px-4 py-0"
             }`}
           >
             <div className="relative">
@@ -488,8 +488,8 @@ const TabbedLayout = ({
                     className={`
                   ${
                     previousListItems?.length == 4
-                      ? "grid grid-cols-4 gap-4"
-                      : "flex gap-4 flex-nowrap"
+                      ? "grid grid-cols-4 max-lg:grid-cols-2 max-sm:grid-cols-1 gap-4 max-sm:gap-3"
+                      : "flex gap-4 max-sm:gap-3 flex-nowrap"
                   } min-w-min md:min-w-0 absolute inset-0 transition-transform overflow-scroll duration-300 ease-in-out z-10
                   ${
                     transitionDirection === "next"
@@ -501,7 +501,7 @@ const TabbedLayout = ({
                     {previousListItems?.map((item, index) => (
                       <div
                         key={`previous-${item.key || index}-${Date.now()}`}
-                        className="min-w-[200px]"
+                        className="min-w-[200px] max-sm:min-w-full"
                       >
                         <AvailableList
                           list={{
@@ -525,8 +525,8 @@ const TabbedLayout = ({
                 className={`
                 ${
                   currentListItems?.length == 4
-                    ? "grid grid-cols-4 gap-4"
-                    : "flex gap-4 flex-nowrap overflow-x-scroll hideScrollbar"
+                    ? "grid grid-cols-4 max-lg:grid-cols-2 max-sm:grid-cols-1 gap-4 max-sm:gap-3"
+                    : "flex gap-4 max-sm:gap-3 flex-nowrap overflow-x-scroll max-sm:overflow-x-auto hideScrollbar"
                 } min-w-min md:min-w-0 ${
                   !disableTransitions
                     ? "transition-transform duration-300 ease-in-out"
@@ -554,7 +554,7 @@ const TabbedLayout = ({
                 {currentListItems?.map((item, index) => (
                   <div
                     key={`current-${item.key || index}-${Date.now()}`}
-                    className="flex-grow flex-shrink flex-basis-[25%] min-w-[12rem]"
+                    className="flex-grow flex-shrink flex-basis-[25%] min-w-[12rem] max-sm:min-w-full"
                   >
                     <AvailableList
                       list={{
@@ -589,20 +589,20 @@ const TabbedLayout = ({
 
           {/* Filter Section */}
           {showFilters && getVisibleFilters().length > 0 && (
-            <div className="px-6 py-5">
+            <div className="px-6 max-sm:px-4 py-5 max-sm:py-3">
               {customComponent && customComponent()}
               <FilterSection
                 filterConfig={getVisibleFilters()}
                 currentTab={selectedTab}
                 onFilterChange={handleFilterChange}
-                containerClassName="md:flex max-md:flex-col md:flex-wrap gap-3 items-center"
+                containerClassName="md:flex max-md:flex-col max-sm:flex-col md:flex-wrap gap-3 max-sm:gap-2 items-center max-sm:items-stretch"
                 initialValues={currentFilterValues}
               />
             </div>
           )}
 
           {showSelectedFilterPills && (
-            <div className="px-[20px] border-t-1 border-gray-200">
+            <div className="px-[20px] max-sm:px-[16px] border-t-1 border-gray-200">
               <ActiveFiltersBox
                 activeFilters={currentFilterValues}
                 onFilterChange={onFilterChange}
@@ -649,7 +649,7 @@ const TabbedLayout = ({
           />
         </div>
       ) : (
-        <div className="absolute top-6 right-6 flex gap-2 z-50">
+        <div className="absolute top-6 max-sm:top-4 right-6 max-sm:right-4 flex gap-2 z-50">
           {showFilters && (
             <div className="relative" ref={filterDropdownRef}>
               <button
@@ -657,10 +657,10 @@ const TabbedLayout = ({
                   setShowFilterDropdown(!showFilterDropdown);
                   setShowColumnDropdown(false);
                 }}
-                className="p-2 bg-white border cursor-pointer border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
+                className="p-2 max-sm:p-1.5 bg-white border cursor-pointer border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
                 title="Filters"
               >
-                <FilterIcon className="w-5 h-5 text-gray-600" />
+                <FilterIcon className="w-5 h-5 max-sm:w-4 max-sm:h-4 text-gray-600" />
               </button>
 
               <DropdownList
@@ -670,7 +670,7 @@ const TabbedLayout = ({
                 onItemChange={handleFilterToggle}
                 onItemsReorder={handleFiltersReorder}
                 emptyMessage="No filters available"
-                className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+                className="absolute right-0 mt-2 w-64 max-sm:w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
                 isDraggable={isDraggableFilters}
                 showSearch={showFilterSearch}
               />
@@ -684,10 +684,10 @@ const TabbedLayout = ({
                   setShowColumnDropdown(!showColumnDropdown);
                   setShowFilterDropdown(false);
                 }}
-                className="p-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
+                className="p-2 max-sm:p-1.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 shadow-sm"
                 title="Columns"
               >
-                <ColumnsIcon className="w-5 h-5 text-gray-600" />
+                <ColumnsIcon className="w-5 h-5 max-sm:w-4 max-sm:h-4 text-gray-600" />
               </button>
 
               <DropdownList
@@ -697,7 +697,7 @@ const TabbedLayout = ({
                 onItemChange={handleColumnToggle}
                 onItemsReorder={handleColumnsReorder}
                 emptyMessage="No columns available"
-                className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+                className="absolute right-0 mt-2 w-64 max-sm:w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
                 isDraggable={isDraggableColumns}
                 showSearch={showColumnSearch}
               />
@@ -706,27 +706,77 @@ const TabbedLayout = ({
         </div>
       )}
 
-      {/* Desktop tabs */}
+      {/* Mobile and Desktop tabs */}
       {tabs?.length > 0 && (
         <div
-          className={`hidden md:flex gap-[4px] ${
-            showTabFullWidth ? "w-full" : "w-[70%]"
-          } px-[24px] ${useHeaderV2 ? "pt-0" : "pt-[24px]"}`}
+          className={`flex gap-[4px] max-sm:gap-[2px] ${
+            showTabFullWidth ? "w-full" : "w-[70%] max-sm:w-full"
+          } px-[24px] max-sm:px-[16px] ${useHeaderV2 ? "pt-0" : "pt-[24px] max-sm:pt-[16px]"}`}
         >
-          {tabs?.map((tab, index) => {
-            const selectedIndex = tab?.key === selectedTab;
-            return (
-              <SelectListItem
-                key={index}
-                item={tab}
-                selectedIndex={selectedIndex}
-                handleSelectItemClick={handleTabChange}
-                onCurrencyChange={onCurrencyChange}
-                loading={loading}
-                selectedCurrency={tabCurrencies?.[tab.key] || selectedCurrency}
-              />
-            );
-          })}
+          {/* Desktop tabs - hidden on small screens */}
+          <div className="hidden sm:contents">
+            {tabs?.map((tab, index) => {
+              const selectedIndex = tab?.key === selectedTab;
+              return (
+                <SelectListItem
+                  key={index}
+                  item={tab}
+                  selectedIndex={selectedIndex}
+                  handleSelectItemClick={handleTabChange}
+                  onCurrencyChange={onCurrencyChange}
+                  loading={loading}
+                  selectedCurrency={tabCurrencies?.[tab.key] || selectedCurrency}
+                />
+              );
+            })}
+          </div>
+          
+          {/* Mobile tab selector - visible only on small screens */}
+          <div className="sm:hidden w-full">
+            <div className="relative">
+              <select
+                value={selectedTab}
+                onChange={(e) => {
+                  const selectedTabObj = tabs.find(tab => tab.key === e.target.value);
+                  if (selectedTabObj) {
+                    handleTabChange(selectedTabObj);
+                  }
+                }}
+                className="w-full p-3 bg-white border border-gray-300 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'right 0.5rem center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '1.5em 1.5em',
+                  paddingRight: '2.5rem'
+                }}
+              >
+                {tabs.map((tab) => (
+                  <option key={tab.key} value={tab.key}>
+                    {tab.name} {tab.count && `(${tab.count})`}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {/* Mobile tab info display */}
+            {(() => {
+              const currentTab = tabs.find(tab => tab.key === selectedTab);
+              return currentTab && (
+                <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm text-blue-800 font-medium">
+                      {currentTab.name}
+                    </div>
+                    <div className="text-xs text-blue-600">
+                      {currentTab.count && `${currentTab.count} items`}
+                      {currentTab.amount && ` • ${currentTab.amount}`}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
         </div>
       )}
 
@@ -737,7 +787,7 @@ const TabbedLayout = ({
         <div
           ref={scrollContainerRef}
           className={`${
-            customTableComponent && `${`overflow-auto ${reportsPage ? "max-h-[calc(100vh-125px)]" :"max-h-[calc(100vh-250px)]"}`}`
+            customTableComponent && `${`overflow-auto ${reportsPage ? "max-h-[calc(100vh-125px)]" :"max-h-[calc(100vh-250px)] max-sm:max-h-[calc(100vh-200px)]"}`}`
           }`}
           onScroll={debouncedHandleScroll}
         >
@@ -746,17 +796,17 @@ const TabbedLayout = ({
 
           {/* Loading indicator for pagination */}
           {loadingMore && (
-            <div className="flex justify-center py-4">
+            <div className="flex justify-center py-4 max-sm:py-3">
               <div className="flex items-center gap-2 text-gray-600">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span className="text-sm">Loading more...</span>
+                <span className="text-sm max-sm:text-xs">Loading more...</span>
               </div>
             </div>
           )}
 
           {/* End of data indicator */}
           {!hasNextPage && !loading && (
-            <div className="flex justify-center py-4 text-gray-500 text-sm">
+            <div className="flex justify-center py-4 max-sm:py-3 text-gray-500 text-sm max-sm:text-xs">
               No more data to load
             </div>
           )}
@@ -817,6 +867,32 @@ const TabbedLayout = ({
 
           .hideScrollbar::-webkit-scrollbar {
             display: none;
+          }
+
+          /* Mobile responsive improvements */
+          @media (max-width: 640px) {
+            .grid-cols-4 {
+              grid-template-columns: 1fr;
+            }
+            
+            .md\:flex {
+              display: flex;
+              flex-direction: column;
+            }
+            
+            .gap-4 {
+              gap: 0.75rem;
+            }
+            
+            .px-6 {
+              padding-left: 1rem;
+              padding-right: 1rem;
+            }
+            
+            .py-5 {
+              padding-top: 0.75rem;
+              padding-bottom: 0.75rem;
+            }
           }
         `}</style>
       )}

@@ -542,7 +542,7 @@ const MySalesSubUploadParent = React.forwardRef(
 
     // Left Panel Content
     const LeftPanelContent = () => (
-      <div className="md:w-[45%] max-md:hidden border-r border-[#E0E1EA] flex flex-col">
+      <div className="w-[45%] border-r border-[#E0E1EA] flex flex-col">
         <div className="p-3 m-4 flex flex-col gap-4 overflow-y-auto  flex-1 max-h-[calc(100vh-150px)]">
           {showPopupView && selectedTemplateContent ? (
             <TemplateContentRenderer
@@ -598,7 +598,7 @@ const MySalesSubUploadParent = React.forwardRef(
     return (
       <div className="flex flex-1 overflow-hidden">
         <LeftPanelContent />
-        <div className="md:w-[55%] w-full flex flex-col">
+        <div className="w-[55%] flex flex-col">
           <div className="m-4 flex flex-col overflow-y-auto hideScrollbar flex-1 max-h-[calc(100vh-150px)]">
             {MatchHeader && <MatchHeader />}
             {TicketDetails && <TicketDetails />}
