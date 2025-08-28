@@ -116,73 +116,6 @@ const InventoryLogsInfo = ({
   const [expandedLogs, setExpandedLogs] = useState(new Set());
   const [activeTab, setActiveTab] = useState("order");
 
-  // Sample data for demonstration
-  const sampleData = [
-    {
-      ticket_id: 626376,
-      user_id: 25,
-      json_payload: {
-        home_town: "Manchester City",
-        ticket_category: "Longside Lower Tier",
-        ticket_block: "31179",
-        add_web_price_addlist: "100",
-        max_display_qty: "5",
-        first_seat: "1",
-        row: "10A",
-        split_type: "No Preferences",
-        ship_date: "2025-09-12",
-        additional_file_type: null,
-        additional_dynamic_content: null,
-        match_id: "6784",
-        event: "Event",
-        ticket_details: [
-          "Tickets not available for purchase by Italian citizens",
-          "Adult + Junior",
-          "Concession Ticket - Child",
-          "Family Stand - 1 x Adult & 1 x Junior",
-          "Concession Ticket - Senior Citizen",
-          "Under 21 Ticket",
-          "Under 18 Ticket",
-          "No under 14s",
-          "Wheelchair User Only",
-          "Over 18 Ticket",
-          "21 And Over Ticket",
-          "Under 15s accompanied by An Adult",
-          "Meet Up With Seller",
-          "Limited Or Restricted View",
-          "Side Or Rear View",
-          "Restricted Leg Room",
-          "Away team passport holders not allowed - Passport copy required",
-          "Includes Parking",
-          "Access To VIP Lounge",
-          "Ticket with meal",
-          "Includes VIP Pass",
-          "Sponsor / Federation Tickets",
-          "Screenshot",
-          "Event Day Delivery",
-          "Passo card required",
-          "Alcohol Free Area",
-        ],
-        ticket_details1: "Not Seated Together",
-        quantity: 5,
-        price_type: "GBP",
-        price: 400,
-        in_hand: true,
-        ticket_type: "E-Ticket",
-      },
-      created_at: "2025-08-22T12:41:53.000000Z",
-    },
-    {
-      ticket_id: 626376,
-      user_id: 25,
-      json_payload: {
-        quantity: "7",
-        register_id: null,
-      },
-      created_at: "2025-08-22T12:59:32.000000Z",
-    },
-  ];
-
   function convertTimestamp(isoTimestamp) {
     const date = new Date(isoTimestamp);
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -253,7 +186,7 @@ const InventoryLogsInfo = ({
       return activeTab === "order" ? orderLogs : inventoryLogs;
     }
     // Use sample data for demonstration if no data provided
-    return data.length > 0 ? data : sampleData;
+    return data.length > 0 ? data : [];
   };
 
   const getReferencePayload = () => {
@@ -401,7 +334,7 @@ const InventoryLogsInfo = ({
       </span>
     );
   };
-
+  const hideKeys = ["tracking_file_status"];
   return (
     <RightViewModal className="!w-[800px]" show={show} onClose={onClose}>
       {/* Add relative positioning and ensure overflow is visible */}
@@ -543,7 +476,8 @@ const InventoryLogsInfo = ({
                                           );
                                         const currentValue =
                                           currentFieldValues[key];
-
+                                        if (hideKeys?.includes(key))
+                                          return null;
                                         return (
                                           <tr
                                             key={fieldIndex}
@@ -592,7 +526,8 @@ const InventoryLogsInfo = ({
                                           );
                                         const currentValue =
                                           currentFieldValues[key];
-
+                                        if (hideKeys?.includes(key))
+                                          return null;
                                         return (
                                           <tr
                                             key={fieldIndex}

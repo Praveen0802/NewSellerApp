@@ -393,7 +393,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
     } finally {
     }
   };
-  console.log(hideCta, "hideCtahideCtahideCta");
+
   return (
     <div className="flex flex-col h-full max-h-screen">
       {/* Toast container */}
