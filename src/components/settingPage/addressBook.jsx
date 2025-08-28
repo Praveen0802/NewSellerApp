@@ -246,7 +246,7 @@ const AddressBook = (props) => {
               />
 
               <AddressView
-                title="Default address"
+                title="Other addresses"
                 handleEditClick={handleEditClick}
                 handleDeleteClick={handleDeleteConfirmation}
                 addressValues={addressValues}

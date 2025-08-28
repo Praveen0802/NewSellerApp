@@ -273,16 +273,14 @@ const SalesPage = (props) => {
         isLoading: true,
       };
     });
-
     const salesData = await fetchSalesOrderDetails("", {
-      booking_id: item?.order_id?.replace("1BX", ""),
+      booking_id: item?.id,
     });
     const ticketTypes = await getTicketTypes();
     const ticketTypesList = ticketTypes?.ticket_types?.map((list) => ({
       label: list?.name,
       value: list?.id,
     }));
-    console.log("salesData", salesData);
 
     setShowInfoPopup({
       flag: true,
@@ -304,10 +302,10 @@ const SalesPage = (props) => {
       isLoading: true,
     }));
     const orderLogs = await fetchSalesOrderLogs("", {
-      booking_id: item?.order_id?.replace("1BX", ""),
+      booking_id: item?.id,
     });
     const inventoryLogs = await fetchSalesInventoryLogs("", {
-      ticket_id: item?.order_id?.replace("1BX", ""),
+      ticket_id: item?.id,
     });
     setShowLogDetailsModal({
       flag: true,

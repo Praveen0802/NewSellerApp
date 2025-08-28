@@ -156,7 +156,6 @@ const RportHistory = (props) => {
   const [filtersApplied, setFiltersApplied] = useState({
     page: 1,
   });
-console.log(props,'propsprops')
   const [showInfoPopup, setShowInfoPopup] = useState(false);
   const [showLogDetailsModal, setShowLogDetailsModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -868,10 +867,7 @@ console.log(props,'propsprops')
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-4 py-2 border-b border-gray-200 flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold">
-                Reports
-              </h2>
-              
+              <h2 className="text-sm font-semibold">Reports</h2>
             </div>
             <Button
               onClick={handleExportCSV}
@@ -934,30 +930,33 @@ console.log(props,'propsprops')
           scrollThreshold={100}
         />
       </div>
+      {showLogDetailsModal?.flag && (
+        <InventoryLogsInfo
+          show={showLogDetailsModal?.flag}
+          onClose={() =>
+            setShowLogDetailsModal({
+              flag: false,
+              orderLogs: [],
+              inventoryLogs: [],
+            })
+          }
+          orderLogs={showLogDetailsModal?.orderLogs}
+          inventoryLogs={showLogDetailsModal?.inventoryLogs}
+          isLoading={showLogDetailsModal?.isLoading}
+          showTabs={true}
+        />
+      )}
 
-      <InventoryLogsInfo
-        show={showLogDetailsModal?.flag}
-        onClose={() =>
-          setShowLogDetailsModal({
-            flag: false,
-            orderLogs: [],
-            inventoryLogs: [],
-          })
-        }
-        orderLogs={showLogDetailsModal?.orderLogs}
-        inventoryLogs={showLogDetailsModal?.inventoryLogs}
-        isLoading={showLogDetailsModal?.isLoading}
-        showTabs={true}
-      />
-
-      <OrderInfo
-        show={showInfoPopup?.flag}
-        data={showInfoPopup?.data}
-        onClose={() => setShowInfoPopup({ flag: false, data: [] })}
-        refreshPopupData={refreshPopupData}
-        type="report"
-        showShimmer={showInfoPopup?.isLoading}
-      />
+      {showInfoPopup?.flag && (
+        <OrderInfo
+          show={showInfoPopup?.flag}
+          data={showInfoPopup?.data}
+          onClose={() => setShowInfoPopup({ flag: false, data: [] })}
+          refreshPopupData={refreshPopupData}
+          type="report"
+          showShimmer={showInfoPopup?.isLoading}
+        />
+      )}
     </div>
   );
 };

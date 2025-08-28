@@ -47,7 +47,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
   const [guestDetails, setGuestDetails] = useState([]);
   const [hideCta, setHideCta] = useState(false);
   const [bookingNo, setBookingNo] = useState(null);
-
+  console.log(selectedAddress, "selectedAddressselectedAddress");
   const { data = {} } = confirmPurchasePopupFields;
   const [selectedQuantity, setSelectedQuantity] = useState(
     data?.purchase?.price_breakdown?.ticket_quantity
@@ -75,7 +75,9 @@ const ConfirmPurchasePopup = ({ onClose }) => {
       first_name: field?.first_name,
       last_name: field?.last_name,
       email: field?.email,
-      dialing_code: field?.country_code?.includes("+") ? field?.country_code : `+${field?.country_code}`,
+      dialing_code: field?.country_code?.includes("+")
+        ? field?.country_code
+        : `+${field?.country_code}`,
       mobile_no: field?.mobile_number,
       country: field?.country_id,
       city: field?.city_id,
@@ -265,7 +267,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
       setLoader(true);
 
       // Validate address selection
-      if (!addressDetails || addressDetails.length === 0) {
+      if (selectedAddress <= 0) {
         bookingConfirm(false, "Please add a billing address");
         setLoader(false);
         return;
@@ -280,7 +282,6 @@ const ConfirmPurchasePopup = ({ onClose }) => {
       setSelectedPaymentMethod(paymentMethod);
 
       if (guestDetails?.length > 0) {
-
         try {
           const allFieldsFilled = guestDetails.every((guest) => {
             console.log(guest, "guestguest");

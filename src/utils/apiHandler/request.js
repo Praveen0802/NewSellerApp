@@ -1515,14 +1515,14 @@ export const fetchSalesOrderDetails = async (token, params) => {
       ...(params && { params: params }),
     });
     return response?.data?.success
-      ? response?.data?.data?.length > 0
-        ? response?.data?.data
-        : orderDetails
-      : orderDetails;
+      ? // ? response?.data?.data?.length > 0
+        response?.data?.data
+      : [];
+    // : orderLog;
   } catch (error) {
     // console.log("ERROR in fetchSalesPageData", error);
     //
-    return orderDetails;
+    // return ;
   }
 };
 

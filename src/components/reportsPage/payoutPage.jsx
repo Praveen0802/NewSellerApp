@@ -161,7 +161,6 @@ const PayoutPage = (props) => {
     statusFilter,
     dateRange,
   ]);
-console.log(currentHistoryData,'currentHistoryDatacurrentHistoryData')
   // Scroll event handler
   const handleScroll = useCallback(
     (e) => {
@@ -789,14 +788,18 @@ console.log(currentHistoryData,'currentHistoryDatacurrentHistoryData')
       </div>
 
       {isOrderTab ? (
-        <OrderInfo
-          show={eyeViewPopup?.flag}
-          data={eyeViewPopup?.data}
-          onClose={() => setEyeViewPopup({ flag: false, data: "" })}
-          refreshPopupData={refreshPopupData}
-          type="sales"
-          showShimmer={eyeViewPopup?.isLoading}
-        />
+        <>
+          {eyeViewPopup?.flag && (
+            <OrderInfo
+              show={eyeViewPopup?.flag}
+              data={eyeViewPopup?.data}
+              onClose={() => setEyeViewPopup({ flag: false, data: "" })}
+              refreshPopupData={refreshPopupData}
+              type="sales"
+              showShimmer={eyeViewPopup?.isLoading}
+            />
+          )}
+        </>
       ) : (
         <TransactionDetailsPopup
           show={eyeViewPopup?.flag}

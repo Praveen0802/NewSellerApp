@@ -603,7 +603,7 @@ const AddEditAddress = ({
               htmlFor="is_default"
               className="ml-2 cursor-pointer text-sm text-gray-700"
             >
-              Use as default address?
+              Use as Primary Address?
             </label>
           </div>
         </div>

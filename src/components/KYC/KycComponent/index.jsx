@@ -53,6 +53,8 @@ const KycComponent = ({
       setSubmitForApproval(kycStatus.kyc_status);
     }
   }, [kycStatus]);
+
+  console.log(kycStatus.kyc_status,'kycStatus.kyc_statuskycStatus.kyc_status')
   // New state for contract generation modal
   const [contractModal, setContractModal] = useState({
     open: false,
@@ -115,6 +117,7 @@ const KycComponent = ({
   // Extract document data from props
   const getDocumentData = (docType) => {
     const propData = propsMapping[docType];
+    console.log(propData,'propDatapropDatapropData')
     if (!propData) return null;
     return {
       status: propData.status,
@@ -699,26 +702,188 @@ const KycComponent = ({
     (docType) => getDocumentStatus(docType) === "not uploaded"
   );
 
-  const handleSubmitForApproval = async () => {
-    if (hasNotUploaded) {
-      console.log("Please upload all required documents before submitting.");
-      return; // stop here
-    }
-    try {
-      const token = getCookie("auth_token") || currentUser?.token;
-      const userId = getCookie("user_token");
-      console.log("User ID from cookie:", userId);
-      const body = {
-        user_id: userId,
-      };
-      const response = await submitKycForApproval(token, body);
-      setSubmitForApproval(2); // Set to "Waiting for Approval"
-      toast.success("KYC submitted for approval successfully!");
-    } catch (error) {
-      console.error("KYC submission failed", error);
-    }
+  // Add this helper function to your component
+// Add this helper function to your component
+const getSubmitButtonState = () => {
+  const docTypes = Object.keys(documentConfig);
+  const statuses = docTypes.map((docType) => getDocumentStatus(docType));
+  
+  const hasNotUploaded = statuses.some(status => status === "not uploaded");
+  const hasRejected = statuses.some(status => status === "Rejected");
+  const hasPending = statuses.some(status => status === "Pending");
+  const allApproved = statuses.every(status => status === "Approved");
+  
+  // Button should be disabled when:
+  // 1. There are documents not uploaded yet
+  // 2. There are rejected documents (user needs to re-upload first)
+  // 3. All documents are already approved (no need to resubmit)
+  // 4. Already submitted for approval and waiting (submitForApproval === 2)
+  const shouldDisable = hasNotUploaded || 
+                       hasRejected ||
+                       (allApproved && submitForApproval === 1) || 
+                       submitForApproval === 2;
+  
+  // Button text logic
+  let buttonText = "Submit for Approval";
+  let icon = FileText;
+  
+  if (hasNotUploaded) {
+    buttonText = "Complete Upload";
+    icon = AlertCircle;
+  } else if (hasRejected) {
+    buttonText = "Fix Rejected Documents";
+    icon = AlertCircle;
+  } else if (allApproved && submitForApproval === 1) {
+    buttonText = "Already Approved";
+    icon = CheckCircle;
+  } else if (submitForApproval === 2) {
+    buttonText = "Waiting for Review";
+    icon = Clock;
+  } else if (hasPending) {
+    buttonText = "Submit for Approval";
+    icon = FileText;
+  }
+  
+  return {
+    disabled: shouldDisable,
+    text: buttonText,
+    icon: icon,
+    hasNotUploaded,
+    hasRejected,
+    hasPending,
+    allApproved
   };
+};
 
+// Add loading state - add this to your component state
+const [isSubmitting, setIsSubmitting] = useState(false);
+
+// Updated handleSubmitForApproval function
+const handleSubmitForApproval = async () => {
+  const { hasNotUploaded, hasRejected } = getSubmitButtonState();
+  
+  if (hasNotUploaded) {
+    toast.error("Please upload all required documents before submitting.");
+    return;
+  }
+  
+  if (hasRejected) {
+    toast.error("Please fix all rejected documents before submitting.");
+    return;
+  }
+  
+  setIsSubmitting(true); // Start loading
+  
+  try {
+    const token = getCookie("auth_token") || currentUser?.token;
+    const userId = getCookie("user_token");
+    console.log("User ID from cookie:", userId);
+    
+    const body = {
+      user_id: userId,
+    };
+    
+    const response = await submitKycForApproval(token, body);
+    setSubmitForApproval(2); // Set to "Waiting for Approval"
+    toast.success("KYC submitted for approval successfully!");
+  } catch (error) {
+    console.error("KYC submission failed", error);
+    toast.error("Failed to submit KYC. Please try again.");
+  } finally {
+    setIsSubmitting(false); // Stop loading
+  }
+};
+
+// Spinner component for loading state
+const Spinner = ({ className = "w-4 h-4" }) => (
+  <svg 
+    className={`animate-spin ${className}`} 
+    xmlns="http://www.w3.org/2000/svg" 
+    fill="none" 
+    viewBox="0 0 24 24"
+  >
+    <circle 
+      className="opacity-25" 
+      cx="12" 
+      cy="12" 
+      r="10" 
+      stroke="currentColor" 
+      strokeWidth="4"
+    />
+    <path 
+      className="opacity-75" 
+      fill="currentColor" 
+      d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+    />
+  </svg>
+);
+
+// Updated button component
+const SubmitButton = () => {
+  const buttonState = getSubmitButtonState();
+  const Icon = buttonState.icon;
+  const isDisabled = buttonState.disabled || isSubmitting;
+  
+  return (
+    <button
+      onClick={handleSubmitForApproval}
+      disabled={isDisabled}
+      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+        isDisabled
+          ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+          : "bg-gray-900 text-white hover:bg-gray-800 active:bg-gray-950 shadow-sm hover:shadow-md"
+      }`}
+    >
+      {isSubmitting ? (
+        <>
+          <Spinner />
+          <span>Submitting...</span>
+        </>
+      ) : (
+        <>
+          <Icon className="w-4 h-4" />
+          <span>{buttonState.text}</span>
+        </>
+      )}
+    </button>
+  );
+};
+
+// For mobile version
+const MobileSubmitButton = () => {
+  const buttonState = getSubmitButtonState();
+  const Icon = buttonState.icon;
+  const isDisabled = buttonState.disabled || isSubmitting;
+  
+  return (
+    <button
+      onClick={handleSubmitForApproval}
+      disabled={isDisabled}
+      className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+        isDisabled
+          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+          : "bg-gray-900 text-white hover:bg-gray-800"
+      }`}
+    >
+      {isSubmitting ? (
+        <>
+          <Spinner />
+          <span className="hidden sm:inline">Submitting...</span>
+          <span className="sm:hidden">...</span>
+        </>
+      ) : (
+        <>
+          <Icon className="w-4 h-4" />
+          <span className="hidden sm:inline">{buttonState.text}</span>
+          <span className="sm:hidden">
+            {buttonState.hasNotUploaded ? "Complete" : 
+             buttonState.hasRejected ? "Fix Docs" : "Submit"}
+          </span>
+        </>
+      )}
+    </button>
+  );
+};
   const areAllDocumentsApproved = () => {
     const docTypes = Object.keys(documentConfig);
     return docTypes.every(
@@ -728,38 +893,81 @@ const KycComponent = ({
 
   return (
     <div className="w-full h-full">
-      <div className="flex items-center justify-between p-3 sm:p-4">
-        <h2 className="pb-2 sm:pb-4 text-base sm:text-lg md:text-xl font-semibold">
-          KYC Documents
-        </h2>
-        {submitForApproval === 0 && (
+     {/* Sticky Header - Place this at the top of your KycComponent return */}
+<div className="sticky top-0 z-10 bg-white border-b border-l border-gray-200 shadow-sm">
+  <div className="flex items-center justify-between px-4 py-4 lg:px-6">
+    {/* Left Section - Title */}
+    <div className="flex-shrink-0">
+      <h2 className="text-xl font-semibold text-gray-900">
+        KYC Documents
+      </h2>
+    </div>
+
+    {/* Center Section - Progress Bar */}
+    <div className="flex-1 max-w-md mx-6 lg:mx-8">
+      <div className="bg-gray-50 rounded-lg border flex flex-col gap-1 border-gray-200 px-4 py-3">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-sm font-medium text-gray-600">Progress</span>
+          <span className="text-sm font-semibold text-gray-900">
+            {approvedDocuments}/{totalDocuments} approved
+          </span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2.5">
           <div
-            type="button"
-            onClick={handleSubmitForApproval}
-            disabled={hasNotUploaded}
-            className={`px-4 py-2 text-sm sm:text-base rounded-lg transition ${
-              hasNotUploaded
-                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                : "bg-gray-900 text-white hover:bg-gray-700 cursor-pointer"
-            }`}
-          >
-            Submit for Approval
-          </div>
-        )}
-
-        {submitForApproval === 1 && areAllDocumentsApproved() && (
-          <span className="px-3 py-1 text-sm font-medium text-green-700 bg-green-100 rounded-full">
-            Approved
-          </span>
-        )}
-
-        {(submitForApproval === 2 ||
-          (submitForApproval === 1 && !areAllDocumentsApproved())) && (
-          <span className="px-3 py-1 text-sm font-medium text-yellow-700 bg-yellow-100 rounded-full">
-            Waiting for Approval
-          </span>
-        )}
+            className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out shadow-sm"
+            style={{ width: `${progressPercentage}%` }}
+          ></div>
+        </div>
       </div>
+    </div>
+
+    {/* Right Section - Status Badge and Submit Button */}
+    <div className="flex items-center gap-3 flex-shrink-0">
+      {/* Status Badge */}
+      {submitForApproval === 1 && areAllDocumentsApproved() && (
+        <div className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg">
+          <CheckCircle className="w-4 h-4" />
+          <span>Approved</span>
+        </div>
+      )}
+
+      {(submitForApproval === 2 ||
+        (submitForApproval === 1 && !areAllDocumentsApproved())) && (
+        <div className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg">
+          <Clock className="w-4 h-4" />
+          <span>Waiting for Approval</span>
+        </div>
+      )}
+
+      {/* Submit Button */}
+     <SubmitButton />
+    </div>
+  </div>
+
+  {/* Mobile Responsive Version - Show on smaller screens */}
+  <div className="lg:hidden px-4 pb-4">
+    <div className="space-y-3">
+      {/* Progress Section */}
+      <div className="bg-gray-50 rounded-lg border border-gray-200 px-3 py-2.5">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-medium text-gray-600">Progress</span>
+          <span className="text-xs font-semibold text-gray-900">
+            {approvedDocuments}/{totalDocuments} approved
+          </span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${progressPercentage}%` }}
+          ></div>
+        </div>
+      </div>
+
+      {/* Actions Row */}
+    
+    </div>
+  </div>
+</div>
 
       <div className="p-6 sm:p-4 bg-white border-[1px] flex flex-col gap-3 sm:gap-4 border-[#eaeaf1] w-full h-full">
         <div className="flex justify-between items-center">
@@ -770,20 +978,6 @@ const KycComponent = ({
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-6 bg-white rounded-lg border border-gray-200 p-4 ">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">Progress</span>
-            <span className="text-sm font-medium text-gray-700">
-              {approvedDocuments}/{totalDocuments} approved
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
-              style={{ width: `${progressPercentage}%` }}
-            ></div>
-          </div>
-        </div>
 
         {/* Document List */}
         <div className="mb-6 grid grid-cols-1 gap-4">
