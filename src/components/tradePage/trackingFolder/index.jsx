@@ -235,7 +235,7 @@ const TrackingPage = (props) => {
               tooltipPosition: "top",
             },
             {
-              icon: item?.listing_note?.length > 0 && (
+              icon:  (
                 <Image
                   width={20}
                   height={20}
@@ -246,8 +246,11 @@ const TrackingPage = (props) => {
               className: "cursor-pointer ",
               key: "document",
               tooltipComponent:
-                item?.listing_note?.length > 0 &&
-                item?.listing_note?.map((note, index) => (
+                
+              ((item?.listing_note?.length > 0
+                ? item?.listing_note
+                : [{ ticket_note: "No Restrictions" }]
+              ))?.map((note, index) => (
                   <div className="flex flex-col gap-2" key={index}>
                     <p className="text-left">Benifits/Restrictions</p>
                     <ul

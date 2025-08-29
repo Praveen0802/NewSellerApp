@@ -318,7 +318,7 @@ const InventoryFolder = (props) => {
             // Updated tooltip content in your rightStickyColumns mapping
             // Updated tooltip content in your rightStickyColumns mapping
             {
-              icon: item?.listing_note?.length > 0 && (
+              icon: (
                 <Image
                   width={20}
                   height={20}
@@ -328,13 +328,16 @@ const InventoryFolder = (props) => {
               ),
               className: "cursor-pointer pr-2",
               key: "document",
-              tooltipComponent: item?.listing_note?.length > 0 && (
+              tooltipComponent: (
                 <div>
                   <div className="font-medium text-gray-800 mb-2 text-xs pb-1 border-b border-gray-200">
                     Benefits/Restrictions
                   </div>
                   <div className="space-y-1 max-h-32 overflow-y-auto text-xs">
-                    {item?.listing_note?.map((note, index) => (
+                    {(item?.listing_note?.length > 0
+                      ? item?.listing_note
+                      : [{ ticket_note: "No Restrictions" }]
+                    )?.map((note, index) => (
                       <div key={index}>
                         {typeof note === "object" && note !== null ? (
                           <div className="space-y-1">
