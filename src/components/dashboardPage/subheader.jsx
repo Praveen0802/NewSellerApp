@@ -19,7 +19,6 @@ const Subheader = () => {
   const isLmtPayAccessable = userRoles?.permission?.filter(
     (item) => item?.name == "lmt-pay" && item.is_can_access == 1
   );
-  console.log(isLmtPayAccessable, "isDashboardVisibleisDashboardVisible");
 
   return (
     <div className="bg-white flex items-center py-2 md:py-2 justify-between px-4 md:px-6 border-b border-[#eaeaf1]">

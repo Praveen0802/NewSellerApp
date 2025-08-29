@@ -41,7 +41,7 @@ import ClearChip from "./components/clearChip";
 
 const InventoryFolder = (props) => {
   const { response = {}, matchId } = props;
-  console.log(response,'responseresponse')
+  console.log(response, "responseresponse");
   const {
     match_details = {},
     ticket_details = [],
@@ -145,6 +145,7 @@ const InventoryFolder = (props) => {
   };
 
   const fetchScrollEnd = async () => {
+    console.log(currentPage, lastPage, "ppppppppppppppppppppppp");
     if (currentPage >= lastPage) return;
     const scrollPosition = window.scrollY || document.documentElement.scrollTop;
     const params = {
@@ -380,16 +381,24 @@ const InventoryFolder = (props) => {
       },
       {
         icon: (
-          <Button
-            label="Buy"
-            classNames={{
-              label_: "text-white text-xs sm:text-sm",
-              root: "bg-[#343432] py-1 px-2 rounded-md hover:bg-[#343432] transition-colors whitespace-nowrap",
-            }}
+          // <Button
+          //   label="Buy"
+          //   classNames={{
+          //     label_: "text-white text-xs",
+          //     root: "bg-[#343432] py-1 px-2 rounded-md hover:bg-[#343432] transition-colors whitespace-nowrap",
+          //   }}
+          //   onClick={() => {
+          //     handleClickItem(item);
+          //   }}
+          // />
+          <button
             onClick={() => {
               handleClickItem(item);
             }}
-          />
+            className="bg-[#343432] py-1 px-2 rounded-md hover:bg-[#343432] text-white text-xs font-medium transition-colors whitespace-nowrap"
+          >
+            Buy
+          </button>
         ),
         key: "buy",
       },
