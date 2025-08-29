@@ -27,7 +27,7 @@ const TruncatedArrayDisplay = ({ items, maxVisible = 3, keyName }) => {
   const [showTooltip, setShowTooltip] = useState(false);
 
   if (!Array.isArray(items) || items.length === 0) {
-    return <span className="text-gray-400 italic text-xs">Empty</span>;
+    return <span className="text-gray-400 italic text-xs">-</span>;
   }
 
   const visibleItems = items.slice(0, maxVisible);
@@ -133,7 +133,7 @@ const InventoryLogsInfo = ({
       return value ? "Yes" : "No";
     }
     if (typeof value === "string" && value.trim() === "") {
-      return "Empty";
+      return "-";
     }
     if (
       key === "ticket_file_status" &&
@@ -250,10 +250,10 @@ const InventoryLogsInfo = ({
 
   // Enhanced render function for field values
   const renderFieldValue = (key, currentValue, isChangedInCurrentLog) => {
-    const hasValue = currentValue !== undefined && currentValue !== null;
+    const hasValue = currentValue !== undefined && currentValue !== null && currentValue !== "";
 
     if (!hasValue) {
-      return <span className="text-gray-400 italic text-xs">Empty</span>;
+      return <span className="text-gray-400 italic text-xs">-</span>;
     }
 
     const formattedValue = formatValue(currentValue, key);
@@ -263,18 +263,22 @@ const InventoryLogsInfo = ({
       return (
         <div className="space-y-1">
           {Array.isArray(formattedValue) ? (
-            formattedValue.map((url, idx) => (
-              <div key={idx}>
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline break-all block"
-                >
-                  Click here {formattedValue.length > 1 ? `(${idx + 1})` : ""}
-                </a>
-              </div>
-            ))
+            formattedValue.length > 0 ? (
+              formattedValue.map((url, idx) => (
+                <div key={idx}>
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline break-all block"
+                  >
+                    Click here {formattedValue.length > 1 ? `(${idx + 1})` : ""}
+                  </a>
+                </div>
+              ))
+            ) : (
+              <span className="text-gray-400 italic text-xs">-</span>
+            )
           ) : (
             <a
               href={currentValue}
@@ -291,6 +295,10 @@ const InventoryLogsInfo = ({
 
     // Handle arrays (including large arrays like ticket_details)
     if (Array.isArray(formattedValue)) {
+      if (formattedValue.length === 0) {
+        return <span className="text-gray-400 italic text-xs">-</span>;
+      }
+
       // Check if this is a large array field
       if (isLargeArrayField(key) && formattedValue.length > 3) {
         return (

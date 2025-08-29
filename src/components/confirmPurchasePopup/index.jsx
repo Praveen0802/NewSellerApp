@@ -63,6 +63,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
     mobile_no: "",
     country_id: "",
     city: "",
+    postal_code: ""
   });
   const handlePaymentChange = (name) => {
     setSelectedPayment(name);
@@ -81,6 +82,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
       mobile_no: field?.mobile_number,
       country: field?.country_id,
       city: field?.city_id,
+      postal_code: field?.zip_code,
     });
   };
 
@@ -131,13 +133,12 @@ const ConfirmPurchasePopup = ({ onClose }) => {
         country: Number(primaryAddress?.country_id),
         city: Number(primaryAddress?.city_id),
         address: primaryAddress?.address,
+        postal_code: primaryAddress?.zip_code,
       });
-      console.log(address, "address");
     } catch (error) {
       toast.error("Failed to load address and payment details");
     }
   };
-  console.log(formFieldValues, "formFieldValues");
   useEffect(() => {
     fetchAddressPaymentDetails();
   }, []);
@@ -267,7 +268,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
       setLoader(true);
 
       // Validate address selection
-      if (selectedAddress <= 0) {
+      if (selectedAddress < 0) {
         bookingConfirm(false, "Please add a billing address");
         setLoader(false);
         return;
@@ -346,6 +347,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
           country: `${formFieldValues?.country}`,
           city: `${formFieldValues?.city}`,
           address: `${formFieldValues?.address}`,
+          postal_code: `${formFieldValues?.postal_code}`,
           payment_method: `${paymentMethod}`,
         };
 

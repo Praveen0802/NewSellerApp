@@ -28,6 +28,8 @@ import {
   LMTpurchaseTracking,
   LMTTradeOrders, // Add this API function
 } from "@/utils/apiHandler/request";
+import { useSelector } from "react-redux";
+import AccessDeniedComponent from "../secureLayout/accessDeniedComponent";
 
 const DashboardPage = (props) => {
   const [resultData, setResultData] = useState(props?.response);
@@ -50,8 +52,14 @@ const DashboardPage = (props) => {
     topSellingCategory: "", //allCategories
     reports: "GBP", // Default currency
   });
-
+  const { userRoles } = useSelector((state) => state.common);
+  console.log(userRoles, "userRolesuserRolesuserRoles");
   // Track current page for pagination - Added all sections
+
+  const isDashboardVisible = userRoles?.permission?.filter(
+    (item) => item?.name == "dashboard" && item.is_can_access == 1
+  );
+  console.log(isDashboardVisible, "isDashboardVisibleisDashboardVisible");
   const [currentPages, setCurrentPages] = useState({
     salesOverView: 1,
     awaitingDelivery: 1,
@@ -432,61 +440,63 @@ const DashboardPage = (props) => {
     const { matchId = null } = item ?? {};
     router.push(`/add-listings${matchId ? `/${matchId}` : ""}`);
   };
-console.log(resultData,'resultDataresultData')
   return (
     <div className="flex flex-col h-full">
       <Subheader />
-
-      <div className="overflow-auto p-3 sm:p-4 md:p-6 w-full h-full flex flex-col gap-3 sm:gap-4 md:gap-5 bg-[#F5F7FA]">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-          <div className="flex flex-col gap-3 sm:gap-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              {listValues?.map((listItem, listIndex) => {
-                return (
-                  <ViewContainer
-                    key={listIndex}
-                    title={listItem?.title}
-                    options={listItem?.options}
-                    listValues={listItem?.listValues}
-                    onChange={listItem?.onchange}
-                    loader={loader[listItem?.keyValue]}
-                    selectedOption={listItem?.selectedOption}
-                    displayValues={listItem?.displayValues}
-                    handleScrollEnd={handleScrollEnd}
-                    keyValue={listItem?.keyValue}
-                    meta={listItem?.meta}
-                  />
-                );
-              })}
+      {isDashboardVisible?.length > 0 ? (
+        <div className="overflow-auto p-3 sm:p-4 md:p-6 w-full h-full flex flex-col gap-3 sm:gap-4 md:gap-5 bg-[#F5F7FA]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                {listValues?.map((listItem, listIndex) => {
+                  return (
+                    <ViewContainer
+                      key={listIndex}
+                      title={listItem?.title}
+                      options={listItem?.options}
+                      listValues={listItem?.listValues}
+                      onChange={listItem?.onchange}
+                      loader={loader[listItem?.keyValue]}
+                      selectedOption={listItem?.selectedOption}
+                      displayValues={listItem?.displayValues}
+                      handleScrollEnd={handleScrollEnd}
+                      keyValue={listItem?.keyValue}
+                      meta={listItem?.meta}
+                    />
+                  );
+                })}
+              </div>
+              <ReportViewContainer reportValues={reportValues} />
             </div>
-            <ReportViewContainer reportValues={reportValues} />
+            <div className="w-full flex flex-col">
+              <TopSellingEvents
+                sellingEvents={sellingEvents}
+                handleClick={handleCreateListing}
+                handleScrollEnd={handleScrollEnd}
+                loader={loader.topSelling}
+              />
+            </div>
           </div>
-          <div className="w-full flex flex-col">
-            <TopSellingEvents
-              sellingEvents={sellingEvents}
-              handleClick={handleCreateListing}
-              handleScrollEnd={handleScrollEnd}
-              loader={loader.topSelling}
-            />
-          </div>
-        </div>
 
-        <TradeTickets
-          resultData={resultData}
-          handleScrollEnd={handleScrollEnd}
-          loader={loader}
-        />
-        <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 md:gap-6">
-          <div className="w-full lg:w-1/2 flex flex-col gap-3 sm:gap-4 md:gap-6">
-            <NotificationActivityList
-              notificationsList={resultData?.notifications}
-              activities={resultData?.activity}
-              handleScrollEnd={handleScrollEnd}
-              loader={loader}
-            />
+          <TradeTickets
+            resultData={resultData}
+            handleScrollEnd={handleScrollEnd}
+            loader={loader}
+          />
+          <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 md:gap-6">
+            <div className="w-full lg:w-1/2 flex flex-col gap-3 sm:gap-4 md:gap-6">
+              <NotificationActivityList
+                notificationsList={resultData?.notifications}
+                activities={resultData?.activity}
+                handleScrollEnd={handleScrollEnd}
+                loader={loader}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      ):(
+        <AccessDeniedComponent />
+      )}
     </div>
   );
 };

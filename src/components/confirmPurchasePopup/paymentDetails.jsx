@@ -3,7 +3,7 @@ import React from "react";
 import roundedChevron from "../../../public/rounded-chevron.svg";
 import netBankingSupports from "../../../public/netBankingSupports.svg";
 import { updateWalletPopupFlag } from "@/utils/redux/common/action";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 const PaymentDetails = ({
   data,
@@ -12,6 +12,10 @@ const PaymentDetails = ({
   paymentDetails,
 }) => {
   const dispatch = useDispatch();
+  const { userRoles } = useSelector((state) => state.common);
+  const isLmtPayAccessable = userRoles?.permission?.filter(
+    (item) => item?.name == "lmt-pay" && item.is_can_access == 1
+  );
   const handleOpenAddWalletPopup = () => {
     dispatch(
       updateWalletPopupFlag({
@@ -33,15 +37,17 @@ const PaymentDetails = ({
               {paymentDetails?.[0]?.wallet?.amount}
             </b>
           </p>
-          <button
-            onClick={() => {
-              handleOpenAddWalletPopup();
-            }}
-            className="flex gap-2 bg-[#F0F1F5] cursor-pointer rounded-md py-[2px] px-[5px] items-center"
-          >
-            <Image src={roundedChevron} width={12} height={12} alt="logo" />
-            <p className="text-[12px] font-normal">Deposit</p>
-          </button>
+          {isLmtPayAccessable?.length > 0 && (
+            <button
+              onClick={() => {
+                handleOpenAddWalletPopup();
+              }}
+              className="flex gap-2 bg-[#F0F1F5] cursor-pointer rounded-md py-[2px] px-[5px] items-center"
+            >
+              <Image src={roundedChevron} width={12} height={12} alt="logo" />
+              <p className="text-[12px] font-normal">Deposit</p>
+            </button>
+          )}
         </div>
       ),
     },

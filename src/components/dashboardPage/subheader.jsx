@@ -2,7 +2,7 @@ import Image from "next/image";
 import Button from "../commonComponents/button";
 import calendarIcon from "../../../public/calendar-03.svg";
 import { formatDate } from "@/utils/helperFunctions";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { ADD_WALLET_POPUP } from "@/utils/redux/common/type";
 import { updateWalletPopupFlag } from "@/utils/redux/common/action";
 
@@ -15,6 +15,12 @@ const Subheader = () => {
       })
     );
   };
+  const { userRoles } = useSelector((state) => state.common);
+  const isLmtPayAccessable = userRoles?.permission?.filter(
+    (item) => item?.name == "lmt-pay" && item.is_can_access == 1
+  );
+  console.log(isLmtPayAccessable, "isDashboardVisibleisDashboardVisible");
+
   return (
     <div className="bg-white flex items-center py-2 md:py-2 justify-between px-4 md:px-6 border-b border-[#eaeaf1]">
       <div className="flex gap-2 items-center">
@@ -23,17 +29,19 @@ const Subheader = () => {
           {formatDate(new Date())}
         </p>
       </div>
-      <Button
-        type="primary"
-        classNames={{
-          root: "px-2 md:px-3 py-1.5 md:py-2",
-          label_: "text-xs md:text-sm font-medium",
-        }}
-        onClick={() => {
-          handleOpenAddWalletPopup();
-        }}
-        label="+ Add Deposit"
-      />
+      {isLmtPayAccessable?.length > 0 && (
+        <Button
+          type="primary"
+          classNames={{
+            root: "px-2 md:px-3 py-1.5 md:py-2",
+            label_: "text-xs md:text-sm font-medium",
+          }}
+          onClick={() => {
+            handleOpenAddWalletPopup();
+          }}
+          label="+ Add Deposit"
+        />
+      )}
     </div>
   );
 };

@@ -9,7 +9,7 @@ import { IconStore } from "@/utils/helperFunctions/iconStore";
 import EventSearch from "./components/eventSearch";
 import roundedChevron from "../../../public/rounded-chevron.svg";
 import Image from "next/image";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { updateWalletPopupFlag } from "@/utils/redux/common/action";
 import chevronDown from "../../../public/white-chevron-right.svg";
 import useIsMobile from "@/utils/helperFunctions/useIsmobile";
@@ -22,7 +22,9 @@ const TradePage = (props) => {
   const isMobile = useIsMobile();
   const [selectedTab, setSelectedTab] = useState(profile);
 
-  const [showEventSearch, setShowEventSearch] = useState(profile == 'home' ? true: false);
+  const [showEventSearch, setShowEventSearch] = useState(
+    profile == "home" ? true : false
+  );
 
   const tabFields = [
     {
@@ -108,6 +110,11 @@ const TradePage = (props) => {
     </div>
   );
 
+  const { userRoles } = useSelector((state) => state.common);
+  const isLmtPayAccessable = userRoles?.permission?.filter(
+    (item) => item?.name == "lmt-pay" && item.is_can_access == 1
+  );
+
   return (
     <div className="bg-[#ECEDF2] w-full h-full relative">
       {/* Wallet info - Responsive for both desktop and mobile */}
@@ -115,13 +122,15 @@ const TradePage = (props) => {
         <div className="flex-1 md:flex-none max-md:px-4">
           {/* <AvailableFunds fetchWalletBalance={fetchWalletBalance} /> */}
         </div>
-        <div
-          onClick={handleOpenAddWalletPopup}
-          className="flex gap-1 md:gap-2 bg-[#F0F1F5] max-md:px-4 cursor-pointer rounded-md p-1 md:p-[8px] items-center"
-        >
-          <Image src={roundedChevron} width={16} height={16} alt="logo" />
-          <p className="text-[12px] md:text-[14px] font-normal">Deposit</p>
-        </div>
+        {isLmtPayAccessable?.length > 0 && (
+          <div
+            onClick={handleOpenAddWalletPopup}
+            className="flex gap-1 md:gap-2 bg-[#F0F1F5] max-md:px-4 cursor-pointer rounded-md p-1 md:p-[8px] items-center"
+          >
+            <Image src={roundedChevron} width={16} height={16} alt="logo" />
+            <p className="text-[12px] md:text-[14px] font-normal">Deposit</p>
+          </div>
+        )}
       </div>
 
       {/* Desktop tabs */}

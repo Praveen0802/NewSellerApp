@@ -21,8 +21,12 @@ const AddressDetails = ({
 
   // Helper function to check if we should show the form
   const shouldShowForm = () => {
-    return selectedAddress === "other" || 
-           (selectedAddress !== undefined && selectedAddress !== null && selectedAddress !== "other");
+    return (
+      selectedAddress === "other" ||
+      (selectedAddress !== undefined &&
+        selectedAddress !== null &&
+        selectedAddress !== "other")
+    );
   };
 
   // This will be used to render the form fields for any selected address
@@ -104,7 +108,10 @@ const AddressDetails = ({
                     type: "select",
                     id: "dialing_code",
                     name: "dialing_code",
-                    value: formFieldValues?.dialing_code || formFieldValues?.country_code || "",
+                    value:
+                      formFieldValues?.dialing_code ||
+                      formFieldValues?.country_code ||
+                      "",
                     onChange: (e) => handleChange(e, "dialing_code", "select"),
                     className: `!py-[4px] !px-4 ${fieldStyle}`,
                     searchable: true,
@@ -185,12 +192,36 @@ const AddressDetails = ({
         onChange: (e) => handleChange(e, "city", "select"),
         disabled: !formFieldValues?.country && !formFieldValues?.country_id,
         className: `!py-[4px] !px-4 ${fieldStyle} ${
-          !formFieldValues?.country && !formFieldValues?.country_id ? "opacity-60" : ""
+          !formFieldValues?.country && !formFieldValues?.country_id
+            ? "opacity-60"
+            : ""
         }`,
         labelClassName: "!text-[12px] text-gray-600 block",
-        options: cityOptions?.length ? cityOptions : [{ value: "", label: "Select City" }],
+        options: cityOptions?.length
+          ? cityOptions
+          : [{ value: "", label: "Select City" }],
         placeholder: "Select City",
-        rightIcon: (formFieldValues?.city || formFieldValues?.city_id)
+        rightIcon:
+          formFieldValues?.city || formFieldValues?.city_id
+            ? () => (
+                <span className="text-green-500">
+                  <IconStore.circleTick className="size-5" />
+                </span>
+              )
+            : null,
+      },
+      {
+        label: "Postal Code",
+        type: "text",
+        id: "postal_code",
+        mandatory: true,
+        name: "postal_code",
+        value: formFieldValues?.postal_code || "",
+        onChange: (e) => handleChange(e, "postal_code"),
+        className: `!py-[4px] !px-4 ${fieldStyle}`,
+        labelClassName: "!text-[12px] text-gray-600 block",
+        placeholder: "Enter postal code",
+        rightIcon: formFieldValues?.postal_code
           ? () => (
               <span className="text-green-500">
                 <IconStore.circleTick className="size-5" />
@@ -283,9 +314,11 @@ const AddressDetails = ({
               <div className="w-full">
                 <FormFields formFields={[userFormFields[5][0]]} />
               </div>
-              <div className="w-full">
+              <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormFields formFields={[userFormFields[6][0]]} />
+                <FormFields formFields={[userFormFields[6][1]]} />
               </div>
+            
             </div>
           </div>
         )}
