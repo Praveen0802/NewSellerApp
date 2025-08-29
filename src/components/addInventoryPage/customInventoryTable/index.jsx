@@ -999,7 +999,7 @@ const CommonInventoryTable = ({
                               isMobile
                                 ? "py-1.5 px-2 text-[10px]"
                                 : "py-2 px-3 text-xs"
-                            } whitespace-nowrap overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
+                            } whitespace-nowrap  overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
                               isRowDisabled ? "bg-gray-50" : ""
                             } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
                             style={columnStyles}

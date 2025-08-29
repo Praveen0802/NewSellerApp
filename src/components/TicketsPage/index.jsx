@@ -418,7 +418,7 @@ const TicketsPage = (props) => {
         ticket_type_id: ticket.ticket_type_id || "",
         ticket_category: ticket.ticket_category || "",
         ticket_category_id: ticket.ticket_category_id || "",
-        quantity: ticket.quantity || 0,
+        quantity: `${ticket.quantity}` || 0,
 
         // FIX: Ensure price values are properly handled
         price: ticket.price ? String(ticket.price) : "", // Convert to string
@@ -433,6 +433,7 @@ const TicketsPage = (props) => {
             ? "Sold"
             : "Inactive",
         sell_date: ticket.sell_date || "",
+        sold_count: `${ticket.sold_count}` || "0",
         row: ticket.row || "",
         block: ticket.ticket_block || "",
         first_seat: ticket.first_seat || "",
@@ -1201,6 +1202,13 @@ const TicketsPage = (props) => {
         editable: true,
         type: "number",
       },
+       {
+        key: "sold_count",
+        label: "Sold",
+        increasedWidth: "!w-[100px] !min-w-[100px] ",
+        editable: false,
+        type: "number",
+      },
       // {
       //   key: "seat",
       //   label: "Seat",
@@ -1429,6 +1437,13 @@ const TicketsPage = (props) => {
           editable: true,
           type: "number",
         },
+        {
+        key: "sold_count",
+        label: "Sold",
+        increasedWidth: "!w-[100px] !min-w-[100px] ",
+        editable: false,
+        type: "number",
+      },
         {
           key: "web_price",
           label: "Face Value",
