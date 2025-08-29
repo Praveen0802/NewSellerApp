@@ -1297,7 +1297,7 @@ const MySalesUploadTickets = ({
                 ? `Proof Document (${currentUploadedFiles.length}/1)`
                 : `Uploaded Files (${currentUploadedFiles.length})`}
             </h3>
-            <div class="flex items-center gap-x-2">
+            {/* <div class="flex items-center gap-x-2">
               <span class="text-xs text-[#323A70]">Show assigned</span>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input
@@ -1310,7 +1310,7 @@ const MySalesUploadTickets = ({
                 />
                 <div class="w-7 h-3 bg-gray-200 peer-checked:bg-[#64EAA540] rounded-full transition-all peer peer-checked:after:translate-x-full peer-checked:after:bg-[#64EAA5] after:content-[''] after:absolute after:-top-0.5 after:-left-0.5 after:bg-gray-400 after:rounded-full after:h-4 after:w-4 after:transition-all after:shadow-md peer-checked:bg-100"></div>
               </label>
-            </div>
+            </div> */}
           </div>
 
           <div className="max-h-64 overflow-y-auto border border-[#E0E1EA] rounded">
