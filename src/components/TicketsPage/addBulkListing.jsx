@@ -501,7 +501,7 @@ const BulkInventory = (props) => {
       return newData;
     });
 
-    setGlobalSelectedTickets([]);
+    // setGlobalSelectedTickets([]);
     toast.success(
       `${globalSelectedTickets.length} ticket(s) cloned successfully`
     );

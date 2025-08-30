@@ -116,7 +116,7 @@ const BulkActionBar = ({
 
   // NEW: Determine if clone actions should be disabled
   const cloneActionsDisabled = hasAnyClonedSelected && !areAllSelectedCloned;
-  const editDisabled = disabled || selectedCount === 0 || hasAnyClonedSelected;
+  const editDisabled = disabled || selectedCount === 0; 
 
   return (
     <>

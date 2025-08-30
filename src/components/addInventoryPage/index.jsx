@@ -80,7 +80,7 @@ const AddInventoryPage = (props) => {
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isTablet, setIsTablet] = useState(false);
+
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Extract the original response structure (KEEP EXACTLY THE SAME)
@@ -130,7 +130,6 @@ const AddInventoryPage = (props) => {
     const checkScreenSize = () => {
       const width = window.innerWidth;
       setIsMobile(width < 768);
-      setIsTablet(width >= 768 && width < 1024);
     };
 
     checkScreenSize();
@@ -1418,7 +1417,7 @@ const AddInventoryPage = (props) => {
     }));
 
     setInventoryData((prevData) => [...prevData, ...clonedRows]);
-    setSelectedRows([]);
+    // setSelectedRows([]);
     toast.success(`${rowsToClone.length} row(s) cloned successfully`);
   };
 
@@ -1765,7 +1764,7 @@ const AddInventoryPage = (props) => {
                 setHasSearched(false);
               }}
               parentClassName={`${
-                isMobile ? "!w-full" : isTablet ? "!w-[50%]" : "!w-[40%]"
+                isMobile ? "!w-full"  : "!w-[40%]"
               }`}
               data-search-container="true"
               labelClassName="text-[#7D82A4]"
@@ -1776,8 +1775,7 @@ const AddInventoryPage = (props) => {
                 className={`flex ${
                   isMobile
                     ? "flex-col gap-2"
-                    : isTablet
-                    ? "flex-wrap gap-3"
+                    
                     : "gap-4"
                 } items-start ${isMobile ? "" : "sm:items-center"}`}
               >
@@ -1785,8 +1783,7 @@ const AddInventoryPage = (props) => {
                   className={`flex ${
                     isMobile
                       ? "flex-wrap gap-2"
-                      : isTablet
-                      ? "flex-wrap gap-3"
+                     
                       : "gap-4"
                   } items-center`}
                 >
@@ -1852,6 +1849,17 @@ const AddInventoryPage = (props) => {
                 View Map
               </p>
             )}
+
+            {isMobile && (
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="flex items-center gap-2 px-3 py-2 bg-[#4285F4] text-white rounded-md text-sm font-medium hover:bg-[#3367D6] transition-colors"
+              >
+                <Menu size={14} />
+                {showMobileFilters ? "Hide Filters" : "Show Filters"}
+              </button>
+            )}
+
             {/* Move FilterColumnControls here - in the header but after View Map */}
             <FilterColumnControls
               // Filter props
@@ -1879,7 +1887,7 @@ const AddInventoryPage = (props) => {
           <>
             <div
               className={`border-b-[1px] border-[#DADBE5] p-3 sm:p-4 lg:p-5 ${
-                (isMobile || isTablet) && !showMobileFilters ? "hidden" : ""
+                (isMobile ) && !showMobileFilters ? "hidden" : ""
               }`}
             >
               <div className="flex items-center justify-between">
@@ -1887,8 +1895,7 @@ const AddInventoryPage = (props) => {
                   className={`flex ${
                     isMobile
                       ? "flex-col gap-3"
-                      : isTablet
-                      ? "flex-wrap gap-4"
+                      
                       : "flex-wrap gap-5"
                   } items-start ${isMobile ? "" : "sm:items-center"}`}
                 >
@@ -1901,7 +1908,7 @@ const AddInventoryPage = (props) => {
                 </div>
               </div>
             </div>
-            {inventoryData.length === 0 && (
+            {/* {inventoryData.length === 0 && ( */}
               <div
                 className={`flex ${
                   isMobile ? "justify-center" : "justify-end"
@@ -1917,7 +1924,7 @@ const AddInventoryPage = (props) => {
                   label="+ Add Listings"
                 />
               </div>
-            )}
+            {/* )} */}
           </>
         )}
       </div>

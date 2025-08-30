@@ -933,7 +933,7 @@ const MySalesUploadTickets = ({
     );
     formData.append("dynamic_content", currentAdditionalInfo?.dynamicContent);
     formData.append("ticket_type", currentAdditionalInfo?.template || "");
-    if (currentAdditionalInfo?.templateFile) {
+    if (currentAdditionalInfo?.templateFile && currentAdditionalInfo?.templateFile instanceof File) {
       formData.append(
         "additional_file",
         currentAdditionalInfo.templateFile,

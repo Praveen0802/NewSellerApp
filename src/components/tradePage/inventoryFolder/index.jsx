@@ -46,9 +46,10 @@ const InventoryFolder = (props) => {
     match_details = {},
     ticket_details = [],
     totalAmount = "",
-    filters = {},
+    filters:filterValues = {},
   } = response;
   const [selectedItem, setSelectedItem] = useState("all");
+  const [filters,setFilters] = useState(filterValues);
   const [displayTicketDetails, setDisplayTicketDetails] =
     useState(ticket_details);
   const [filtersApplied, setFiltersApplied] = useState({ page: 1 });
@@ -109,6 +110,7 @@ const InventoryFolder = (props) => {
     } else {
       setDisplayTicketDetails([...response?.ticket_details]);
     }
+    setFilters(response?.filters);
     setLastPage(response?.meta?.last_page);
     setCurrentPage(response?.meta?.current_page);
     setLoader(false);

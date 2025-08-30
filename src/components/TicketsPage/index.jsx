@@ -590,19 +590,19 @@ const TicketsPage = (props) => {
       toast.error("Please select tickets to edit");
       return;
     }
-
-    // Check if any cloned tickets are selected - they can't be edited
-    const hasClonedSelected = hasAnyClonedTicketsSelected();
-    if (hasClonedSelected) {
-      toast.error(
-        "Cloned tickets cannot be edited. Please select only existing tickets."
-      );
-      return;
-    }
-
+  
+    // REMOVED: Check for cloned tickets - now they can be edited
+    // const hasClonedSelected = hasAnyClonedTicketsSelected();
+    // if (hasClonedSelected) {
+    //   toast.error(
+    //     "Cloned tickets cannot be edited. Please select only existing tickets."
+    //   );
+    //   return;
+    // }
+  
     setGlobalEditingTickets(globalSelectedTickets);
     setIsGlobalEditMode(true);
-
+  
     if (globalSelectedTickets.length === 1) {
       toast.success("Edit mode activated for selected ticket");
     } else {
@@ -610,7 +610,7 @@ const TicketsPage = (props) => {
         `Bulk edit mode activated for ${globalSelectedTickets.length} tickets`
       );
     }
-  }, [globalSelectedTickets, hasAnyClonedTicketsSelected]);
+  }, [globalSelectedTickets]); 
 
   const handleGlobalSaveEdit = useCallback(() => {
     setGlobalEditingTickets([]);
@@ -759,12 +759,12 @@ const TicketsPage = (props) => {
       toast.error("Please select tickets to clone");
       return;
     }
-
+  
     const allTickets = getAllTicketsFromMatches();
     const ticketsToClone = allTickets.filter((ticket) =>
       globalSelectedTickets.includes(ticket.uniqueId)
     );
-
+  
     // Check if trying to clone already cloned tickets
     const alreadyClonedSelected = ticketsToClone.some(
       (ticket) => ticket.isCloned
@@ -775,28 +775,28 @@ const TicketsPage = (props) => {
       );
       return;
     }
-
+  
     // Group cloned tickets by match
     const clonedTicketsByMatch = {};
     const newClonedTicketIds = []; // Track new IDs for selection
-
+  
     setTicketsByMatch((prevData) => {
       const newData = { ...prevData };
-
+  
       ticketsToClone.forEach((ticket) => {
         const matchIndex = ticket.matchIndex;
-
+  
         if (!clonedTicketsByMatch[matchIndex]) {
           clonedTicketsByMatch[matchIndex] = [];
         }
-
+  
         // IMPORTANT: Calculate the correct ticketIndex for the cloned ticket
         const currentTicketsCount = newData[matchIndex]?.tickets.length || 0;
         const newTicketIndex = currentTicketsCount; // This will be the index of the new ticket
-
+  
         // Create correct uniqueId format: matchIndex_ticketIndex
         const correctUniqueId = `${matchIndex}_${newTicketIndex}`;
-
+  
         const clonedTicket = {
           ...ticket,
           id: `${matchIndex}-clone-${Date.now()}-${Math.random()}`, // Keep this for internal ID
@@ -809,9 +809,9 @@ const TicketsPage = (props) => {
             s_no: "", // Empty instead of CLONE_ prefix
           },
         };
-
+  
         console.log("🔍 Created cloned ticket with uniqueId:", correctUniqueId);
-
+  
         // Add to the match data immediately
         if (newData[matchIndex]) {
           newData[matchIndex] = {
@@ -819,25 +819,22 @@ const TicketsPage = (props) => {
             tickets: [...newData[matchIndex].tickets, clonedTicket],
           };
         }
-
+  
         // Track the new ID for selection
         newClonedTicketIds.push(correctUniqueId);
       });
-
+  
       return newData;
     });
-
-    // Clear current selection and optionally select the cloned tickets
-    setGlobalSelectedTickets([]);
-
-    // Optional: Auto-select the cloned tickets
-    setTimeout(() => {
-      setGlobalSelectedTickets(newClonedTicketIds);
-      console.log("🔍 Auto-selected cloned tickets:", newClonedTicketIds);
-    }, 100);
-
+  
+    // FIXED: Keep only the original selection (don't select cloned tickets)
+    // The original tickets remain selected, cloned tickets are not auto-selected
+    // No change needed to globalSelectedTickets since we want to keep the original selection as-is
+  
+    console.log("🔍 Keeping original selection only:", globalSelectedTickets);
+  
     toast.success(
-      `${globalSelectedTickets.length} ticket(s) cloned successfully`
+      `${globalSelectedTickets.length} ticket(s) cloned successfully. Original tickets remain selected.`
     );
   }, [globalSelectedTickets, getAllTicketsFromMatches]);
 
@@ -1653,22 +1650,22 @@ const TicketsPage = (props) => {
       const matchIndex = matchIndexParam.toString();
       const rowKey = `${matchIndex}_${rowIndex}`;
       console.log(rowIndex, columnKey, value, "rowKeyrowKey");
-
-      // Check if trying to edit a cloned ticket
-      const currentTicket = ticketsByMatch[matchIndex]?.tickets[rowIndex];
-      if (currentTicket?.isCloned) {
-        toast.error(
-          "Cloned tickets cannot be edited. Please publish them first or select non-cloned tickets."
-        );
-        return;
-      }
-
+  
+      // REMOVED: Check for cloned tickets - now they can be edited
+      // const currentTicket = ticketsByMatch[matchIndex]?.tickets[rowIndex];
+      // if (currentTicket?.isCloned) {
+      //   toast.error(
+      //     "Cloned tickets cannot be edited. Please publish them first or select non-cloned tickets."
+      //   );
+      //   return;
+      // }
+  
       // Find header config from match-specific headers
       const matchSpecificHeaders = constructHeadersForMatch(matchIndex);
       const headerConfig = matchSpecificHeaders.find(
         (h) => h.key === columnKey
       );
-
+  
       let processedValue = value;
       if (headerConfig?.type === "select" && headerConfig?.options) {
         const isValidValue = headerConfig.options.some(
@@ -1683,42 +1680,41 @@ const TicketsPage = (props) => {
           }
         }
       }
-
-      // NEW: Handle dependent field clearing
+  
+      // Handle dependent field clearing (keeping existing logic)
       const handleDependentFields = (
         updatedTicket,
         changedColumnKey,
         changedValue
       ) => {
         let finalTicket = { ...updatedTicket };
-
-        // If ticket_category_id changes, clear the block field
+  
         if (changedColumnKey === "ticket_category_id") {
           finalTicket.block = "";
           console.log(
             `🔄 Cleared block field due to ticket_category_id change for match ${matchIndex}, row ${rowIndex}`
           );
-
-          // Also add block to pending edits if we're in single edit mode
+  
           if (!isGlobalEditMode || globalEditingTickets.length === 0) {
             setPendingEdits((prev) => ({
               ...prev,
               [rowKey]: {
                 ...prev[rowKey],
-                block: "", // Clear block in pending edits
+                block: "",
               },
             }));
           }
         }
-
+  
         return finalTicket;
       };
-
+  
+      // Rest of the function remains the same...
       if (isGlobalEditMode && globalEditingTickets.length > 0) {
         // BULK EDIT LOGIC with dependency handling
         setTicketsByMatch((prevData) => {
           const newData = { ...prevData };
-
+  
           const ticketsByMatchIndex = {};
           globalEditingTickets.forEach((uniqueId) => {
             const [ticketMatchIndex, originalIndex] = uniqueId.split("_");
@@ -1727,7 +1723,7 @@ const TicketsPage = (props) => {
             }
             ticketsByMatchIndex[ticketMatchIndex].push(parseInt(originalIndex));
           });
-
+  
           Object.entries(ticketsByMatchIndex).forEach(
             ([editMatchIndex, indices]) => {
               if (newData[editMatchIndex]) {
@@ -1736,19 +1732,17 @@ const TicketsPage = (props) => {
                   tickets: newData[editMatchIndex].tickets.map(
                     (ticketItem, index) => {
                       if (indices.includes(index)) {
-                        // Apply the main change
                         let updatedTicket = {
                           ...ticketItem,
                           [columnKey]: processedValue,
                         };
-
-                        // Handle dependent fields
+  
                         updatedTicket = handleDependentFields(
                           updatedTicket,
                           columnKey,
                           processedValue
                         );
-
+  
                         return updatedTicket;
                       }
                       return ticketItem;
@@ -1758,30 +1752,32 @@ const TicketsPage = (props) => {
               }
             }
           );
-
+  
           return newData;
         });
-
+  
         const allTickets = getAllTicketsFromMatches();
         const selectedTickets = allTickets.filter((t) =>
           globalEditingTickets.includes(t.uniqueId)
         );
-
-        // Prepare API update params
+  
         const updateParams = { [columnKey]: processedValue };
-
-        // If ticket_category_id is being changed, also clear block in API call
+  
         if (columnKey === "ticket_category_id") {
           updateParams.block = "";
         }
-
+  
+        // UPDATE: Handle both cloned and existing tickets
         selectedTickets.forEach((selectedTicket) => {
-          updateCellValues(updateParams, selectedTicket?.rawTicketData?.s_no);
+          // Only call API for existing tickets (not cloned ones)
+          if (!selectedTicket.isCloned && selectedTicket?.rawTicketData?.s_no) {
+            updateCellValues(updateParams, selectedTicket?.rawTicketData?.s_no);
+          }
+          // For cloned tickets, the changes are only stored in local state
+          // They will be sent to API when published
         });
       } else {
-        // SINGLE EDIT MODE with dependency handling
-
-        // Store original value if not already stored
+        // SINGLE EDIT MODE - remains mostly the same
         if (!originalValues[rowKey]) {
           const currentTicket = ticketsByMatch[matchIndex]?.tickets[rowIndex];
           if (currentTicket) {
@@ -1791,8 +1787,7 @@ const TicketsPage = (props) => {
             }));
           }
         }
-
-        // Store the pending edit
+  
         setPendingEdits((prev) => {
           const newPendingEdits = {
             ...prev,
@@ -1801,16 +1796,14 @@ const TicketsPage = (props) => {
               [columnKey]: processedValue,
             },
           };
-
-          // If ticket_category_id changes, also clear block in pending edits
+  
           if (columnKey === "ticket_category_id") {
             newPendingEdits[rowKey].block = "";
           }
-
+  
           return newPendingEdits;
         });
-
-        // Update the UI immediately to show the change (optimistic update)
+  
         setTicketsByMatch((prevData) => {
           const updatedData = {
             ...prevData,
@@ -1818,26 +1811,24 @@ const TicketsPage = (props) => {
               ...prevData[matchIndex],
               tickets: prevData[matchIndex].tickets.map((ticketItem, index) => {
                 if (index === rowIndex) {
-                  // Apply the main change
                   let updatedTicket = {
                     ...ticketItem,
                     [columnKey]: processedValue,
                   };
-
-                  // Handle dependent fields
+  
                   updatedTicket = handleDependentFields(
                     updatedTicket,
                     columnKey,
                     processedValue
                   );
-
+  
                   return updatedTicket;
                 }
                 return ticketItem;
               }),
             },
           };
-
+  
           return updatedData;
         });
       }
@@ -1896,58 +1887,41 @@ const TicketsPage = (props) => {
     async (matchIndex, rowIndex) => {
       const rowKey = `${matchIndex}_${rowIndex}`;
       const pendingChanges = pendingEdits[rowKey];
-
+  
       if (!pendingChanges || Object.keys(pendingChanges).length === 0) return;
-
+  
       try {
         const ticket = ticketsByMatch[matchIndex]?.tickets[rowIndex];
         if (!ticket) return;
-
-        // Get match-specific headers for this particular match
+  
         const matchSpecificHeaders = constructHeadersForMatch(matchIndex);
-
-        // Transform field keys and values for API
+  
         const transformedParams = {};
-
-        // Check if ticket_category_id is being changed to handle block dependency
         const isTicketCategoryChanged =
           pendingChanges.hasOwnProperty("ticket_category_id");
-
+  
         Object.entries(pendingChanges).forEach(([key, value]) => {
-          // Find the header configuration for this field from match-specific headers
           const headerConfig = matchSpecificHeaders.find((h) => h.key === key);
-
           let processedValue = value;
-
-          // Handle select fields - ensure we're using the value, not the label
+  
           if (headerConfig?.type === "select" && headerConfig?.options) {
-            // Check if the current value is a label instead of a value
             const optionByValue = headerConfig.options.find(
               (opt) => opt.value === value || opt.value === String(value)
             );
             const optionByLabel = headerConfig.options.find(
               (opt) => opt.label === value
             );
-
+  
             if (optionByValue) {
-              // Value is already correct
               processedValue = optionByValue.value;
             } else if (optionByLabel) {
-              // Value is actually a label, use the corresponding value
               processedValue = optionByLabel.value;
               console.log(
                 `🔄 Converted label "${value}" to value "${processedValue}" for field "${key}" in match ${matchIndex}`
               );
-            } else {
-              // Fallback: keep the original value but log a warning
-              console.warn(
-                `⚠️ Could not find option for value/label "${value}" in field "${key}" for match ${matchIndex}`
-              );
-              processedValue = value;
             }
           }
-
-          // Handle multiselect fields (like listing_note)
+  
           if (headerConfig?.type === "multiselect" && headerConfig?.options) {
             if (Array.isArray(value)) {
               processedValue = value.map((item) => {
@@ -1957,21 +1931,17 @@ const TicketsPage = (props) => {
                 const optionByLabel = headerConfig.options.find(
                   (opt) => opt.label === item
                 );
-
+  
                 if (optionByValue) {
                   return optionByValue.value;
                 } else if (optionByLabel) {
-                  console.log(
-                    `🔄 Converted multiselect label "${item}" to value "${optionByLabel.value}" for field "${key}" in match ${matchIndex}`
-                  );
                   return optionByLabel.value;
                 }
                 return item;
               });
             }
           }
-
-          // Transform field keys for API (ticket_type_id -> ticket_type, etc.)
+  
           const transformedKey =
             key === "ticket_type_id"
               ? "ticket_type"
@@ -1980,136 +1950,141 @@ const TicketsPage = (props) => {
               : key === "split_type_id"
               ? "split_type"
               : key === "block"
-              ? "ticket_block" // Transform block to ticket_block for API
+              ? "ticket_block"
               : key;
-
+  
           transformedParams[transformedKey] = processedValue;
         });
-
-        // NEW: If ticket_category_id changed and block is not explicitly in pending changes,
-        // ensure block is cleared in the API call
+  
         if (
           isTicketCategoryChanged &&
           !pendingChanges.hasOwnProperty("block")
         ) {
           transformedParams.ticket_block = "";
-          console.log(
-            `🔄 Auto-clearing block (ticket_block) in API call due to ticket_category change for match ${matchIndex}`
-          );
         }
-
+  
         console.log(
           `📤 Sending to API for match ${matchIndex}:`,
           transformedParams
         );
-
-        // Make single API call with all transformed parameters
-        const update = await updateMyListing(
-          "",
-          ticket?.rawTicketData?.s_no,
-          transformedParams
-        );
-
-        if (update?.success) {
-          // Update the local state with the correct values
-          setTicketsByMatch((prevData) => ({
-            ...prevData,
-            [matchIndex]: {
-              ...prevData[matchIndex],
-              tickets: prevData[matchIndex].tickets.map((ticketItem, index) => {
-                if (index === rowIndex) {
-                  // Update with the processed values (not the original pending changes)
-                  const updatedTicket = { ...ticketItem };
-
-                  Object.entries(pendingChanges).forEach(([key, value]) => {
-                    const headerConfig = matchSpecificHeaders.find(
-                      (h) => h.key === key
+  
+        // UPDATED: Only call API for non-cloned tickets
+        if (!ticket.isCloned && ticket?.rawTicketData?.s_no) {
+          const update = await updateMyListing(
+            "",
+            ticket?.rawTicketData?.s_no,
+            transformedParams
+          );
+  
+          if (!update?.success) {
+            console.error("Update failed:", update);
+            toast.error("Failed to update field(s)");
+            handleCancelEdit(matchIndex, rowIndex);
+            return;
+          }
+        }
+        // For cloned tickets, changes are only stored locally until published
+  
+        // Update the local state with the correct values
+        setTicketsByMatch((prevData) => ({
+          ...prevData,
+          [matchIndex]: {
+            ...prevData[matchIndex],
+            tickets: prevData[matchIndex].tickets.map((ticketItem, index) => {
+              if (index === rowIndex) {
+                const updatedTicket = { ...ticketItem };
+  
+                Object.entries(pendingChanges).forEach(([key, value]) => {
+                  const headerConfig = matchSpecificHeaders.find(
+                    (h) => h.key === key
+                  );
+  
+                  let finalValue = value;
+  
+                  if (
+                    headerConfig?.type === "select" &&
+                    headerConfig?.options
+                  ) {
+                    const optionByValue = headerConfig.options.find(
+                      (opt) =>
+                        opt.value === value || opt.value === String(value)
                     );
-
-                    let finalValue = value;
-
-                    // Apply the same transformation logic for the UI update
-                    if (
-                      headerConfig?.type === "select" &&
-                      headerConfig?.options
-                    ) {
+                    const optionByLabel = headerConfig.options.find(
+                      (opt) => opt.label === value
+                    );
+  
+                    if (optionByValue) {
+                      finalValue = optionByValue.value;
+                    } else if (optionByLabel) {
+                      finalValue = optionByLabel.value;
+                    }
+                  }
+  
+                  if (
+                    headerConfig?.type === "multiselect" &&
+                    headerConfig?.options &&
+                    Array.isArray(value)
+                  ) {
+                    finalValue = value.map((item) => {
                       const optionByValue = headerConfig.options.find(
                         (opt) =>
-                          opt.value === value || opt.value === String(value)
+                          opt.value === item || opt.value === String(item)
                       );
                       const optionByLabel = headerConfig.options.find(
-                        (opt) => opt.label === value
+                        (opt) => opt.label === item
                       );
-
+  
                       if (optionByValue) {
-                        finalValue = optionByValue.value;
+                        return optionByValue.value;
                       } else if (optionByLabel) {
-                        finalValue = optionByLabel.value;
+                        return optionByLabel.value;
                       }
-                    }
-
-                    if (
-                      headerConfig?.type === "multiselect" &&
-                      headerConfig?.options &&
-                      Array.isArray(value)
-                    ) {
-                      finalValue = value.map((item) => {
-                        const optionByValue = headerConfig.options.find(
-                          (opt) =>
-                            opt.value === item || opt.value === String(item)
-                        );
-                        const optionByLabel = headerConfig.options.find(
-                          (opt) => opt.label === item
-                        );
-
-                        if (optionByValue) {
-                          return optionByValue.value;
-                        } else if (optionByLabel) {
-                          return optionByLabel.value;
-                        }
-                        return item;
-                      });
-                    }
-
-                    updatedTicket[key] = finalValue;
-                  });
-
-                  // NEW: Ensure block is cleared in UI if ticket_category_id changed
-                  if (
-                    isTicketCategoryChanged &&
-                    !pendingChanges.hasOwnProperty("block")
-                  ) {
-                    updatedTicket.block = "";
-                    console.log(
-                      `🔄 Auto-cleared block in UI due to ticket_category change for match ${matchIndex}`
-                    );
+                      return item;
+                    });
                   }
-
-                  return updatedTicket;
+  
+                  updatedTicket[key] = finalValue;
+                });
+  
+                if (
+                  isTicketCategoryChanged &&
+                  !pendingChanges.hasOwnProperty("block")
+                ) {
+                  updatedTicket.block = "";
                 }
-                return ticketItem;
-              }),
-            },
-          }));
-
-          // Clear pending edits and original values for this row
-          setPendingEdits((prev) => {
-            const newPending = { ...prev };
-            delete newPending[rowKey];
-            return newPending;
-          });
-
-          setOriginalValues((prev) => {
-            const newOriginal = { ...prev };
-            delete newOriginal[rowKey];
-            return newOriginal;
-          });
-
-          // Update success message to reflect dependent field changes
-          const changedFieldsCount = Object.keys(pendingChanges).length;
-          const hasAutoCleared =
-            isTicketCategoryChanged && !pendingChanges.hasOwnProperty("block");
-
+  
+                return updatedTicket;
+              }
+              return ticketItem;
+            }),
+          },
+        }));
+  
+        // Clear pending edits and original values for this row
+        setPendingEdits((prev) => {
+          const newPending = { ...prev };
+          delete newPending[rowKey];
+          return newPending;
+        });
+  
+        setOriginalValues((prev) => {
+          const newOriginal = { ...prev };
+          delete newOriginal[rowKey];
+          return newOriginal;
+        });
+  
+        // Success message
+        const changedFieldsCount = Object.keys(pendingChanges).length;
+        const hasAutoCleared =
+          isTicketCategoryChanged && !pendingChanges.hasOwnProperty("block");
+  
+        if (ticket.isCloned) {
+          toast.success(
+            changedFieldsCount > 1
+              ? `${changedFieldsCount} fields updated for cloned ticket (changes will be saved when published)`
+              : "Field updated for cloned ticket (changes will be saved when published)"
+          );
+        } else {
           if (hasAutoCleared) {
             toast.success(
               changedFieldsCount > 1
@@ -2123,16 +2098,10 @@ const TicketsPage = (props) => {
                 : "Field updated successfully"
             );
           }
-        } else {
-          console.error("Update failed:", update);
-          toast.error("Failed to update field(s)");
-          // Revert the changes on error
-          handleCancelEdit(matchIndex, rowIndex);
         }
       } catch (error) {
         console.error("Error confirming edit:", error);
         toast.error("Error updating field(s)");
-        // Revert the changes on error
         handleCancelEdit(matchIndex, rowIndex);
       }
     },
