@@ -193,17 +193,20 @@ const InventoryLogsInfo = ({
     const currentData = getCurrentData();
     const firstEntry = currentData.find(
       (entry) =>
-        entry.json_payload && Object.keys(entry.json_payload).length > 1
+        entry.json_payload?.changes &&
+        Object.keys(entry.json_payload?.changes).length > 1
     );
-    return firstEntry?.json_payload || {};
+    return firstEntry?.json_payload?.changes || {};
   };
 
   const getAllFields = () => {
     const currentData = getCurrentData();
     const allFields = new Set();
     currentData.forEach((entry) => {
-      if (entry.json_payload) {
-        Object.keys(entry.json_payload).forEach((key) => allFields.add(key));
+      if (entry.json_payload?.changes) {
+        Object.keys(entry.json_payload?.changes).forEach((key) =>
+          allFields.add(key)
+        );
       }
     });
     return Array.from(allFields);
@@ -216,17 +219,22 @@ const InventoryLogsInfo = ({
 
     for (let i = 0; i <= upToIndex; i++) {
       const logEntry = currentData[i];
-      if (logEntry && logEntry.json_payload) {
-        Object.entries(logEntry.json_payload).forEach(([key, value]) => {
-          currentValues[key] = value;
-        });
+      if (logEntry && logEntry.json_payload?.changes) {
+        Object.entries(logEntry.json_payload?.changes).forEach(
+          ([key, value]) => {
+            currentValues[key] = value;
+          }
+        );
       }
     }
     return currentValues;
   };
 
   const isFieldChangedInCurrentLog = (key, logEntry) => {
-    return logEntry.json_payload && logEntry.json_payload.hasOwnProperty(key);
+    return (
+      logEntry.json_payload?.changes &&
+      logEntry.json_payload?.changes.hasOwnProperty(key)
+    );
   };
 
   const toggleLog = (index) => {
@@ -250,7 +258,10 @@ const InventoryLogsInfo = ({
 
   // Enhanced render function for field values
   const renderFieldValue = (key, currentValue, isChangedInCurrentLog) => {
-    const hasValue = currentValue !== undefined && currentValue !== null && currentValue !== "";
+    const hasValue =
+      currentValue !== undefined &&
+      currentValue !== null &&
+      currentValue !== "";
 
     if (!hasValue) {
       return <span className="text-gray-400 italic text-xs">-</span>;
@@ -391,7 +402,9 @@ const InventoryLogsInfo = ({
           <div className="max-h-[90vh] overflow-y-auto p-3 relative">
             {displayData.map((logEntry, index) => {
               const isExpanded = expandedLogs.has(index);
-              const payloadKeys = Object.keys(logEntry.json_payload || {});
+              const payloadKeys = Object.keys(
+                logEntry.json_payload?.changes || {}
+              );
               const hasPayload = payloadKeys.length > 0;
               const currentFieldValues = getCurrentFieldValues(index);
 
