@@ -30,6 +30,7 @@ import {
 } from "@/utils/apiHandler/request";
 import { useSelector } from "react-redux";
 import AccessDeniedComponent from "../secureLayout/accessDeniedComponent";
+import PageLoader from "../pageLoader";
 
 const DashboardPage = (props) => {
   const [resultData, setResultData] = useState(props?.response);
@@ -56,10 +57,18 @@ const DashboardPage = (props) => {
   console.log(userRoles, "userRolesuserRolesuserRoles");
   // Track current page for pagination - Added all sections
 
-  const isDashboardVisible = userRoles?.permission?.filter(
-    (item) => item?.name == "dashboard" && item.is_can_access == 1
-  );
-  console.log(isDashboardVisible, "isDashboardVisibleisDashboardVisible");
+  // const isDashboardVisible = userRoles?.permission?.filter(
+  //   (item) => item?.name == "dashboard" && item.is_can_access == 1
+  // );
+  // console.log(isDashboardVisible, "isDashboardVisibleisDashboardVisible");
+  // Derive permission state
+  const permissions = userRoles?.permission;
+  const permissionsLoading = permissions === undefined;
+  const canAccessDashboard = Array.isArray(permissions)
+    ? permissions.some(
+        (p) => p?.name === "dashboard" && Number(p?.is_can_access) === 1
+      )
+    : false;
   const [currentPages, setCurrentPages] = useState({
     salesOverView: 1,
     awaitingDelivery: 1,
@@ -446,7 +455,11 @@ const DashboardPage = (props) => {
   return (
     <div className="flex flex-col h-full">
       <Subheader />
-      {isDashboardVisible?.length > 0 ? (
+      {permissionsLoading ? (
+        <div className="flex items-center justify-center py-16">
+          <PageLoader />
+        </div>
+      ) : canAccessDashboard ? (
         <div className="overflow-auto p-3 sm:p-4 md:p-6 w-full h-full flex flex-col gap-3 sm:gap-4 md:gap-5 bg-[#F5F7FA]">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
             <div className="flex flex-col gap-3 sm:gap-4">
