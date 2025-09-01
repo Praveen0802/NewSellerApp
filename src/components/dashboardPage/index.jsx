@@ -264,6 +264,9 @@ const DashboardPage = (props) => {
             category: filters.topSellingCategory,
           };
         }
+        if(keyValue === "reports"){
+          params.currency = filters.reports;
+        }
 
         // For purchaseTracking and tradeOrders, no additional params needed, just page
 
@@ -484,7 +487,7 @@ const DashboardPage = (props) => {
             loader={loader}
           />
           <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 md:gap-6">
-            <div className="w-full lg:w-1/2 flex flex-col gap-3 sm:gap-4 md:gap-6">
+            <div className="w-full flex flex-col gap-3 sm:gap-4 md:gap-6">
               <NotificationActivityList
                 notificationsList={resultData?.notifications}
                 activities={resultData?.activity}

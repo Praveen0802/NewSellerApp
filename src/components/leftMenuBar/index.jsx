@@ -612,7 +612,7 @@ const NotificationsPopup = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={notificationRedict}
-                className="px-3 py-1 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700"
+                className="px-3 py-1 bg-[#343432] text-white text-sm rounded-lg "
               >
                 View all
               </button>
@@ -631,7 +631,7 @@ const NotificationsPopup = ({
               onClick={() => handleTabChange("notifications")}
               className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 ${
                 activeTab === "notifications"
-                  ? "border-purple-600 text-purple-600 bg-purple-50"
+                  ? "border-[#343432] text-[#343432] bg-gray-50"
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >

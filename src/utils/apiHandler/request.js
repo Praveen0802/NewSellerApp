@@ -122,7 +122,7 @@ export const myListingUploadTickets = async (token, data) => {
         },
       }),
     });
-    console.log(response,'response?.data')
+    console.log(response, "response?.data");
     return response;
   } catch (error) {
     console.log("ERROR in saveListing", error);
@@ -1914,6 +1914,23 @@ export const PriceUpdatewithQuantity = async (token, id, params) => {
       method: "GET",
       ...(token && { token: token }),
       params: queryParams,
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in purchaseFavouratesTracking", error);
+  }
+};
+
+export const updateNotificationLog = async (token, params) => {
+  try {
+    const queryParams = {
+      ...params,
+    };
+    const response = await makeRequest({
+      url: `${API_ROUTES.NOTIFICATION_LOG}`,
+      method: "POST",
+      ...(token && { token: token }),
+      data: queryParams,
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {

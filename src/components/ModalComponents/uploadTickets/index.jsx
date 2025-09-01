@@ -131,7 +131,11 @@ const UploadTickets = ({
     templateContent: "",
     selectedTemplate: null,
   });
-
+const handleCloseFunction = (passValue) =>{
+  setAssignedFiles([]);
+  console.log('calling thisss')
+  onClose(passValue);
+}
   // Enhanced useEffect to properly handle proof upload state initialization
   useEffect(() => {
     if (!show) return;
@@ -149,11 +153,14 @@ const UploadTickets = ({
           })
         );
         setProofTransferredFiles(existingProofFiles);
+        console.log(existingProofFiles,"existingProofFiles");
+        setAssignedFiles(existingProofFiles);
       } else {
         setProofTransferredFiles([]);
       }
       setProofUploadedFiles([]);
     } else {
+      console.log('hereeee')
       if (
         existingUploadedTickets.length > 0 &&
         existingUploadedTickets?.[0]?.upload_tickets
@@ -781,7 +788,7 @@ const UploadTickets = ({
     console.log(updatedObject, "updatedObjectupdatedObject");
     // setIsLoading(true);
     let hasChanges = false;
-    
+
     const constructTicketFormData = (updatedObject) => {
       const formData = new FormData();
       const index = 0;
@@ -791,7 +798,7 @@ const UploadTickets = ({
         rowData?.rawTicketData?.ticket_type_id
       );
       formData.append(`data[0][match_id]`, rowData?.rawMatchData?.m_id);
-      
+
       if (paperTicketFlow) {
         formData.append(`data[0][upload_id]`, updatedObject.courier_id || "0");
         if (
@@ -800,7 +807,7 @@ const UploadTickets = ({
           !updatedObject?.upload_tickets?.[0]?.url
         ) {
           hasChanges = true;
-  
+
           updatedObject.upload_tickets.forEach((ticket, idx) => {
             formData.append(
               `data[0][rows][${idx}][file]`,
@@ -810,7 +817,7 @@ const UploadTickets = ({
           });
         }
       }
-      
+
       // Common additional info fields for all flows (except proof upload)
       if (updatedObject.additional_info && !proofUploadView) {
         if (
@@ -834,7 +841,7 @@ const UploadTickets = ({
           );
         }
       }
-  
+
       // Handle Normal Flow and Proof Upload - upload_tickets
       // FIXED: Only process new files (non-existing) from updatedObject
       if (
@@ -843,12 +850,12 @@ const UploadTickets = ({
         !paperTicketFlow
       ) {
         hasChanges = true;
-        
+
         // Filter only new files that need to be uploaded
         const newFilesToUpload = updatedObject.upload_tickets.filter(
           (fileObj) => !fileObj.isExisting && fileObj.file instanceof File
         );
-        
+
         newFilesToUpload.forEach((fileObj, idx) => {
           const uploadId = fileObj.existingId || fileObj.id;
           formData.append(
@@ -862,19 +869,19 @@ const UploadTickets = ({
           );
         });
       }
-  
+
       // Handle E-Ticket Flow - qr_links
       if (updatedObject.qr_links && updatedObject.qr_links.length > 0) {
         hasChanges = true;
-  
+
         updatedObject.qr_links.forEach((link, idx) => {
           // Only process links that have at least one QR link (android or ios)
           if (link.qr_link_android || link.qr_link_ios) {
             // Use the existing id if available, otherwise use 0
             const uploadId = link.id || 0;
-  
+
             formData.append(`data[0][rows][${idx}][upload_id]`, uploadId);
-  
+
             // Add Android link if it exists
             if (link.qr_link_android) {
               formData.append(
@@ -882,7 +889,7 @@ const UploadTickets = ({
                 link.qr_link_android
               );
             }
-  
+
             // Add iOS link if it exists
             if (link.qr_link_ios) {
               formData.append(
@@ -893,7 +900,7 @@ const UploadTickets = ({
           }
         });
       }
-  
+
       // Handle Paper Ticket Flow - courier details and upload_tickets
       if (updatedObject.courier_type) {
         hasChanges = true;
@@ -916,18 +923,18 @@ const UploadTickets = ({
           updatedObject.courier_tracking_details
         );
       }
-  
+
       // Add proof upload flag if applicable
       if (proofUploadView) {
         formData.append(`data[${index}][is_proof_upload]`, "1");
       }
-  
+
       return formData;
     };
-  
+
     const constructNewFormData = () => {
       const newFormData = new FormData();
-  
+
       if (updatedObject.additional_info) {
         if (updatedObject.additional_info?.templateFile) {
           newFormData.append(
@@ -936,7 +943,7 @@ const UploadTickets = ({
             "additional_file"
           );
         }
-  
+
         newFormData.append(
           "additional_file_type",
           updatedObject.additional_info.template || ""
@@ -954,18 +961,19 @@ const UploadTickets = ({
           updatedObject.additional_info.template || ""
         );
       }
-  
+
       return newFormData;
     };
-  
+
     try {
+      setIsLoading(true);
       const formData = constructTicketFormData(updatedObject);
       console.log(updatedObject, "updatedObjectupdatedObject", formData);
-      
+
       if (hasChanges) {
         const response = await myListingUploadTickets("", formData);
         if (response.status == 200) {
-          onClose();
+          handleCloseFunction();
           toast.success(
             proofUploadView
               ? "Proof document uploaded successfully"
@@ -976,7 +984,7 @@ const UploadTickets = ({
           toast.error(response.message || "Upload failed");
         }
       }
-  
+
       if (updatedObject.additional_info) {
         try {
           const newFormData = constructNewFormData(updatedObject);
@@ -999,7 +1007,7 @@ const UploadTickets = ({
 
   const handleConfirmCtaClick = useCallback(async () => {
     if (mySalesPage) {
-      onClose();
+      handleCloseFunction();
       return;
     }
     // Get additional info data from SubUploadParent ref instead of additionalInfoRef
@@ -1052,14 +1060,14 @@ const UploadTickets = ({
         try {
           const response = await uploadPopInstruction("", formData);
           setIsLoading(false);
-          onClose();
+          handleCloseFunction();
           toast.success("Proof document uploaded successfully");
         } catch (error) {
           console.error("API call failed:", error);
           setIsLoading(false);
         }
       } else {
-        onClose();
+        handleCloseFunction();
         setIsLoading(false);
       }
     } else if (normalFlow) {
@@ -1083,7 +1091,7 @@ const UploadTickets = ({
           handleConfirmClick(updatedObject, rowIndex, rowData);
         }
       } else {
-        onClose();
+        handleCloseFunction();
       }
     } else if (ETicketsFlow) {
       const completedTickets = currentQRLinks.filter(
@@ -1100,7 +1108,7 @@ const UploadTickets = ({
           handleConfirmClick(updatedObject, rowIndex, rowData);
         }
       } else {
-        onClose();
+        handleCloseFunction();
       }
     } else if (paperTicketFlow) {
       if (
@@ -1129,7 +1137,7 @@ const UploadTickets = ({
           handleConfirmClick(updatedObject, rowIndex, rowData);
         }
       } else {
-        onClose();
+        handleCloseFunction();
       }
     }
     if (
@@ -1924,7 +1932,7 @@ const UploadTickets = ({
             : "!w-[80vw]"
         }
         show={show}
-        onClose={() => onClose(false)}
+        onClose={() => handleCloseFunction(false)}
       >
         <div className="w-full h-full bg-white rounded-lg relative flex flex-col">
           {/* Header */}
@@ -1942,7 +1950,7 @@ const UploadTickets = ({
               {!isSmallMobile && getModalSubtitle()}
             </h2>
             <button
-              onClick={() => onClose(false)}
+              onClick={() => handleCloseFunction(false)}
               className="text-gray-500 flex-shrink-0"
             >
               <X
@@ -1985,7 +1993,7 @@ const UploadTickets = ({
               }`}
             >
               <button
-                onClick={() => onClose(false)}
+                onClick={() => handleCloseFunction(false)}
                 className={`${
                   isSmallMobile ? "px-3 py-1.5" : "px-4 py-2"
                 } border border-gray-300 rounded text-gray-700 ${

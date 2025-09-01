@@ -5,6 +5,7 @@ import {
   fetchActivityHistory,
   fetchNotificationHistory,
   updateNotification,
+  updateNotificationLog,
 } from "@/utils/apiHandler/request";
 import useTeamMembersDetails from "@/Hooks/useTeamMembersDetails";
 
@@ -625,8 +626,9 @@ const useNotification = ({
     }));
   }, []);
 
-  const handleViewItem = useCallback((item) => {
+  const handleViewItem = useCallback(async (item) => {
     setState((prev) => ({ ...prev, popupItem: item, showPopup: true }));
+    await updateNotificationLog("", { id: item.id });
   }, []);
 
   const handleClearFilters = useCallback(async () => {

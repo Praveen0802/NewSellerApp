@@ -467,10 +467,10 @@ const OrderInfo = ({
       name: "Days to Event",
       key: "days_to_event",
     },
-    {
-      name: "Expected Payout Date",
-      key: "payout_date",
-    },
+    // {
+    //   name: "Expected Payout Date",
+    //   key: "payout_date",
+    // },
   ];
   console.log(currentOrderObject, "currentOrderObjectcurrentOrderObject");
   return (

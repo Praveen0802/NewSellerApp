@@ -14,7 +14,7 @@ import { useRouter } from "next/router";
 
 const AddDepositSummary = ({ onClose } = {}) => {
   const [loader, setLoader] = useState(false);
-  const [isLoadingAccountDetails, setIsLoadingAccountDetails] = useState(true); // New loading state
+  const [isLoadingAccountDetails, setIsLoadingAccountDetails] = useState(true);
   const [currencyDetails, setCurrencyDetails] = useState([]);
   const [bankAccountDetails, setBankAccountDetails] = useState();
   const [formFieldValues, setFormFieldValues] = useState({
@@ -48,14 +48,14 @@ const AddDepositSummary = ({ onClose } = {}) => {
 
   const fetchAccountDetails = async () => {
     try {
-      setIsLoadingAccountDetails(true); // Set loading to true
+      setIsLoadingAccountDetails(true);
       const response = await accountReference();
       setBankAccountDetails(response?.data);
     } catch (error) {
       console.error("Error fetching account details:", error);
       toast.error("Error loading account details");
     } finally {
-      setIsLoadingAccountDetails(false); // Set loading to false when done
+      setIsLoadingAccountDetails(false);
     }
   };
 
@@ -180,47 +180,60 @@ const AddDepositSummary = ({ onClose } = {}) => {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto rounded-lg relative bg-white flex flex-col h-full sm:h-[100vh]">
-      {/* Header - More compact on mobile */}
-      <div className="flex px-3 sm:px-5 py-2 sm:py-3 justify-between border-b-[1px] border-gray-200 items-center rounded-t-lg">
-        <h2 className="text-base sm:text-lg md:text-[20px] text-[#343432] font-semibold">
+    <div className="w-full max-w-3xl mx-auto rounded-lg relative bg-white flex flex-col h-full sm:h-[100vh] min-h-screen sm:min-h-0">
+      {/* Header - Responsive padding and text sizes */}
+      <div className="flex px-4 sm:px-5 py-3 sm:py-3 justify-between border-b-[1px] border-gray-200 items-center rounded-t-lg shrink-0">
+        <h2 className="text-lg sm:text-lg md:text-[20px] text-[#343432] font-semibold leading-tight pr-2">
           Top up your SB pay Account
         </h2>
         <button
           onClick={onClose}
-          className="p-1 sm:p-1.5 rounded-full cursor-pointer bg-white/10 hover:bg-white/20 transition-colors duration-200"
+          className="p-2 sm:p-1.5 rounded-full cursor-pointer bg-white/10 hover:bg-white/20 transition-colors duration-200 shrink-0"
           aria-label="Close"
         >
-          <IconStore.close className="size-4 sm:size-5" />
+          <IconStore.close className="size-5 sm:size-5" />
         </button>
       </div>
 
       {/* Scrollable content area */}
       <div className="flex flex-col gap-1 overflow-y-auto flex-grow">
-        {/* Pass the loading state to TopPopupModal */}
+        {/* TopPopupModal - Pass loading state */}
         <TopPopupModal 
           bankAccountDetails={bankAccountDetails} 
           isLoading={isLoadingAccountDetails}
         />
 
-        {/* Form Content - Adjusted padding for mobile */}
-        <div className="flex flex-col gap-3 sm:gap-4 p-3 sm:px-6 sm:pb-6">
-          <p className="text-sm sm:text-base font-medium">Add Deposit</p>
-          <div className="flex flex-col gap-3 sm:gap-4">
-            {/* First row of form fields - Stack vertically on mobile */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <FormFields formFields={depositFormFields[0]} />
+        {/* Form Content - Enhanced mobile spacing */}
+        <div className="flex flex-col gap-4 sm:gap-4 p-4 sm:px-6 sm:pb-6 pb-4">
+          <p className="text-base sm:text-base font-medium text-[#343432]">Add Deposit</p>
+          
+          <div className="flex flex-col gap-4 sm:gap-4">
+            {/* First row - Stack on mobile, side by side on desktop */}
+            <div className="flex flex-col sm:grid sm:grid-cols-2 gap-4 sm:gap-4">
+              {depositFormFields[0].map((field, index) => (
+                <div key={index} className="w-full">
+                  <FormFields formFields={[field]} />
+                </div>
+              ))}
             </div>
-            {/* Second row of form fields */}
-            <FormFields formFields={depositFormFields[1]} />
+            
+            {/* Second row - Always stacked */}
+            <div className="flex flex-col gap-4">
+              {depositFormFields[1].map((field, index) => (
+                <div key={index} className="w-full">
+                  <FormFields formFields={[field]} />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        {/* Spacer div to push footer down */}
-        <div className="flex-grow"></div>
+        
+        {/* Spacer to push footer down */}
+        <div className="flex-grow min-h-4"></div>
       </div>
 
-      {/* Footer - Full width on mobile */}
-      <div className="w-full mt-auto">
+      {/* Footer - Sticky at bottom on mobile */}
+      <div className="w-full mt-auto shrink-0 sticky bottom-0 sm:relative bg-white border-t sm:border-t-0 border-gray-100">
         <FooterButton
           isFormValid={isFormValid}
           onClose={onClose}

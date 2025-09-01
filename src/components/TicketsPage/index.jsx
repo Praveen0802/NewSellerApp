@@ -64,11 +64,23 @@ import Tooltip from "../addInventoryPage/simmpleTooltip";
 const ShimmerCard = ({ isMobile, isSmallMobile }) => (
   <div className="border border-gray-200 rounded-lg mb-4 overflow-hidden animate-pulse">
     {/* Header Shimmer */}
-    <div className={`bg-gray-300 ${isSmallMobile ? 'px-2 py-2' : 'px-3 py-2.5'}`}>
-      <div className={`flex items-center ${isMobile ? 'flex-col space-y-2' : 'justify-between'}`}>
-        <div className={`flex items-center ${isMobile ? 'w-full justify-between' : 'space-x-3'}`}>
+    <div
+      className={`bg-gray-300 ${isSmallMobile ? "px-2 py-2" : "px-3 py-2.5"}`}
+    >
+      <div
+        className={`flex items-center ${
+          isMobile ? "flex-col space-y-2" : "justify-between"
+        }`}
+      >
+        <div
+          className={`flex items-center ${
+            isMobile ? "w-full justify-between" : "space-x-3"
+          }`}
+        >
           <div className="w-4 h-4 bg-gray-400 rounded"></div>
-          <div className={`${isMobile ? 'w-32' : 'w-48'} h-4 bg-gray-400 rounded`}></div>
+          <div
+            className={`${isMobile ? "w-32" : "w-48"} h-4 bg-gray-400 rounded`}
+          ></div>
           {!isMobile && (
             <div className="flex items-center space-x-3">
               <div className="w-20 h-3 bg-gray-400 rounded"></div>
@@ -92,24 +104,44 @@ const ShimmerCard = ({ isMobile, isSmallMobile }) => (
     <div className="w-full bg-white">
       <div className="relative">
         {/* Table Header Shimmer */}
-        <div className={`bg-gray-100 border-b border-gray-200 ${isSmallMobile ? 'p-2' : 'p-3'}`}>
-          <div className={`flex ${isMobile ? 'space-x-2' : 'space-x-4'}`}>
+        <div
+          className={`bg-gray-100 border-b border-gray-200 ${
+            isSmallMobile ? "p-2" : "p-3"
+          }`}
+        >
+          <div className={`flex ${isMobile ? "space-x-2" : "space-x-4"}`}>
             <div className="w-4 h-4 bg-gray-300 rounded"></div>
             {Array.from({ length: isMobile ? 4 : 8 }).map((_, index) => (
-              <div key={index} className={`${isMobile ? 'w-16' : 'w-24'} h-4 bg-gray-300 rounded`}></div>
+              <div
+                key={index}
+                className={`${
+                  isMobile ? "w-16" : "w-24"
+                } h-4 bg-gray-300 rounded`}
+              ></div>
             ))}
           </div>
         </div>
 
         {/* Table Rows Shimmer */}
         {Array.from({ length: 3 }).map((_, rowIndex) => (
-          <div key={rowIndex} className={`border-b border-gray-200 ${isSmallMobile ? 'p-2' : 'p-3'}`}>
-            <div className={`flex ${isMobile ? 'space-x-2' : 'space-x-4'} items-center`}>
+          <div
+            key={rowIndex}
+            className={`border-b border-gray-200 ${
+              isSmallMobile ? "p-2" : "p-3"
+            }`}
+          >
+            <div
+              className={`flex ${
+                isMobile ? "space-x-2" : "space-x-4"
+              } items-center`}
+            >
               <div className="w-4 h-4 bg-gray-200 rounded"></div>
               {Array.from({ length: isMobile ? 4 : 8 }).map((_, colIndex) => (
                 <div
                   key={colIndex}
-                  className={`${isMobile ? 'w-16' : 'w-24'} h-4 bg-gray-200 rounded`}
+                  className={`${
+                    isMobile ? "w-16" : "w-24"
+                  } h-4 bg-gray-200 rounded`}
                 ></div>
               ))}
             </div>
@@ -121,9 +153,17 @@ const ShimmerCard = ({ isMobile, isSmallMobile }) => (
 );
 
 const ShimmerLoader = ({ isMobile, isSmallMobile }) => (
-  <div className={`${isSmallMobile ? 'm-3' : 'm-6'} max-h-[calc(100vh-300px)] overflow-y-auto`}>
+  <div
+    className={`${
+      isSmallMobile ? "m-3" : "m-6"
+    } max-h-[calc(100vh-300px)] overflow-y-auto`}
+  >
     {Array.from({ length: 2 }).map((_, index) => (
-      <ShimmerCard key={index} isMobile={isMobile} isSmallMobile={isSmallMobile} />
+      <ShimmerCard
+        key={index}
+        isMobile={isMobile}
+        isSmallMobile={isSmallMobile}
+      />
     ))}
   </div>
 );
@@ -197,12 +237,21 @@ const ActiveFilterPills = ({
       {activeEntries.map(({ key, value, displayValue }) => (
         <div
           key={key}
-          className={`inline-flex items-center gap-1 ${isSmallMobile ? 'px-2 py-0.5' : 'px-3 py-1'} border-1 border-gray-300 rounded-sm ${isSmallMobile ? 'text-xs' : 'text-sm'}`}
+          className={`inline-flex items-center gap-1 ${
+            isSmallMobile ? "px-2 py-0.5" : "px-3 py-1"
+          } border-1 border-gray-300 rounded-sm ${
+            isSmallMobile ? "text-xs" : "text-sm"
+          }`}
         >
           <span className="font-medium capitalize">
-            {isMobile ? key.replace(/_/g, " ").split(" ")[0] : key.replace(/_/g, " ")}:
+            {isMobile
+              ? key.replace(/_/g, " ").split(" ")[0]
+              : key.replace(/_/g, " ")}
+            :
           </span>
-          <span className={`${isMobile ? 'truncate max-w-16' : ''}`}>{displayValue}</span>
+          <span className={`${isMobile ? "truncate max-w-16" : ""}`}>
+            {displayValue}
+          </span>
           <button
             onClick={() => onFilterChange(key, "", activeFilters, currentTab)}
             className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
@@ -231,13 +280,31 @@ const Pagination = ({
   isSmallMobile = false,
 }) => {
   return (
-    <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center justify-between'} ${isSmallMobile ? 'px-3' : 'px-6'} bg-white`}>
+    <div
+      className={`flex ${
+        isMobile ? "flex-col gap-2" : "items-center justify-between"
+      } ${isSmallMobile ? "px-3" : "px-6"} bg-white`}
+    >
       {/* Left side - Total items count */}
-      <div className={`flex items-center ${isMobile ? 'justify-between w-full' : 'gap-4'}`}>
-        <div className={`${isSmallMobile ? 'py-2 pr-2' : 'py-3 pr-4'} ${!isMobile ? 'border-r-[1px] border-r-[#E0E1EA]' : ''} ${isSmallMobile ? 'text-xs' : 'text-sm'} text-[#323A70] font-medium`}>
+      <div
+        className={`flex items-center ${
+          isMobile ? "justify-between w-full" : "gap-4"
+        }`}
+      >
+        <div
+          className={`${isSmallMobile ? "py-2 pr-2" : "py-3 pr-4"} ${
+            !isMobile ? "border-r-[1px] border-r-[#E0E1EA]" : ""
+          } ${
+            isSmallMobile ? "text-xs" : "text-sm"
+          } text-[#323A70] font-medium`}
+        >
           {totalItems} Events
         </div>
-        <div className={`flex items-center ${isMobile ? 'flex-1 justify-end' : 'gap-4'}`}>
+        <div
+          className={`flex items-center ${
+            isMobile ? "flex-1 justify-end" : "gap-4"
+          }`}
+        >
           <ActiveFilterPills
             activeFilters={activeFilters}
             filterConfig={filterConfig}
@@ -251,9 +318,19 @@ const Pagination = ({
       </div>
 
       {/* Right side - View selector, page info and navigation */}
-      <div className={`flex items-center ${isMobile ? 'justify-between w-full space-x-2' : 'space-x-6'} ${isSmallMobile ? 'py-2' : 'py-3'} ${!isMobile ? 'border-l-[1px] border-l-[#E0E1EA] pl-4' : ''}`}>
+      <div
+        className={`flex items-center ${
+          isMobile ? "justify-between w-full space-x-2" : "space-x-6"
+        } ${isSmallMobile ? "py-2" : "py-3"} ${
+          !isMobile ? "border-l-[1px] border-l-[#E0E1EA] pl-4" : ""
+        }`}
+      >
         {/* View selector */}
-        <div className={`flex items-center space-x-2 ${isSmallMobile ? 'text-xs' : 'text-sm'} text-gray-700`}>
+        <div
+          className={`flex items-center space-x-2 ${
+            isSmallMobile ? "text-xs" : "text-sm"
+          } text-gray-700`}
+        >
           {!isSmallMobile && <span>View</span>}
           <select
             value={itemsPerPage}
@@ -261,7 +338,9 @@ const Pagination = ({
               onItemsPerPageChange &&
               onItemsPerPageChange(parseInt(e.target.value))
             }
-            className={`border border-gray-300 rounded ${isSmallMobile ? 'px-1 py-0.5 text-xs' : 'px-2 py-1 text-sm'} focus:outline-none focus:border-blue-500 bg-white`}
+            className={`border border-gray-300 rounded ${
+              isSmallMobile ? "px-1 py-0.5 text-xs" : "px-2 py-1 text-sm"
+            } focus:outline-none focus:border-blue-500 bg-white`}
           >
             <option value={10}>10</option>
             <option value={25}>25</option>
@@ -333,8 +412,8 @@ const TicketsPage = (props) => {
     };
 
     checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
   const [listingHistoryData, setListingHistoryData] = useState(
@@ -590,7 +669,7 @@ const TicketsPage = (props) => {
       toast.error("Please select tickets to edit");
       return;
     }
-  
+
     // REMOVED: Check for cloned tickets - now they can be edited
     // const hasClonedSelected = hasAnyClonedTicketsSelected();
     // if (hasClonedSelected) {
@@ -599,10 +678,10 @@ const TicketsPage = (props) => {
     //   );
     //   return;
     // }
-  
+
     setGlobalEditingTickets(globalSelectedTickets);
     setIsGlobalEditMode(true);
-  
+
     if (globalSelectedTickets.length === 1) {
       toast.success("Edit mode activated for selected ticket");
     } else {
@@ -610,7 +689,7 @@ const TicketsPage = (props) => {
         `Bulk edit mode activated for ${globalSelectedTickets.length} tickets`
       );
     }
-  }, [globalSelectedTickets]); 
+  }, [globalSelectedTickets]);
 
   const handleGlobalSaveEdit = useCallback(() => {
     setGlobalEditingTickets([]);
@@ -630,7 +709,7 @@ const TicketsPage = (props) => {
     setGlobalEditingTickets([]);
     setIsGlobalEditMode(false);
     setGlobalSelectedTickets([]);
-    toast.info("Edit cancelled");
+    // toast.info("Edit cancelled");
   }, []);
 
   const handleGlobalDelete = useCallback(async () => {
@@ -759,12 +838,12 @@ const TicketsPage = (props) => {
       toast.error("Please select tickets to clone");
       return;
     }
-  
+
     const allTickets = getAllTicketsFromMatches();
     const ticketsToClone = allTickets.filter((ticket) =>
       globalSelectedTickets.includes(ticket.uniqueId)
     );
-  
+
     // Check if trying to clone already cloned tickets
     const alreadyClonedSelected = ticketsToClone.some(
       (ticket) => ticket.isCloned
@@ -775,28 +854,28 @@ const TicketsPage = (props) => {
       );
       return;
     }
-  
+
     // Group cloned tickets by match
     const clonedTicketsByMatch = {};
     const newClonedTicketIds = []; // Track new IDs for selection
-  
+
     setTicketsByMatch((prevData) => {
       const newData = { ...prevData };
-  
+
       ticketsToClone.forEach((ticket) => {
         const matchIndex = ticket.matchIndex;
-  
+
         if (!clonedTicketsByMatch[matchIndex]) {
           clonedTicketsByMatch[matchIndex] = [];
         }
-  
+
         // IMPORTANT: Calculate the correct ticketIndex for the cloned ticket
         const currentTicketsCount = newData[matchIndex]?.tickets.length || 0;
         const newTicketIndex = currentTicketsCount; // This will be the index of the new ticket
-  
+
         // Create correct uniqueId format: matchIndex_ticketIndex
         const correctUniqueId = `${matchIndex}_${newTicketIndex}`;
-  
+
         const clonedTicket = {
           ...ticket,
           id: `${matchIndex}-clone-${Date.now()}-${Math.random()}`, // Keep this for internal ID
@@ -809,9 +888,9 @@ const TicketsPage = (props) => {
             s_no: "", // Empty instead of CLONE_ prefix
           },
         };
-  
+
         console.log("🔍 Created cloned ticket with uniqueId:", correctUniqueId);
-  
+
         // Add to the match data immediately
         if (newData[matchIndex]) {
           newData[matchIndex] = {
@@ -819,23 +898,20 @@ const TicketsPage = (props) => {
             tickets: [...newData[matchIndex].tickets, clonedTicket],
           };
         }
-  
+
         // Track the new ID for selection
         newClonedTicketIds.push(correctUniqueId);
       });
-  
+
       return newData;
     });
-  
+
     // FIXED: Keep only the original selection (don't select cloned tickets)
     // The original tickets remain selected, cloned tickets are not auto-selected
     // No change needed to globalSelectedTickets since we want to keep the original selection as-is
-  
+
     console.log("🔍 Keeping original selection only:", globalSelectedTickets);
-  
-    toast.success(
-      `${globalSelectedTickets.length} ticket(s) cloned successfully. Original tickets remain selected.`
-    );
+
   }, [globalSelectedTickets, getAllTicketsFromMatches]);
 
   // NEW: Function to construct FormData for cloned tickets (similar to AddInventory)
@@ -1199,7 +1275,7 @@ const TicketsPage = (props) => {
         editable: true,
         type: "number",
       },
-       {
+      {
         key: "sold_count",
         label: "Sold",
         increasedWidth: "!w-[100px] !min-w-[100px] ",
@@ -1435,12 +1511,12 @@ const TicketsPage = (props) => {
           type: "number",
         },
         {
-        key: "sold_count",
-        label: "Sold",
-        increasedWidth: "!w-[100px] !min-w-[100px] ",
-        editable: false,
-        type: "number",
-      },
+          key: "sold_count",
+          label: "Sold",
+          increasedWidth: "!w-[100px] !min-w-[100px] ",
+          editable: false,
+          type: "number",
+        },
         {
           key: "web_price",
           label: "Face Value",
@@ -1650,7 +1726,7 @@ const TicketsPage = (props) => {
       const matchIndex = matchIndexParam.toString();
       const rowKey = `${matchIndex}_${rowIndex}`;
       console.log(rowIndex, columnKey, value, "rowKeyrowKey");
-  
+
       // REMOVED: Check for cloned tickets - now they can be edited
       // const currentTicket = ticketsByMatch[matchIndex]?.tickets[rowIndex];
       // if (currentTicket?.isCloned) {
@@ -1659,13 +1735,13 @@ const TicketsPage = (props) => {
       //   );
       //   return;
       // }
-  
+
       // Find header config from match-specific headers
       const matchSpecificHeaders = constructHeadersForMatch(matchIndex);
       const headerConfig = matchSpecificHeaders.find(
         (h) => h.key === columnKey
       );
-  
+
       let processedValue = value;
       if (headerConfig?.type === "select" && headerConfig?.options) {
         const isValidValue = headerConfig.options.some(
@@ -1680,7 +1756,7 @@ const TicketsPage = (props) => {
           }
         }
       }
-  
+
       // Handle dependent field clearing (keeping existing logic)
       const handleDependentFields = (
         updatedTicket,
@@ -1688,13 +1764,13 @@ const TicketsPage = (props) => {
         changedValue
       ) => {
         let finalTicket = { ...updatedTicket };
-  
+
         if (changedColumnKey === "ticket_category_id") {
           finalTicket.block = "";
           console.log(
             `🔄 Cleared block field due to ticket_category_id change for match ${matchIndex}, row ${rowIndex}`
           );
-  
+
           if (!isGlobalEditMode || globalEditingTickets.length === 0) {
             setPendingEdits((prev) => ({
               ...prev,
@@ -1705,16 +1781,16 @@ const TicketsPage = (props) => {
             }));
           }
         }
-  
+
         return finalTicket;
       };
-  
+
       // Rest of the function remains the same...
       if (isGlobalEditMode && globalEditingTickets.length > 0) {
         // BULK EDIT LOGIC with dependency handling
         setTicketsByMatch((prevData) => {
           const newData = { ...prevData };
-  
+
           const ticketsByMatchIndex = {};
           globalEditingTickets.forEach((uniqueId) => {
             const [ticketMatchIndex, originalIndex] = uniqueId.split("_");
@@ -1723,7 +1799,7 @@ const TicketsPage = (props) => {
             }
             ticketsByMatchIndex[ticketMatchIndex].push(parseInt(originalIndex));
           });
-  
+
           Object.entries(ticketsByMatchIndex).forEach(
             ([editMatchIndex, indices]) => {
               if (newData[editMatchIndex]) {
@@ -1736,13 +1812,13 @@ const TicketsPage = (props) => {
                           ...ticketItem,
                           [columnKey]: processedValue,
                         };
-  
+
                         updatedTicket = handleDependentFields(
                           updatedTicket,
                           columnKey,
                           processedValue
                         );
-  
+
                         return updatedTicket;
                       }
                       return ticketItem;
@@ -1752,21 +1828,21 @@ const TicketsPage = (props) => {
               }
             }
           );
-  
+
           return newData;
         });
-  
+
         const allTickets = getAllTicketsFromMatches();
         const selectedTickets = allTickets.filter((t) =>
           globalEditingTickets.includes(t.uniqueId)
         );
-  
+
         const updateParams = { [columnKey]: processedValue };
-  
+
         if (columnKey === "ticket_category_id") {
           updateParams.block = "";
         }
-  
+
         // UPDATE: Handle both cloned and existing tickets
         selectedTickets.forEach((selectedTicket) => {
           // Only call API for existing tickets (not cloned ones)
@@ -1787,7 +1863,7 @@ const TicketsPage = (props) => {
             }));
           }
         }
-  
+
         setPendingEdits((prev) => {
           const newPendingEdits = {
             ...prev,
@@ -1796,14 +1872,14 @@ const TicketsPage = (props) => {
               [columnKey]: processedValue,
             },
           };
-  
+
           if (columnKey === "ticket_category_id") {
             newPendingEdits[rowKey].block = "";
           }
-  
+
           return newPendingEdits;
         });
-  
+
         setTicketsByMatch((prevData) => {
           const updatedData = {
             ...prevData,
@@ -1815,20 +1891,20 @@ const TicketsPage = (props) => {
                     ...ticketItem,
                     [columnKey]: processedValue,
                   };
-  
+
                   updatedTicket = handleDependentFields(
                     updatedTicket,
                     columnKey,
                     processedValue
                   );
-  
+
                   return updatedTicket;
                 }
                 return ticketItem;
               }),
             },
           };
-  
+
           return updatedData;
         });
       }
@@ -1878,7 +1954,7 @@ const TicketsPage = (props) => {
         return newOriginal;
       });
 
-      toast.info("Changes discarded");
+      // toast.info("Changes discarded");
     },
     [originalValues]
   );
@@ -1887,23 +1963,23 @@ const TicketsPage = (props) => {
     async (matchIndex, rowIndex) => {
       const rowKey = `${matchIndex}_${rowIndex}`;
       const pendingChanges = pendingEdits[rowKey];
-  
+
       if (!pendingChanges || Object.keys(pendingChanges).length === 0) return;
-  
+
       try {
         const ticket = ticketsByMatch[matchIndex]?.tickets[rowIndex];
         if (!ticket) return;
-  
+
         const matchSpecificHeaders = constructHeadersForMatch(matchIndex);
-  
+
         const transformedParams = {};
         const isTicketCategoryChanged =
           pendingChanges.hasOwnProperty("ticket_category_id");
-  
+
         Object.entries(pendingChanges).forEach(([key, value]) => {
           const headerConfig = matchSpecificHeaders.find((h) => h.key === key);
           let processedValue = value;
-  
+
           if (headerConfig?.type === "select" && headerConfig?.options) {
             const optionByValue = headerConfig.options.find(
               (opt) => opt.value === value || opt.value === String(value)
@@ -1911,7 +1987,7 @@ const TicketsPage = (props) => {
             const optionByLabel = headerConfig.options.find(
               (opt) => opt.label === value
             );
-  
+
             if (optionByValue) {
               processedValue = optionByValue.value;
             } else if (optionByLabel) {
@@ -1921,7 +1997,7 @@ const TicketsPage = (props) => {
               );
             }
           }
-  
+
           if (headerConfig?.type === "multiselect" && headerConfig?.options) {
             if (Array.isArray(value)) {
               processedValue = value.map((item) => {
@@ -1931,7 +2007,7 @@ const TicketsPage = (props) => {
                 const optionByLabel = headerConfig.options.find(
                   (opt) => opt.label === item
                 );
-  
+
                 if (optionByValue) {
                   return optionByValue.value;
                 } else if (optionByLabel) {
@@ -1941,7 +2017,7 @@ const TicketsPage = (props) => {
               });
             }
           }
-  
+
           const transformedKey =
             key === "ticket_type_id"
               ? "ticket_type"
@@ -1952,22 +2028,22 @@ const TicketsPage = (props) => {
               : key === "block"
               ? "ticket_block"
               : key;
-  
+
           transformedParams[transformedKey] = processedValue;
         });
-  
+
         if (
           isTicketCategoryChanged &&
           !pendingChanges.hasOwnProperty("block")
         ) {
           transformedParams.ticket_block = "";
         }
-  
+
         console.log(
           `📤 Sending to API for match ${matchIndex}:`,
           transformedParams
         );
-  
+
         // UPDATED: Only call API for non-cloned tickets
         if (!ticket.isCloned && ticket?.rawTicketData?.s_no) {
           const update = await updateMyListing(
@@ -1975,7 +2051,7 @@ const TicketsPage = (props) => {
             ticket?.rawTicketData?.s_no,
             transformedParams
           );
-  
+
           if (!update?.success) {
             console.error("Update failed:", update);
             toast.error("Failed to update field(s)");
@@ -1984,7 +2060,7 @@ const TicketsPage = (props) => {
           }
         }
         // For cloned tickets, changes are only stored locally until published
-  
+
         // Update the local state with the correct values
         setTicketsByMatch((prevData) => ({
           ...prevData,
@@ -1993,14 +2069,14 @@ const TicketsPage = (props) => {
             tickets: prevData[matchIndex].tickets.map((ticketItem, index) => {
               if (index === rowIndex) {
                 const updatedTicket = { ...ticketItem };
-  
+
                 Object.entries(pendingChanges).forEach(([key, value]) => {
                   const headerConfig = matchSpecificHeaders.find(
                     (h) => h.key === key
                   );
-  
+
                   let finalValue = value;
-  
+
                   if (
                     headerConfig?.type === "select" &&
                     headerConfig?.options
@@ -2012,14 +2088,14 @@ const TicketsPage = (props) => {
                     const optionByLabel = headerConfig.options.find(
                       (opt) => opt.label === value
                     );
-  
+
                     if (optionByValue) {
                       finalValue = optionByValue.value;
                     } else if (optionByLabel) {
                       finalValue = optionByLabel.value;
                     }
                   }
-  
+
                   if (
                     headerConfig?.type === "multiselect" &&
                     headerConfig?.options &&
@@ -2033,7 +2109,7 @@ const TicketsPage = (props) => {
                       const optionByLabel = headerConfig.options.find(
                         (opt) => opt.label === item
                       );
-  
+
                       if (optionByValue) {
                         return optionByValue.value;
                       } else if (optionByLabel) {
@@ -2042,63 +2118,63 @@ const TicketsPage = (props) => {
                       return item;
                     });
                   }
-  
+
                   updatedTicket[key] = finalValue;
                 });
-  
+
                 if (
                   isTicketCategoryChanged &&
                   !pendingChanges.hasOwnProperty("block")
                 ) {
                   updatedTicket.block = "";
                 }
-  
+
                 return updatedTicket;
               }
               return ticketItem;
             }),
           },
         }));
-  
+
         // Clear pending edits and original values for this row
         setPendingEdits((prev) => {
           const newPending = { ...prev };
           delete newPending[rowKey];
           return newPending;
         });
-  
+
         setOriginalValues((prev) => {
           const newOriginal = { ...prev };
           delete newOriginal[rowKey];
           return newOriginal;
         });
-  
+
         // Success message
         const changedFieldsCount = Object.keys(pendingChanges).length;
         const hasAutoCleared =
           isTicketCategoryChanged && !pendingChanges.hasOwnProperty("block");
-  
-        if (ticket.isCloned) {
-          toast.success(
-            changedFieldsCount > 1
-              ? `${changedFieldsCount} fields updated for cloned ticket (changes will be saved when published)`
-              : "Field updated for cloned ticket (changes will be saved when published)"
-          );
-        } else {
-          if (hasAutoCleared) {
-            toast.success(
-              changedFieldsCount > 1
-                ? `${changedFieldsCount} fields updated and block cleared due to category change`
-                : "Field updated and block cleared due to category change"
-            );
-          } else {
-            toast.success(
-              changedFieldsCount > 1
-                ? `${changedFieldsCount} fields updated successfully`
-                : "Field updated successfully"
-            );
-          }
-        }
+
+        // if (ticket.isCloned) {
+        //   toast.success(
+        //     changedFieldsCount > 1
+        //       ? `${changedFieldsCount} fields updated for cloned ticket (changes will be saved when published)`
+        //       : "Field updated for cloned ticket (changes will be saved when published)"
+        //   );
+        // } else {
+        //   if (hasAutoCleared) {
+        //     toast.success(
+        //       changedFieldsCount > 1
+        //         ? `${changedFieldsCount} fields updated and block cleared due to category change`
+        //         : "Field updated and block cleared due to category change"
+        //     );
+        //   } else {
+        //     toast.success(
+        //       changedFieldsCount > 1
+        //         ? `${changedFieldsCount} fields updated successfully`
+        //         : "Field updated successfully"
+        //     );
+        //   }
+        // }
       } catch (error) {
         console.error("Error confirming edit:", error);
         toast.error("Error updating field(s)");

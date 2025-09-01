@@ -333,10 +333,10 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
       name: "Days to Event",
       key: "days_to_event",
     },
-    {
-      name: "Expected Payout Date",
-      key: "payout_date",
-    },
+    // {
+    //   name: "Expected Payout Date",
+    //   key: "payout_date",
+    // },
   ];
 
   console.log("Raw ticket_details.match_datetime:", ticket_details?.match_datetime);
