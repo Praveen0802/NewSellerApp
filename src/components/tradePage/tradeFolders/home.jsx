@@ -37,6 +37,20 @@ const TradeHome = (props) => {
     return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
 
+  // Format time to HH:MM (24h).
+  const formatHHMM = (timeStr) => {
+    if (!timeStr) return "";
+    const match = String(timeStr).match(/^(\d{1,2}):(\d{2})(?::\d{2})?/);
+    if (match) {
+      return `${match[1].padStart(2, "0")}:${match[2]}`;
+    }
+    const d = new Date(timeStr);
+    if (!isNaN(d)) {
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+    }
+    return timeStr;
+  };
+
   const constructViewDataType = (array) => {
     return (
       Array.isArray(array) &&
@@ -45,7 +59,7 @@ const TradeHome = (props) => {
           id: item?.m_id,
           name: item?.match_name,
           date: desiredFormatDate(item?.match_date),
-          time: item?.match_time,
+          time: formatHHMM(item?.match_time),
           listing: item?.listings,
           league: item?.tournament_name || item?.othereventCategory_name,
           availableTickets: item?.available_tickets,
