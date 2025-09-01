@@ -47,11 +47,11 @@ const RightViewContainer = (props) => {
         {tableView?.body?.map((body, bodyIndex) => {
           return (
             <div
-              className="flex justify-between items-center border-b-[1px] border-[#eaeaf1] p-2"
+              className="flex justify-between items-center border-b-[1px] border-[#eaeaf1] p-2 gap-2"
               key={bodyIndex}
             >
-              <p className="text-[#343432] text-[12px]">{body?.matchName}</p>
-              <p className="text-[#343432] text-[12px]">{body?.revenue}</p>
+              <p className="text-[#343432] text-[12px] max-w-[220px] break-words whitespace-normal leading-snug">{body?.matchName}</p>
+              <p className="text-[#343432] text-[12px] flex-shrink-0 text-right">{body?.revenue}</p>
             </div>
           );
         })}

@@ -264,6 +264,9 @@ const DashboardPage = (props) => {
             category: filters.topSellingCategory,
           };
         }
+        if (keyValue === "reports") {
+          params.currency = filters.reports;
+        }
 
         // For purchaseTracking and tradeOrders, no additional params needed, just page
 
