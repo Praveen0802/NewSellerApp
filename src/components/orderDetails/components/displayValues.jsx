@@ -70,15 +70,6 @@ const DisplayValues = ({
 
     const displayTicketType = currentTicketType?.label || ticketType;
 
-    console.log("Order status key detected:", {
-      ticketType,
-      currentTicketType,
-      displayTicketType,
-      ticketTypesList,
-      showEditIcon,
-      ticketTypesListLength: ticketTypesList?.length,
-    });
-
     const getStatusBadgeColor = () => {
       const lowerCaseValue = value?.toLowerCase();
       if (["delivered", "active", "confirmed"].includes(lowerCaseValue)) {
@@ -106,26 +97,26 @@ const DisplayValues = ({
     };
 
     return (
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 w-full">
         <p className="text-xs font-normal text-[#7D82A4]">{text}</p>
-        <div className="relative" ref={dropdownRef}>
-          <div className="flex items-center">
-            {/* Order Status Badge */}
+        <div className="relative w-full" ref={dropdownRef}>
+          {/* Mobile: Stacked layout */}
+          <div className="flex flex-col gap-2 md:hidden">
+            {/* Order Status Badge - Mobile */}
             <span
-              className={`${getStatusBadgeColor()} text-white px-2 py-1 rounded-l-md text-sm font-normal`}
+              className={`${getStatusBadgeColor()} text-white px-3 py-2 rounded-md text-sm font-normal w-fit`}
             >
               {value}
             </span>
 
-            {/* Ticket Type Badge */}
+            {/* Ticket Type Badge - Mobile */}
             {ticketType && (
               <div className="flex items-center gap-2 w-full">
                 <span
-                  className={`${getTicketTypeBadgeColor()} text-[#343432] px-2 w-full py-1 text-sm font-normal ${
-                    showEditIcon ? "" : "rounded-r-md"
+                  className={`${getTicketTypeBadgeColor()} text-[#343432] px-3 py-2 flex-1 text-sm font-normal ${
+                    showEditIcon ? "rounded-l-md" : "rounded-md"
                   }`}
                 >
-                  {/* Find the current ticket type label from the list */}
                   {showEditIcon
                     ? ticketTypesList.find(
                         (ticket) =>
@@ -136,21 +127,62 @@ const DisplayValues = ({
                     : ticketType}
                 </span>
 
-                {/* Edit Icon - only show if ticketTypesList has items */}
+                {/* Edit Icon - Mobile */}
                 {showEditIcon && (
                   <button
                     onClick={handleEditClick}
-                    className={`p-2 bg-[#343432] rounded-md transition-colors border-l border-gray-200`}
+                    className="p-2 bg-[#343432] rounded-md transition-colors flex-shrink-0"
                     title="Edit ticket type"
                   >
-                    <SquarePen className="size-3 text-white " />
+                    <SquarePen className="size-4 text-white" />
                   </button>
                 )}
               </div>
             )}
           </div>
 
-          {/* Dropdown for ticket type selection */}
+          {/* Desktop: Inline layout */}
+          <div className="hidden md:flex items-center">
+            {/* Order Status Badge - Desktop */}
+            <span
+              className={`${getStatusBadgeColor()} text-white px-2 py-1 rounded-l-md text-sm font-normal`}
+            >
+              {value}
+            </span>
+
+            {/* Ticket Type Badge - Desktop */}
+            {ticketType && (
+              <div className="flex items-center gap-2 w-full">
+                <span
+                  className={`${getTicketTypeBadgeColor()} text-[#343432] px-2 w-full py-1 text-sm font-normal ${
+                    showEditIcon ? "" : "rounded-r-md"
+                  }`}
+                >
+                  {showEditIcon
+                    ? ticketTypesList.find(
+                        (ticket) =>
+                          ticket.label === ticketType ||
+                          ticket.value === ticketType ||
+                          ticket.value === orderObject?.ticket_type_id
+                      )?.label || ticketType
+                    : ticketType}
+                </span>
+
+                {/* Edit Icon - Desktop */}
+                {showEditIcon && (
+                  <button
+                    onClick={handleEditClick}
+                    className="p-2 bg-[#343432] rounded-md transition-colors border-l border-gray-200"
+                    title="Edit ticket type"
+                  >
+                    <SquarePen className="size-3 text-white" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Dropdown for ticket type selection - Responsive */}
           {isDropdownOpen && showEditIcon && (
             <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
               <div className="py-1">
@@ -183,27 +215,27 @@ const DisplayValues = ({
   }
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 w-full">
       <p className="text-xs font-normal text-[#7D82A4]">{text}</p>
-      <p
+      <div
         className={`flex items-center justify-between ${
-          copyKeys ? "bg-[#F4F5F8] px-1 py-0.5 rounded-md" : ""
+          copyKeys ? "bg-[#F4F5F8] px-2 md:px-1 py-1 md:py-0.5 rounded-md" : ""
         } ${
           deliveryKey &&
           `${
-            orderFullfilled ? "bg-green-100 " : "bg-[#FFF4EC]"
-          } px-1 py-0.5 rounded-md w-fit`
+            orderFullfilled ? "bg-green-100" : "bg-[#FFF4EC]"
+          } px-2 md:px-1 py-1 md:py-0.5 rounded-md w-fit`
         } text-sm font-normal text-[#343432]`}
       >
-        {value}
+        <span className="break-words flex-1 min-w-0 pr-2">{value}</span>
         {copyKeys && (
-          <div className="flex items-center">
+          <div className="flex items-center flex-shrink-0">
             {copied ? (
               <span className="text-green-500 text-xs mr-1">Copied!</span>
             ) : null}
             <button
               onClick={handleCopy}
-              className="p-0.5 hover:bg-gray-200 rounded transition-colors"
+              className="p-1 md:p-0.5 hover:bg-gray-200 rounded transition-colors"
               aria-label="Copy to clipboard"
             >
               {copied ? (
@@ -214,7 +246,7 @@ const DisplayValues = ({
             </button>
           </div>
         )}
-      </p>
+      </div>
     </div>
   );
 };

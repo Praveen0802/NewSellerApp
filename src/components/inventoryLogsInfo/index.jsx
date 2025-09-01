@@ -355,7 +355,7 @@ const InventoryLogsInfo = ({
   };
   const hideKeys = ["tracking_file_status"];
   return (
-    <RightViewModal className="!w-[800px]" show={show} onClose={onClose}>
+    <RightViewModal className="md:!w-[800px] max-md:!w-full" show={show} onClose={onClose}>
       {/* Add relative positioning and ensure overflow is visible */}
       <div className="w-full bg-white rounded-lg relative overflow-visible">
         {/* Header */}
@@ -480,9 +480,9 @@ const InventoryLogsInfo = ({
                           <h4 className="text-sm font-medium text-gray-700 mb-2">
                             Current State:
                           </h4>
-                          <div className="flex flex-wrap gap-2 overflow-visible">
+                          <div className="flex max-md:flex-col md:flex-wrap gap-2 overflow-visible">
                             {/* First Table */}
-                            <div className="flex-1 min-w-0 max-w-[calc(50%-0.25rem)] overflow-visible">
+                            <div className="flex-1 md:min-w-0 md:max-w-[calc(50%-0.25rem)] overflow-visible">
                               <div className="overflow-visible">
                                 <table className="w-full table-fixed rounded-md border border-gray-200">
                                   <tbody className="bg-white divide-y divide-gray-200">
@@ -532,7 +532,7 @@ const InventoryLogsInfo = ({
                             </div>
 
                             {/* Second Table */}
-                            <div className="flex-1 min-w-0 max-w-[calc(50%-0.25rem)] overflow-visible">
+                            <div className="flex-1 md:min-w-0 md:max-w-[calc(50%-0.25rem)] overflow-visible">
                               <div className="overflow-visible">
                                 <table className="w-full table-fixed rounded-md border border-gray-200">
                                   <tbody className="bg-white divide-y divide-gray-200">

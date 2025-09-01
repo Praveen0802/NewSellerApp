@@ -2522,7 +2522,7 @@ const TicketsPage = (props) => {
               label: category?.first_name,
             })) || [],
           parentClassName:
-            "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
+            "flex-grow flex-shrink flex-basis-[15%] p-0 w-full md:!max-w-[15%]",
           className: "!py-[6px] !px-[12px] max-md:text-xs",
           labelClassName: "!text-[11px]",
         },
@@ -2535,7 +2535,7 @@ const TicketsPage = (props) => {
             endDate: filtersApplied?.end_date,
           },
           parentClassName:
-            "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
+            "flex-grow flex-shrink flex-basis-[15%] p-0 w-full md:!max-w-[15%]",
           className: "!py-[9px] !px-[12px] max-md:text-xs",
           labelClassName: "!text-[11px]",
         },
@@ -2550,7 +2550,7 @@ const TicketsPage = (props) => {
               label: category?.name,
             })) || [],
           parentClassName:
-            "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
+            "flex-grow flex-shrink flex-basis-[15%] p-0 w-full md:!max-w-[15%]",
           className: "!py-[6px] !px-[12px] max-md:text-xs",
           labelClassName: "!text-[11px]",
         },
@@ -2565,7 +2565,7 @@ const TicketsPage = (props) => {
               label: category?.name,
             })) || [],
           parentClassName:
-            "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
+            "flex-grow flex-shrink flex-basis-[15%] p-0 w-full md:!max-w-[15%]",
           className: "!py-[6px] !px-[12px] max-md:text-xs",
           labelClassName: "!text-[11px]",
         },
@@ -2580,7 +2580,7 @@ const TicketsPage = (props) => {
               label: category?.name,
             })) || [],
           parentClassName:
-            "flex-grow flex-shrink flex-basis-[15%] md:p-0 pb-3 w-full md:!max-w-[15%]",
+            "flex-grow flex-shrink flex-basis-[15%] p-0 w-full md:!max-w-[15%]",
           className: "!py-[6px] !px-[12px] mobile:text-xs",
           labelClassName: "!text-[11px]",
         },
@@ -2863,7 +2863,7 @@ const TicketsPage = (props) => {
             setShowSearchDropdown(false);
             setHasSearched(false);
           }}
-          parentClassName="!w-[400px]"
+          parentClassName="md:!w-[400px]"
         />
       </div>
     );
@@ -3070,7 +3070,7 @@ const TicketsPage = (props) => {
   };
 
   return (
-    <div className="bg-[#F5F7FA] w-full max-h-[calc(100vh-100px)] overflow-auto relative ">
+    <div className=" w-full max-h-[calc(100vh-100px)] overflow-auto relative ">
       <div className="bg-white">
         <TabbedLayout
           tabs={[]}
@@ -3120,7 +3120,7 @@ const TicketsPage = (props) => {
       {isLoading ? (
         <ShimmerLoader isMobile={isMobile} isSmallMobile={isSmallMobile} />
       ) : (
-        <div className="m-6 pb-[100px]">
+        <div className="m-4 md:m-6 pb-[100px]">
           {Object.keys(ticketsByMatch).length > 0 ? (
             renderMatchTables()
           ) : (

@@ -310,7 +310,7 @@ const BulkListings = (props) => {
 
   const { showFullDisplay } = useSelector((state) => state.common);
   return (
-    <div className="bg-[#F5F7FA] w-full h-full relative">
+    <div className="bg-[#F5F7FA] w-full h-full relative max-md:overflow-auto">
       <div className="flex bg-white items-center py-2 md:py-2 justify-between px-4 md:px-6 border-b border-[#eaeaf1]">
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -390,9 +390,9 @@ const BulkListings = (props) => {
 
       {/* Dynamic Filters Section */}
       <div className="border-b-[1px] bg-white border-[#DADBE5] p-4">
-        <div className="flex gap-4 items-center ">
+        <div className="flex max-md:flex-col gap-4 md:items-center ">
           {visibleFilters.search && (
-            <div className="w-[40%] min-w-[300px]">
+            <div className="md:w-[40%] md:min-w-[300px]">
               <FloatingLabelInput
                 id="selectedMatch"
                 name="selectedMatch"
@@ -410,7 +410,7 @@ const BulkListings = (props) => {
           )}
 
           {visibleFilters.tournament && (
-            <div className="w-[20%] min-w-[150px]">
+            <div className="md:w-[20%] min-w-[150px]">
               <FloatingSelect
                 label={"Tournament"}
                 selectedValue={filtersApplied?.tournament_id}
@@ -441,7 +441,7 @@ const BulkListings = (props) => {
           )}
 
           {visibleFilters.venue && (
-            <div className="w-[20%] min-w-[150px]">
+            <div className="md:w-[20%] md:min-w-[150px]">
               <FloatingSelect
                 label={"Venue"}
                 selectedValue={filtersApplied?.venue}
@@ -473,7 +473,7 @@ const BulkListings = (props) => {
           )}
 
           {visibleFilters.eventDate && (
-            <div className="w-[20%] ">
+            <div className="md:w-[20%] ">
               <FloatingDateRange
                 id="eventDate"
                 name="eventDate"
@@ -518,7 +518,6 @@ const BulkListings = (props) => {
         <div className="overflow-y-auto overflow-x-auto h-full">
           <EventsTable
             events={eventListViews}
-            
             headers={headers}
             selectedRows={selectedRows}
             setSelectedRows={setSelectedRows}
@@ -532,39 +531,73 @@ const BulkListings = (props) => {
         <div
           className={`fixed bottom-0 w-full left-0 ${
             showFullDisplay ? "pl-42" : "pl-15"
-          } right-0 bg-white border-t border-[#E5E7EB] shadow-lg z-50`}
+          } right-0 bg-white border-t border-[#E5E7EB] shadow-lg z-50 
+    
+    /* Mobile responsive adjustments */
+    sm:pl-0 /* Remove left padding on mobile */
+    ${
+      showFullDisplay ? "lg:pl-42" : "lg:pl-15"
+    } /* Apply desktop padding only on large screens */`}
         >
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
+            {/* Left section - Request Event button */}
+            <div className="flex items-center gap-2 sm:gap-4">
               <Button
                 type="outlined"
                 classNames={{
-                  root: "px-4 py-2  text-[#374151] bg-[#03BA8A] ",
-                  label_: "text-sm text-white font-medium",
+                  root: "px-3 py-2 sm:px-4 sm:py-2 text-[#374151] bg-[#03BA8A]",
+                  label_: "text-xs sm:text-sm text-white font-medium",
                 }}
-                // onClick={() => setSelectedRows([])}
                 label="Request Event"
               />
+              {/* Show selected count on mobile */}
+              <span className="text-xs text-[#6B7280] sm:hidden">
+                {selectedRows.length} selected
+              </span>
             </div>
-            <div className="flex items-center gap-3">
+
+            {/* Right section - Action buttons */}
+            <div className="flex items-center gap-2 sm:gap-3">
               <Button
                 type="outlined"
                 classNames={{
-                  root: "px-4 py-2 border border-[#D1D5DB] text-[#374151] hover:bg-[#F9FAFB]",
-                  label_: "text-sm font-medium",
+                  root: `px-3 py-2 sm:px-4 sm:py-2 border border-[#D1D5DB] 
+                   text-[#374151] hover:bg-[#F9FAFB]
+                   /* Hide text on very small screens, show icon or shorter text */`,
+                  label_: "text-xs sm:text-sm font-medium",
                 }}
-                onClick={() => {setSelectedRows([]); }}
-                label="Cancel"
+                onClick={() => {
+                  setSelectedRows([]);
+                }}
+                label={
+                  <span className="sm:inline">
+                    <span className="hidden sm:inline">Cancel</span>
+                    <span className="sm:hidden">✕</span>
+                  </span>
+                }
               />
               <Button
                 type="primary"
                 classNames={{
-                  root: "px-4 py-2",
-                  label_: "text-sm font-medium",
+                  root: "px-3 py-2 sm:px-4 sm:py-2",
+                  label_: "text-xs sm:text-sm font-medium",
                 }}
                 onClick={handleAddticket}
-                label="Add Tickets"
+                label={
+                  <span>
+                    <span className="hidden sm:inline">Add Tickets</span>
+                    <span className="sm:hidden">Add</span>
+                  </span>
+                }
               />
+            </div>
+          </div>
+
+          {/* Optional: Mobile-specific selected items indicator */}
+          <div className="sm:hidden px-4 pb-2">
+            <div className="text-xs text-[#6B7280]">
+              {selectedRows.length} item{selectedRows.length !== 1 ? "s" : ""}{" "}
+              selected
             </div>
           </div>
         </div>

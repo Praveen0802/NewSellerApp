@@ -81,7 +81,7 @@ const AddInventoryPage = (props) => {
   const [hasSearched, setHasSearched] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(true);
 
   // Extract the original response structure (KEEP EXACTLY THE SAME)
   const {
@@ -225,7 +225,7 @@ const AddInventoryPage = (props) => {
         })) || []),
       ],
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[180px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow  md:max-w-[180px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
@@ -248,7 +248,7 @@ const AddInventoryPage = (props) => {
         { value: "5", label: "5" },
       ],
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[120px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[120px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
@@ -273,7 +273,7 @@ const AddInventoryPage = (props) => {
         })) || []),
       ],
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[150px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[150px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
@@ -310,7 +310,7 @@ const AddInventoryPage = (props) => {
         })) || []),
       ],
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[180px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[180px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
@@ -342,7 +342,7 @@ const AddInventoryPage = (props) => {
       ],
       increasedWidth: "min-w-[100px]",
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
@@ -364,7 +364,7 @@ const AddInventoryPage = (props) => {
         label: value,
       })),
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[140px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[140px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
@@ -385,7 +385,7 @@ const AddInventoryPage = (props) => {
         label: value,
       })),
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[180px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[180px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
@@ -407,7 +407,7 @@ const AddInventoryPage = (props) => {
       disabled: !filtersApplied?.ticket_category,
 
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[150px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[150px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
@@ -423,7 +423,7 @@ const AddInventoryPage = (props) => {
       value: filtersApplied?.row,
       increasedWidth: "!w-[100px]",
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[100px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[100px] lg:max-w-[212px]",
       className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
@@ -440,7 +440,7 @@ const AddInventoryPage = (props) => {
       increasedWidth: "!w-[110px]",
       value: filtersApplied?.first_seat,
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[120px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[120px] lg:max-w-[212px]",
       className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
@@ -458,7 +458,7 @@ const AddInventoryPage = (props) => {
       currencyFormat: true,
       value: filtersApplied?.face_value,
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[140px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[140px] lg:max-w-[212px]",
       iconBefore: (
         <div className="border-r-[1px] pr-2 border-[#E0E1EA]">
           <p className="text-xs sm:text-[10px] lg:text-xs">
@@ -484,7 +484,7 @@ const AddInventoryPage = (props) => {
       mandatory: true,
       value: filtersApplied?.add_price_addlist,
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
       iconBefore: (
         <div className="border-r-[1px] pr-2 border-[#E0E1EA]">
           <p className="text-xs sm:text-[10px] lg:text-xs">
@@ -507,7 +507,7 @@ const AddInventoryPage = (props) => {
       label: "Benifits",
       value: filtersApplied?.notes,
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[140px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[140px] lg:max-w-[212px]",
       multiselect: true,
       options: [
         ...(notes_left?.map((note) => ({
@@ -543,7 +543,7 @@ const AddInventoryPage = (props) => {
         })) || []),
       ],
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
@@ -563,7 +563,7 @@ const AddInventoryPage = (props) => {
       minDate: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
       maxDate: matchDetails?.ship_date, // Convert to proper format
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
       singleDateMode: true,
       className:
         "!pb-[10px] !pt-[12px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
@@ -578,7 +578,7 @@ const AddInventoryPage = (props) => {
       label: "Tickets In Hand",
       value: filtersApplied?.ticket_in_hand || false,
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
       className:
         "!py-[4px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
@@ -1763,9 +1763,7 @@ const AddInventoryPage = (props) => {
                 setShowSearchDropdown(false);
                 setHasSearched(false);
               }}
-              parentClassName={`${
-                isMobile ? "!w-full"  : "!w-[40%]"
-              }`}
+              parentClassName={`${isMobile ? "!w-full" : "!w-[40%]"}`}
               data-search-container="true"
               labelClassName="text-[#7D82A4]"
             />
@@ -1773,18 +1771,12 @@ const AddInventoryPage = (props) => {
             {matchDetails && (
               <div
                 className={`flex ${
-                  isMobile
-                    ? "flex-col gap-2"
-                    
-                    : "gap-4"
+                  isMobile ? "flex-col gap-2" : "gap-4"
                 } items-start ${isMobile ? "" : "sm:items-center"}`}
               >
                 <div
                   className={`flex ${
-                    isMobile
-                      ? "flex-wrap gap-2"
-                     
-                      : "gap-4"
+                    isMobile ? "flex-wrap gap-2" : "gap-4"
                   } items-center`}
                 >
                   <div
@@ -1850,7 +1842,7 @@ const AddInventoryPage = (props) => {
               </p>
             )}
 
-            {isMobile && (
+            {/* {isMobile && (
               <button
                 onClick={() => setShowMobileFilters(!showMobileFilters)}
                 className="flex items-center gap-2 px-3 py-2 bg-[#4285F4] text-white rounded-md text-sm font-medium hover:bg-[#3367D6] transition-colors"
@@ -1858,27 +1850,29 @@ const AddInventoryPage = (props) => {
                 <Menu size={14} />
                 {showMobileFilters ? "Hide Filters" : "Show Filters"}
               </button>
-            )}
+            )} */}
 
             {/* Move FilterColumnControls here - in the header but after View Map */}
-            <FilterColumnControls
-              // Filter props
-              showFilters={true}
-              availableFilters={getAvailableFilters()}
-              onFilterToggle={handleFilterToggle}
-              onFiltersReorder={handleFiltersReorder}
-              isDraggableFilters={true}
-              showFilterSearch={true}
-              // Column props
-              showColumns={true}
-              availableColumns={getAvailableColumns()}
-              onColumnToggle={handleColumnToggle}
-              onColumnsReorder={handleColumnsReorder}
-              isDraggableColumns={true}
-              showColumnSearch={true}
-              // Container props - Updated positioning
-              className="flex gap-2"
-            />
+            {!isMobile && (
+              <FilterColumnControls
+                // Filter props
+                showFilters={true}
+                availableFilters={getAvailableFilters()}
+                onFilterToggle={handleFilterToggle}
+                onFiltersReorder={handleFiltersReorder}
+                isDraggableFilters={true}
+                showFilterSearch={true}
+                // Column props
+                showColumns={true}
+                availableColumns={getAvailableColumns()}
+                onColumnToggle={handleColumnToggle}
+                onColumnsReorder={handleColumnsReorder}
+                isDraggableColumns={true}
+                showColumnSearch={true}
+                // Container props - Updated positioning
+                className="flex gap-2"
+              />
+            )}
           </div>
         </div>
 
@@ -1887,16 +1881,13 @@ const AddInventoryPage = (props) => {
           <>
             <div
               className={`border-b-[1px] border-[#DADBE5] p-3 sm:p-4 lg:p-5 ${
-                (isMobile ) && !showMobileFilters ? "hidden" : ""
+                isMobile && !showMobileFilters ? "hidden" : ""
               }`}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between max-md:w-full">
                 <div
-                  className={`flex ${
-                    isMobile
-                      ? "flex-col gap-3"
-                      
-                      : "flex-wrap gap-5"
+                  className={`flex  max-md:w-full ${
+                    isMobile ? "flex-col gap-3" : "flex-wrap gap-5"
                   } items-start ${isMobile ? "" : "sm:items-center"}`}
                 >
                   <FormFields
@@ -1909,21 +1900,21 @@ const AddInventoryPage = (props) => {
               </div>
             </div>
             {/* {inventoryData.length === 0 && ( */}
-              <div
-                className={`flex ${
-                  isMobile ? "justify-center" : "justify-end"
-                } px-3 sm:px-4 lg:px-5 py-2 border-b-[1px] border-[#E0E1EA]`}
-              >
-                <Button
-                  type="primary"
-                  classNames={{
-                    root: `${isMobile ? "px-6 py-3" : "px-4 py-2.5"}`,
-                    label_: `${isMobile ? "text-base" : "text-sm"} font-medium`,
-                  }}
-                  onClick={handleAddListing}
-                  label="+ Add Listings"
-                />
-              </div>
+            <div
+              className={`flex ${
+                isMobile ? "justify-center" : "justify-end"
+              } px-3 sm:px-4 lg:px-5 py-2 border-b-[1px] border-[#E0E1EA]`}
+            >
+              <Button
+                type="primary"
+                classNames={{
+                  root: `${isMobile ? "px-6 py-3" : "px-4 py-2.5"}`,
+                  label_: `${isMobile ? "text-base" : "text-sm"} font-medium`,
+                }}
+                onClick={handleAddListing}
+                label="+ Add Listings"
+              />
+            </div>
             {/* )} */}
           </>
         )}

@@ -7,6 +7,7 @@ import ActiveFiltersBox from "./ActiveFilterBoxs";
 import { FilterSection } from "./filterSection";
 import HeaderV2 from "./HeaderV2";
 import DropdownList from "./DropdownList";
+import useIsMobile from "@/utils/helperFunctions/useIsmobile";
 
 // Mock icons - replace with your actual icons
 const FilterIcon = ({ className }) => (
@@ -474,7 +475,7 @@ const TabbedLayout = ({
 
           {/* List Items Section with Transitions */}
           <div
-            className={`transition-all duration-300 ease-in-out overflow-hidden border-b-[1px] border-[#E0E1EA] ${
+            className={`transition-all duration-300 ease-in-out hideScrollbar max-md:overflow-auto md:overflow-hidden border-b-[1px] border-[#E0E1EA] ${
               showListItems
                 ? "max-h-[500px] opacity-100 px-6 max-sm:px-4 pb-3 pt-3 max-sm:pb-2 max-sm:pt-2"
                 : "max-h-0 opacity-0 px-6 max-sm:px-4 py-0"
@@ -488,7 +489,7 @@ const TabbedLayout = ({
                     className={`
                   ${
                     previousListItems?.length == 4
-                      ? "grid grid-cols-4 max-lg:grid-cols-2 max-sm:grid-cols-1 gap-4 max-sm:gap-3"
+                      ? "md:grid md:grid-cols-4 max-md:flex gap-4 max-sm:gap-3 overflow-x-auto"
                       : "flex gap-4 max-sm:gap-3 flex-nowrap"
                   } min-w-min md:min-w-0 absolute inset-0 transition-transform overflow-scroll duration-300 ease-in-out z-10
                   ${
@@ -501,7 +502,7 @@ const TabbedLayout = ({
                     {previousListItems?.map((item, index) => (
                       <div
                         key={`previous-${item.key || index}-${Date.now()}`}
-                        className="min-w-[200px] max-sm:min-w-full"
+                        className=" md:min-w-[200px] max-sm:min-w-[200px]"
                       >
                         <AvailableList
                           list={{
@@ -525,7 +526,7 @@ const TabbedLayout = ({
                 className={`
                 ${
                   currentListItems?.length == 4
-                    ? "grid grid-cols-4 max-lg:grid-cols-2 max-sm:grid-cols-1 gap-4 max-sm:gap-3"
+                    ? "md:grid md:grid-cols-4 max-md:flex gap-4 max-sm:gap-3 overflow-x-auto"
                     : "flex gap-4 max-sm:gap-3 flex-nowrap overflow-x-scroll max-sm:overflow-x-auto hideScrollbar"
                 } min-w-min md:min-w-0 ${
                   !disableTransitions
@@ -554,7 +555,7 @@ const TabbedLayout = ({
                 {currentListItems?.map((item, index) => (
                   <div
                     key={`current-${item.key || index}-${Date.now()}`}
-                    className="flex-grow flex-shrink flex-basis-[25%] min-w-[12rem] max-sm:min-w-full"
+                    className="flex-grow flex-shrink flex-basis-[25%] md:min-w-[12rem] max-sm:min-w-[200px]"
                   >
                     <AvailableList
                       list={{
@@ -595,7 +596,7 @@ const TabbedLayout = ({
                 filterConfig={getVisibleFilters()}
                 currentTab={selectedTab}
                 onFilterChange={handleFilterChange}
-                containerClassName="md:flex max-md:flex-col max-sm:flex-col md:flex-wrap gap-3 max-sm:gap-2 items-center max-sm:items-stretch"
+                containerClassName="flex max-md:flex-col max-sm:flex-col md:flex-wrap gap-3 max-sm:gap-3 items-center max-sm:items-stretch"
                 initialValues={currentFilterValues}
               />
             </div>
@@ -618,6 +619,7 @@ const TabbedLayout = ({
     );
   };
 
+  const isMobile = useIsMobile();
   return (
     <div className={className}>
       {/* Header V2 or Original Top Right Controls */}
@@ -650,7 +652,7 @@ const TabbedLayout = ({
         </div>
       ) : (
         <div className="absolute top-6 max-sm:top-4 right-6 max-sm:right-4 flex gap-2 z-50">
-          {showFilters && (
+          {showFilters && !isMobile && (
             <div className="relative" ref={filterDropdownRef}>
               <button
                 onClick={() => {
@@ -677,7 +679,7 @@ const TabbedLayout = ({
             </div>
           )}
 
-          {!hideVisibleColumns && (
+          {!hideVisibleColumns && !isMobile && (
             <div className="relative" ref={columnDropdownRef}>
               <button
                 onClick={() => {
@@ -732,7 +734,7 @@ const TabbedLayout = ({
           </div>
           
           {/* Mobile tab selector - visible only on small screens */}
-          <div className="sm:hidden w-full">
+          <div className="sm:hidden w-full pb-3">
             <div className="relative">
               <select
                 value={selectedTab}

@@ -1192,7 +1192,16 @@ const LeftMenuBar = () => {
       <>
         {/* Mobile Header */}
         <div className="fixed top-0 left-0 right-0 bg-[#343432] h-16 flex items-center justify-between px-4 z-20">
-          <Image src={logo} alt="logo" width={60} height={32} />
+          <div
+            onClick={() => {
+              if (kycStatus?.kyc_status == 1) {
+                router.push("/dashboard");
+              }
+            }}
+            className=""
+          >
+            <Image src={logo} alt="logo" width={60} height={32} />
+          </div>
           <button onClick={toggleMobileMenu} className="p-2 text-white">
             <Menu size={24} />
           </button>

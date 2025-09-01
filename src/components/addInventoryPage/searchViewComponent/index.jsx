@@ -102,7 +102,7 @@ const SearchedViewComponent = ({
   return (
     <>
       {(hasEvents || hasPerformers || hasVenues) && (
-        <div className="max-h-[300px] overflow-y-auto px-3 py-2 flex flex-col gap-3 shadow-sm border border-[#E0E1EA]">
+        <div className="max-h-[300px] px-3 py-2 flex flex-col gap-3 shadow-sm border border-[#E0E1EA]">
           {hasEvents && (
             <div className="flex flex-col">
               <p className="text-[13px] font-medium">Events</p>

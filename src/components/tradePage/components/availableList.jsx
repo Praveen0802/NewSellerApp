@@ -31,7 +31,7 @@ const AvailableList = ({ list, loading = false }) => {
   // If loading, show shimmer
   if (loading) {
     return (
-      <div className="border border-gray-200 rounded-md bg-white py-2 px-2 w-full flex flex-col gap-2">
+      <div className="border border-gray-200 rounded-md bg-white py-2 px-2  max-md:w-[200px] md:flex-1 flex flex-col gap-2 flex-shrink-0">
         <div className="flex justify-between items-center">
           <ShimmerBlock className="h-6 w-16" />
           <ShimmerBlock className="h-4 w-12 rounded-xl" />
@@ -46,7 +46,9 @@ const AvailableList = ({ list, loading = false }) => {
 
   // Determine styling - container is always enabled, only checkbox can be disabled
   const containerClasses = `
-    border border-gray-200 rounded-md bg-white py-2 px-2 w-full flex flex-col gap-2
+    border border-gray-200 rounded-md bg-white py-2 px-2 
+     max-md:w-[200px] md:flex-1 flex-shrink-0
+    ${list?.className || ''} flex flex-col gap-2
     ${
       list?.showCheckbox
         ? "cursor-pointer hover:bg-gray-50 transition-colors"

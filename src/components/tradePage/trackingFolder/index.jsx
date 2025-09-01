@@ -385,24 +385,24 @@ const TrackingPage = (props) => {
       <div className="bg-white">
         {/* Filter section */}
         <div className="py-[16px] md:py-[20px] px-[16px] md:px-[24px] border-b-[1px] border-[#E0E1EA] overflow-x-auto">
-          <div className="flex gap-3 md:gap-4 md:w-[70%]">
-            {items.map((item, index) => (
-              <AvailableList
-                key={index}
-                list={{
-                  name: item.name,
-                  value: item.value,
-                  showCheckbox: item.showCheckbox,
-                  isChecked: item.isChecked,
-                  onCheckChange: () => toggleItem(index),
-                  onClick: item.showCheckbox
-                    ? () => toggleItem(index)
-                    : undefined,
-                }}
-              />
-            ))}
-          </div>
-        </div>
+  <div className="flex gap-3 md:gap-4 md:w-[70%] overflow-x-auto scrollbar-hide">
+    {items.map((item, index) => (
+      <AvailableList
+        key={index}
+        list={{
+          name: item.name,
+          value: item.value,
+          showCheckbox: item.showCheckbox,
+          isChecked: item.isChecked,
+          onCheckChange: () => toggleItem(index),
+          onClick: item.showCheckbox
+            ? () => toggleItem(index)
+            : undefined,
+        }}
+      />
+    ))}
+  </div>
+</div>
 
         {/* Search filters section */}
         <div className="md:py-[20px] md:px-[24px] border-b-[1px] border-[#E0E1EA]">

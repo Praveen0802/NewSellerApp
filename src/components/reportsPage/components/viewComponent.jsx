@@ -22,7 +22,7 @@ const ViewComponent = ({ item, onClick, hidePlus = false, isPayout }) => {
   ];
 
   return (
-    <div className="p-4 border-[1px] border-[#eaeaf1] rounded-md flex flex-col gap-2">
+    <div className="p-4 border-[1px] max-md:min-w-[300px] border-[#eaeaf1] rounded-md flex flex-col gap-2">
       <div className="flex justify-between items-center pb-4 border-b-[1px] border-[#eaeaf1]">
         <div className="flex gap-2 items-center">
           <Image src={item?.icon} width={40} height={40} alt="logo" />

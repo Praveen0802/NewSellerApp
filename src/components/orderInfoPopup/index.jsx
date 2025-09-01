@@ -19,6 +19,7 @@ import { toast } from "react-toastify";
 import { Download, Expand, Shrink, X } from "lucide-react";
 import AttendeeDetails from "./attendeeDetails";
 import useS3Download from "@/Hooks/useS3Download";
+import useIsMobile from "@/utils/helperFunctions/useIsmobile";
 
 const OrderInfo = ({
   show,
@@ -43,6 +44,7 @@ const OrderInfo = ({
   // Handle new array format data
   const data = orderData && orderData.length > 0 ? orderData[0] : null;
   const [updatedOrderObject, setUpdatedOrderObject] = useState(null);
+  const isMobile = useIsMobile();
 
   // Enhanced transition handler
   const handleCollapseModal = () => {
@@ -227,7 +229,11 @@ const OrderInfo = ({
 
   if (showShimmer) {
     return (
-      <RightViewModal className={"!w-[600px]"} show={show} onClose={onClose}>
+      <RightViewModal
+        className={"md:!w-[600px] max-md:!w-full"}
+        show={show}
+        onClose={onClose}
+      >
         <ShimmerLoader />
       </RightViewModal>
     );
@@ -235,7 +241,11 @@ const OrderInfo = ({
 
   if (!data) {
     return (
-      <RightViewModal className={"!w-[600px]"} show={show} onClose={onClose}>
+      <RightViewModal
+        className={"md:!w-[600px] max-md:!w-full"}
+        show={show}
+        onClose={onClose}
+      >
         <div className="p-4 text-center">
           <p>No order data available</p>
           <p className="text-sm text-gray-500">Please try again later.</p>
@@ -259,7 +269,7 @@ const OrderInfo = ({
     order_id_label,
   } = data;
 
-  console.log(data,'datadatadata')
+  console.log(data, "datadatadata");
   // Extract order notes from ticket details
   const order_notes = ticket_details?.[0]?.order_notes || "";
   // const order_notes = "";
@@ -359,7 +369,7 @@ const OrderInfo = ({
   // Since ticket_details is now an array, we'll use the first ticket or handle multiple tickets
   const transformedTicketDetails = ticket_details?.[0]
     ? {
-      match_name:order_details?.match_name,
+        match_name: order_details?.match_name,
         venue: ticket_details[0].venue,
         match_date: ticket_details[0].match_date,
         match_time: ticket_details[0].match_time,
@@ -472,18 +482,19 @@ const OrderInfo = ({
     //   key: "payout_date",
     // },
   ];
-  console.log(currentOrderObject, "currentOrderObjectcurrentOrderObject");
   return (
     <RightViewModal
       className={`transition-all duration-300 ease-in-out ${
-        expandedVersion ? "!w-[100vw] !max-w-none" : "!w-[650px]"
+        expandedVersion
+          ? "!w-[100vw] !max-w-none"
+          : "md:!w-[600px] max-md:!w-full"
       }`}
       show={show}
       onClose={onClose}
     >
       <div
         className={`transition-all duration-300 ease-in-out ${
-          expandedVersion ? "w-full" : "w-[650px]"
+          expandedVersion ? "w-full" : "md:w-[650px]"
         }`}
       >
         <div className="overflow-auto rounded-md bg-white h-full">
@@ -493,25 +504,27 @@ const OrderInfo = ({
               {order_details?.booking_no || order_details?.order_id}
             </p>
             <div className="flex items-center gap-2">
-              <div
-                className={`transition-all duration-300 ease-in-out ${
-                  isTransitioning ? "opacity-50" : "opacity-100"
-                }`}
-              >
-                {!hideExpand ? (
-                  expandedVersion ? (
-                    <Shrink
-                      className="w-4 h-4 text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-200"
-                      onClick={handleCollapseModal}
-                    />
-                  ) : (
-                    <Expand
-                      className="w-4 h-4 text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-200"
-                      onClick={handleCollapseModal}
-                    />
-                  )
-                ) : null}
-              </div>
+              {!isMobile && (
+                <div
+                  className={`transition-all duration-300 ease-in-out ${
+                    isTransitioning ? "opacity-50" : "opacity-100"
+                  }`}
+                >
+                  {!hideExpand ? (
+                    expandedVersion ? (
+                      <Shrink
+                        className="w-4 h-4 text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-200"
+                        onClick={handleCollapseModal}
+                      />
+                    ) : (
+                      <Expand
+                        className="w-4 h-4 text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-200"
+                        onClick={handleCollapseModal}
+                      />
+                    )
+                  ) : null}
+                </div>
+              )}
 
               <X
                 onClick={() => {

@@ -15,7 +15,7 @@ const ViewMapPopup = ({
   blockDataColor,
 }) => {
   return (
-    <RightViewModal show={show} onClose={onClose} className="w-[650px]">
+    <RightViewModal show={show} onClose={onClose} className="md:!w-[650px] !w-[100%]">
       <div className="bg-white p-2 rounded-md">
         <div className="flex justify-between items-center p-2 border-b-[1px] border-[#DADBE5]">
           <p className="text-[18px] font-semibold">{stadiumName}</p>

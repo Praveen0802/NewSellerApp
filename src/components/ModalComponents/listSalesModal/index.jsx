@@ -17,55 +17,76 @@ import {
 } from "@/utils/apiHandler/request";
 import Tooltip from "@/components/addInventoryPage/simmpleTooltip";
 
-// Shimmer Loader Component
-const ShimmerLoader = () => {
+// Shimmer Loader Component - Mobile Responsive
+const ShimmerLoader = ({ isMobile }) => {
   return (
     <div className="animate-pulse w-full">
       {/* Header shimmer */}
-      <div className="flex border-b border-gray-200 bg-white">
-        <div className="p-3 w-32">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-        </div>
-        <div className="p-3 w-20">
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        </div>
-        <div className="p-3 w-24">
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-        </div>
-        <div className="p-3 w-24">
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        </div>
-        <div className="p-3 w-28">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-        </div>
-        <div className="p-3 flex-1">
-          <div className="h-4 bg-gray-200 rounded w-full"></div>
-        </div>
-      </div>
+      {isMobile ? (
+        // Mobile card-style shimmer
+        <>
+          {[...Array(6)].map((_, index) => (
+            <div key={index} className="border-b border-gray-200 p-3">
+              <div className="flex justify-between items-start mb-2">
+                <div className="h-4 bg-gray-200 rounded w-24"></div>
+                <div className="h-6 bg-gray-200 rounded w-16"></div>
+              </div>
+              <div className="space-y-2">
+                <div className="h-3 bg-gray-200 rounded w-full"></div>
+                <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            </div>
+          ))}
+        </>
+      ) : (
+        // Desktop table shimmer
+        <>
+          <div className="flex border-b border-gray-200 bg-white">
+            <div className="p-3 w-32">
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            </div>
+            <div className="p-3 w-20">
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            </div>
+            <div className="p-3 w-24">
+              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+            </div>
+            <div className="p-3 w-24">
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            </div>
+            <div className="p-3 w-28">
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            </div>
+            <div className="p-3 flex-1">
+              <div className="h-4 bg-gray-200 rounded w-full"></div>
+            </div>
+          </div>
 
-      {/* Row shimmers */}
-      {[...Array(6)].map((_, index) => (
-        <div key={index} className="flex border-b border-gray-200">
-          <div className="p-3 w-32">
-            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-          </div>
-          <div className="p-3 w-20">
-            <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-          </div>
-          <div className="p-3 w-24">
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          </div>
-          <div className="p-3 w-24">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-          </div>
-          <div className="p-3 w-28">
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          </div>
-          <div className="p-3 flex-1">
-            <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-          </div>
-        </div>
-      ))}
+          {[...Array(6)].map((_, index) => (
+            <div key={index} className="flex border-b border-gray-200">
+              <div className="p-3 w-32">
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              </div>
+              <div className="p-3 w-20">
+                <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+              </div>
+              <div className="p-3 w-24">
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+              <div className="p-3 w-24">
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              </div>
+              <div className="p-3 w-28">
+                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+              <div className="p-3 flex-1">
+                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
     </div>
   );
 };
@@ -102,7 +123,19 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
   const [error, setError] = useState(null);
   const [hasMorePages, setHasMorePages] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
   const scrollContainerRef = useRef(null);
+
+  // Responsive breakpoint detection
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
 
   // Filter states - moved up before useCallback
   const [filtersApplied, setFiltersApplied] = useState({
@@ -353,75 +386,84 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
   return (
     <div className="p-4">
       <CustomModal show={show} onClose={() => onClose()}>
-        <div className="bg-white w-4xl rounded-md">
-          {/* Header with match details */}
-          <div className="px-4 pt-4 flex justify-between items-center">
-            <h2 className="text-lg font-medium text-[#323A70]">
+        <div className="bg-white  md:w-4xl rounded-md">
+          {/* Header with match details - Responsive */}
+          <div className={`${isMobile ? "px-3 pt-3" : "px-4 pt-4"} flex justify-between items-center`}>
+            <h2 className={`${isMobile ? "text-base" : "text-lg"} font-medium text-[#323A70] truncate pr-2`}>
               {matchDetails.title}
             </h2>
             <button
               onClick={() => onClose()}
-              className="text-gray-500 cursor-pointer"
+              className="text-gray-500 cursor-pointer flex-shrink-0"
             >
-              <XCircle />
+              <XCircle size={isMobile ? 20 : 24} />
             </button>
           </div>
 
-          {/* Date and venue info */}
-          <div className="px-4 py-2 border-b border-gray-200 flex items-center gap-4">
-            <div className="flex items-center gap-2 pr-4 border-r border-gray-200">
-              <span className="text-[#323A70]">
-                <Calendar className="w-4 h-4 text-[#00A3ED]" />
-              </span>
-              <span className="text-sm text-[#323A70]">
-                {matchDetails.date}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[#323A70]">
-                <MapPin className="w-4 h-4 text-[#00A3ED]" />
-              </span>
-              <span className="text-sm ">{matchDetails.venue}</span>
+          {/* Date and venue info - Responsive */}
+          <div className={`${isMobile ? "px-3 py-2" : "px-4 py-2"} border-b border-gray-200`}>
+            <div className={`flex items-center ${isMobile ? "flex-col space-y-2" : "gap-4"}`}>
+              <div className={`flex items-center gap-2 ${isMobile ? "justify-center" : "pr-4 border-r border-gray-200"}`}>
+                <span className="text-[#323A70]">
+                  <Calendar className="w-4 h-4 text-[#00A3ED]" />
+                </span>
+                <span className={`${isMobile ? "text-xs" : "text-sm"} text-[#323A70]`}>
+                  {matchDetails.date}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[#323A70]">
+                  <MapPin className="w-4 h-4 text-[#00A3ED]" />
+                </span>
+                <span className={`${isMobile ? "text-xs text-center" : "text-sm"}`}>
+                  {matchDetails.venue}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="px-4 py-2 border-b border-gray-200 flex justify-between items-center">
-            <div className="flex">
-              {/* Tab buttons if needed */}
-            </div>
+          {/* Filters - Responsive */}
+          <div className={`${isMobile ? "px-3 py-2" : "px-4 py-2"} border-b border-gray-200`}>
+            <div className={`flex ${isMobile ? "flex-col space-y-2" : "justify-between items-center"}`}>
+              <div className="flex">
+                {/* Tab buttons if needed */}
+              </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-[#323A70]">Filter by:</span>
-              <div className="flex gap-2">
-                <CustomSelect
-                  selectedValue={filtersApplied?.ticket_category}
-                  options={filterOptions}
-                  onSelect={(e) => {
-                    handleSelectChange(e, "ticket_category");
-                  }}
-                  placeholder="All Sections"
-                  textSize="text-xs"
-                  buttonPadding="px-2 py-1"
-                  className="!w-[120px]"
-                />
-                <CustomSelect
-                  selectedValue={filtersApplied?.quantity}
-                  options={quantityOptions}
-                  onSelect={(e) => {
-                    handleSelectChange(e, "quantity");
-                  }}
-                  placeholder="All Quantities"
-                  textSize="text-xs"
-                  buttonPadding="px-2 py-1 !w-full"
-                  className="!w-[120px]"
-                />
+              <div className={`flex ${isMobile ? "flex-col space-y-2" : "items-center gap-2"}`}>
+                <span className={`${isMobile ? "text-xs" : "text-sm"} text-[#323A70] ${isMobile ? "font-medium" : ""}`}>
+                  Filter by:
+                </span>
+                <div className={`flex ${isMobile ? "space-x-2" : "gap-2"}`}>
+                  <CustomSelect
+                    selectedValue={filtersApplied?.ticket_category}
+                    options={filterOptions}
+                    onSelect={(e) => {
+                      handleSelectChange(e, "ticket_category");
+                    }}
+                    placeholder="All Sections"
+                    textSize={isMobile ? "text-xs" : "text-xs"}
+                    buttonPadding={isMobile ? "px-2 py-1.5" : "px-2 py-1"}
+                    className={`${isMobile ? "!w-[140px]" : "!w-[120px]"}`}
+                  />
+                  <CustomSelect
+                    selectedValue={filtersApplied?.quantity}
+                    options={quantityOptions}
+                    onSelect={(e) => {
+                      handleSelectChange(e, "quantity");
+                    }}
+                    placeholder="All Quantities"
+                    textSize={isMobile ? "text-xs" : "text-xs"}
+                    buttonPadding={isMobile ? "px-2 py-1.5 !w-full" : "px-2 py-1 !w-full"}
+                    className={`${isMobile ? "!w-[140px]" : "!w-[120px]"}`}
+                  />
+                </div>
               </div>
             </div>
           </div>
 
           <div 
             ref={scrollContainerRef}
-            className="px-4 pb-4 max-h-[500px] overflow-auto"
+            className={`${isMobile ? "px-3 pb-3" : "px-4 pb-4"} max-h-[500px] overflow-auto`}
           >
             {/* Error State */}
             {error && !isLoading && (
@@ -445,163 +487,291 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
             )}
 
             {/* Loading State */}
-            {isLoading && <ShimmerLoader />}
+            {isLoading && <ShimmerLoader isMobile={isMobile} />}
 
             {/* Empty State */}
             {!isLoading && !error && allListings.length === 0 && (
               <EmptyState />
             )}
 
-            {/* Data State */}
+            {/* Data State - Responsive Layout */}
             {!isLoading && !error && allListings.length > 0 && (
               <>
-                {/* Table header with flex layout */}
-                <div className="flex border-b border-gray-200 bg-white sticky top-0 z-10">
-                  <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-32">
-                    Section/Block
-                  </div>
-                  <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-20">
-                    Row
-                  </div>
-                  <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-24">
-                    Quantity
-                  </div>
-                  <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-24">
-                    Category
-                  </div>
-                  <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-28 flex items-center">
-                    Payout Price <ChevronDown className="ml-1 w-4 h-4" />
-                  </div>
-                  <div className="p-3 text-[12px] font-medium text-[#7D82A4] flex-1">
-                    Benefits & Restrictions
-                  </div>
-                </div>
+                {isMobile ? (
+                  // Mobile: Card Layout
+                  <div className="space-y-3">
+                    {allListings.map((item, index) => {
+                      if (!item) return null;
 
-                {/* Table rows with flex layout */}
-                {allListings.map((item, index) => {
-                  // Null check for item
-                  if (!item) return null;
-
-                  return (
-                    <div
-                      key={item.ticket_id || index}
-                      className={`${
-                        item.flag === 1 ? "bg-gray-100" : ""
-                      } flex border-b border-gray-200  text-[#323A70]`}
-                    >
-                      <div
-                        className="p-3 text-[12px] w-32 truncate"
-                        title={item.block_id}
-                      >
-                        {item.block_id || "-"}
-                      </div>
-                      <div className="p-3 text-[12px] w-20">
-                        {item.row || "-"}
-                      </div>
-                      <div className="p-3 text-[12px] w-24">
-                        {item.quantity || "-"}
-                      </div>
-                      <div
-                        className="p-3 text-[12px] w-24 truncate"
-                        title={item.ticket_category}
-                      >
-                        {item.ticket_category || "-"}
-                      </div>
-                      <div className="p-3 text-[12px] w-32">
-                        {editingRow === item.ticket_id ? (
-                          // Edit Mode - Show input field with save/cancel buttons
-                          <div className="flex items-center gap-1">
-                            <span className="text-gray-600">
-                              {item?.currencyIcon}
-                            </span>
-                            <input
-                              type="text"
-                              value={`${editPrices[item.ticket_id]}` || ""}
-                              onChange={(e) =>
-                                handlePriceChange(
-                                  item.ticket_id,
-                                  e.target.value.replace(/[^0-9.]/g, "")
-                                )
-                              }
-                              className="border border-blue-500 rounded w-16 px-2 py-1 text-[12px] focus:outline-none focus:ring-1 focus:ring-blue-500"
-                              placeholder="0.00"
-                              autoFocus
-                            />
-                            <div className="flex gap-1">
-                              <button
-                                onClick={() => savePrice(item)}
-                                className="bg-green-600 hover:bg-green-700 text-white rounded p-1 transition-colors"
-                                title="Save price"
-                              >
-                                <Check className="w-3 h-3" />
-                              </button>
-                              <button
-                                onClick={cancelEdit}
-                                className="bg-gray-400 hover:bg-gray-500 text-white rounded p-1 transition-colors"
-                                title="Cancel edit"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
+                      return (
+                        <div
+                          key={item.ticket_id || index}
+                          className={`${
+                            item.flag === 1 ? "bg-gray-50" : "bg-white"
+                          } border border-gray-200 rounded-lg p-3 space-y-2`}
+                        >
+                          {/* Header Row */}
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-[#323A70] text-sm truncate">
+                                {item.block_id || "-"}
+                              </div>
+                              <div className="text-xs text-gray-600 mt-0.5">
+                                {item.ticket_category || "-"}
+                              </div>
+                            </div>
+                            <div className="text-right ml-2">
+                              {editingRow === item.ticket_id ? (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-gray-600 text-xs">
+                                    {item?.currencyIcon}
+                                  </span>
+                                  <input
+                                    type="text"
+                                    value={`${editPrices[item.ticket_id]}` || ""}
+                                    onChange={(e) =>
+                                      handlePriceChange(
+                                        item.ticket_id,
+                                        e.target.value.replace(/[^0-9.]/g, "")
+                                      )
+                                    }
+                                    className="border border-blue-500 rounded w-16 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    placeholder="0.00"
+                                    autoFocus
+                                  />
+                                  <div className="flex gap-1">
+                                    <button
+                                      onClick={() => savePrice(item)}
+                                      className="bg-green-600 hover:bg-green-700 text-white rounded p-1 transition-colors"
+                                      title="Save price"
+                                    >
+                                      <Check className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                      onClick={cancelEdit}
+                                      className="bg-gray-400 hover:bg-gray-500 text-white rounded p-1 transition-colors"
+                                      title="Cancel edit"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 group">
+                                  <span className="text-gray-600 text-xs">
+                                    {item?.currencyIcon}
+                                  </span>
+                                  <span
+                                    className={`text-sm font-medium ${
+                                      item.flag === 1
+                                        ? "cursor-pointer text-blue-600"
+                                        : "text-gray-700"
+                                    }`}
+                                    onClick={() =>
+                                      item.flag === 1 &&
+                                      startEditPrice(item.ticket_id, item.price)
+                                    }
+                                  >
+                                    {item.price || "-"}
+                                  </span>
+                                  {item.flag === 1 && (
+                                    <button
+                                      onClick={() =>
+                                        startEditPrice(item.ticket_id, item.price)
+                                      }
+                                      className="ml-1 bg-blue-500 hover:bg-blue-600 text-white rounded p-1 transition-all duration-200"
+                                      title="Edit price"
+                                    >
+                                      <Edit className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
-                        ) : (
-                          // Display Mode - Show price with edit option if flag === 1
-                          <div className={`flex items-center  gap-1 group`}>
-                            <span className="text-gray-600">
-                              {item?.currencyIcon}
-                            </span>
-                            <span
-                              className={`${
-                                item.flag === 1
-                                  ? "cursor-pointer hover:text-blue-600 transition-colors"
-                                  : "text-gray-700"
-                              }`}
-                              onClick={() =>
-                                item.flag === 1 &&
-                                startEditPrice(item.ticket_id, item.price)
-                              }
-                              title={
-                                item.flag === 1
-                                  ? "Click to edit price"
-                                  : "Price not editable"
-                              }
-                            >
-                              {item.price || "-"}
-                            </span>
-                            {item.flag === 1 && (
-                              <button
-                                onClick={() =>
-                                  startEditPrice(item.ticket_id, item.price)
-                                }
-                                className="ml-2 opacity-0 group-hover:opacity-100 bg-blue-500 hover:bg-blue-600 text-white rounded p-1 transition-all duration-200"
-                                title="Edit price"
-                              >
-                                <Edit className="w-3 h-3" />
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
 
-                      <div className="p-3 text-[12px] flex-1 flex items-center justify-between">
-                        <span
-                          className="break-words pr-2 max-w-[180px]"
-                          title={getBenefitsText(item.ticket_details)}
-                        >
-                          {getBenefitsText(item.ticket_details)}
-                        </span>
-                        <Tooltip
-                          content={getBenefitsText(item.ticket_details)}
-                          position="top"
-                        >
-                          <button className="text-gray-400 flex-shrink-0">
-                            <IconStore.document />
-                          </button>
-                        </Tooltip>
+                          {/* Details Grid */}
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                              <span className="text-gray-500 font-medium">Row:</span>
+                              <span className="ml-1 text-[#323A70]">{item.row || "-"}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500 font-medium">Qty:</span>
+                              <span className="ml-1 text-[#323A70]">{item.quantity || "-"}</span>
+                            </div>
+                          </div>
+
+                          {/* Benefits */}
+                          <div className="border-t border-gray-100 pt-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-gray-500 font-medium">Benefits:</span>
+                              <Tooltip
+                                content={getBenefitsText(item.ticket_details)}
+                                position="top"
+                              >
+                                <button className="text-gray-400 flex-shrink-0">
+                                  <IconStore.document />
+                                </button>
+                              </Tooltip>
+                            </div>
+                            <p className="text-xs text-[#323A70] mt-1 line-clamp-2">
+                              {getBenefitsText(item.ticket_details)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  // Desktop: Table Layout (unchanged)
+                  <>
+                    {/* Table header with flex layout */}
+                    <div className="flex border-b border-gray-200 bg-white sticky top-0 z-10">
+                      <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-32">
+                        Section/Block
+                      </div>
+                      <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-20">
+                        Row
+                      </div>
+                      <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-24">
+                        Quantity
+                      </div>
+                      <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-24">
+                        Category
+                      </div>
+                      <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-28 flex items-center">
+                        Payout Price <ChevronDown className="ml-1 w-4 h-4" />
+                      </div>
+                      <div className="p-3 text-[12px] font-medium text-[#7D82A4] flex-1">
+                        Benefits & Restrictions
                       </div>
                     </div>
-                  );
-                })}
+
+                    {/* Table rows with flex layout */}
+                    {allListings.map((item, index) => {
+                      if (!item) return null;
+
+                      return (
+                        <div
+                          key={item.ticket_id || index}
+                          className={`${
+                            item.flag === 1 ? "bg-gray-100" : ""
+                          } flex border-b border-gray-200  text-[#323A70]`}
+                        >
+                          <div
+                            className="p-3 text-[12px] w-32 truncate"
+                            title={item.block_id}
+                          >
+                            {item.block_id || "-"}
+                          </div>
+                          <div className="p-3 text-[12px] w-20">
+                            {item.row || "-"}
+                          </div>
+                          <div className="p-3 text-[12px] w-24">
+                            {item.quantity || "-"}
+                          </div>
+                          <div
+                            className="p-3 text-[12px] w-24 truncate"
+                            title={item.ticket_category}
+                          >
+                            {item.ticket_category || "-"}
+                          </div>
+                          <div className="p-3 text-[12px] w-32">
+                            {editingRow === item.ticket_id ? (
+                              <div className="flex items-center gap-1">
+                                <span className="text-gray-600">
+                                  {item?.currencyIcon}
+                                </span>
+                                <input
+                                  type="text"
+                                  value={`${editPrices[item.ticket_id]}` || ""}
+                                  onChange={(e) =>
+                                    handlePriceChange(
+                                      item.ticket_id,
+                                      e.target.value.replace(/[^0-9.]/g, "")
+                                    )
+                                  }
+                                  className="border border-blue-500 rounded w-16 px-2 py-1 text-[12px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                  placeholder="0.00"
+                                  autoFocus
+                                />
+                                <div className="flex gap-1">
+                                  <button
+                                    onClick={() => savePrice(item)}
+                                    className="bg-green-600 hover:bg-green-700 text-white rounded p-1 transition-colors"
+                                    title="Save price"
+                                  >
+                                    <Check className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    onClick={cancelEdit}
+                                    className="bg-gray-400 hover:bg-gray-500 text-white rounded p-1 transition-colors"
+                                    title="Cancel edit"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className={`flex items-center  gap-1 group`}>
+                                <span className="text-gray-600">
+                                  {item?.currencyIcon}
+                                </span>
+                                <span
+                                  className={`${
+                                    item.flag === 1
+                                      ? "cursor-pointer hover:text-blue-600 transition-colors"
+                                      : "text-gray-700"
+                                  }`}
+                                  onClick={() =>
+                                    item.flag === 1 &&
+                                    startEditPrice(item.ticket_id, item.price)
+                                  }
+                                  title={
+                                    item.flag === 1
+                                      ? "Click to edit price"
+                                      : "Price not editable"
+                                  }
+                                >
+                                  {item.price || "-"}
+                                </span>
+                                {item.flag === 1 && (
+                                  <button
+                                    onClick={() =>
+                                      startEditPrice(item.ticket_id, item.price)
+                                    }
+                                    className="ml-2 opacity-0 group-hover:opacity-100 bg-blue-500 hover:bg-blue-600 text-white rounded p-1 transition-all duration-200"
+                                    title="Edit price"
+                                  >
+                                    <Edit className="w-3 h-3" />
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="p-3 text-[12px] flex-1 flex items-center justify-between">
+                            <span
+                              className="break-words pr-2 max-w-[180px]"
+                              title={getBenefitsText(item.ticket_details)}
+                            >
+                              {getBenefitsText(item.ticket_details)}
+                            </span>
+                            <Tooltip
+                              content={getBenefitsText(item.ticket_details)}
+                              position="top"
+                            >
+                              <button className="text-gray-400 flex-shrink-0">
+                                <IconStore.document />
+                              </button>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
 
                 {/* Loading more indicator */}
                 {isLoadingMore && <PaginationLoader />}

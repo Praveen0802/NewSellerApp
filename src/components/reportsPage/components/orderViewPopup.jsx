@@ -19,7 +19,7 @@ const OrderViewPopup = ({
       show={show}
       onClose={onClose}
       outSideClickClose={outSideClickClose}
-      className={"w-[500px]"}
+      className={"md:w-[500px] max-md:!w-full"}
     >
       {data?.transactionType == "wallet" ? (
         <DepositPopup data={data} onClose={onClose} showShimmer={showShimmer} />

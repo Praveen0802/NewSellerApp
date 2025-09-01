@@ -59,12 +59,12 @@ const CtaValues = ({ ctaText, order_notes, onSaveNote = () => {} } = {}) => {
   return (
     <div className="space-y-4">
       {/* CTA Cards */}
-      <div className="flex justify-between gap-4 items-center">
+      <div className="flex max-md:flex-col justify-between gap-4 md:items-center">
         {ctaText?.map((item, index) => {
           return (
             <div
               key={index}
-              className="px-4 flex border border-[#E0E1EA] rounded-lg w-1/2 justify-between items-center py-3 bg-white shadow-sm hover:shadow-md transition-shadow duration-200"
+              className="px-4 flex border border-[#E0E1EA] rounded-lg md:w-1/2 justify-between items-center py-3 bg-white shadow-sm hover:shadow-md transition-shadow duration-200"
             >
               <p className="text-base flex gap-2 items-center font-semibold text-[#343432]">
                 {item?.title}

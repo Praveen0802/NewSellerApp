@@ -12,6 +12,7 @@ import AttendeeDetails from "./components/attendeeDetails";
 import PaymentOrderDetails from "./components/paymentOrderDetails";
 import DownLoadYourTickets from "./components/downLoadYourTickets";
 import RightViewModal from "../commonComponents/rightViewModal";
+import useIsMobile from "@/utils/helperFunctions/useIsmobile";
 
 const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
   // Handle case where data might be an array or null/undefined
@@ -419,6 +420,8 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
     );
   }
 
+  const isMobile = useIsMobile();
+
   return (
     <>
       <style>{`
@@ -475,7 +478,7 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
                 {hasValidData ? `Order ID: ${orderId}` : "Order Details"}
               </p>
               <div className="flex items-center gap-2">
-                {hasValidData && (
+                {hasValidData && !isMobile && (
                   <button className="cursor-pointer">
                     {expandedVersion ? (
                       <IconStore.collapse

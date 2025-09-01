@@ -693,7 +693,7 @@ const handleGlobalPublishLive = async () => {
           label: note.name,
         })) || []),
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
@@ -714,7 +714,7 @@ const handleGlobalPublishLive = async () => {
         { value: "4", label: "4" },
         { value: "5", label: "5" },
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
@@ -737,7 +737,7 @@ const handleGlobalPublishLive = async () => {
           label: note.name,
         })) || []),
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
@@ -770,7 +770,7 @@ console.log(updated,'updatedupdated')
           label: note.name,
         })) || []),
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
@@ -799,7 +799,7 @@ console.log(updated,'updatedupdated')
         { value: "5", label: "5" },
       ],
       parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow max-w-[212px] sm:max-w-[160px] lg:max-w-[212px]",
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px] sm:max-w-[160px] ",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
@@ -819,7 +819,7 @@ console.log(updated,'updatedupdated')
         value: key,
         label: value,
       })),
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
@@ -838,7 +838,7 @@ console.log(updated,'updatedupdated')
         value: key,
         label: value,
       })),
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
@@ -857,7 +857,7 @@ console.log(updated,'updatedupdated')
       value: filtersApplied?.ticket_block,
       options: blockData, // Will be dynamically populated per match
       disabled: !filtersApplied?.ticket_category,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
@@ -870,7 +870,7 @@ console.log(updated,'updatedupdated')
       label: "Row",
       increasedWidth: "!w-[100px]",
       value: filtersApplied?.row,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[10px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
@@ -886,7 +886,7 @@ console.log(updated,'updatedupdated')
       label: "First Seat",
       increasedWidth: "!w-[110px]",
       value: filtersApplied?.first_seat,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[10px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
@@ -903,7 +903,7 @@ console.log(updated,'updatedupdated')
       label: "Face Value",
       increasedWidth: "!w-[120px]",
       value: filtersApplied?.face_value,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       iconBefore: (
         <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
           <p className="text-xs">
@@ -928,7 +928,7 @@ console.log(updated,'updatedupdated')
       increasedWidth: "!w-[120px]",
       currencyFormat: true,
       value: filtersApplied?.add_price_addlist,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       iconBefore: (
         <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
           <p className="text-xs">
@@ -950,7 +950,7 @@ console.log(updated,'updatedupdated')
       name: "notes",
       label: "Benefits",
       value: filtersApplied?.notes,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       multiselect: true,
       options: [
         ...(notes_left?.map((note) => ({
@@ -984,7 +984,7 @@ console.log(updated,'updatedupdated')
           label: note.name,
         })) || []),
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
@@ -1001,7 +1001,7 @@ console.log(updated,'updatedupdated')
       },
       minDate: new Date().toISOString().split("T")[0],
       maxDate: allMatchDetails[0]?.ship_date,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       singleDateMode: true,
       className: "!py-[10px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
@@ -1014,7 +1014,7 @@ console.log(updated,'updatedupdated')
       name: "tickets_in_hand",
       label: "Tickets In Hand",
       value: filtersApplied?.tickets_in_hand || false,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[4px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
@@ -1570,34 +1570,70 @@ console.log(updated,'updatedupdated')
             </div>
           </div>
           {allMatchDetails.length > 0 && (
-            <div className="flex gap-4 items-center flex-wrap">
-              {allMatchDetails?.map((list, index) => {
-                return (
-                  <div
-                    key={index}
-                    className="flex gap-3 items-center border border-[#DADBE5] p-2 rounded-md"
-                  >
-                    <p className="text-[#323A70] text-[14px] font-medium">
+        <div className="space-y-3">
+          {/* Desktop/Tablet View - Hidden on mobile */}
+          <div className="hidden sm:flex gap-4 items-center flex-wrap">
+            {allMatchDetails?.map((list, index) => (
+              <div
+                key={index}
+                className="flex gap-3 items-center border border-[#DADBE5] p-2 rounded-md bg-white transition-shadow"
+              >
+                <p className="text-[#323A70] text-[14px] font-medium">
+                  {list?.match_name}
+                </p>
+                <div className="flex gap-1 items-center">
+                  <Calendar className="w-3 h-3 text-[#00A3ED]" />
+                  <p className="text-[12px] text-gray-600">{list?.match_date_format}</p>
+                </div>
+                <div className="flex gap-1 items-center">
+                  <Clock className="w-3 h-3 text-[#00A3ED]" />
+                  <p className="text-[12px] text-gray-600">{list?.match_time}</p>
+                </div>
+                <X
+                  className="w-3.5 h-3.5 text-gray-600 cursor-pointer hover:text-red-500 transition-colors"
+                  onClick={() => handleDeleteMatch(list.match_id)}
+                  title={`Remove ${list?.match_name}`}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile View - Compact and Professional */}
+          <div className="sm:hidden space-y-2">
+            {allMatchDetails?.map((list, index) => (
+              <div
+                key={index}
+                className="bg-white border border-[#DADBE5] rounded-lg p-3 "
+              >
+                <div className="flex justify-between items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-[#323A70] text-sm font-medium truncate mb-2">
                       {list?.match_name}
-                    </p>
-                    <div className="flex gap-1 items-center">
-                      <Calendar className="w-3 h-3 text-[#00A3ED]" />{" "}
-                      <p className="text-[12px]">{list?.match_date_format}</p>{" "}
+                    </h3>
+                    <div className="flex gap-4 text-xs text-gray-600">
+                      <div className="flex gap-1 items-center">
+                        <Calendar className="w-3 h-3 text-[#00A3ED] flex-shrink-0" />
+                        <span>{list?.match_date_format}</span>
+                      </div>
+                      <div className="flex gap-1 items-center">
+                        <Clock className="w-3 h-3 text-[#00A3ED] flex-shrink-0" />
+                        <span>{list?.match_time}</span>
+                      </div>
                     </div>
-                    <div className="flex gap-1 items-center">
-                      <Clock className="w-3 h-3 text-[#00A3ED]" />{" "}
-                      <p className="text-[12px]">{list?.match_time}</p>{" "}
-                    </div>
-                    <X
-                      className="w-3.5 h-3.5 text-gray-600 cursor-pointer hover:text-red-500 transition-colors"
-                      onClick={() => handleDeleteMatch(list.match_id)}
-                      title={`Remove ${list?.match_name}`}
-                    />
                   </div>
-                );
-              })}
-            </div>
-          )}
+                  <button
+                    onClick={() => handleDeleteMatch(list.match_id)}
+                    className="p-1 rounded-full hover:bg-red-50 transition-colors"
+                    title={`Remove ${list?.match_name}`}
+                  >
+                    <X className="w-4 h-4 text-gray-500 hover:text-red-500 transition-colors" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
         </div>
         {allMatchDetails.length > 0 && (
           <>
@@ -1636,7 +1672,7 @@ console.log(updated,'updatedupdated')
       {allMatchDetails.length > 0 && totalTicketCount > 0 && (
         <div
           // style={{ maxHeight: "calc(100vh - 450px)", overflowY: "auto" }}
-          className="m-6 pb-[150px] rounded-lg shadow-sm"
+          className="m-6 pb-[150px] rounded-lg "
         >
           <div>
             {/* Individual Match Accordions (Separate Tables) */}

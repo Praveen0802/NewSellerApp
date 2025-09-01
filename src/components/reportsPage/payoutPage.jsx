@@ -634,7 +634,7 @@ const PayoutPage = (props) => {
         }`}
       >
         <div className="px-3 md:px-[24px] py-4 md:py-[20px]">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mobile:grid-cols-1 mobile:gap-3">
+          <div className="md:grid  md:grid-cols-4 gap-4 max-md:flex max-md:items-center max-md:overflow-auto hideScrollbar">
             {overviewValues?.map((item, index) => (
               <ViewComponent
                 key={index}
