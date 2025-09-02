@@ -148,7 +148,7 @@ const AttendeeDetails = ({
                   {getFieldLabel(field)}
                 </th>
               ))}
-              {expandedVersion && mySalesPage && (
+              {mySalesPage && (
                 <th className="text-center py-2 px-2 font-medium text-gray-700">
                   Action
                 </th>
@@ -172,7 +172,7 @@ const AttendeeDetails = ({
                       {attendee.display_fields?.[field] || "-"}
                     </td>
                   ))}
-                  {expandedVersion && mySalesPage && (
+                  {mySalesPage && (
                     <>
                       {ticketType == 3 ? (
                         index == 0 ? (

@@ -168,12 +168,12 @@ const AddDepositSummary = ({ onClose } = {}) => {
 
     try {
       await sendDepositRequest(payload);
-      toast.success("Deposit details saved successfully");
+      toast.success("Your deposit request has been submitted and is now pending admin approval.");
       onClose();
       handleRefresh?.();
     } catch (error) {
       console.error("Error saving deposit details", error);
-      toast.error("Error saving deposit details");
+      toast.error("Unable to save deposit request. Please try again or reach out to support if the issue persists.");
     } finally {
       setLoader(false);
     }
