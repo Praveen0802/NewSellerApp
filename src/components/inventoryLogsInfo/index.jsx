@@ -328,7 +328,7 @@ const InventoryLogsInfo = ({
                 key={idx}
                 className={`block px-2 py-1 rounded text-sm break-all max-w-full ${
                   isChangedInCurrentLog
-                    ? "bg-green-200 text-green-800 font-semibold"
+                    ? " text-green-800 font-semibold"
                     : "font-light"
                 }`}
               >
@@ -345,7 +345,7 @@ const InventoryLogsInfo = ({
       <span
         className={`inline-block px-2 py-1 rounded text-sm break-all max-w-full ${
           isChangedInCurrentLog
-            ? "bg-green-200 text-green-800 font-semibold"
+            ? " text-green-800 font-semibold"
             : "font-light"
         }`}
       >

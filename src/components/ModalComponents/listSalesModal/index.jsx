@@ -564,7 +564,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                                   <span
                                     className={`text-sm font-medium ${
                                       item.flag === 1
-                                        ? "cursor-pointer text-blue-600"
+                                        ? "cursor-pointer text-gray-700"
                                         : "text-gray-700"
                                     }`}
                                     onClick={() =>
@@ -579,7 +579,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                                       onClick={() =>
                                         startEditPrice(item.ticket_id, item.price)
                                       }
-                                      className="ml-1 bg-blue-500 hover:bg-blue-600 text-white rounded p-1 transition-all duration-200"
+                                      className="ml-1 bg-[#343432]  text-white rounded p-1 transition-all duration-200"
                                       title="Edit price"
                                     >
                                       <Edit className="w-3 h-3" />
@@ -741,7 +741,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                                     onClick={() =>
                                       startEditPrice(item.ticket_id, item.price)
                                     }
-                                    className="ml-2 opacity-0 group-hover:opacity-100 bg-blue-500 hover:bg-blue-600 text-white rounded p-1 transition-all duration-200"
+                                    className="ml-2 opacity-0 group-hover:opacity-100 bg-[#343432]  text-white rounded p-1 transition-all duration-200"
                                     title="Edit price"
                                   >
                                     <Edit className="w-3 h-3" />

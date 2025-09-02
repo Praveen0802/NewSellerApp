@@ -66,14 +66,14 @@ const InventoryFolder = (props) => {
   const [formFieldValues, setFormFieldValues] = useState(defaultFilters);
   const [loader, setLoader] = useState(false);
   const dispatch = useDispatch();
-  
+
   const selectedMatchData = {
     match: `${match_details?.match_name}`,
     eventDate: desiredFormatDate(match_details?.match_date),
     eventTime: match_details?.match_time,
     Venue: `${match_details?.venue},${match_details?.country},${match_details?.city}`,
   };
-  
+
   const currentCategoryRef = useRef(null);
   const svgContainerRef = useRef(null);
 
@@ -83,12 +83,12 @@ const InventoryFolder = (props) => {
       const width = window.innerWidth;
       const isMobileDevice = width < 768;
       setIsMobile(isMobileDevice);
-      
+
       // Auto-hide map on mobile initially
       if (isMobileDevice && showMap) {
         setShowMap(false);
       }
-      
+
       // Auto-show map on desktop
       if (!isMobileDevice && !showMap) {
         setShowMap(true);
@@ -148,153 +148,18 @@ const InventoryFolder = (props) => {
     }
     setFormFieldValues({ ...formFieldValues, [key]: value });
   };
-
-  const renderListItem = (icon, text) => {
-    return (
-      <div className="flex gap-2 items-center whitespace-nowrap">
-        {icon && <div className="flex-shrink-0">{icon}</div>}
-        <p className="text-[#343432] text-[12px] sm:text-[14px] font-normal truncate">
-          {text}
-        </p>
-      </div>
-    );
-  };
-
-  const fetchScrollEnd = async () => {
-    console.log(currentPage, lastPage, "ppppppppppppppppppppppp");
-    if (currentPage >= lastPage) return;
-    const scrollPosition = window.scrollY || document.documentElement.scrollTop;
-    const params = {
-      ...filtersApplied,
-      page: currentPage + 1,
-    };
-
-    await fetchAPIDetails(params, true);
-    setFiltersApplied(params);
-  };
-
-  const handleMapBlockClick = (blockId) => {
-    const params = {
-      ...filtersApplied,
-      page: 1,
-      category:
-        filtersApplied?.category?.length > 0
-          ? [...filtersApplied?.category, blockId]
-          : blockId,
-    };
-    setFiltersApplied(params);
-    fetchAPIDetails(params);
-  };
-
-  // Enhanced headers for different screen sizes
-  const headers = [
-    { key: "qty", label: "Qty" },
-    { key: "category", label: "Category" },
-    { key: "section", label: isMobile ? "Block" : "Section/Block" },
-    { key: "row", label: "Row" },
-    ...(isMobile
-      ? [
-          { key: "price", label: "Price" },
-          { key: "actions", label: "Actions" }, // Combined actions column for mobile
-        ]
-      : []),
-  ];
-
-  // Enhanced data mapping for mobile
-  const data = displayTicketDetails?.map((item) => {
-    return {
-      qty: item?.quantity,
-      category: item?.seat_category,
-      section: item?.block_id,
-      row: item?.row,
-      ...(isMobile
-        ? {
-            price: (
-              <div className="text-[12px] font-medium text-[#343432]">
-                {item?.price_with_symbol}
-              </div>
-            ),
-            actions: (
-              <div className="flex gap-1 items-center justify-center">
-                <Image
-                  width={12}
-                  height={12}
-                  src={
-                    item?.ticket_type_id == 2
-                      ? attachmentPin
-                      : item?.ticket_type_id == 4 || item?.ticket_type_id == 6
-                      ? attachment6
-                      : item?.ticket_type_id == 3
-                      ? attachment3
-                      : item?.ticket_type_id == 1
-                      ? attachment1
-                      : attachmentPin
-                  }
-                  alt="attach"
-                />
-                <Image width={12} height={12} src={crossHand} alt="hand" />
-                {item?.listing_note?.length > 0 && (
-                  <Image width={12} height={12} src={documentText} alt="document" />
-                )}
-              </div>
-            ),
-          }
-        : {}),
-      seat_category_id: item?.seat_category_id,
-    };
-  });
-
-  const handleClickFavourites = async (item) => {
-    if (item?.trackingfound == 1) return;
-    const payload = {
-      m_id: matchId,
-      s_no: item?.s_no,
-    };
-    const response = await AddFavouratesTracing("", "POST", payload);
-    const updatedTicketDetails = displayTicketDetails?.map((ticket) => {
-      if (ticket?.s_no == item?.s_no) {
-        return {
-          ...ticket,
-          trackingfound: 1,
-        };
-      }
-      return ticket;
-    });
-
-    setDisplayTicketDetails(updatedTicketDetails);
-  };
-
-  const handleClickItem = async (item) => {
-    const data = await purchaseTickets("", item?.s_no, {
-      currency: item?.price_type,
-    });
-    dispatch(
-      updateConfirmPurchasePopup({
-        flag: true,
-        data: { ...data, sNo: item?.s_no, matchId: matchId },
-      })
-    );
-  };
-
-  const resetFilters = () => {
-    setFiltersApplied({ page: 1 });
-    setFormFieldValues(defaultFilters);
-    fetchAPIDetails({ page: 1 });
-  };
-
-  const rightStickyHeaders = isMobile ? [] : ["Ticket Price"];
-
-  // Enhanced right sticky columns with better mobile handling
   const rightStickyColumns = displayTicketDetails?.map((item) => {
     return [
+      // Price as first sticky column for both mobile and desktop
+      {
+        icon: <p className="text-[12px] lg:text-[14px] font-medium">{item?.price_with_symbol}</p>,
+        className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px] bg-white",
+      },
+      // Desktop-only action icons
       ...(isMobile
         ? []
         : [
-            {
-              icon: <p className="text-[12px] lg:text-[14px]">{item?.price_with_symbol}</p>,
-              className:
-                "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px]",
-            },
+            // Desktop sticky columns (excluding price which is now first)
             {
               icon: (
                 <Image
@@ -384,6 +249,7 @@ const InventoryFolder = (props) => {
               tooltipPosition: "top",
             },
           ]),
+      // Star (favorites) - common for both mobile and desktop
       {
         icon: (
           <Image
@@ -397,9 +263,10 @@ const InventoryFolder = (props) => {
           />
         ),
         tooltipComponent: <p className="text-center text-[12px]">Track this ticket</p>,
-        className: `border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer ${isMobile ? 'px-1' : 'px-2'}`,
+        className: `border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer bg-white ${isMobile ? 'px-1' : 'px-2'}`,
         key: "star",
       },
+      // Buy button - common for both mobile and desktop
       {
         icon: (
           <button
@@ -413,10 +280,112 @@ const InventoryFolder = (props) => {
             Buy
           </button>
         ),
+        className: "bg-white",
         key: "buy",
       },
     ];
   });
+
+  const renderListItem = (icon, text) => {
+    return (
+      <div className="flex gap-2 items-center whitespace-nowrap">
+        {icon && <div className="flex-shrink-0">{icon}</div>}
+        <p className="text-[#343432] text-[12px] sm:text-[14px] font-normal truncate">
+          {text}
+        </p>
+      </div>
+    );
+  };
+
+  const fetchScrollEnd = async () => {
+    console.log(currentPage, lastPage, "ppppppppppppppppppppppp");
+    if (currentPage >= lastPage) return;
+    const scrollPosition = window.scrollY || document.documentElement.scrollTop;
+    const params = {
+      ...filtersApplied,
+      page: currentPage + 1,
+    };
+
+    await fetchAPIDetails(params, true);
+    setFiltersApplied(params);
+  };
+
+  const handleMapBlockClick = (blockId) => {
+    const params = {
+      ...filtersApplied,
+      page: 1,
+      category:
+        filtersApplied?.category?.length > 0
+          ? [...filtersApplied?.category, blockId]
+          : blockId,
+    };
+    setFiltersApplied(params);
+    fetchAPIDetails(params);
+  };
+
+  // Enhanced headers for different screen sizes
+  const headers = [
+    { key: "qty", label: "Qty" },
+    { key: "category", label: "Category" },
+    { key: "section", label: isMobile ? "Block" : "Section/Block" },
+    { key: "row", label: "Row" },
+    // Remove the mobile-specific actions column since individual actions will be sticky
+  ];
+
+  // Enhanced data mapping for mobile
+  const data = displayTicketDetails?.map((item) => {
+    return {
+      qty: item?.quantity,
+      category: item?.seat_category,
+      section: item?.block_id,
+      row: item?.row,
+      // Remove mobile price from here since it will be in sticky columns
+      seat_category_id: item?.seat_category_id,
+    };
+  });
+
+  const handleClickFavourites = async (item) => {
+    if (item?.trackingfound == 1) return;
+    const payload = {
+      m_id: matchId,
+      s_no: item?.s_no,
+    };
+    const response = await AddFavouratesTracing("", "POST", payload);
+    const updatedTicketDetails = displayTicketDetails?.map((ticket) => {
+      if (ticket?.s_no == item?.s_no) {
+        return {
+          ...ticket,
+          trackingfound: 1,
+        };
+      }
+      return ticket;
+    });
+
+    setDisplayTicketDetails(updatedTicketDetails);
+  };
+
+  const handleClickItem = async (item) => {
+    const data = await purchaseTickets("", item?.s_no, {
+      currency: item?.price_type,
+    });
+    dispatch(
+      updateConfirmPurchasePopup({
+        flag: true,
+        data: { ...data, sNo: item?.s_no, matchId: matchId },
+      })
+    );
+  };
+
+  const resetFilters = () => {
+    setFiltersApplied({ page: 1 });
+    setFormFieldValues(defaultFilters);
+    fetchAPIDetails({ page: 1 });
+  };
+
+  const rightStickyHeaders = isMobile ? ["Price"] : ["Ticket Price"];
+
+  // Enhanced right sticky columns with better mobile handling
+ 
 
   const handleTicketMouseEnter = (categoryId) => {
     if (!svgContainerRef.current) return;
@@ -491,7 +460,7 @@ const InventoryFolder = (props) => {
                   {selectedMatchData?.match}
                 </p>
               </div>
-              
+
               {/* Match details - responsive grid */}
               <div className="py-[6px] lg:py-[10px] lg:inline-block lg:ml-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row gap-2 lg:gap-4">
@@ -537,17 +506,19 @@ const InventoryFolder = (props) => {
               {isMobile ? (
                 <>
                   <div className="px-[16px] py-[12px] flex justify-between items-center">
-                    <h3 className="text-[14px] font-medium text-[#343432]">Filters</h3>
+                    <h3 className="text-[14px] font-medium text-[#343432]">
+                      Filters
+                    </h3>
                     <button
                       onClick={() => setShowFilters(!showFilters)}
                       className="flex items-center gap-2 px-3 py-1 bg-[#F5F5F7] rounded-md"
                     >
                       <span className="text-[12px] font-medium text-[#343432]">
-                        {showFilters ? 'Hide' : 'Show'}
+                        {showFilters ? "Hide" : "Show"}
                       </span>
                       <IconStore.chevronDown
                         className={`size-4 transition-transform duration-200 ${
-                          showFilters ? 'rotate-180' : ''
+                          showFilters ? "rotate-180" : ""
                         }`}
                       />
                     </button>
@@ -578,7 +549,12 @@ const InventoryFolder = (props) => {
               <div className="border-b-[1px] sm:border-b-[1px] border-[#E0E1EA] overflow-x-auto w-full sm:w-auto">
                 <div className="px-[16px] lg:px-[21px] flex gap-3 items-center w-fit border-r-[1px] py-[10px] border-[#E0E1EA] min-w-max">
                   {renderListItem(
-                    <Image src={hamburger} width={16} height={16} alt="listings" />,
+                    <Image
+                      src={hamburger}
+                      width={16}
+                      height={16}
+                      alt="listings"
+                    />,
                     `${filters?.TotalListingTickets} Listings`
                   )}
                   {renderListItem(
@@ -598,7 +574,7 @@ const InventoryFolder = (props) => {
                   </button>
                 </div>
               </div>
-              
+
               {/* Filter chips with horizontal scroll */}
               {!isEmptyObject(filtersApplied) && (
                 <div className="px-[16px] sm:px-0 sm:pl-2 w-full sm:w-auto overflow-x-auto">
@@ -694,7 +670,11 @@ const InventoryFolder = (props) => {
                 isMobile || !showMap ? "w-full" : "w-[50%]"
               }`}
             >
-              <div className={`${isMobile ? 'max-h-[400px]' : 'max-h-[400px] xl:max-h-[500px]'} overflow-auto`}>
+              <div
+                className={`${
+                  isMobile ? "max-h-[400px]" : "max-h-[400px] xl:max-h-[500px]"
+                } overflow-auto`}
+              >
                 <StickyDataTable
                   headers={headers}
                   data={data}
@@ -706,6 +686,7 @@ const InventoryFolder = (props) => {
                   handleTicketMouseLeave={handleTicketMouseLeave}
                   stickyColumnsConfig={{
                     columnWidths: isMobile ? [
+                      80, // Price
                       40, // Star icon
                       60, // Buy button
                     ] : [

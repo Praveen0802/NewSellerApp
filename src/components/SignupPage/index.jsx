@@ -900,7 +900,7 @@ const SignupFlow = ({ refer_code, currentScreen = null, currencies } = {}) => {
             {formStep === 2 && (
               <div className="space-y-2">
                 <p className="text-[14px] font-medium text-gray-800">
-                  Set a Seat Brokers Password
+                  Set a Seats Brokers Password
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div ref={(el) => (errorRefs.current.password = el)}>

@@ -74,9 +74,11 @@ const ViewContainer = ({
           selectedValue={selectedOption}
           options={options}
           onSelect={onChange}
-          textSize="!text-xs  w-[150px]"
+          textSize="!text-[10px]  "
+          className="!w-[140px]"
           buttonPadding="px-1 py-1 "
-          dropdownItemPadding="py-1 pl-2 pr-4 md:pr-6"
+          buttonClassName="!py-1 !px-2"
+          dropdownItemPadding="py-1 pl-1 pr-4 md:pr-6"
         />
       </div>
 

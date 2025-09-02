@@ -295,7 +295,7 @@ const AddEditAddress = ({
         id: "phone_section",
         customComponent: (
           <div className="flex space-x-2 w-full">
-            <div className="w-1/4">
+            <div className="md:w-1/4">
               <FormFields
                 formFields={[
                   {
@@ -305,7 +305,7 @@ const AddEditAddress = ({
                     name: "phone_code",
                     value: formFieldValues?.phone_code,
                     onChange: (e) => handleChange(e, "phone_code", "select"),
-                    className: `!py-2 !px-4 ${fieldStyle}`,
+                    className: `!py-2 !px-4 !w-[90px] ${fieldStyle}`,
                     searchable: true,
                     options: phoneCodeOptions,
                     mandatory: true,
@@ -313,7 +313,7 @@ const AddEditAddress = ({
                 ]}
               />
             </div>
-            <div className="w-3/4">
+            <div className="md:w-3/4 max-md:w-full">
               <FormFields
                 formFields={[
                   {

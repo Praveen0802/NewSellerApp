@@ -273,7 +273,7 @@ const AddPayOutPopup = ({
 
   return (
     <CustomModal show={show} onClose={onClose} outSideClickClose={false}>
-      <div className="bg-white rounded-lg w-full max-md:w-[320px] md:w-[600px] max-w-full">
+      <div className="bg-white rounded-lg w-full max-md:w-full md:w-[600px] max-w-full">
         {showShimmer ? (
           <ShimmerLoader />
         ) : (

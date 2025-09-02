@@ -283,7 +283,7 @@ const AddressBook = (props) => {
       <RightViewModal
         show={addressViewPopup?.show}
         onClose={handleClosePopup}
-        className={"md:!w-[700px]"}
+        className={"md:!w-[700px] max-md:!w-full"}
         outSideClickClose={false}
       >
         <AddEditAddress

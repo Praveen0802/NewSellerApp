@@ -347,7 +347,7 @@ const KycDocumentComponent = ({
         {currentUser?.email && currentUser?.first_name && (
           <button
             onClick={handleRetry}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="mt-4 px-4 py-2 bg-[#343432] text-white rounded-md  transition-colors"
             disabled={kycLoader || ownerLoader}
           >
             Try Again

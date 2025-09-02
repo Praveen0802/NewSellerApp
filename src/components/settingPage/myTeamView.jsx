@@ -222,7 +222,7 @@ const MyTeamView = (props) => {
               ]}
               selectedValue={primaryFilter}
               keyValue="ticket_status"
-              className="!w-[20%]"
+              className="md:!w-[20%]"
               onSelect={(e) => {
                 handleSelectChange(e, "ticket_status");
               }}
@@ -390,7 +390,7 @@ const MyTeamView = (props) => {
       <RightViewModal
         show={userViewPopup?.show}
         onClose={handleClosePopup}
-        className={"md:!w-[600px]"}
+        className={"md:!w-[600px] max-md:!w-full"}
         outSideClickClose={false}
       >
         <AddEditUser

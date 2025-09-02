@@ -223,44 +223,61 @@ const ActiveFilterPills = ({
   if (activeEntries.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      {activeEntries.length > 0 && (
-        <Image
-          onClick={onClearAllFilters}
-          src={reloadIcon}
-          width={isSmallMobile ? 24 : 30}
-          height={isSmallMobile ? 24 : 30}
-          className="cursor-pointer"
-          alt="image-logo"
-        />
-      )}
-      {activeEntries.map(({ key, value, displayValue }) => (
-        <div
-          key={key}
-          className={`inline-flex items-center gap-1 ${
-            isSmallMobile ? "px-2 py-0.5" : "px-3 py-1"
-          } border-1 border-gray-300 rounded-sm ${
-            isSmallMobile ? "text-xs" : "text-sm"
-          }`}
-        >
-          <span className="font-medium capitalize">
-            {isMobile
-              ? key.replace(/_/g, " ").split(" ")[0]
-              : key.replace(/_/g, " ")}
-            :
-          </span>
-          <span className={`${isMobile ? "truncate max-w-16" : ""}`}>
-            {displayValue}
-          </span>
-          <button
-            onClick={() => onFilterChange(key, "", activeFilters, currentTab)}
-            className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
+    <div className="flex items-center gap-2">
+    {/* Fixed clear all button */}
+    {activeEntries.length > 0 && (
+      <Image
+        onClick={onClearAllFilters}
+        src={reloadIcon}
+        width={isSmallMobile ? 24 : 30}
+        height={isSmallMobile ? 24 : 30}
+        className="cursor-pointer flex-shrink-0"
+        alt="image-logo"
+      />
+    )}
+    
+    {/* Scrollable filters container */}
+    <div className="flex gap-2 items-center overflow-x-auto scrollbar-hide min-w-0 flex-1">
+      <div className="flex gap-2 items-center whitespace-nowrap">
+        {activeEntries.map(({ key, value, displayValue }) => (
+          <div
+            key={key}
+            className={`inline-flex items-center gap-1 ${
+              isSmallMobile ? "px-2 py-0.5" : "px-3 py-1"
+            } border-1 border-gray-300 rounded-sm ${
+              isSmallMobile ? "text-xs" : "text-sm"
+            } flex-shrink-0`}
           >
-            <X size={isSmallMobile ? 12 : 14} />
-          </button>
-        </div>
-      ))}
+            <span className="font-medium capitalize whitespace-nowrap">
+              {isMobile
+                ? key.replace(/_/g, " ").split(" ")[0]
+                : key.replace(/_/g, " ")}
+              :
+            </span>
+            <span className={`${isMobile ? "max-w-16 truncate" : ""} whitespace-nowrap`}>
+              {displayValue}
+            </span>
+            <button
+              onClick={() => onFilterChange(key, "", activeFilters, currentTab)}
+              className="ml-1 hover:bg-blue-200 rounded-full p-0.5 flex-shrink-0"
+            >
+              <X size={isSmallMobile ? 12 : 14} />
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
+  
+    <style jsx>{`
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+    `}</style>
+  </div>
   );
 };
 
@@ -288,7 +305,7 @@ const Pagination = ({
       {/* Left side - Total items count */}
       <div
         className={`flex items-center ${
-          isMobile ? "justify-between w-full" : "gap-4"
+          isMobile ? "justify-between w-full overflow-auto hideScrollbar" : "gap-4"
         }`}
       >
         <div
