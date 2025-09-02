@@ -7,20 +7,29 @@ const { useRouter } = require("next/router");
 const RouteAccessChecker = ({ children }) => {
   const router = useRouter();
   const {
-    allowedRoutes: loginAllowedRoute = [],
+    allowedRoutes: dynamicAllowedRoutes, // from redux (can be null while loading)
     userRoles,
     isPermissionsLoaded,
   } = useSelector((state) => state.common);
 
-  const allowedRoutes = [
+  // Base public/always-accessible root route segments
+  const baseAllowedRoutes = [
     "login",
     "signup",
     "reset-password",
     "verify-email",
     "kyc-verification",
     "dashboard",
-    ...(Array.isArray(loginAllowedRoute) ? loginAllowedRoute : []),
+    "settings", // needed so /settings/kyc etc. don't flash Access Denied before dynamic routes load
   ];
+
+  // Merge and de-duplicate
+  const effectiveAllowedRoutes = Array.from(
+    new Set([
+      ...baseAllowedRoutes,
+      ...(Array.isArray(dynamicAllowedRoutes) ? dynamicAllowedRoutes : []),
+    ])
+  );
 
   // Get current path and extract base route
   const getCurrentBaseRoute = (pathname) => {
@@ -45,8 +54,8 @@ const RouteAccessChecker = ({ children }) => {
 
   // Check if permissions are still loading
   const isPermissionsLoading = () => {
-    // Check if permissions haven't been loaded yet
-    return !isPermissionsLoaded || allowedRoutes === null || userRoles === null;
+    // while roles loading OR dynamic routes still null treat as loading
+    return !isPermissionsLoaded || userRoles === null || dynamicAllowedRoutes === null;
   };
 
   // Show loading while permissions are being fetched
@@ -54,7 +63,7 @@ const RouteAccessChecker = ({ children }) => {
     return <PageLoader />;
   }
 
-  const hasAccess = checkRouteAccess(router.pathname, allowedRoutes);
+  const hasAccess = checkRouteAccess(router.pathname, effectiveAllowedRoutes);
 
   // If no access, show Access Denied component
   if (!hasAccess) {

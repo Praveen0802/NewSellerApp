@@ -26,6 +26,7 @@ import {
   checkEmailExistence,
 } from "@/utils/apiHandler/request";
 import useCountryCodes from "@/Hooks/useCountryCodes";
+import PhoneInputField from "@/components/commonComponents/PhoneInput/PhoneInputField";
 import { toast } from "react-toastify";
 import Image from "next/image";
 import FloatingDateRange from "../commonComponents/dateRangeInput";
@@ -320,18 +321,18 @@ const SignupFlow = ({ refer_code, currentScreen = null, currencies } = {}) => {
     }
 
     // Enhanced DOB validation with age check
-    if (!formData.dob?.startDate?.trim()) {
-      newErrors.dob = "Date of birth is required";
-    } else {
-      const age = calculateAge(formData.dob?.startDate);
-      if (age === null) {
-        newErrors.dob = "Please enter a valid date of birth";
-      } else if (age < 10) {
-        newErrors.dob = "You must be at least 10 years old to register";
-      } else if (age > 120) {
-        newErrors.dob = "Please enter a valid date of birth";
-      }
-    }
+    // if (!formData.dob?.startDate?.trim()) {
+    //   newErrors.dob = "Date of birth is required";
+    // } else {
+    //   const age = calculateAge(formData.dob?.startDate);
+    //   if (age === null) {
+    //     newErrors.dob = "Please enter a valid date of birth";
+    //   } else if (age < 10) {
+    //     newErrors.dob = "You must be at least 10 years old to register";
+    //   } else if (age > 120) {
+    //     newErrors.dob = "Please enter a valid date of birth";
+    //   }
+    // }
 
     if (!formData.currency.trim()) {
       newErrors.currency = "Currency is required";
@@ -492,6 +493,7 @@ const SignupFlow = ({ refer_code, currentScreen = null, currencies } = {}) => {
 
   const submitForm = async () => {
     setIsLoading(true);
+    console.log('clicked submit');
     try {
       // Save form data to cookies before API call
       setCookie(
@@ -967,44 +969,20 @@ const SignupFlow = ({ refer_code, currentScreen = null, currencies } = {}) => {
             {/* Step 3: Contact Info */}
             {formStep === 3 && (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="md:col-span-1">
-                    <div
-                      ref={(el) => (errorRefs.current.phone_country_code = el)}
-                    >
-                      <FloatingSelect
-                        label="Phone Code"
-                        options={allCountryCodeOptions}
-                        selectedValue={formData.phone_country_code}
-                        onSelect={handleChange}
-                        keyValue="phone_country_code"
-                        error={errors.phone_country_code}
-                        searchable={true}
-                        showError={true}
-                        staticLabel={true}
-                        paddingClassName="px-3 py-[11px]"
-                      />
-                    </div>
-                  </div>
-                  <div className="md:col-span-2">
-                    <div ref={(el) => (errorRefs.current.phone_number = el)}>
-                      <FloatingLabelInput
-                        label="Phone Number"
-                        type="tel"
-                        id="phone_number"
-                        keyValue="phone_number"
-                        value={formData.phone_number}
-                        onChange={handleChange}
-                        error={errors.phone_number}
-                        showError={true}
-                        staticLabel={true}
-                        className="!py-[8px] sm:!py-[10px] !px-[10px] sm:!px-[12px] !text-[#374151] !text-[13px] sm:!text-[14px]"
-                      />
-                    </div>
-                  </div>
-                </div>
+                {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <PhoneInputField
+                    label="Phone"
+                    formData={formData}
+                    setFormData={setFormData}
+                    error={errors.phone_country_code || errors.phone_number}
+                    errorRef={(el) => {
+                      errorRefs.current.phone_country_code = el;
+                      errorRefs.current.phone_number = el;
+                    }}
+                  />
+                </div> */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div ref={(el) => (errorRefs.current.dob = el)}>
+                  {/* <div ref={(el) => (errorRefs.current.dob = el)}>
                     <FloatingDateRange
                       label="Date of Birth"
                       type="date"
@@ -1023,7 +1001,17 @@ const SignupFlow = ({ refer_code, currentScreen = null, currencies } = {}) => {
                       maxDate={maxDate.toISOString().split("T")[0]}
                       staticLabel={true}
                     />
-                  </div>
+                  </div> */}
+                  <PhoneInputField
+                    label="Phone"
+                    formData={formData}
+                    setFormData={setFormData}
+                    error={errors.phone_country_code || errors.phone_number}
+                    errorRef={(el) => {
+                      errorRefs.current.phone_country_code = el;
+                      errorRefs.current.phone_number = el;
+                    }}
+                  />
                   <div ref={(el) => (errorRefs.current.currency = el)}>
                     <FloatingSelect
                       label="Currency"

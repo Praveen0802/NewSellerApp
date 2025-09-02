@@ -114,6 +114,57 @@ const KycComponent = ({
     business_document: "business_document",
   };
 
+  // Explicit success label mapping per requirements
+  const successLabelMap = {
+    contract: 'Contract Document',
+    photoId: 'Photo ID Proof Document',
+    address: 'Address Proof Document',
+  business_document: 'Business Document',
+  };
+
+  // Helper to compute a clean filename for downloads based on document type & URL
+  const computeFileName = (docType, url, title) => {
+    const rawLabel = successLabelMap[docType] || title || docType || 'Document';
+    const base = rawLabel
+      .replace(/document$/i, 'Document') // normalize casing
+      .replace(/[^A-Za-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '') || 'Document';
+    let ext = 'pdf';
+    if (url) {
+      try {
+        const cleaned = url.split('?')[0].split('#')[0];
+        const lastDot = cleaned.lastIndexOf('.');
+        if (lastDot !== -1 && lastDot < cleaned.length - 1) {
+          const cand = cleaned.substring(lastDot + 1).toLowerCase();
+            // basic whitelist
+          if (/^(pdf|jpg|jpeg|png|gif|webp|svg|doc|docx|xls|xlsx|csv|txt|rtf|zip)$/i.test(cand)) {
+            ext = cand;
+          }
+        }
+      } catch (e) {
+        // swallow
+      }
+    }
+    return `${base}.${ext}`;
+  };
+
+  // Helper: format document type for user-facing messages (Title Case + ensure 'Document')
+  const formatDocumentTypeForDisplay = (raw) => {
+    if (!raw) return "";
+    let name = raw.replace(/_/g, " "); // underscores to spaces
+    name = name.replace(/([a-z])([A-Z])/g, '$1 $2'); // camelCase spacing
+    name = name
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+    if (!/document(s)?$/i.test(name)) {
+      name = `${name} Document`;
+    }
+    return name;
+  };
+
   // Extract document data from props
   const getDocumentData = (docType) => {
     const propData = propsMapping[docType];
@@ -343,7 +394,8 @@ const KycComponent = ({
 
       if (response && response.success !== false) {
         if (onUploadSuccess) {
-          toast.success(`${documentType} uploaded successfully`);
+          const successLabel = successLabelMap[documentType] || formatDocumentTypeForDisplay(documentType);
+          toast.success(`${successLabel} uploaded successfully`);
           onUploadSuccess(documentType, file);
         }
         console.log(`${documentType} uploaded successfully`);
@@ -368,7 +420,8 @@ const KycComponent = ({
 
   const handleDownload = async (url, filename) => {
     try {
-      await downloadFile(url);
+      console.log('Initiating download', { url, filename });
+      await downloadFile(url, filename);
     } catch (error) {
       toast.error("Failed to download document. Please try again.");
     }
@@ -464,12 +517,12 @@ const KycComponent = ({
                     <span>View</span>
                   </button>
                   <button
-                    onClick={() =>
-                      handleDownload(
-                        docData.data[config.dataKey],
-                        `${config.title.replace(/\s+/g, "_")}.pdf`
-                      )
-                    }
+                    onClick={() => {
+                      const url = docData.data[config.dataKey];
+                      const fileName = computeFileName(docType, url, config.title);
+                      console.log('Downloading KYC document', { docType, url, fileName, status });
+                      handleDownload(url, fileName);
+                    }}
                     className="flex items-center space-x-1 text-green-600 hover:text-green-700 text-sm font-medium p-1 rounded hover:bg-green-50 transition-colors cursor-pointer"
                   >
                     <Download className="w-4 h-4" />
@@ -501,12 +554,12 @@ const KycComponent = ({
                     <span>View</span>
                   </button>
                   <button
-                    onClick={() =>
-                      handleDownload(
-                        docData.data[config.dataKey],
-                        `${config.title.replace(/\s+/g, "_")}.pdf`
-                      )
-                    }
+                    onClick={() => {
+                      const url = docData.data[config.dataKey];
+                      const fileName = computeFileName(docType, url, config.title);
+                      console.log('Downloading KYC document', { docType, url, fileName, status });
+                      handleDownload(url, fileName);
+                    }}
                     className="flex items-center space-x-1 text-green-600 hover:text-green-700 text-sm font-medium p-1 rounded hover:bg-green-50 transition-colors cursor-pointer"
                   >
                     <Download className="w-4 h-4" />
@@ -940,7 +993,7 @@ const MobileSubmitButton = () => {
       )}
 
       {/* Submit Button */}
-     <SubmitButton />
+     {/* <SubmitButton /> */}
     </div>
   </div>
 
@@ -1001,8 +1054,13 @@ const MobileSubmitButton = () => {
               </div>
             )}
           </div>
+            {/* Centered compact submit button below cards */}
+            <div className="flex justify-center">
+              <div className="w-full max-w-xs flex justify-center">
+                <SubmitButton />
+              </div>
+            </div>
         </div>
-
         {/* Contract Generation Modal */}
         {contractModal.open && (
           <div className="fixed inset-0 bg-black/80 bg-opacity-50 flex items-center justify-center z-50 p-4">

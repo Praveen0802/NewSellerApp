@@ -44,6 +44,211 @@ button {
   cursor: pointer !important;
 }
 
+/* Ensure phone input dropdown overlays adjacent form labels/fields */
+.react-tel-input .country-list {
+  z-index: 999 !important;
+}
+
+/* Improved Phone Input Dropdown Design */
+.react-tel-input .country-list {
+  max-height: 260px !important;
+  padding: 4px 0 6px !important;
+  border-radius: 8px !important;
+  width: 100% !important; /* match input width */
+  box-shadow: 0 4px 18px -2px rgba(0,0,0,0.08), 0 2px 6px -1px rgba(0,0,0,0.06) !important;
+  border: 1px solid #E5E7EB !important; /* gray-200 */
+  background: #FFFFFF !important;
+}
+
+.react-tel-input .country-list .search-box {
+  border: 1px solid #E5E7EB !important; /* gray-200 */
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
+  font-size: 14px !important;
+  line-height: 20px !important;
+  margin: 8px 12px 6px !important;
+  background: #FFFFFF !important; /* solid white to hide countries behind */
+  position: relative !important;
+  font-weight: 400 !important;
+  color: #111827 !important; /* gray-900 */
+  background-image: none !important; /* remove icon */
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+
+.react-tel-input .country-list .search-box::placeholder {
+  color: #9CA3AF !important; /* gray-400 */
+  font-weight: 400 !important;
+}
+
+.react-tel-input .country-list .search-box:focus {
+  outline: 0 !important;
+  border-color: #10B981 !important; /* emerald */
+  box-shadow: 0 0 0 2px #10B9811a !important;
+  background-color: #FFFFFF !important; /* keep solid */
+}
+
+/* Force-remove any default search icon from library */
+.react-tel-input .country-list .search,
+.react-tel-input .country-list .search-box {
+  background-image: none !important;
+}
+.react-tel-input .country-list .search:before,
+.react-tel-input .country-list .search:after {
+  display: none !important;
+  content: none !important;
+}
+.react-tel-input .country-list .search svg,
+.react-tel-input .country-list .search i,
+.react-tel-input .country-list .search span[class*="icon"],
+.react-tel-input .country-list .search .icon,
+.react-tel-input .country-list .search .search-icon {
+  display: none !important;
+}
+
+/* Ensure no overlapping absolutely positioned icon remains */
+.react-tel-input .country-list .search {
+  position: relative !important;
+}
+.react-tel-input .country-list .search > * {
+  background: transparent !important;
+}
+
+/* Explicitly hide emoji magnifier span */
+.react-tel-input .country-list .search .search-emoji,
+.react-tel-input .country-list .search span[aria-label*="Magnifying"],
+.react-tel-input .country-list .search span[role="img"],
+.react-tel-input .country-list li.search > span:first-child {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Make search row sticky at top while scrolling country list */
+.react-tel-input .country-list li.search {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 20 !important;
+  background: #FFFFFF !important;
+  padding: 6px 8px !important; /* room around input */
+  box-shadow: 0 2px 4px -2px rgba(0,0,0,0.08), 0 1px 2px -1px rgba(0,0,0,0.06) !important; /* subtle separation */
+  border-bottom: 1px solid #F3F4F6 !important; /* gray-100 */
+}
+
+/* Remove outer margins when sticky to avoid gap at top */
+.react-tel-input .country-list li.search .search-box {
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+/* Ensure input stretches full width without leftover icon gap */
+.react-tel-input .country-list li.search .search-box {
+  padding-left: 12px !important;
+}
+.react-tel-input .country-list .search-box::-webkit-search-decoration,
+.react-tel-input .country-list .search-box::-webkit-search-cancel-button,
+.react-tel-input .country-list .search-box::-webkit-search-results-button,
+.react-tel-input .country-list .search-box::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+}
+
+.react-tel-input .country-list .search-box::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  height: 14px;
+  width: 14px;
+  background: none;
+  cursor: pointer;
+}
+
+.react-tel-input .country-list .country {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 12px !important;
+  font-size: 14px !important;
+  border-radius: 6px !important;
+  margin: 2px 6px !important;
+  transition: background .15s ease, color .15s ease;
+  cursor: pointer !important;
+}
+
+.react-tel-input .country-list .country .dial-code {
+  margin-left: auto !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #6B7280 !important; /* gray-500 */
+  opacity: .85;
+}
+
+.react-tel-input .country-list .country:hover {
+  background: #F0FDF4 !important; /* emerald-50 */
+}
+
+.react-tel-input .country-list .country.active, 
+.react-tel-input .country-list .country.active:hover {
+  background: #10B981 !important;
+  color: #FFFFFF !important;
+}
+
+.react-tel-input .country-list .country.active .dial-code {
+  color: #ECFDF5 !important; /* lighter for contrast */
+}
+
+/* Scrollbar styling inside dropdown */
+.react-tel-input .country-list::-webkit-scrollbar {
+  width: 6px;
+}
+.react-tel-input .country-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.react-tel-input .country-list::-webkit-scrollbar-thumb {
+  background: #D1D5DB; /* gray-300 */
+  border-radius: 8px;
+}
+.react-tel-input .country-list::-webkit-scrollbar-thumb:hover { 
+  background: #9CA3AF; /* gray-400 */
+}
+
+/* Flag dropdown button alignment */
+.react-tel-input .flag-dropdown {
+  background: #FFFFFF !important;
+  border: 1px solid #DADBE5 !important;
+  border-right: none !important;
+  border-radius: 6px 0 0 6px !important;
+}
+
+.react-tel-input .selected-flag {
+  padding: 0 10px !important;
+  width: 56px !important; /* consistent width */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.react-tel-input .selected-flag .arrow {
+  margin-left: 4px !important;
+  border-top-color: #6B7280 !important;
+  opacity: .9;
+}
+
+.react-tel-input .selected-flag.open .arrow {
+  border-top-color: #10B981 !important;
+}
+
+.react-tel-input .form-control {
+  padding-left: 60px !important; /* account for fixed flag width */
+}
+
+/* Error state accent */
+.react-tel-input.has-error .form-control,
+.react-tel-input .form-control.error {
+  border-color: #EF4444 !important; /* red-500 */
+  box-shadow: 0 0 0 1px #EF44441A !important;
+}
+
+
 
 
 .border-1-green-600 {

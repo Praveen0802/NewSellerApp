@@ -542,14 +542,14 @@ const BulkListings = (props) => {
           <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
             {/* Left section - Request Event button */}
             <div className="flex items-center gap-2 sm:gap-4">
-              <Button
+              {/* <Button
                 type="outlined"
                 classNames={{
                   root: "px-3 py-2 sm:px-4 sm:py-2 text-[#374151] bg-[#03BA8A]",
                   label_: "text-xs sm:text-sm text-white font-medium",
                 }}
                 label="Request Event"
-              />
+              /> */}
               {/* Show selected count on mobile */}
               <span className="text-xs text-[#6B7280] sm:hidden">
                 {selectedRows.length} selected
@@ -594,12 +594,12 @@ const BulkListings = (props) => {
           </div>
 
           {/* Optional: Mobile-specific selected items indicator */}
-          <div className="sm:hidden px-4 pb-2">
+          {/* <div className="sm:hidden px-4 pb-2">
             <div className="text-xs text-[#6B7280]">
               {selectedRows.length} item{selectedRows.length !== 1 ? "s" : ""}{" "}
               selected
             </div>
-          </div>
+          </div> */}
         </div>
       )}
     </div>
