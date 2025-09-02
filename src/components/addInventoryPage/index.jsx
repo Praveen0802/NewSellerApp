@@ -1030,11 +1030,11 @@ const AddInventoryPage = (props) => {
     setEditingRowIndex(selectedRows);
     setIsEditMode(true);
 
-    if (selectedRows.length === 1) {
-      toast.success("Edit mode activated for selected row");
-    } else {
-      toast.success(`Bulk edit mode activated for ${selectedRows.length} rows`);
-    }
+    // if (selectedRows.length === 1) {
+    //   toast.success("Edit mode activated for selected row");
+    // } else {
+    //   toast.success(`Bulk edit mode activated for ${selectedRows.length} rows`);
+    // }
   };
 
   // Function to save edit changes
@@ -1418,7 +1418,7 @@ const AddInventoryPage = (props) => {
 
     setInventoryData((prevData) => [...prevData, ...clonedRows]);
     // setSelectedRows([]);
-    toast.success(`${rowsToClone.length} row(s) cloned successfully`);
+    // toast.success(`${rowsToClone.length} row(s) cloned successfully`);
   };
 
   const [loader, setLoader] = useState(false);

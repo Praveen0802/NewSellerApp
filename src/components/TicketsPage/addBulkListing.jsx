@@ -290,13 +290,13 @@ const BulkInventory = (props) => {
     setGlobalEditingTickets(globalSelectedTickets);
     setIsGlobalEditMode(true);
 
-    if (globalSelectedTickets.length === 1) {
-      toast.success("Edit mode activated for selected ticket");
-    } else {
-      toast.success(
-        `Bulk edit mode activated for ${globalSelectedTickets.length} tickets`
-      );
-    }
+    // if (globalSelectedTickets.length === 1) {
+    //   toast.success("Edit mode activated for selected ticket");
+    // } else {
+    //   toast.success(
+    //     `Bulk edit mode activated for ${globalSelectedTickets.length} tickets`
+    //   );
+    // }
   };
 
   const handleGlobalSaveEdit = () => {
@@ -502,9 +502,9 @@ const BulkInventory = (props) => {
     });
 
     // setGlobalSelectedTickets([]);
-    toast.success(
-      `${globalSelectedTickets.length} ticket(s) cloned successfully`
-    );
+    // toast.success(
+    //   `${globalSelectedTickets.length} ticket(s) cloned successfully`
+    // );
   };
 
   const [loader, setLoader] = useState(false);
