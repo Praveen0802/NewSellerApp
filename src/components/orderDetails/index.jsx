@@ -27,8 +27,7 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
     payment_details = {},
     tickets = {},
   } = normalizedData;
-
-  console.log(normalizedData, 'datadata');
+  const isMobile = useIsMobile();
   
   const [expandedVersion, setExpandedVersion] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -420,7 +419,7 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
     );
   }
 
-  const isMobile = useIsMobile();
+
 
   return (
     <>
