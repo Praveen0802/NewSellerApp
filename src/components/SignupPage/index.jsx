@@ -23,6 +23,7 @@ import {
 import {
   RegisterUser,
   fetchCityBasedonCountry,
+  checkEmailExistence,
 } from "@/utils/apiHandler/request";
 import useCountryCodes from "@/Hooks/useCountryCodes";
 import { toast } from "react-toastify";
@@ -560,6 +561,34 @@ const SignupFlow = ({ refer_code, currentScreen = null, currencies } = {}) => {
     }
   };
 
+  // Inner next for multi-step form inside Register (currentStep 2)
+  const handleInnerNext = async () => {
+    // Only perform email existence check when progressing from formStep 1 -> 2
+    if (formStep === 1) {
+      if (!validateStepperForm()) return; // run field validation first
+      const email = formData.email?.trim();
+      if (email && /\S+@\S+\.\S+/.test(email)) {
+        // Clear previous email error
+        if (errors.email) setErrors((prev) => ({ ...prev, email: "" }));
+        const resp = await checkEmailExistence("", { email });
+        const exists = resp?.data?.exists;
+        if (exists) {
+          setErrors((prev) => ({ ...prev, email: "Email already exists" }));
+          // focus/scroll to email
+          setTimeout(() => {
+            scrollToFirstError({ email: "Email already exists" });
+          }, 50);
+          return; // stop progression
+        }
+      }
+      setFormStep(2);
+      return;
+    }
+    // For steps 2 -> 3 just validate and move forward
+    if (!validateStepperForm()) return;
+    setFormStep((s) => Math.min(totalFormSteps, s + 1));
+  };
+
   const handleBack = () => {
     // If child form stepper is not at first step, go back in child
     if (formStep > 1) {
@@ -900,7 +929,7 @@ const SignupFlow = ({ refer_code, currentScreen = null, currencies } = {}) => {
             {formStep === 2 && (
               <div className="space-y-2">
                 <p className="text-[14px] font-medium text-gray-800">
-                  Set a Seat Brokers Password
+                  Set a Seats Brokers Password
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div ref={(el) => (errorRefs.current.password = el)}>
@@ -1452,11 +1481,7 @@ const SignupFlow = ({ refer_code, currentScreen = null, currencies } = {}) => {
                   {formStep < totalFormSteps ? (
                     <button
                       type="button"
-                      onClick={() => {
-                        if (validateStepperForm()) {
-                          setFormStep((s) => Math.min(totalFormSteps, s + 1));
-                        }
-                      }}
+                      onClick={handleInnerNext}
                       disabled={!userType}
                       className={`flex items-center gap-2 px-4 lg:px-6 py-2.5 lg:py-2 rounded-lg font-medium transition-colors min-w-[120px] justify-center ${
                         !userType

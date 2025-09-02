@@ -171,4 +171,5 @@ export const API_ROUTES = {
   UPLOAD_POD_TICKETS: "/sales/upload-pod",
   INSTRUCTION_FILE_UPLOAD: "/sales/upload-additional-template",
   SUBMIT_KYC: "/auth/submit-kyc-for-approval",
+  CHECK_EMAIL_EXISTENCE: "/auth/check-email",
 };

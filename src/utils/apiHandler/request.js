@@ -1416,6 +1416,22 @@ export const RegisterUser = async (token, data) => {
   }
 };
 
+// Check if email exists (returns API raw response)
+export const checkEmailExistence = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.CHECK_EMAIL_EXISTENCE,
+      method: "POST",
+      ...(token && { token }),
+      params,
+    });
+    return response?.data; // { success: true, data: { exists: boolean }, message: string }
+  } catch (error) {
+    console.log("ERROR in checkEmailExistence", error?.response, error);
+    return error?.response?.data;
+  }
+};
+
 export const VerifyEmail = async (token, data) => {
   try {
     const response = await makeRequest({

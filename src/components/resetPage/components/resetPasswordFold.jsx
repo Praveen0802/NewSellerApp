@@ -190,7 +190,7 @@ const ResetPasswordFold = ({ token }) => {
             />
           </div>
         </form>
-        <span className="text-sm text-blue-500 underline cursor-pointer" onClick={backToLogin}>Go Back to Login</span>
+        <span className="text-sm text-emerald-500 underline cursor-pointer" onClick={backToLogin}>Go Back to Login</span>
         </>
       )}
     </div>
