@@ -3,13 +3,16 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import logo from "../../../public/logo.png";
 import Button from "@/components/commonComponents/button";
-import { VerifyEmail } from "@/utils/apiHandler/request";
+import { VerifyEmail, ResendVerificationRequest } from "@/utils/apiHandler/request";
 
-const ConfirmEmailFold = ({ token }) => {
+const ConfirmEmailFold = ({ token, email: initialEmail = "" }) => {
   const [loader, setLoader] = useState(false);
   const [verifySuccess, setVerifySuccess] = useState(false);
   const [verifyMessage, setVerifyMessage] = useState("");
   const [error, setError] = useState("");
+  const [resendLoader, setResendLoader] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
+  const [email, setEmail] = useState(initialEmail);
 
   const router = useRouter();
 
@@ -25,15 +28,26 @@ const ConfirmEmailFold = ({ token }) => {
       if (response?.error) {
         console.error("Error verifying email:", error);
         setError(response?.error);
+        setVerifySuccess(false);
       } else {
-        setVerifySuccess(true);
+        console.log("VerifyEmail response:", response);
+        if (response?.success) {
+          setVerifySuccess(true);
+        } else {
+          setVerifySuccess(false);
+        }
         setVerifyMessage(response?.message);
+        // Capture email from response data for resend if needed
+        if (response?.data?.email) {
+          setEmail(response.data.email);
+        }
       }
 
       setLoader(false);
     } catch (error) {
       console.error("Error verifying email:", error);
-      setError("Failed to verify email. Please try again or contact support.");
+      setVerifySuccess(false);
+      setError("Failed to verify email. Please try again.");
       setLoader(false);
     }
   };
@@ -45,6 +59,36 @@ const ConfirmEmailFold = ({ token }) => {
   const goToLogin = () => {
     router.push("/login");
   };
+
+  const handleResend = async () => {
+    if (!email) return; // need email to resend
+    setResendLoader(true);
+    setResendMessage("");
+    try {
+      const body = { email };
+      const response = await ResendVerificationRequest("", body);
+      if (response?.success) {
+        setResendMessage(response?.message || "Verification email resent.");
+  setError("");
+  // Clear old verify failure message so it doesn't show alongside success
+  setVerifyMessage("");
+      } else {
+        setError(response?.message || "Failed to resend verification email.");
+      }
+    } catch (e) {
+      setError("Failed to resend verification email.");
+    } finally {
+      setResendLoader(false);
+    }
+  };
+
+  // Decide if we should show resend option (failed verification attempt)
+  const isResendMode = !verifySuccess && !loader && (error || verifyMessage);
+  const buttonLabel = isResendMode ? "Resend Verification Email" : "Verify Email";
+  const isAnyLoading = loader || resendLoader;
+
+  // Determine if we should show the failure block (avoid when we have a resend success message)
+  const showFailureBlock = (error || (!verifySuccess && !loader && verifyMessage)) && !resendMessage;
 
   return (
     <div className="flex flex-col gap-6 px-6 md:px-8 justify-center items-center py-6 md:py-8 bg-white w-full rounded-xl">
@@ -81,20 +125,28 @@ const ConfirmEmailFold = ({ token }) => {
         </div>
       ) : (
         <div className="flex flex-col gap-6 w-full max-w-xs mx-auto">
-          {error && (
+          {showFailureBlock && (
             <div className="bg-red-50 p-3 rounded-lg">
-              <p className="text-red-500 text-sm text-center">{error}</p>
+              <p className="text-red-500 text-sm text-center">{error || verifyMessage || "Verification failed."}</p>
+            </div>
+          )}
+          {isResendMode && email && !resendMessage && (
+            <p className="text-[11px] text-center text-gray-500 -mt-4">We can resend a new verification link to <span className="font-medium">{email}</span>.</p>
+          )}
+          {resendMessage && (
+            <div className="bg-green-50 p-3 rounded-lg">
+              <p className="text-green-600 text-sm text-center">{resendMessage}</p>
             </div>
           )}
           <Button
-            label="Verify Email"
+            label={buttonLabel}
             type="primary"
             classNames={{
               root: "justify-center items-center",
               label_: "text-base text-center w-full font-medium",
             }}
-            onClick={handleVerify}
-            loading={loader}
+            onClick={isResendMode ? handleResend : handleVerify}
+            loading={isAnyLoading}
           />
         </div>
       )}

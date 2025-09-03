@@ -1443,6 +1443,7 @@ export const VerifyEmail = async (token, data) => {
     return response?.data;
   } catch (error) {
     console.log("ERROR in VerifyEmail", error);
+    return error?.response?.data || { success: false, error: true };
   }
 };
 
@@ -1454,9 +1455,11 @@ export const ResendVerificationRequest = async (token, data) => {
       ...(token && { token: token }),
       data: data,
     });
-    return response?.data?.success ? response?.data?.data : {};
+  // Return full payload so caller can read success & message
+  return response?.data; // { success, data, message }
   } catch (error) {
     console.log("ERROR in ResendVerificationRequest", error);
+  return error?.response?.data || { success: false, message: "Request failed" };
   }
 };
 
