@@ -579,6 +579,7 @@ const CommonInventoryTable = ({
         placeholder={getPlaceholder()}
         iconBefore={header.iconBefore || null}
         currencyFormat={header.currencyFormat || false}
+        decimalValue={header.decimalValue || false}
         alwaysShowAsEditable={true}
       />
     );
@@ -985,7 +986,7 @@ const CommonInventoryTable = ({
                           }
                           className={`${
                             isMobile ? "w-3 h-3" : "w-4 h-4"
-                          } text-gray-600 border-[#DADBE5] rounded focus:ring-blue-500 ${
+                          } text-gray-600 accent-[#343432]  border-[#DADBE5] rounded focus:ring-blue-500 ${
                             isEditMode
                               ? "cursor-not-allowed opacity-50"
                               : "cursor-pointer"
@@ -1019,28 +1020,28 @@ const CommonInventoryTable = ({
                           } text-center whitespace-nowrap border-r border-[#DADBE5]`}
                         >
                           <div className="flex justify-center items-center">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              disabled={isRowDisabled}
-                              onChange={(e) => {
-                                if (isRowDisabled) return;
-                                e.stopPropagation();
-                                const newSelectedRows = isSelected
-                                  ? selectedRows.filter(
-                                      (index) => index !== rowIndex
-                                    )
-                                  : [...selectedRows, rowIndex];
-                                setSelectedRows(newSelectedRows);
-                              }}
-                              className={`${
-                                isMobile ? "w-3 h-3" : "w-4 h-4"
-                              } text-gray-600 border-[#DADBE5] rounded focus:ring-blue-500 ${
-                                isRowDisabled
-                                  ? "cursor-not-allowed opacity-50"
-                                  : "cursor-pointer"
-                              }`}
-                            />
+                          <input
+  type="checkbox"
+  checked={isSelected}
+  disabled={isRowDisabled}
+  onChange={(e) => {
+    if (isRowDisabled) return;
+    e.stopPropagation();
+    const newSelectedRows = isSelected
+      ? selectedRows.filter(
+          (index) => index !== rowIndex
+        )
+      : [...selectedRows, rowIndex];
+    setSelectedRows(newSelectedRows);
+  }}
+  className={`${
+    isMobile ? "w-3 h-3" : "w-4 h-4"
+  } accent-[#343432] border-[#DADBE5] rounded focus:ring-blue-500 ${
+    isRowDisabled
+      ? "cursor-not-allowed opacity-50"
+      : "cursor-pointer"
+  }`}
+/>
                           </div>
                         </td>
                       </tr>
@@ -1076,7 +1077,7 @@ const CommonInventoryTable = ({
                           isMobile ? "px-2 py-2" : "px-3 py-3"
                         } text-left text-[#7D82A4] font-medium whitespace-nowrap ${
                           isMobile ? "text-[10px]" : "text-xs"
-                        } border-r border-[#DADBE5]`}
+                        }  border-r border-[#DADBE5]`}
                         style={columnStyles}
                       >
                         <div className="flex justify-between items-center">
@@ -1116,7 +1117,7 @@ const CommonInventoryTable = ({
                               isMobile
                                 ? "py-1.5 px-2 text-[10px]"
                                 : "py-2 px-3 text-xs"
-                            } whitespace-nowrap  overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
+                            } whitespace-nowrap ${header?.increasedWidth}  overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
                               isRowDisabled ? "bg-gray-50" : ""
                             } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
                             style={columnStyles}

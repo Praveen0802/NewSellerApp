@@ -898,7 +898,7 @@ const SalesPage = (props) => {
       },
       {
         type: "date",
-        name: "event_Date",
+        name: "event_date",
         singleDateMode: false,
         label: "Event Date",
         parentClassName: "!w-[150px] max-sm:!w-full",
@@ -962,6 +962,7 @@ const SalesPage = (props) => {
     // Reset sort state when filters change (optional)
     setSortState(null);
     console.log(
+      filterKey === "event_date",
       "🚀 ~ file: index.jsx:164 ~ handleFilterChange ~ value:",
       value,
       filterKey
@@ -1135,8 +1136,9 @@ const SalesPage = (props) => {
   };
 
   const refreshPopupData = () => {
+    console.log(showInfoPopup,'showInfoPopupshowInfoPopup')
     if (showInfoPopup.flag) {
-      getOrderDetails({ bg_id: showInfoPopup?.bg_id });
+      getOrderDetails({ id: showInfoPopup?.data?.order_details?.order_id });
     }
   };
   const handleClearAllFilters = async () => {

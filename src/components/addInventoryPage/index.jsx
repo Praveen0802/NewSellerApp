@@ -80,8 +80,10 @@ const AddInventoryPage = (props) => {
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-
   const [showMobileFilters, setShowMobileFilters] = useState(true);
+  
+  // Add validation errors state
+  const [validationErrors, setValidationErrors] = useState({});
 
   // Extract the original response structure (KEEP EXACTLY THE SAME)
   const {
@@ -140,6 +142,21 @@ const AddInventoryPage = (props) => {
   // Handle accordion toggle for single mode
   const handleToggleCollapse = () => {
     setIsTableCollapsed(!isTableCollapsed);
+  };
+
+  // Generic filter change handler that clears validation errors
+  const handleFilterChange = (fieldName, value) => {
+    // Update filter value
+    setFiltersApplied((prev) => ({ ...prev, [fieldName]: value }));
+    
+    // Clear validation error for this field when user starts typing/selecting
+    if (validationErrors[fieldName]) {
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
   };
 
   // KEEP THE ORIGINAL formatDateForInput function (EXACT SAME)
@@ -210,7 +227,7 @@ const AddInventoryPage = (props) => {
     }
   }, [filtersApplied?.ticket_category, matchId]);
 
-  // KEEP THE ORIGINAL filters array construction (EXACT SAME) with responsive className updates
+  // Updated filters array with validation errors and handleFilterChange
   const filters = [
     {
       type: "select",
@@ -218,6 +235,7 @@ const AddInventoryPage = (props) => {
       label: "Ticket Type",
       value: filtersApplied?.ticket_types,
       mandatory: true,
+      error: validationErrors?.ticket_types,
       options: [
         ...(ticket_types?.map((note) => ({
           value: note.id.toString(),
@@ -230,8 +248,7 @@ const AddInventoryPage = (props) => {
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, ticket_types: value })),
+      onChange: (value) => handleFilterChange("ticket_types", value),
     },
     {
       type: "number",
@@ -239,6 +256,7 @@ const AddInventoryPage = (props) => {
       label: "Quantity",
       mandatory: true,
       value: filtersApplied?.add_qty_addlist,
+      error: validationErrors?.add_qty_addlist,
       increasedWidth: "!w-[100px]",
       options: [
         { value: "1", label: "1" },
@@ -253,11 +271,7 @@ const AddInventoryPage = (props) => {
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (e) =>
-        setFiltersApplied((prev) => ({
-          ...prev,
-          add_qty_addlist: e.target.value,
-        })),
+      onChange: (e) => handleFilterChange("add_qty_addlist", e.target.value),
     },
     {
       type: "select",
@@ -266,6 +280,7 @@ const AddInventoryPage = (props) => {
       increasedWidth: "!w-[120px]",
       mandatory: true,
       value: filtersApplied?.split_type,
+      error: validationErrors?.split_type,
       options: [
         ...(split_types?.map((note) => ({
           value: note.id.toString(),
@@ -278,18 +293,23 @@ const AddInventoryPage = (props) => {
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      // onChange: (value) =>
-      //   setFiltersApplied((prev) => ({ ...prev, split_type: value })),
       onChange: (value) => {
-        setFiltersApplied((prev) => {
-          let updated = { ...prev, split_type: value };
-          if (value === "6") {
-            updated.split_details = "27";
-          } else if (prev.split_details === "27") {
-            updated.split_details = "";
+        let updated = { split_type: value };
+        if (value === "6") {
+          updated.split_details = "27";
+        } else if (filtersApplied.split_details === "27") {
+          updated.split_details = "";
+        }
+        setFiltersApplied((prev) => ({ ...prev, ...updated }));
+        
+        // Clear validation errors for both fields
+        setValidationErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.split_type;
+          if (updated.split_details !== undefined) {
+            delete newErrors.split_details;
           }
-
-          return updated;
+          return newErrors;
         });
       },
     },
@@ -299,6 +319,7 @@ const AddInventoryPage = (props) => {
       label: "Seating Arrangement",
       mandatory: true,
       value: filtersApplied?.split_details,
+      error: validationErrors?.split_details,
       options: [
         ...(split_details_left?.map((note) => ({
           value: note.id.toString(),
@@ -315,16 +336,21 @@ const AddInventoryPage = (props) => {
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      // onChange: (value) =>
-      //   setFiltersApplied((prev) => ({ ...prev, split_details: value })),
       onChange: (value) => {
-        setFiltersApplied((prev) => {
-          let updated = { ...prev, split_details: value };
-          if (prev.split_type === "6" && value !== "27") {
-            updated.split_type = "5";
+        let updated = { split_details: value };
+        if (filtersApplied.split_type === "6" && value !== "27") {
+          updated.split_type = "5";
+        }
+        setFiltersApplied((prev) => ({ ...prev, ...updated }));
+        
+        // Clear validation errors for both fields
+        setValidationErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.split_details;
+          if (updated.split_type !== undefined) {
+            delete newErrors.split_type;
           }
-
-          return updated;
+          return newErrors;
         });
       },
     },
@@ -333,6 +359,7 @@ const AddInventoryPage = (props) => {
       name: "max_display_qty",
       label: "Max Display Quantity",
       value: filtersApplied?.max_display_qty,
+      error: validationErrors?.max_display_qty,
       options: [
         { value: "1", label: "1" },
         { value: "2", label: "2" },
@@ -347,11 +374,7 @@ const AddInventoryPage = (props) => {
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (e) =>
-        setFiltersApplied((prev) => ({
-          ...prev,
-          max_display_qty: e?.target?.value,
-        })),
+      onChange: (e) => handleFilterChange("max_display_qty", e?.target?.value),
     },
     {
       type: "select",
@@ -359,6 +382,7 @@ const AddInventoryPage = (props) => {
       increasedWidth: "!w-[100px]",
       label: "Fan Area",
       value: filtersApplied?.home_town,
+      error: validationErrors?.home_town,
       options: Object.entries(home_town || {}).map(([key, value]) => ({
         value: key,
         label: value,
@@ -369,8 +393,7 @@ const AddInventoryPage = (props) => {
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, home_town: value })),
+      onChange: (value) => handleFilterChange("home_town", value),
     },
     {
       type: "select",
@@ -378,8 +401,9 @@ const AddInventoryPage = (props) => {
       label: "Seating Category",
       mandatory: true,
       increasedWidth:
-        "!w-[180px] !min-w-[180px] sm:!w-[160px] sm:!min-w-[160px] lg:!w-[180px] lg:!min-w-[180px]",
+        " sm:!w-[160px] sm:!min-w-[160px] !w-[160px] ",
       value: filtersApplied?.ticket_category,
+      error: validationErrors?.ticket_category,
       options: Object.entries(block_data || {}).map(([key, value]) => ({
         value: key,
         label: value,
@@ -390,12 +414,21 @@ const AddInventoryPage = (props) => {
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
+      onChange: (value) => {
         setFiltersApplied((prev) => ({
           ...prev,
           ticket_category: value,
           ticket_block: "",
-        })),
+        }));
+        
+        // Clear validation errors
+        setValidationErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.ticket_category;
+          delete newErrors.ticket_block;
+          return newErrors;
+        });
+      },
     },
     {
       type: "select",
@@ -403,35 +436,30 @@ const AddInventoryPage = (props) => {
       label: "Section/Block",
       increasedWidth: "!w-[110px]",
       value: filtersApplied?.ticket_block,
+      error: validationErrors?.ticket_block,
       options: blockDetails,
       disabled: !filtersApplied?.ticket_category,
-
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow md:max-w-[150px] lg:max-w-[212px]",
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, ticket_block: value })),
+      onChange: (value) => handleFilterChange("ticket_block", value),
     },
-
     {
       type: "text",
       name: "row",
       label: "Row",
       value: filtersApplied?.row,
+      error: validationErrors?.row,
       increasedWidth: "!w-[100px]",
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow md:max-w-[100px] lg:max-w-[212px]",
       className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (e) =>
-        setFiltersApplied((prev) => ({
-          ...prev,
-          row: e?.target?.value,
-        })),
+      onChange: (e) => handleFilterChange("row", e?.target?.value),
     },
     {
       type: "number",
@@ -439,16 +467,13 @@ const AddInventoryPage = (props) => {
       label: "First Seat",
       increasedWidth: "!w-[110px]",
       value: filtersApplied?.first_seat,
+      error: validationErrors?.first_seat,
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow md:max-w-[120px] lg:max-w-[212px]",
       className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (e) =>
-        setFiltersApplied((prev) => ({
-          ...prev,
-          first_seat: e?.target?.value,
-        })),
+      onChange: (e) => handleFilterChange("first_seat", e?.target?.value),
     },
     {
       type: "number",
@@ -456,7 +481,9 @@ const AddInventoryPage = (props) => {
       label: "Face Value",
       increasedWidth: "!w-[120px]",
       currencyFormat: true,
+      decimalValue:true,
       value: filtersApplied?.face_value,
+      error: validationErrors?.face_value,
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow md:max-w-[140px] lg:max-w-[212px]",
       iconBefore: (
@@ -469,20 +496,18 @@ const AddInventoryPage = (props) => {
       className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (e) =>
-        setFiltersApplied((prev) => ({
-          ...prev,
-          face_value: e?.target?.value,
-        })),
+      onChange: (e) => handleFilterChange("face_value", e?.target?.value),
     },
     {
       type: "number",
       name: "add_price_addlist",
       label: "Processed Price",
+      decimalValue:true,
       increasedWidth: "!w-[120px]",
       currencyFormat: true,
       mandatory: true,
       value: filtersApplied?.add_price_addlist,
+      error: validationErrors?.add_price_addlist,
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
       iconBefore: (
@@ -495,17 +520,14 @@ const AddInventoryPage = (props) => {
       className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (e) =>
-        setFiltersApplied((prev) => ({
-          ...prev,
-          add_price_addlist: e?.target?.value,
-        })),
+      onChange: (e) => handleFilterChange("add_price_addlist", e?.target?.value),
     },
     {
       type: "select",
       name: "notes",
       label: "Benifits",
       value: filtersApplied?.notes,
+      error: validationErrors?.notes,
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow md:max-w-[140px] lg:max-w-[212px]",
       multiselect: true,
@@ -523,14 +545,14 @@ const AddInventoryPage = (props) => {
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, notes: value })),
+      onChange: (value) => handleFilterChange("notes", value),
     },
     {
       type: "select",
       name: "restrictions",
       label: "Restrictions",
       value: filtersApplied?.restrictions,
+      error: validationErrors?.restrictions,
       multiselect: true,
       options: [
         ...(restriction_left?.map((note) => ({
@@ -548,10 +570,8 @@ const AddInventoryPage = (props) => {
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, restrictions: value })),
+      onChange: (value) => handleFilterChange("restrictions", value),
     },
-
     {
       type: "date",
       name: "ship_date",
@@ -560,8 +580,9 @@ const AddInventoryPage = (props) => {
         startDate: matchDetails?.ship_date,
         endDate: matchDetails?.ship_date,
       },
-      minDate: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
-      maxDate: matchDetails?.ship_date, // Convert to proper format
+      error: validationErrors?.ship_date,
+      minDate: new Date().toISOString().split("T")[0],
+      maxDate: matchDetails?.ship_date,
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
       singleDateMode: true,
@@ -569,14 +590,14 @@ const AddInventoryPage = (props) => {
         "!pb-[10px] !pt-[12px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, ship_date: value })),
+      onChange: (value) => handleFilterChange("ship_date", value),
     },
     {
       type: "checkbox",
       name: "ticket_in_hand",
       label: "Tickets In Hand",
       value: filtersApplied?.ticket_in_hand || false,
+      error: validationErrors?.ticket_in_hand,
       parentClassName:
         "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
       className:
@@ -584,11 +605,7 @@ const AddInventoryPage = (props) => {
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       hideFromTable: true,
-      onChange: (e) =>
-        setFiltersApplied((prev) => ({
-          ...prev,
-          ticket_in_hand: e?.target?.checked,
-        })),
+      onChange: (e) => handleFilterChange("ticket_in_hand", e?.target?.checked),
     },
   ];
 
@@ -628,6 +645,7 @@ const AddInventoryPage = (props) => {
       hideFromTable: filter?.hideFromTable,
       iconBefore: filter.iconBefore || null,
       currencyFormat: filter.currencyFormat || false,
+      decimalValue: filter.decimalValue || false,
     };
 
     if (filter.multiselect) {
@@ -1029,12 +1047,6 @@ const AddInventoryPage = (props) => {
     }
     setEditingRowIndex(selectedRows);
     setIsEditMode(true);
-
-    // if (selectedRows.length === 1) {
-    //   toast.success("Edit mode activated for selected row");
-    // } else {
-    //   toast.success(`Bulk edit mode activated for ${selectedRows.length} rows`);
-    // }
   };
 
   // Function to save edit changes
@@ -1091,7 +1103,7 @@ const AddInventoryPage = (props) => {
       // For initial load or empty query, send empty string to get default/popular results
       const searchQuery = isInitialLoad ? "" : query ? query.trim() : "";
 
-      console.log("Making API call with searchQuery:", searchQuery); // Debug log
+      console.log("Making API call with searchQuery:", searchQuery);
 
       const response = await FetchPerformerOrVenueListing("", {
         query: searchQuery,
@@ -1325,8 +1337,6 @@ const AddInventoryPage = (props) => {
       }
 
       if (publishingData?.additional_info?.templateFile) {
-        // Debug: Check what you're actually trying to append
-
         formData.append(
           `data[${index}][additional_file]`,
           publishingData?.additional_info?.templateFile,
@@ -1417,13 +1427,10 @@ const AddInventoryPage = (props) => {
     }));
 
     setInventoryData((prevData) => [...prevData, ...clonedRows]);
-    // setSelectedRows([]);
-    // toast.success(`${rowsToClone.length} row(s) cloned successfully`);
   };
 
   const [loader, setLoader] = useState(false);
 
-  // Enhanced publish function to handle multiple rows
   // Enhanced publish function to handle multiple rows with price validation
   const handlePublishLive = async () => {
     if (selectedRows.length === 0) {
@@ -1491,6 +1498,7 @@ const AddInventoryPage = (props) => {
       setLoader(false);
     }
   };
+
   // Function to create inventory item from filter values
   const createInventoryItemFromFilters = () => {
     const newItem = {
@@ -1530,9 +1538,10 @@ const AddInventoryPage = (props) => {
     return newItem;
   };
 
-  // Modified Add listing function to use filter values
+  // Enhanced validateMandatoryFields function
   const validateMandatoryFields = () => {
-    const errors = [];
+    const errors = {};
+    const errorMessages = [];
 
     // Get all mandatory fields from filters
     const mandatoryFields = filters.filter(
@@ -1550,7 +1559,8 @@ const AddInventoryPage = (props) => {
         fieldValue === "" ||
         (Array.isArray(fieldValue) && fieldValue.length === 0)
       ) {
-        errors.push({
+        errors[field.name] = `${field.label} is required`;
+        errorMessages.push({
           field: field.name,
           label: field.label,
           message: `${field.label} is required`,
@@ -1559,15 +1569,19 @@ const AddInventoryPage = (props) => {
     });
 
     return {
-      isValid: errors.length === 0,
-      errors: errors,
+      isValid: Object.keys(errors).length === 0,
+      errors: errorMessages,
+      fieldErrors: errors,
     };
   };
 
-  // Updated handleAddListing function with mandatory validation
+  // Updated handleAddListing function with enhanced validation
   const handleAddListing = () => {
     // First validate mandatory fields
     const validation = validateMandatoryFields();
+
+    // Set validation errors in state
+    setValidationErrors(validation.fieldErrors);
 
     if (!validation.isValid) {
       // Show error toast with all missing mandatory fields
@@ -1577,6 +1591,9 @@ const AddInventoryPage = (props) => {
       toast.error(`Please fill in all mandatory fields: ${fieldNames}`);
       return;
     }
+
+    // Clear validation errors if validation passes
+    setValidationErrors({});
 
     // Check if any filter values are present (your existing logic)
     const hasFilterValues = Object.values(filtersApplied).some((value) => {
@@ -1600,8 +1617,6 @@ const AddInventoryPage = (props) => {
     console.log("New listing created:", newListing);
     setInventoryData((prevData) => [...prevData, newListing]);
     setShowTable(true);
-
-    // Show success message
   };
 
   const handleSearchBlur = (e) => {
@@ -1842,16 +1857,6 @@ const AddInventoryPage = (props) => {
               </p>
             )}
 
-            {/* {isMobile && (
-              <button
-                onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="flex items-center gap-2 px-3 py-2 bg-[#4285F4] text-white rounded-md text-sm font-medium hover:bg-[#3367D6] transition-colors"
-              >
-                <Menu size={14} />
-                {showMobileFilters ? "Hide Filters" : "Show Filters"}
-              </button>
-            )} */}
-
             {/* Move FilterColumnControls here - in the header but after View Map */}
             {!isMobile && (
               <FilterColumnControls
@@ -1899,7 +1904,6 @@ const AddInventoryPage = (props) => {
                 </div>
               </div>
             </div>
-            {/* {inventoryData.length === 0 && ( */}
             <div
               className={`flex ${
                 isMobile ? "justify-center" : "justify-end"
@@ -1915,7 +1919,6 @@ const AddInventoryPage = (props) => {
                 label="+ Add Listings"
               />
             </div>
-            {/* )} */}
           </>
         )}
       </div>
@@ -1929,7 +1932,7 @@ const AddInventoryPage = (props) => {
         >
           <div>
             <CommonInventoryTable
-              key={`inventory-table-${orderedColumns.join("-")}`} // Force re-render when order changes
+              key={`inventory-table-${orderedColumns.join("-")}`}
               inventoryData={inventoryData}
               headers={memoizedVisibleHeaders}
               selectedRows={selectedRows}

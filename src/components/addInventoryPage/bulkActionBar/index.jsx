@@ -302,7 +302,7 @@ const BulkActionBar = ({
                     className={`flex items-center space-x-2 ${isSmallMobile ? 'px-2 py-0.5' : 'px-3 py-1'} ${isSmallMobile ? 'text-[11px]' : 'text-[13px]'} rounded-md transition-colors font-medium ${
                       disabled || loading || selectedClonedCount === 0
                         ? "bg-gray-400 text-white cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-700 text-white"
+                        : "bg-[#343432] hover:bg-blue-700 text-white"
                     }`}
                   >
                     {loading ? (

@@ -900,6 +900,7 @@ console.log(updated,'updatedupdated')
       type: "number",
       name: "face_value",
       currencyFormat: true,
+      decimalValue:true,
       label: "Face Value",
       increasedWidth: "!w-[120px]",
       value: filtersApplied?.face_value,
@@ -927,6 +928,7 @@ console.log(updated,'updatedupdated')
       mandatory: true,
       increasedWidth: "!w-[120px]",
       currencyFormat: true,
+      decimalValue:true,
       value: filtersApplied?.add_price_addlist,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       iconBefore: (
@@ -1040,6 +1042,7 @@ console.log(updated,'updatedupdated')
       hideFromTable: filter?.hideFromTable,
       iconBefore: filter?.iconBefore,
       currencyFormat: filter.currencyFormat || false,
+      decimalValue:filter.decimalValue || false,
     };
 
     if (filter.multiselect) {

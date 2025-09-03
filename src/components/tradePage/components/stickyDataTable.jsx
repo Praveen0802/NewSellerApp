@@ -723,7 +723,7 @@ const StickyDataTable = ({
                              ${
                                header?.key == "bookingNo" &&
                                (displayText == "pending"
-                                 ? "text-[#343432]"
+                                 ? "text-[#F57B1B]"
                                  : displayText == "cancelled"
                                  ? "text-red-500"
                                  : displayText == "confirmed"

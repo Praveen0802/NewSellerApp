@@ -1295,7 +1295,7 @@ const TicketsPage = (props) => {
       {
         key: "sold_count",
         label: "Sold",
-        increasedWidth: "!w-[100px] !min-w-[100px] ",
+        increasedWidth: "!w-[100px] !min-w-[100px] bg-gray-50",
         editable: false,
         type: "number",
       },
@@ -1311,6 +1311,7 @@ const TicketsPage = (props) => {
         editable: true,
         iconHandling: true,
         currencyFormat: true,
+        decimalValue:true,
         type: "number",
         iconBefore: (rowValue) => (
           <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
@@ -1324,6 +1325,7 @@ const TicketsPage = (props) => {
         key: "price",
         label: "Price",
         currencyFormat: true,
+        decimalValue:true,
         editable: true,
         iconHandling: true,
         type: "number",
@@ -1530,7 +1532,7 @@ const TicketsPage = (props) => {
         {
           key: "sold_count",
           label: "Sold",
-          increasedWidth: "!w-[100px] !min-w-[100px] ",
+          increasedWidth: "!w-[100px] !min-w-[100px] bg-gray-100",
           editable: false,
           type: "number",
         },
@@ -1540,6 +1542,7 @@ const TicketsPage = (props) => {
           editable: true,
           iconHandling: true,
           currencyFormat: true,
+          decimalValue:true,
           type: "number",
           iconBefore: (rowValue) => (
             <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
@@ -1553,6 +1556,7 @@ const TicketsPage = (props) => {
           key: "price",
           label: "Price",
           currencyFormat: true,
+          decimalValue:true,
           editable: true,
           iconHandling: true,
           type: "number",

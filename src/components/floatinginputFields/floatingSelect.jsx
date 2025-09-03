@@ -14,6 +14,7 @@ const FloatingSelect = ({
   selectedClassName = "",
   paddingClassName = "px-3 py-[14px]",
   error = "",
+  showError=false,
   id,
   name,
   required = false,
@@ -477,7 +478,7 @@ const FloatingSelect = ({
         </div>
       )}
 
-      {error && <p className={`mt-1 ${isSmallMobile ? 'text-xs' : 'text-sm'} text-red-500`}>{error}</p>}
+      {error && showError && <p className={`mt-1 ${isSmallMobile ? 'text-xs' : 'text-sm'} text-red-500`}>{error}</p>}
     </div>
     </>
   );

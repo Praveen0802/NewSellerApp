@@ -72,7 +72,7 @@ const KYC = (props) => {
   };
 
   return (
-    <div className="h-fit bg-gray-50">
+    <div className="h-full bg-gray-50">
       <KycComponent
         photoId={docsData.photoId}
         address={docsData.address}

@@ -1866,7 +1866,7 @@ const handleCloseFunction = (passValue) =>{
                           {!proofUploadView && (
                             <div className="text-gray-400 cursor-grab">⋮⋮</div>
                           )}
-                          <span className="text-xs text-gray-700 truncate max-w-24">
+                          <span className="text-xs text-gray-700 truncate ">
                             {assignedFile.name}
                           </span>
                         </div>

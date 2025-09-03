@@ -37,7 +37,6 @@ const FloatingLabelInput = ({
   defaultFocus = false,
   max,
   onFocus = () => {},
-  decimalValue=false
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);

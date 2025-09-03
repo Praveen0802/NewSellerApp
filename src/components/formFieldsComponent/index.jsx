@@ -24,12 +24,14 @@ const FormFields = ({ formFields }) => {
           className,
           labelClassName,
           currencyFormat,
+          decimalValue,
           iconBefore,
           mandatory,
           disabled,
           readOnly,
           options,
           searchable,
+          showError,
           hideCalendarIcon = false,
           onBlur,
           placeholder,
@@ -68,6 +70,7 @@ const FormFields = ({ formFields }) => {
                 name={name}
                 keyValue={keyValue}
                 options={options || []}
+                showError={showError}
                 mandatory={mandatory}
                 selectedValue={value}
                 multiselect={multiselect}
@@ -109,6 +112,7 @@ const FormFields = ({ formFields }) => {
                 keyValue={keyValue}
                 type={type}
                 onBlur={onBlur}
+                decimalValue={decimalValue}
                 label={label}
                 parentClassName={parentClassName}
                 showDropdown={showDropdown}
@@ -116,6 +120,7 @@ const FormFields = ({ formFields }) => {
                 hideLabel={hideLabel}
                 mandatory={mandatory}
                 showDelete={showDelete}
+                showError={showError}
                 deleteFunction={deleteFunction}
                 dropDownComponent={dropDownComponent}
                 currencyFormat={currencyFormat}

@@ -52,7 +52,7 @@ const ShimmerLoader = ({ isMobile }) => {
             <div className="p-3 w-24">
               <div className="h-4 bg-gray-200 rounded w-2/3"></div>
             </div>
-            <div className="p-3 w-24">
+            <div className="p-3 w-40">
               <div className="h-4 bg-gray-200 rounded w-1/2"></div>
             </div>
             <div className="p-3 w-28">
@@ -74,7 +74,7 @@ const ShimmerLoader = ({ isMobile }) => {
               <div className="p-3 w-24">
                 <div className="h-4 bg-gray-200 rounded w-1/2"></div>
               </div>
-              <div className="p-3 w-24">
+              <div className="p-3 w-40">
                 <div className="h-4 bg-gray-200 rounded w-3/4"></div>
               </div>
               <div className="p-3 w-28">
@@ -443,7 +443,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                     placeholder="All Sections"
                     textSize={isMobile ? "text-xs" : "text-xs"}
                     buttonPadding={isMobile ? "px-2 py-1.5" : "px-2 py-1"}
-                    className={`${isMobile ? "!w-[140px]" : "!w-[120px]"}`}
+                    className={`${isMobile ? "!w-[140px]" : "!w-[200px]"}`}
                   />
                   <CustomSelect
                     selectedValue={filtersApplied?.quantity}
@@ -454,7 +454,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                     placeholder="All Quantities"
                     textSize={isMobile ? "text-xs" : "text-xs"}
                     buttonPadding={isMobile ? "px-2 py-1.5 !w-full" : "px-2 py-1 !w-full"}
-                    className={`${isMobile ? "!w-[140px]" : "!w-[120px]"}`}
+                    className={`${isMobile ? "!w-[140px]" : "!w-[200px]"}`}
                   />
                 </div>
               </div>
@@ -624,7 +624,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                     })}
                   </div>
                 ) : (
-                  // Desktop: Table Layout (unchanged)
+                  // Desktop: Table Layout with fixed category column width
                   <>
                     {/* Table header with flex layout */}
                     <div className="flex border-b border-gray-200 bg-white sticky top-0 z-10">
@@ -637,11 +637,12 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                       <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-24">
                         Quantity
                       </div>
-                      <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-24">
+                      {/* Fixed: Increased width from w-24 to w-40 for Category column */}
+                      <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-40">
                         Category
                       </div>
                       <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-28 flex items-center">
-                        Payout Price <ChevronDown className="ml-1 w-4 h-4" />
+                      Proceed Price <ChevronDown className="ml-1 w-4 h-4" />
                       </div>
                       <div className="p-3 text-[12px] font-medium text-[#7D82A4] flex-1">
                         Benefits & Restrictions
@@ -671,8 +672,9 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                           <div className="p-3 text-[12px] w-24">
                             {item.quantity || "-"}
                           </div>
+                          {/* Fixed: Increased width and removed truncate to show full category text */}
                           <div
-                            className="p-3 text-[12px] w-24 truncate"
+                            className="p-3 text-[12px] w-40 break-words"
                             title={item.ticket_category}
                           >
                             {item.ticket_category || "-"}

@@ -242,7 +242,7 @@ const OrderInfo = ({
   if (!data) {
     return (
       <RightViewModal
-        className={"md:!w-[600px] max-md:!w-full"}
+        className={"md:!w-[700px] max-md:!w-full"}
         show={show}
         onClose={onClose}
       >
@@ -385,7 +385,7 @@ const OrderInfo = ({
   const handleSaveNote = async (note) => {
     const id_key_name = "booking_id";
     const { order_id } = order_details;
-
+console.log(order_details,'order_detailsorder_details')
     const payload = {
       [id_key_name]: String(order_id),
       order_notes: note,
@@ -487,14 +487,14 @@ const OrderInfo = ({
       className={`transition-all duration-300 ease-in-out ${
         expandedVersion
           ? "!w-[100vw] !max-w-none"
-          : "md:!w-[600px] max-md:!w-full"
+          : "md:!w-[700px] max-md:!w-full"
       }`}
       show={show}
       onClose={onClose}
     >
       <div
         className={`transition-all duration-300 ease-in-out ${
-          expandedVersion ? "w-full" : "md:w-[650px]"
+          expandedVersion ? "w-full" : "md:w-[700px]"
         }`}
       >
         <div className="overflow-auto rounded-md bg-white h-full">

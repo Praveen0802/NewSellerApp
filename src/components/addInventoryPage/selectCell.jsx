@@ -599,7 +599,8 @@ const SimpleEditableCell = ({
   iconBefore = null,
   rowValue = {},
   alwaysShowAsEditable = false,
-  currencyFormat = false, // NEW: Add currencyFormat prop
+  currencyFormat = false,
+  decimalValue = false, // NEW: Add decimalValue prop
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -608,32 +609,55 @@ const SimpleEditableCell = ({
   const inputRef = useRef(null);
   const [shouldFocusInput, setShouldFocusInput] = useState(false);
 
-  // Currency formatting functions
-const formatCurrency = (num) => {
-  if (!num && num !== 0) return "";
-  
-  // Convert to string first, then remove any existing commas and convert to number
-  const cleanNum = typeof num === 'string' ? num.replace(/,/g, '') : String(num);
-  const number = parseFloat(cleanNum);
-  
-  if (isNaN(number)) return "";
-  
-  // Format with commas
-  return number.toLocaleString('en-US', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2
-  });
-};
+  // Enhanced currency/decimal formatting functions
+  const formatCurrency = (num) => {
+    if (!num && num !== 0) return decimalValue ? "0.00" : "";
+    
+    // Convert to string first, then remove any existing commas and convert to number
+    const cleanNum = typeof num === 'string' ? num.replace(/,/g, '') : String(num);
+    const number = parseFloat(cleanNum);
+    
+    if (isNaN(number)) return decimalValue ? "0.00" : "";
+    
+    // For decimal values, always show 2 decimal places
+    if (decimalValue) {
+      return number.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+    
+    // For regular currency format
+    return number.toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
+  };
 
-  // Remove currency formatting to get raw number
-const unformatCurrency = (formattedValue) => {
-  if (!formattedValue && formattedValue !== 0) return "";
-  
-  // Convert to string first to handle numbers, then remove commas
-  return String(formattedValue).replace(/,/g, '');
-};
+  // Enhanced decimal formatting function
+  const formatDecimal = (num) => {
+    if (!num && num !== 0) return "0.00";
+    
+    const cleanNum = typeof num === 'string' ? num.replace(/,/g, '') : String(num);
+    const number = parseFloat(cleanNum);
+    
+    if (isNaN(number)) return "0.00";
+    
+    return number.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
 
-  // Date formatting helper functions
+  // Remove currency/decimal formatting to get raw number
+  const unformatCurrency = (formattedValue) => {
+    if (!formattedValue && formattedValue !== 0) return "";
+    
+    // Convert to string first to handle numbers, then remove commas
+    return String(formattedValue).replace(/,/g, '');
+  };
+
+  // Date formatting helper functions (keeping existing)
   const formatDateForDisplay = (dateString) => {
     if (!dateString) return "";
 
@@ -648,7 +672,7 @@ const unformatCurrency = (formattedValue) => {
         return dateString.replace(/-/g, "/");
       }
 
-      // If in YYYY-MM-DD format (NEW ADDITION TO HANDLE YOUR CASE)
+      // If in YYYY-MM-DD format
       if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const [year, month, day] = dateString.split("-");
         return `${day}/${month}/${year}`;
@@ -670,26 +694,21 @@ const unformatCurrency = (formattedValue) => {
     }
   };
 
-  // Convert date string to FloatingDateRange format (startDate/endDate object)
+  // Convert date string to FloatingDateRange format (keeping existing)
   const convertToDateRangeFormat = (dateString) => {
     if (!dateString) return { startDate: "", endDate: "" };
 
-    // Convert to YYYY-MM-DD format for FloatingDateRange
     let formattedDate = "";
 
     if (dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-      // DD/MM/YYYY format
       const [day, month, year] = dateString.split("/");
       formattedDate = `${year}-${month}-${day}`;
     } else if (dateString.match(/^\d{2}-\d{2}-\d{4}$/)) {
-      // DD-MM-YYYY format
       const [day, month, year] = dateString.split("-");
       formattedDate = `${year}-${month}-${day}`;
     } else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      // YYYY-MM-DD format (ALREADY CORRECT - NO CONVERSION NEEDED)
       formattedDate = dateString;
     } else {
-      // Try to parse as Date and convert
       try {
         const date = new Date(dateString);
         if (!isNaN(date.getTime())) {
@@ -707,13 +726,12 @@ const unformatCurrency = (formattedValue) => {
     return { startDate: formattedDate, endDate: formattedDate };
   };
 
-  // Convert FloatingDateRange format back to DD-MM-YYYY
+  // Convert FloatingDateRange format back to DD-MM-YYYY (keeping existing)
   const convertFromDateRangeFormat = (dateRangeValue) => {
     if (!dateRangeValue || !dateRangeValue.startDate) return "";
 
     const dateString = dateRangeValue.startDate;
 
-    // Convert YYYY-MM-DD to DD-MM-YYYY
     if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
       const [year, month, day] = dateString.split("-");
       return `${day}-${month}-${year}`;
@@ -722,18 +740,29 @@ const unformatCurrency = (formattedValue) => {
     return dateString;
   };
 
-  // Update display value when value changes
+  // Update display value when value changes - ENHANCED for decimal support
   useEffect(() => {
-    if (currencyFormat && type === "number") {
-      setDisplayValue(formatCurrency(value));
-      setEditValue(value || "");
+    if (type === "number") {
+      if (decimalValue) {
+        // For decimal values, always format with 2 decimal places
+        setDisplayValue(formatDecimal(value));
+        setEditValue(value || "");
+      } else if (currencyFormat) {
+        // For currency format
+        setDisplayValue(formatCurrency(value));
+        setEditValue(value || "");
+      } else {
+        // Regular number
+        setDisplayValue(value || "");
+        setEditValue(value);
+      }
     } else {
       setDisplayValue(value || "");
       setEditValue(value);
     }
-  }, [value, currencyFormat, type]);
+  }, [value, currencyFormat, decimalValue, type]);
 
-  // For multiselect type, use the MultiSelectEditableCell
+  // For multiselect type, use the MultiSelectEditableCell (keeping existing)
   if (type === "multiselect") {
     return (
       <MultiSelectEditableCell
@@ -754,7 +783,7 @@ const unformatCurrency = (formattedValue) => {
     return opts.find((o) => o?.value == val || o?.label == val)?.value ?? val;
   };
 
-  // For select type, use the custom select component
+  // For select type, use the custom select component (keeping existing)
   if (type === "select") {
     return (
       <CustomSelectEditableCell
@@ -773,7 +802,7 @@ const unformatCurrency = (formattedValue) => {
     );
   }
 
-  // For date type, use FloatingDateRange - ALWAYS SHOW AS EDITABLE BY DEFAULT
+  // For date type, use FloatingDateRange (keeping existing)
   if (type === "date") {
     const handleDateChange = (dateRangeValue) => {
       const convertedValue = convertFromDateRangeFormat(dateRangeValue);
@@ -782,7 +811,6 @@ const unformatCurrency = (formattedValue) => {
       }
     };
 
-    // Date fields are ALWAYS rendered as editable (FloatingDateRange) unless disabled
     if (!disabled) {
       return (
         <div className="w-full">
@@ -800,7 +828,6 @@ const unformatCurrency = (formattedValue) => {
       );
     }
 
-    // Only show as read-only display when disabled
     return (
       <div className={`cursor-not-allowed opacity-60 ${className}`}>
         <span className="text-xs text-gray-400">
@@ -821,18 +848,18 @@ const unformatCurrency = (formattedValue) => {
       setIsEditing(true);
       setShouldFocusInput(true);
 
-      // For currency format, switch to raw value for editing
-      if (currencyFormat && type === "number") {
+      // For currency format or decimal value, switch to raw value for editing
+      if ((currencyFormat || decimalValue) && type === "number") {
         const rawValue = unformatCurrency(displayValue);
         setEditValue(rawValue);
       }
     },
-    [disabled, currencyFormat, type, displayValue]
+    [disabled, currencyFormat, decimalValue, type, displayValue]
   );
 
   const handleSave = () => {
-    // For currency format, save the raw numeric value
-    const valueToSave = currencyFormat && type === "number" 
+    // For currency format or decimal value, save the raw numeric value
+    const valueToSave = (currencyFormat || decimalValue) && type === "number" 
       ? unformatCurrency(editValue) 
       : editValue;
 
@@ -841,27 +868,36 @@ const unformatCurrency = (formattedValue) => {
     }
     setIsEditing(false);
 
-    // Update display value for currency format
-    if (currencyFormat && type === "number") {
-      setDisplayValue(formatCurrency(valueToSave));
+    // Update display value for currency format or decimal value
+    if (type === "number") {
+      if (decimalValue) {
+        setDisplayValue(formatDecimal(valueToSave));
+      } else if (currencyFormat) {
+        setDisplayValue(formatCurrency(valueToSave));
+      }
     }
   };
 
   const handleCancel = () => {
     setEditValue(value);
-    if (currencyFormat && type === "number") {
-      setDisplayValue(formatCurrency(value));
+    if (type === "number") {
+      if (decimalValue) {
+        setDisplayValue(formatDecimal(value));
+      } else if (currencyFormat) {
+        setDisplayValue(formatCurrency(value));
+      }
     }
     setIsEditing(false);
   };
 
   const handleChange = (newValue) => {
-    // For currency format, handle validation
-    if (currencyFormat && type === "number") {
+    // For currency format or decimal value, handle validation
+    if ((currencyFormat || decimalValue) && type === "number") {
       // Remove commas and validate as number
       let cleanValue = newValue.replace(/,/g, "");
       cleanValue = cleanValue.replace(/[^0-9.-]/g, "");
 
+      // Handle multiple decimal points
       const decimalCount = (cleanValue.match(/\./g) || []).length;
       if (decimalCount > 1) {
         const firstDecimalIndex = cleanValue.indexOf(".");
@@ -870,6 +906,15 @@ const unformatCurrency = (formattedValue) => {
           cleanValue.substring(firstDecimalIndex + 1).replace(/\./g, "");
       }
 
+      // For decimal values, limit to 2 decimal places
+      if (decimalValue && cleanValue.includes(".")) {
+        const parts = cleanValue.split(".");
+        if (parts[1] && parts[1].length > 2) {
+          cleanValue = `${parts[0]}.${parts[1].substring(0, 2)}`;
+        }
+      }
+
+      // Handle negative sign
       if (cleanValue.includes("-")) {
         const negativeIndex = cleanValue.indexOf("-");
         if (negativeIndex !== 0) {
@@ -894,8 +939,8 @@ const unformatCurrency = (formattedValue) => {
   };
 
   const handleKeyPress = (e) => {
-    // For currency format number inputs, prevent non-numeric characters
-    if (currencyFormat && type === "number") {
+    // For currency format or decimal value number inputs, prevent non-numeric characters
+    if ((currencyFormat || decimalValue) && type === "number") {
       const allowedKeys = [
         "Backspace",
         "Delete",
@@ -945,17 +990,21 @@ const unformatCurrency = (formattedValue) => {
       handleSave();
     } else {
       setIsEditing(false);
-      // Format currency on blur
-      if (currencyFormat && type === "number") {
-        setDisplayValue(formatCurrency(editValue));
+      // Format currency or decimal on blur
+      if (type === "number") {
+        if (decimalValue) {
+          setDisplayValue(formatDecimal(editValue));
+        } else if (currencyFormat) {
+          setDisplayValue(formatCurrency(editValue));
+        }
       }
     }
   };
 
   const handleFocus = () => {
     setIsFocused(true);
-    // For currency format, show raw value when focused
-    if (currencyFormat && type === "number" && !isEditing) {
+    // For currency format or decimal value, show raw value when focused
+    if ((currencyFormat || decimalValue) && type === "number" && !isEditing) {
       const rawValue = unformatCurrency(displayValue);
       setEditValue(rawValue);
     }
@@ -976,6 +1025,11 @@ const unformatCurrency = (formattedValue) => {
       return value ? "Yes" : "No";
     }
     
+    // For decimal value, use decimal formatting
+    if (decimalValue && type === "number") {
+      return displayValue || "0.00";
+    }
+    
     // For currency format, use displayValue
     if (currencyFormat && type === "number") {
       return displayValue || placeholder;
@@ -986,6 +1040,9 @@ const unformatCurrency = (formattedValue) => {
 
   const hasValue = () => {
     if (type === "checkbox") return true;
+    if (decimalValue && type === "number") {
+      return true; // Always show decimal values
+    }
     if (currencyFormat && type === "number") {
       return !!(displayValue && displayValue.toString().trim());
     }
@@ -1031,9 +1088,9 @@ const unformatCurrency = (formattedValue) => {
         ) : (
           <input
             ref={inputRef}
-            type={currencyFormat && type === "number" ? "text" : type}
+            type={(currencyFormat || decimalValue) && type === "number" ? "text" : type}
             value={editValue || ""}
-            placeholder={placeholder}
+            placeholder={decimalValue && type === "number" ? "0.00" : placeholder}
             onChange={(e) => handleChange(e.target.value)}
             onKeyDown={handleKeyPress}
             onBlur={handleBlur}
@@ -1066,9 +1123,15 @@ const unformatCurrency = (formattedValue) => {
             </div>
           ) : (
             <input
-              type={currencyFormat && type === "number" ? "text" : type}
-              value={currencyFormat && type === "number" ? displayValue : (editValue || "")}
-              placeholder={placeholder}
+              type={(currencyFormat || decimalValue) && type === "number" ? "text" : type}
+              value={
+                decimalValue && type === "number" 
+                  ? displayValue 
+                  : currencyFormat && type === "number" 
+                    ? displayValue 
+                    : (editValue || "")
+              }
+              placeholder={decimalValue && type === "number" ? "0.00" : placeholder}
               className={`border border-[#DADBE5] rounded ${getInputPadding()} py-1 text-xs focus:outline-none bg-white w-full cursor-pointer text-[#323A70] hover:border-green-600 transition-colors placeholder:text-gray-400`}
               readOnly
             />
