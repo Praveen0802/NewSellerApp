@@ -46,7 +46,7 @@ const PurchaseCard = ({
                 onChange: (e) => handleChange(e, "quantity"),
                 className: `!py-1 !px-4 `,
                 labelClassName: "!text-[12px] w-[50%] text-gray-600 block",
-                placeholder: "DD",
+                placeholder: "Quantity",
                 options: quantityOptions,
               },
             ]}
