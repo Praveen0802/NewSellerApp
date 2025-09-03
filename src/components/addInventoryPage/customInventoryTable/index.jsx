@@ -1,4 +1,4 @@
-// Fixed CommonInventoryTable.js with mobile responsiveness (single mobile breakpoint)
+// Fixed CommonInventoryTable.js - Mobile from v2, Desktop from v1
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
@@ -609,297 +609,330 @@ const CommonInventoryTable = ({
       ref={containerRef}
       className="border border-gray-200 rounded-lg overflow-hidden relative shadow-sm"
     >
-
-{showAccordion && (
-  <div
-    className="bg-[#343432] cursor-pointer"
-    onClick={handleAccordionToggle}
-  >
-    <div className="flex items-center justify-between">
-      {/* Mobile Layout */}
-      {isMobile ? (
-        <div className="flex flex-col w-full">
-          {/* Top Row - Event Info */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#51428E]">
-            <div className="flex-1 min-w-0">
-              <h3 
-                className="font-medium text-white text-sm leading-tight truncate"
-                title={
-                  matchDetails?.match_name && matchDetails?.tournament_name
-                    ? `${matchDetails.match_name} - ${matchDetails.tournament_name}`
-                    : matchDetails?.match_name || "Match Details"
-                }
-              >
-                {matchDetails?.match_name || "Match Details"}
-              </h3>
-              {matchDetails?.tournament_name && (
-                <div className="text-xs text-white opacity-80 truncate mt-0.5">
-                  {matchDetails.tournament_name}
-                </div>
-              )}
-            </div>
-            
-            {/* Chevron */}
-            <div
-              className={`bg-[#FFFFFF26] rounded-full cursor-pointer transition-transform duration-200 flex-shrink-0 p-1.5 ml-3 ${
-                isAnimating ? "scale-95" : "hover:scale-105"
-              }`}
-            >
-              <ChevronDown
-                size={12}
-                className={`text-white transition-transform duration-300 ease-in-out ${
-                  !isCollapsed ? "rotate-180" : ""
-                }`}
-              />
-            </div>
-          </div>
-
-          {/* Bottom Row - Date, Time, Location, Stats, Action */}
-          <div className="flex items-center px-4 py-2">
-            {/* Date & Time */}
-            <div className="flex items-center space-x-3 flex-shrink-0">
-              <div className="flex items-center space-x-1">
-                <Calendar1Icon size={12} className="text-white flex-shrink-0" />
-                <span className="text-white text-xs">
-                  {dayOfWeek(matchDetails?.match_date_format)?.split(",")[0] || ""}
-                </span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <Clock size={12} className="text-white flex-shrink-0" />
-                <span className="text-white text-xs">
-                  {matchDetails?.match_time}
-                </span>
-              </div>
-            </div>
-
-            {/* Location */}
-            <div className="flex items-center space-x-1 flex-1 min-w-0 ml-3">
-              <MapPin size={12} className="text-white flex-shrink-0" />
-              <span className="text-white text-xs truncate">
-                {[
-                  matchDetails?.stadium_name ? `${matchDetails.stadium_name},` : "",
-                  matchDetails?.city_name ? `${matchDetails.city_name},` : "",
-                  matchDetails?.country_name ? `${matchDetails.country_name}` : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-              </span>
-            </div>
-
-            {/* Stats */}
-            <div className="flex items-center space-x-2 ml-3 flex-shrink-0">
-              {matchDetails?.totalTickets && (
-                <Tooltip content={`${matchDetails?.totalTickets} Tickets`}>
-                  <div className="flex gap-1 items-center">
-                    <Image
-                      src={ticketService}
-                      width={12}
-                      height={12}
-                      alt="tickets"
-                      className="flex-shrink-0"
+      {/* Accordion Header */}
+      {showAccordion && (
+        <div
+          className="bg-[#343432] cursor-pointer"
+          onClick={handleAccordionToggle}
+        >
+          <div className="flex items-center justify-between">
+            {/* Mobile Layout */}
+            {isMobile ? (
+              <div className="flex flex-col w-full">
+                {/* Top Row - Event Info */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-[#51428E]">
+                  <div className="flex-1 min-w-0">
+                    <h3 
+                      className="font-medium text-white text-sm leading-tight truncate"
+                      title={
+                        matchDetails?.match_name && matchDetails?.tournament_name
+                          ? `${matchDetails.match_name} - ${matchDetails.tournament_name}`
+                          : matchDetails?.match_name || "Match Details"
+                      }
+                    >
+                      {matchDetails?.match_name || "Match Details"}
+                    </h3>
+                    {matchDetails?.tournament_name && (
+                      <div className="text-xs text-white opacity-80 truncate mt-0.5">
+                        {matchDetails.tournament_name}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Chevron */}
+                  <div
+                    className={`bg-[#FFFFFF26] rounded-full cursor-pointer transition-transform duration-200 flex-shrink-0 p-1.5 ml-3 ${
+                      isAnimating ? "scale-95" : "hover:scale-105"
+                    }`}
+                  >
+                    <ChevronDown
+                      size={12}
+                      className={`text-white transition-transform duration-300 ease-in-out ${
+                        !isCollapsed ? "rotate-180" : ""
+                      }`}
                     />
-                    <span className="text-white text-xs">
-                      {matchDetails?.totalTickets}
-                    </span>
                   </div>
-                </Tooltip>
-              )}
+                </div>
 
-              {matchDetails?.listingTickets && (
-                <Tooltip content={`${matchDetails?.listingTickets} Listing`}>
-                  <div className="flex gap-1 items-center">
-                    <div className="w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
-                      <SquareCheck size={8} className="text-white" />
+                {/* Bottom Row - Date, Time, Location, Stats, Action */}
+                <div className="flex items-center px-4 py-2">
+                  {/* Date & Time */}
+                  <div className="flex items-center space-x-3 flex-shrink-0">
+                    <div className="flex items-center space-x-1">
+                      <Calendar1Icon size={12} className="text-white flex-shrink-0" />
+                      <span className="text-white text-xs">
+                        {dayOfWeek(matchDetails?.match_date_format)?.split(",")[0] || ""}
+                      </span>
                     </div>
-                    <span className="text-white text-xs">
-                      {matchDetails?.listingTickets}
+                    <div className="flex items-center space-x-1">
+                      <Clock size={12} className="text-white flex-shrink-0" />
+                      <span className="text-white text-xs">
+                        {matchDetails?.match_time}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Location */}
+                  <div className="flex items-center space-x-1 flex-1 min-w-0 ml-3">
+                    <MapPin size={12} className="text-white flex-shrink-0" />
+                    <span className="text-white text-xs truncate">
+                      {[
+                        matchDetails?.stadium_name ? `${matchDetails.stadium_name},` : "",
+                        matchDetails?.city_name ? `${matchDetails.city_name},` : "",
+                        matchDetails?.country_name ? `${matchDetails.country_name}` : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
                     </span>
                   </div>
-                </Tooltip>
-              )}
 
-              {/* Additional stats can be added here */}
-              <div className="flex gap-1 items-center">
-                <div className="w-3 h-3 bg-gray-400 rounded-full" />
-                <span className="text-white text-xs">8</span>
+                  {/* Stats */}
+                  <div className="flex items-center space-x-2 ml-3 flex-shrink-0">
+                    {matchDetails?.totalTickets && (
+                      <Tooltip content={`${matchDetails?.totalTickets} Tickets`}>
+                        <div className="flex gap-1 items-center">
+                          <Image
+                            src={ticketService}
+                            width={12}
+                            height={12}
+                            alt="tickets"
+                            className="flex-shrink-0"
+                          />
+                          <span className="text-white text-xs">
+                            {matchDetails?.totalTickets}
+                          </span>
+                        </div>
+                      </Tooltip>
+                    )}
+
+                    {matchDetails?.listingTickets && (
+                      <Tooltip content={`${matchDetails?.listingTickets} Listing`}>
+                        <div className="flex gap-1 items-center">
+                          <div className="w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
+                            <SquareCheck size={8} className="text-white" />
+                          </div>
+                          <span className="text-white text-xs">
+                            {matchDetails?.listingTickets}
+                          </span>
+                        </div>
+                      </Tooltip>
+                    )}
+                  </div>
+
+                  {/* Market Data Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMarketPlaceModal(true);
+                    }}
+                    className="flex items-center justify-center bg-[#FFFFFF26] border border-[#FFFFFF3A] text-[#FFFFFF] p-2 rounded-md cursor-pointer ml-2 flex-shrink-0"
+                    title="Market Data"
+                  >
+                    <ChartLine size={14} className="text-[#64EAA5]" />
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              // Desktop Layout - Restored from first document
+              <>
+                <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6">
+                  {mode === "single" ? (
+                    <div
+                      className={`flex ${
+                        isMobile ? "w-[40px]" : "w-[50px]"
+                      } justify-center ${
+                        isMobile ? "py-3" : "py-4"
+                      } border-r-[1px] border-[#51428E] items-center`}
+                    >
+                      <div
+                        className={`${
+                          isMobile ? "w-3 h-3" : "w-4 h-4"
+                        } border-2 border-white rounded-full flex items-center justify-center`}
+                      >
+                        <div
+                          className={`${
+                            isMobile ? "w-1.5 h-1.5" : "w-2 h-2"
+                          } bg-white rounded-full`}
+                        ></div>
+                      </div>
+                    </div>
+                  ) : null}
 
-            {/* Market Data Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowMarketPlaceModal(true);
-              }}
-              className="flex items-center justify-center bg-[#FFFFFF26] border border-[#FFFFFF3A] text-[#FFFFFF] p-2 rounded-md cursor-pointer ml-2 flex-shrink-0"
-              title="Market Data"
-            >
-              <ChartLine size={14} className="text-[#64EAA5]" />
-            </button>
+                  <div
+                    className={`flex items-center space-x-2 sm:space-x-4 ${
+                      isMobile
+                        ? "py-3 px-2"
+                        : `py-4 ${mode == "single" ? "" : "px-4"}`
+                    } border-r-[1px] border-[#51428E] ${
+                      isMobile ? "w-[200px]" : "w-[280px]"
+                    }`}
+                  >
+                    <h3
+                      className={`font-medium ${
+                        isMobile ? "text-xs" : "text-sm"
+                      } text-white truncate`}
+                    >
+                      {matchDetails?.match_name || "Match Details"}
+                      {matchDetails?.tournament_name
+                        ? ` - ${matchDetails?.tournament_name}`
+                        : ""}
+                    </h3>
+                  </div>
+
+                  <div
+                    className={`flex items-center ${
+                      isMobile ? "space-x-2" : "space-x-4 sm:space-x-6"
+                    } text-xs`}
+                  >
+                    <div
+                      className={`flex items-center space-x-1 sm:space-x-2 ${
+                        isMobile ? "py-3 pr-2" : "py-4 pr-4"
+                      } ${
+                        isMobile ? "w-[130px]" : "w-[170px]"
+                      } border-r-[1px] border-[#51428E]`}
+                    >
+                      <Calendar1Icon
+                        size={isMobile ? 12 : 14}
+                        className="text-white"
+                      />
+                      <span
+                        className={`text-white ${
+                          isMobile ? "text-[10px]" : "text-xs"
+                        } truncate`}
+                      >
+                        {dayOfWeek(matchDetails?.match_date_format)}
+                      </span>
+                    </div>
+
+                    <div
+                      className={`flex items-center space-x-1 sm:space-x-2 ${
+                        isMobile ? "py-3 pr-2" : "py-4 pr-4"
+                      } border-r-[1px] border-[#51428E] ${
+                        isMobile ? "w-[70px]" : "w-[90px]"
+                      }`}
+                    >
+                      <Clock size={isMobile ? 12 : 14} className="text-white" />
+                      <span
+                        className={`text-white ${
+                          isMobile ? "text-[10px]" : "text-xs"
+                        } truncate`}
+                      >
+                        {matchDetails?.match_time}
+                      </span>
+                    </div>
+
+                    {!isMobile && (
+                      <div className="flex items-center space-x-2 py-4 pr-4">
+                        <MapPin size={14} className="text-white" />
+                        {renderMatchLocation(matchDetails)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div
+                  className={`flex items-center ${
+                    isMobile ? "space-x-2 pr-2" : "space-x-4 pr-4"
+                  }`}
+                >
+                  {matchDetails?.listingTickets && (
+                    <Tooltip content={`${matchDetails?.listingTickets} Listing`}>
+                      <div className="flex w-[30px] gap-1 items-center">
+                        <Image
+                          src={listUnpublished}
+                          width={20}
+                          height={20}
+                          alt="logo"
+                        />
+                        <span className={`text-white  text-[12px] text-right`}>
+                          {matchDetails?.listingTickets}
+                        </span>
+                      </div>
+                    </Tooltip>
+                  )}
+                  {matchDetails?.unPublishedTickets > 0 && (
+                    <Tooltip
+                      content={`${matchDetails?.unPublishedTickets} Un Published`}
+                    >
+                      <div className="flex w-[30px] gap-1 items-center">
+                        <Image
+                          src={unpublishedListingValue}
+                          width={20}
+                          height={20}
+                          alt="logo"
+                        />
+                        <span className={`text-white  text-[12px] text-right`}>
+                          {matchDetails?.unPublishedTickets}
+                        </span>
+                      </div>
+                    </Tooltip>
+                  )}
+                  {matchDetails?.publishedTickets && (
+                    <Tooltip
+                      content={`${matchDetails?.publishedTickets} Published`}
+                    >
+                      <div className="flex gap-1 w-[30px] items-center">
+                        <Image
+                          src={listPublished}
+                          width={20}
+                          height={20}
+                          alt="logo"
+                        />
+                        <span className={`text-white text-[12px] text-right`}>
+                          {matchDetails?.publishedTickets}
+                        </span>
+                      </div>
+                    </Tooltip>
+                  )}
+
+                  {matchDetails?.totalTickets && (
+                    <Tooltip content={`${matchDetails?.totalTickets} Tickets`}>
+                      <div className="flex gap-1 w-[30px] items-center">
+                        <Image
+                          src={ticketService}
+                          width={16}
+                          height={16}
+                          alt="logo"
+                        />
+                        <span className={`text-white text-[12px] text-right`}>
+                          {matchDetails?.totalTickets}
+                        </span>
+                      </div>
+                    </Tooltip>
+                  )}
+                  {!isMobile && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowMarketPlaceModal(true);
+                      }}
+                      className="flex items-center gap-1 bg-[#FFFFFF26] border border-[#FFFFFF3A] text-[#FFFFFF] text-sm p-2 rounded-md cursor-pointer"
+                    >
+                      <ChartLine size={16} className="text-[#64EAA5]" />
+                      Market Data
+                    </button>
+                  )}
+
+                  <div
+                    className={`bg-[#FFFFFF26] ${
+                      isMobile ? "p-1.5" : "p-2"
+                    } rounded-full cursor-pointer transition-transform duration-200 ${
+                      isAnimating ? "scale-95" : "hover:scale-105"
+                    }`}
+                  >
+                    <ChevronDown
+                      size={isMobile ? 12 : 14}
+                      className={`text-white transition-transform duration-300 ease-in-out ${
+                        !isCollapsed ? "rotate-180" : ""
+                      }`}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
-      ) : (
-        // Desktop Layout (keep existing)
-        <>
-          {/* LEFT SECTION - Mode indicator + Match info */}
-          <div className="flex items-center flex-1 min-w-0">
-            {mode === "single" && (
-              <div className="flex justify-center items-center flex-shrink-0 w-[50px] py-4 border-r-[1px] border-[#51428E]">
-                <div className="border-2 border-white rounded-full flex items-center justify-center w-4 h-4">
-                  <div className="bg-white rounded-full w-2 h-2" />
-                </div>
-              </div>
-            )}
-
-            {/* Match Info */}
-            <div className={`flex items-center flex-1 min-w-0 py-4 ${mode === "single" ? "" : "px-4"} border-r-[1px] border-[#51428E]`}>
-              <div className="min-w-0 flex-1">
-                <h3
-                  className="font-medium text-white truncate text-sm"
-                  title={
-                    matchDetails?.match_name && matchDetails?.tournament_name
-                      ? `${matchDetails.match_name} - ${matchDetails.tournament_name}`
-                      : matchDetails?.match_name || "Match Details"
-                  }
-                >
-                  {matchDetails?.match_name || "Match Details"}
-                  {matchDetails?.tournament_name && ` - ${matchDetails.tournament_name}`}
-                </h3>
-              </div>
-            </div>
-          </div>
-
-          {/* MIDDLE SECTION - Date/Time/Location */}
-          <div className="flex items-center flex-shrink-0">
-            {/* Date */}
-            <div className="flex items-center space-x-1 border-r-[1px] border-[#51428E] py-4 px-4 min-w-[170px]">
-              <Calendar1Icon size={14} className="text-white flex-shrink-0" />
-              <span className="text-white truncate text-xs" title={dayOfWeek(matchDetails?.match_date_format)}>
-                {dayOfWeek(matchDetails?.match_date_format)}
-              </span>
-            </div>
-
-            {/* Time */}
-            <div className="flex items-center space-x-1 border-r-[1px] border-[#51428E] py-4 px-4 min-w-[90px]">
-              <Clock size={14} className="text-white flex-shrink-0" />
-              <span className="text-white truncate text-xs" title={matchDetails?.match_time}>
-                {matchDetails?.match_time}
-              </span>
-            </div>
-
-            {/* Location */}
-            <div className="flex items-center space-x-2 py-4 px-4 border-r-[1px] border-[#51428E] min-w-[200px]">
-              <MapPin size={14} className="text-white flex-shrink-0" />
-              <div className="min-w-0 flex-1">
-                {renderMatchLocation(matchDetails)}
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT SECTION - Stats + Actions */}
-          <div className="flex items-center flex-shrink-0">
-            {/* Stats */}
-            <div className="flex items-center space-x-2 px-4">
-              {matchDetails?.totalTickets && (
-                <Tooltip content={`${matchDetails?.totalTickets} Tickets`}>
-                  <div className="flex gap-1 items-center min-w-[30px]">
-                    <Image
-                      src={ticketService}
-                      width={16}
-                      height={16}
-                      alt="tickets"
-                      className="flex-shrink-0"
-                    />
-                    <span className="text-white text-[12px]">
-                      {matchDetails?.totalTickets}
-                    </span>
-                  </div>
-                </Tooltip>
-              )}
-
-              {matchDetails?.listingTickets && (
-                <Tooltip content={`${matchDetails?.listingTickets} Listing`}>
-                  <div className="flex gap-1 items-center min-w-[30px]">
-                    <Image
-                      src={listUnpublished}
-                      width={20}
-                      height={20}
-                      alt="listings"
-                      className="flex-shrink-0"
-                    />
-                    <span className="text-white text-[12px]">
-                      {matchDetails?.listingTickets}
-                    </span>
-                  </div>
-                </Tooltip>
-              )}
-
-              {matchDetails?.unPublishedTickets > 0 && (
-                <Tooltip content={`${matchDetails?.unPublishedTickets} Un Published`}>
-                  <div className="flex gap-1 items-center min-w-[30px]">
-                    <Image
-                      src={unpublishedListingValue}
-                      width={20}
-                      height={20}
-                      alt="unpublished"
-                      className="flex-shrink-0"
-                    />
-                    <span className="text-white text-[12px]">
-                      {matchDetails?.unPublishedTickets}
-                    </span>
-                  </div>
-                </Tooltip>
-              )}
-
-              {matchDetails?.publishedTickets && (
-                <Tooltip content={`${matchDetails?.publishedTickets} Published`}>
-                  <div className="flex gap-1 items-center min-w-[30px]">
-                    <Image
-                      src={listPublished}
-                      width={20}
-                      height={20}
-                      alt="published"
-                      className="flex-shrink-0"
-                    />
-                    <span className="text-white text-[12px]">
-                      {matchDetails?.publishedTickets}
-                    </span>
-                  </div>
-                </Tooltip>
-              )}
-            </div>
-
-            {/* Market Data Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowMarketPlaceModal(true);
-              }}
-              className="flex items-center gap-1 bg-[#FFFFFF26] border border-[#FFFFFF3A] text-[#FFFFFF] text-sm p-2 rounded-md cursor-pointer mr-4 flex-shrink-0"
-            >
-              <ChartLine size={16} className="text-[#64EAA5]" />
-              Market Data
-            </button>
-
-            {/* Chevron */}
-            <div
-              className={`bg-[#FFFFFF26] rounded-full cursor-pointer transition-transform duration-200 flex-shrink-0 p-2 mr-4 ${
-                isAnimating ? "scale-95" : "hover:scale-105"
-              }`}
-            >
-              <ChevronDown
-                size={14}
-                className={`text-white transition-transform duration-300 ease-in-out ${
-                  !isCollapsed ? "rotate-180" : ""
-                }`}
-              />
-            </div>
-          </div>
-        </>
       )}
-    </div>
-  </div>
-)}
 
       {/* Animated Table Content Container */}
       <div

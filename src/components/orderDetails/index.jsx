@@ -459,11 +459,11 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
         >
           <div
             className={`
-              transition-custom overflow-auto rounded-md bg-white
+              transition-custom overflow-auto z-[999] rounded-md bg-white
               ${
                 expandedVersion
                   ? "w-full h-full"
-                  : "max-w-[676px] max-md:h-[500px] "
+                  : "max-w-[676px]  "
               }
               ${isTransitioning ? "scale-transition" : ""}
             `}

@@ -644,7 +644,7 @@ const NotificationsPopup = ({
               onClick={() => handleTabChange("activity")}
               className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 ${
                 activeTab === "activity"
-                  ? "border-purple-600 text-purple-600 bg-purple-50"
+                  ? "border-[#343432] bg-gray-50"
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >

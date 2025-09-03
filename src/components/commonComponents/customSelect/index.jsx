@@ -6,6 +6,7 @@ const CustomSelect = ({
   onSelect,
   placeholder = "Select Your option",
   className = "",
+  buttonClassName="",
   textSize = "text-lg", // Default text size
   buttonPadding = "px-4 py-2", // Default button padding
   dropdownItemPadding = "py-2 pl-3 pr-9", // Default dropdown item padding
@@ -76,7 +77,7 @@ const CustomSelect = ({
       <button
         type="button"
         onClick={toggleDropdown}
-        className={`flex items-center justify-between w-full px-2 sm:px-4 py-2 text-xs sm:text-sm text-left text-gray-700 bg-white border-[1px] border-[#DADBE5] rounded-[4px] focus:outline-none min-h-[44px]`}
+        className={`flex items-center justify-between ${buttonClassName} w-full px-2 sm:px-4 py-2 text-xs sm:text-sm text-left text-gray-700 bg-white border-[1px] border-[#DADBE5] rounded-[4px] focus:outline-none min-h-[44px]`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
@@ -88,7 +89,7 @@ const CustomSelect = ({
           {viewingValue?.placeholder ? viewingValue?.placeholder : viewingValue}
         </span>
         <svg
-          className={`w-4 h-4 sm:w-5 sm:h-5 ml-2 flex-shrink-0 ${
+          className={`w-4 h-4 ml-2 flex-shrink-0 ${
             viewingValue?.placeholder ? "text-gray-400" : "text-[#130061]"
           } transition-transform duration-200 ${
             isOpen ? "transform rotate-180" : ""
@@ -120,7 +121,7 @@ const CustomSelect = ({
               return (
                 <li
                   key={index}
-                  className={`cursor-pointer select-none flex justify-between items-center relative py-2 pl-2 sm:pl-3 pr-8 sm:pr-9 hover:bg-indigo-50 min-h-[44px] sm:min-h-auto ${
+                  className={`cursor-pointer select-none flex justify-between items-center relative py-2 pl-2 sm:pl-3  hover:bg-indigo-50 min-h-[44px] sm:min-h-auto ${
                     isSelectedOption
                       ? "bg-indigo-100 text-[#130061]"
                       : "text-gray-900"
@@ -144,7 +145,7 @@ const CustomSelect = ({
                         e.stopPropagation();
                         handleSelect("");
                       }}
-                      className="rounded-full cursor-pointer hover:bg-gray-200 p-1 sm:p-2 min-w-[32px] min-h-[32px] flex items-center justify-center"
+                      className="rounded-full cursor-pointer hover:bg-gray-200 p-1 sm:p-2 min-w-[20px] min-h-[20px] flex items-center justify-center"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"

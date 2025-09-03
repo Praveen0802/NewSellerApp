@@ -91,7 +91,7 @@ const TradePage = (props) => {
 
   // Mobile bottom navigation
   const MobileNavigation = () => (
-    <div className="fixed bottom-0 left-0 right-0 bg-white shadow-md border-t border-gray-200 z-[99] flex justify-around">
+    <div className="fixed bottom-0 left-0 right-0 bg-white shadow-md border-t border-gray-200 z-50 flex justify-around">
       {tabFields?.map((item, index) => {
         const isSelected = item?.key === selectedTab;
         return (

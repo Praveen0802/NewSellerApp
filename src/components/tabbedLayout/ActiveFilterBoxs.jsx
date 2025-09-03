@@ -1,4 +1,4 @@
-// Updated ActiveFiltersBox component with proper date range handling
+// Updated ActiveFiltersBox component with mobile overflow handling
 import React from "react";
 import reloadIcon from "../../../public/reload.svg";
 import Image from "next/image";
@@ -595,20 +595,25 @@ const ActiveFiltersBox = ({
 
   return (
     <div className="rounded px-3 py-2">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-3">
+        {/* Fixed left section */}
+        <div className="flex items-center gap-2 flex-shrink-0">
           <span className="text-xs font-medium text-gray-700 hover:text-gray-900 whitespace-nowrap transition-colors cursor-default">
             Active Filters
           </span>
           <span className="text-gray-400">|</span>
-          <div className="flex gap-3 items-center pl-3">
-            <button
-              onClick={handleClearAllFilters}
-              className="text-sm text-gray-600 hover:text-gray-800 font-medium underline cursor-pointer"
-              title="Clear all filters"
-            >
-              <Image src={reloadIcon} width={30} height={30} alt="image-logo" />
-            </button>
+          <button
+            onClick={handleClearAllFilters}
+            className="text-sm text-gray-600 hover:text-gray-800 font-medium underline cursor-pointer flex-shrink-0"
+            title="Clear all filters"
+          >
+            <Image src={reloadIcon} width={30} height={30} alt="image-logo" />
+          </button>
+        </div>
+        
+        {/* Scrollable filters section */}
+        <div className="flex gap-3 items-center overflow-x-auto scrollbar-hide min-w-0 flex-1">
+          <div className="flex gap-3 items-center whitespace-nowrap">
             {activeFilterEntries.map(([key, value]) => {
               try {
                 let formattedValue;
@@ -626,14 +631,14 @@ const ActiveFiltersBox = ({
                 return (
                   <div
                     key={key}
-                    className="inline-flex items-center gap-1.5 bg-white border border-[#DADBE5] px-[8px] py-[6px] rounded-sm text-sm"
+                    className="inline-flex items-center gap-1.5 bg-white border border-[#DADBE5] px-[8px] py-[6px] rounded-sm text-sm flex-shrink-0"
                   >
-                    <span className="text-gray-700 text-xs">
+                    <span className="text-gray-700 text-xs whitespace-nowrap">
                       {formattedValue}
                     </span>
                     <button
                       onClick={() => handleClearFilter(key)}
-                      className="text-gray-400 hover:text-gray-600 cursor-pointer flex items-center justify-center"
+                      className="text-gray-400 hover:text-gray-600 cursor-pointer flex items-center justify-center flex-shrink-0"
                       title={`Remove ${typeof value === 'object' && value.displayName ? value.displayName : getFilterDisplayName(key)} filter`}
                     >
                       <svg
@@ -660,6 +665,16 @@ const ActiveFiltersBox = ({
           </div>
         </div>
       </div>
+      
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 };
