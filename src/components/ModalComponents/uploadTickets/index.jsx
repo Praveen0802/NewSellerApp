@@ -239,12 +239,17 @@ const handleCloseFunction = (passValue) =>{
           if (hasExistingTickets && !hasPartialUploads) {
             return;
           }
-
-          const remainingSlots = maxQuantity - transferredFiles.length;
+          // Total already staged = existing uploaded (not yet transferred) + transferred
+          const stagedCount = uploadedFiles.length + transferredFiles.length;
+          if (stagedCount >= maxQuantity) {
+            alert("You have already added the maximum number of files.");
+            return;
+          }
+          const remainingSlots = maxQuantity - stagedCount;
           const filesToAdd = files.slice(0, remainingSlots);
-
+          
           const newFiles = filesToAdd.map((file, index) => ({
-            id: `Hello_${index}`,
+            id: `Hello_${Date.now()}_${index}`,
             name: file.name,
             file: file,
           }));
@@ -258,6 +263,7 @@ const handleCloseFunction = (passValue) =>{
       hasPartialUploads,
       maxQuantity,
       transferredFiles.length,
+      uploadedFiles.length,
     ]
   );
 
