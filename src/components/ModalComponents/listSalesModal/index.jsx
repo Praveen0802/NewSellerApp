@@ -641,7 +641,7 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                       <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-40">
                         Category
                       </div>
-                      <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-28 flex items-center">
+                      <div className="p-3 text-[12px] font-medium text-[#7D82A4] w-40 flex items-center">
                       Proceed Price <ChevronDown className="ml-1 w-4 h-4" />
                       </div>
                       <div className="p-3 text-[12px] font-medium text-[#7D82A4] flex-1">
@@ -657,8 +657,8 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                         <div
                           key={item.ticket_id || index}
                           className={`${
-                            item.flag === 1 ? "bg-gray-100" : ""
-                          } flex border-b border-gray-200  text-[#323A70]`}
+                            item.flag === 1 ? "border-l-4 border-l-blue-500" : "border-l-0"
+                          } flex border-b border-gray-200 text-[#323A70]`}
                         >
                           <div
                             className="p-3 text-[12px] w-32 truncate"
@@ -753,13 +753,13 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                             )}
                           </div>
 
-                          <div className="p-3 text-[12px] flex-1 flex items-center justify-between">
-                            <span
+                          <div className="p-3 text-[12px] flex-1 flex items-center justify-center">
+                            {/* <span
                               className="break-words pr-2 max-w-[180px]"
                               title={getBenefitsText(item.ticket_details)}
                             >
                               {getBenefitsText(item.ticket_details)}
-                            </span>
+                            </span> */}
                             <Tooltip
                               content={getBenefitsText(item.ticket_details)}
                               position="top"

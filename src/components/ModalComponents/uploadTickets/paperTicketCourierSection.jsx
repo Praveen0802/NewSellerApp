@@ -502,7 +502,7 @@ console.log(getInitialData(),'getInitialDatagetInitialData')
                             />
                           </svg>
                         </div>
-                        <span className="text-xs text-[#323A70] truncate max-w-32">
+                        <span className="text-xs text-[#323A70] max-w-32">
                           {file.name}
                         </span>
                         {file.isExisting && (
