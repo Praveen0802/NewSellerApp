@@ -105,10 +105,16 @@ const UploadTickets = ({
   const [proofTransferredFiles, setProofTransferredFiles] = useState([]);
 
   // NEW: Drag and drop states
-  const [draggedFile, setDraggedFile] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
+  // Track currently dragged file (ref to avoid extra re-renders mid-drag)
+  const [draggedFile, setDraggedFile] = useState(null); // keep for final UI state after drop
+  const draggingFileRef = useRef(null); // used during the gesture
   const [dragOver, setDragOver] = useState(false);
   const [dragOverSlot, setDragOverSlot] = useState(null);
+  // Refs to stabilize first-attempt drag & drop
+  const dragGhostRef = useRef(null);
+  const dragPayloadRef = useRef(null);
+  const draggingAssignedRef = useRef(null);
+  const draggingAssignedFromIndexRef = useRef(null);
 
   // State for Paper Ticket Flow - storing courier info
   const [paperTicketDetails, setPaperTicketDetails] = useState({
@@ -774,6 +780,12 @@ const handleCloseFunction = (passValue) =>{
 
   const isConfirmDisabled = getCompletionStatus.completed === 0;
 
+  // Keep assignedFiles in sync (ordered, compressed) with transferredFiles after reorder/move/delete
+  useEffect(() => {
+    if (proofUploadView) return; // proof uses different set
+    setAssignedFiles(transferredFiles.filter(Boolean));
+  }, [transferredFiles, proofUploadView]);
+
   // Enhanced modal title and subtitle
   const getModalTitle = () => {
     if (proofUploadView) return "Upload Proof Document";
@@ -1250,50 +1262,37 @@ const handleCloseFunction = (passValue) =>{
         e.preventDefault();
         return;
       }
-
-      // Set drag data for better compatibility
-      e.dataTransfer.setData("text/plain", JSON.stringify(file));
+      console.debug('[UploadTickets] dragStart file:', file.id);
+      try {
+        e.dataTransfer.setData("application/x-ticket", JSON.stringify({ id: file.id }));
+      } catch(err) { /* ignore */ }
+      try { e.dataTransfer.setData("text/plain", file.id); } catch(err) { /* ignore */ }
       e.dataTransfer.effectAllowed = "move";
-
-      // Store dragged file globally for fallback
       window.currentDraggedFile = file;
-      setIsDragging(true);
-      setDraggedFile(file);
-
-      // Create ghost image
+      dragPayloadRef.current = file;
+      draggingFileRef.current = file; // use ref during gesture
+      // Defer state update to next frame to avoid interrupting native drag initialisation (fix first-attempt issue)
+      requestAnimationFrame(()=> setDraggedFile(file));
+      // Custom ghost
       const ghostElement = document.createElement("div");
-      ghostElement.innerHTML = `
-          <div style="
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px dashed #0137D5;
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 12px;
-            color: #323A70;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            max-width: 200px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          ">
-            📄 ${file.name}
-          </div>
-        `;
-      ghostElement.style.position = "absolute";
-      ghostElement.style.top = "-1000px";
+      ghostElement.innerHTML = `<div style="background:rgba(255,255,255,.92);border:2px dashed #0137D5;border-radius:8px;padding:10px 14px;font-size:12px;font-family:system-ui,sans-serif;color:#323A70;box-shadow:0 4px 12px rgba(0,0,0,.18);max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;">📄 ${file.name}</div>`;
+      ghostElement.style.position='absolute';
+      ghostElement.style.top='-1000px';
       document.body.appendChild(ghostElement);
-
-      e.dataTransfer.setDragImage(ghostElement, 10, 10);
-
-      setTimeout(() => {
-        document.body.removeChild(ghostElement);
-      }, 0);
+      dragGhostRef.current = ghostElement;
+      try { e.dataTransfer.setDragImage(ghostElement,10,10);} catch(err) { /* ignore */ }
     };
 
     const handleDragEnd = () => {
+      console.debug('[UploadTickets] dragEnd file:', draggingFileRef.current?.id);
       window.currentDraggedFile = null;
-      setIsDragging(false);
+      draggingFileRef.current = null;
       setDraggedFile(null);
+      dragPayloadRef.current = null;
+      if (dragGhostRef.current) {
+        try { document.body.removeChild(dragGhostRef.current);} catch(err) {}
+        dragGhostRef.current = null;
+      }
     };
 
     // NEW: Enhanced eye icon click handler for FileUploadSection
@@ -1433,7 +1432,7 @@ const handleCloseFunction = (passValue) =>{
               currentUploadedFiles.map((file) => (
                 <div
                   key={file.id}
-                  draggable={canTransferFile(file.id)}
+                  draggable
                   onDragStart={(e) => handleDragStart(e, file)}
                   onDragEnd={handleDragEnd}
                   className={`flex items-center border border-[#eaeaf1] bg-[#F9F9FB] justify-between ${
@@ -1443,7 +1442,7 @@ const handleCloseFunction = (passValue) =>{
                       ? "cursor-grab hover:bg-blue-50 hover:border-l-4 hover:border-l-blue-500"
                       : "cursor-not-allowed opacity-60"
                   } ${
-                    isDragging && draggedFile?.id === file.id
+                    draggingFileRef.current?.id === file.id
                       ? "opacity-50 transform scale-95"
                       : ""
                   }`}
@@ -1565,26 +1564,33 @@ const handleCloseFunction = (passValue) =>{
   const handleReorderTransferredFiles = useCallback(
     (fromIndex, toIndex) => {
       if (fromIndex === toIndex) return;
+      if (proofUploadView) return;
 
-      if (proofUploadView) {
-        // For proof upload, no reordering needed since it's always 1 item
-        return;
-      } else {
-        setTransferredFiles((prev) => {
-          const newArray = [...prev];
-          const draggedItem = newArray[fromIndex];
+      setTransferredFiles((prev) => {
+        const newArray = [...prev];
+        // Ensure fixed length with placeholders up to maxQuantity
+        if (newArray.length < maxQuantity) {
+          for (let i = newArray.length; i < maxQuantity; i++) {
+            newArray[i] = newArray[i] || null;
+          }
+        }
+        const draggedItem = newArray[fromIndex];
+        if (!draggedItem) return newArray; // nothing to move
 
-          // Remove the item from its current position
-          newArray.splice(fromIndex, 1);
-
-          // Insert it at the new position
-          newArray.splice(toIndex, 0, draggedItem);
-
-          return newArray;
-        });
-      }
+        // Strategy: if target slot empty -> move and leave null at original.
+        // If target slot filled -> swap.
+        const targetItem = newArray[toIndex];
+        if (!targetItem) {
+          newArray[toIndex] = draggedItem;
+          newArray[fromIndex] = null;
+        } else {
+          newArray[toIndex] = draggedItem;
+          newArray[fromIndex] = targetItem;
+        }
+        return newArray;
+      });
     },
-    [proofUploadView]
+    [proofUploadView, maxQuantity]
   );
 
   const TicketAssignmentSection = () => {
@@ -1615,29 +1621,51 @@ const handleCloseFunction = (passValue) =>{
 
       // Check if we're reordering an assigned file
       if (
-        draggedAssignedFile &&
-        draggedFromIndex !== null &&
+        (draggedAssignedFile || draggingAssignedRef.current) &&
+        (draggedFromIndex !== null || draggingAssignedFromIndexRef.current !== null) &&
         targetSlot !== null
       ) {
+        const fromIdx = draggingAssignedFromIndexRef.current ?? draggedFromIndex;
         const toIndex = targetSlot - 1;
-        handleReorderTransferredFiles(draggedFromIndex, toIndex);
+        handleReorderTransferredFiles(fromIdx, toIndex);
+        // Full cleanup so original slot becomes active again immediately
+        draggingAssignedRef.current = null;
+        draggingAssignedFromIndexRef.current = null;
+        window.currentDraggedFile = null;
+        dragPayloadRef.current = null;
         setDraggedAssignedFile(null);
         setDraggedFromIndex(null);
+        if (dragGhostRef.current) {
+          try { document.body.removeChild(dragGhostRef.current); } catch(err) {}
+          dragGhostRef.current = null;
+        }
         return;
       }
 
       // Handle new file drops (existing logic)
       let draggedFileData = null;
       try {
-        const dragData = e.dataTransfer.getData("text/plain");
-        if (dragData) {
-          draggedFileData = JSON.parse(dragData);
+        const customReorder = e.dataTransfer.getData("application/x-ticket-reorder");
+        const customTicket = e.dataTransfer.getData("application/x-ticket");
+        if (customReorder) {
+          draggedFileData = JSON.parse(customReorder);
+        } else if (customTicket) {
+          draggedFileData = JSON.parse(customTicket);
+        } else {
+          const plain = e.dataTransfer.getData("text/plain");
+          if (plain) draggedFileData = { id: plain };
         }
-      } catch (error) {
-        console.warn("Failed to parse drag data, using fallback");
+      } catch(error){
+        console.warn('Failed to parse drag data, using fallback');
       }
-
-      const fileToTransfer = draggedFileData || window.currentDraggedFile;
+      let fileToTransfer = null;
+      if (draggedFileData?.id) {
+        fileToTransfer = uploadedFiles.find(f=>f.id===draggedFileData.id) ||
+          proofUploadedFiles.find(f=>f.id===draggedFileData.id) ||
+          dragPayloadRef.current || window.currentDraggedFile;
+      } else {
+        fileToTransfer = dragPayloadRef.current || window.currentDraggedFile;
+      }
 
       if (fileToTransfer && canTransferFile(fileToTransfer.id)) {
         handleTransferSingleFile(fileToTransfer.id, targetSlot);
@@ -1667,53 +1695,42 @@ const handleCloseFunction = (passValue) =>{
     // NEW: Drag handlers for assigned files (for reordering)
     const handleAssignedFileDragStart = (e, file, index) => {
       if (proofUploadView) {
-        // No reordering for proof upload
         e.preventDefault();
         return;
       }
-
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData(
-        "text/plain",
-        JSON.stringify({ type: "reorder", file, index })
-      );
-
-      setDraggedAssignedFile(file);
-      setDraggedFromIndex(index);
-
-      // Create a custom drag image
-      const ghostElement = document.createElement("div");
-      ghostElement.innerHTML = `
-        <div style="
-          background: rgba(255, 255, 255, 0.95);
-          border: 2px solid #03BA8A;
-          border-radius: 6px;
-          padding: 8px 12px;
-          font-size: 12px;
-          color: #323A70;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-          max-width: 200px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        ">
-          🔄 ${file.name}
-        </div>
-      `;
-      ghostElement.style.position = "absolute";
-      ghostElement.style.top = "-1000px";
+      console.debug('[UploadTickets] reorder dragStart file:', file.id, 'index:', index);
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('application/x-ticket-reorder', JSON.stringify({type:'reorder', id:file.id, index})); } catch(err) { /* ignore */ }
+      try { e.dataTransfer.setData('text/plain', file.id); } catch(err) { /* ignore */ }
+      draggingAssignedRef.current = file;
+      draggingAssignedFromIndexRef.current = index;
+      dragPayloadRef.current = file;
+      window.currentDraggedFile = file;
+      requestAnimationFrame(() => {
+        setDraggedAssignedFile(file);
+        setDraggedFromIndex(index);
+      });
+      const ghostElement = document.createElement('div');
+      ghostElement.innerHTML = `<div style="background:rgba(255,255,255,.96);border:2px solid #03BA8A;border-radius:6px;padding:8px 12px;font-size:12px;font-family:system-ui,sans-serif;color:#323A70;box-shadow:0 4px 12px rgba(0,0,0,.22);max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;">🔄 ${file.name}</div>`;
+      ghostElement.style.position='absolute';
+      ghostElement.style.top='-1000px';
       document.body.appendChild(ghostElement);
-
-      e.dataTransfer.setDragImage(ghostElement, 10, 10);
-
-      setTimeout(() => {
-        document.body.removeChild(ghostElement);
-      }, 0);
+      dragGhostRef.current = ghostElement;
+      try { e.dataTransfer.setDragImage(ghostElement,10,10);} catch(err) { /* ignore */ }
     };
 
     const handleAssignedFileDragEnd = () => {
+      console.debug('[UploadTickets] reorder dragEnd file:', draggingAssignedRef.current?.id);
+      draggingAssignedRef.current = null;
+      draggingAssignedFromIndexRef.current = null;
+      dragPayloadRef.current = null;
+      window.currentDraggedFile = null;
       setDraggedAssignedFile(null);
       setDraggedFromIndex(null);
+      if (dragGhostRef.current) {
+        try { document.body.removeChild(dragGhostRef.current);} catch(err) {}
+        dragGhostRef.current = null;
+      }
     };
 
     // Existing functions (unchanged)
@@ -1802,9 +1819,9 @@ const handleCloseFunction = (passValue) =>{
           </h4>
           {dragOver && (
             <div className="text-xs text-blue-600 animate-pulse">
-              {draggedAssignedFile
-                ? "Drop to reorder"
-                : "Drop file here to assign"}
+              {(draggingAssignedRef.current || draggedAssignedFile)
+                ? 'Drop to reorder'
+                : 'Drop file here to assign'}
             </div>
           )}
         </div>
@@ -1820,8 +1837,10 @@ const handleCloseFunction = (passValue) =>{
               const assignedFile = currentTransferredFiles[index];
               const isSlotDraggedOver = dragOverSlot === itemNumber;
               const isEmpty = !assignedFile;
-              const isDraggedFile =
-                draggedAssignedFile && draggedFromIndex === index;
+              const isDraggedFile = (
+                draggingAssignedRef.current &&
+                draggingAssignedFromIndexRef.current === index
+              ) || (draggedAssignedFile && draggedFromIndex === index);
 
               // Check if this specific slot can accept drops
               const canAcceptDrop =
@@ -1830,10 +1849,11 @@ const handleCloseFunction = (passValue) =>{
                 canTransferFile(window.currentDraggedFile.id);
 
               // Check if this slot can accept reordering
+              const activeReorderIndex = draggingAssignedFromIndexRef.current ?? draggedFromIndex;
               const canAcceptReorder =
-                draggedAssignedFile &&
-                draggedFromIndex !== null &&
-                draggedFromIndex !== index;
+                (draggingAssignedRef.current || draggedAssignedFile) &&
+                activeReorderIndex !== null &&
+                activeReorderIndex !== index;
 
               return (
                 <div
