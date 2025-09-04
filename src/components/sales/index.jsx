@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import TabbedLayout from "../tabbedLayout";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import StickyDataTable from "../tradePage/components/stickyDataTable";
@@ -33,6 +33,7 @@ import Tooltip from "../addInventoryPage/simmpleTooltip";
 import UploadTickets from "../ModalComponents/uploadTickets";
 import MySalesUploadTickets from "../ModalComponents/uploadTickets/mySalesUploadTickets";
 import InventoryLogsInfo from "../inventoryLogsInfo";
+import { useRouter } from "next/router";
 
 const SalesPage = (props) => {
   const { profile, response = {} } = props;
@@ -257,6 +258,16 @@ const SalesPage = (props) => {
       tabKey.charAt(0).toUpperCase() + tabKey.slice(1).replace(/[-_]/g, " ")
     );
   };
+
+  // Add Inventory navigation (missing earlier for sales pages)
+  const router = useRouter();
+  const handleAddInventory = useCallback(() => {
+    try {
+      router.push("/add-listings");
+    } catch (e) {
+      console.error("Failed to navigate to add-listings", e);
+    }
+  }, [router]);
 
   const listData = salesData?.map((item) => ({
     ...item,
@@ -1249,6 +1260,8 @@ const SalesPage = (props) => {
         initialTab={profile || "pending"}
         listItemsConfig={itemConfig}
         useHeaderV2={true}
+  onAddInventory={handleAddInventory}
+  addInventoryText="Add Inventory"
         filterConfig={filterConfig}
         onTabChange={handleTabChange}
         onFilterChange={handleFilterChange}
