@@ -1079,6 +1079,11 @@ const SalesPage = (props) => {
 
     // Update global currency state if needed
     setCurrency(currencyCode);
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('sales_currency', currencyCode);
+      }
+    } catch(e) { /* ignore storage errors */ }
   };
 
   const { downloadCSV } = useCSVDownload();
@@ -1114,6 +1119,21 @@ const SalesPage = (props) => {
       getOrderDetails({ id: showInfoPopup?.data?.order_details?.order_id });
     }
   };
+
+  // Rehydrate currency from localStorage (persist across /sales/* route/tab changes)
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('sales_currency');
+        if (saved && saved !== currency) {
+          setCurrency(saved);
+          // Refetch with saved currency so data matches UI selection
+          apiCall({ currency: saved, page: 1 }, true);
+        }
+      }
+    } catch(e) { /* ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const handleClearAllFilters = async () => {
     setSelectedTicketTypes([]); // Reset to empty array
     setSortState(null); // Reset sort state
