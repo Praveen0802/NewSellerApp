@@ -240,7 +240,8 @@ const handleCloseFunction = (passValue) =>{
             return;
           }
           // Total already staged = existing uploaded (not yet transferred) + transferred
-          const stagedCount = uploadedFiles.length + transferredFiles.length;
+          const nonNullTransferred = transferredFiles.filter(Boolean).length;
+          const stagedCount = uploadedFiles.length + nonNullTransferred;
           if (stagedCount >= maxQuantity) {
             alert("You have already added the maximum number of files.");
             return;
@@ -262,7 +263,7 @@ const handleCloseFunction = (passValue) =>{
       hasExistingTickets,
       hasPartialUploads,
       maxQuantity,
-      transferredFiles.length,
+  transferredFiles, // need full array to recalc after null placeholder deletion
       uploadedFiles.length,
     ]
   );
@@ -328,7 +329,8 @@ const handleCloseFunction = (passValue) =>{
         }
 
         const fileToTransfer = uploadedFiles.find((file) => file.id === fileId);
-        const remainingSlots = maxQuantity - transferredFiles.length;
+        const nonNullTransferred = transferredFiles.filter(Boolean).length;
+        const remainingSlots = maxQuantity - nonNullTransferred;
 
         if (remainingSlots <= 0) {
           alert(
@@ -347,48 +349,41 @@ const handleCloseFunction = (passValue) =>{
             setTransferredFiles((prev) => {
               const newTransferred = [...prev];
               const targetIndex = targetSlot - 1;
-
-              // If target slot is empty or beyond current length, add at that position
-              if (targetIndex >= newTransferred.length) {
-                // Fill gaps with nulls if necessary
-                while (newTransferred.length < targetIndex) {
-                  newTransferred.push(null);
+              // Ensure array length up to maxQuantity with null placeholders
+              if (newTransferred.length < maxQuantity) {
+                for (let i = newTransferred.length; i < maxQuantity; i++) {
+                  newTransferred[i] = newTransferred[i] || null;
                 }
-                newTransferred.push(fileToTransfer);
-              } else if (!newTransferred[targetIndex]) {
-                // Target slot is empty, place file there
-                newTransferred[targetIndex] = fileToTransfer;
-              } else {
-                // Target slot is occupied, add at end
-                newTransferred.push(fileToTransfer);
               }
-
-              return newTransferred.filter((file) => file !== null);
+              newTransferred[targetIndex] = fileToTransfer; // place/replace
+              return newTransferred;
             });
             setAssignedFiles((prev) => {
               const newTransferred = [...prev];
               const targetIndex = targetSlot - 1;
-
-              // If target slot is empty or beyond current length, add at that position
-              if (targetIndex >= newTransferred.length) {
-                // Fill gaps with nulls if necessary
-                while (newTransferred.length < targetIndex) {
-                  newTransferred.push(null);
-                }
-                newTransferred.push(fileToTransfer);
-              } else if (!newTransferred[targetIndex]) {
-                // Target slot is empty, place file there
+              // For assignedFiles we keep a compressed list (no nulls) - replace if exists else push
+              if (newTransferred[targetIndex]) {
                 newTransferred[targetIndex] = fileToTransfer;
               } else {
-                // Target slot is occupied, add at end
-                newTransferred.push(fileToTransfer);
+                // If inserting beyond current length, fill gaps with nulls temporarily then push
+                while (newTransferred.length < targetIndex) newTransferred.push(null);
+                newTransferred[targetIndex] = fileToTransfer;
               }
-
-              return newTransferred.filter((file) => file !== null);
+              return newTransferred.filter(Boolean);
             });
           } else {
-            // Original behavior - add at end
-            setTransferredFiles((prev) => [...prev, fileToTransfer]);
+            // Add to first available empty slot, else ignore
+            setTransferredFiles((prev) => {
+              const newArr = [...prev];
+              if (newArr.length < maxQuantity) {
+                for (let i = newArr.length; i < maxQuantity; i++) {
+                  newArr[i] = newArr[i] || null;
+                }
+              }
+              const firstEmpty = newArr.findIndex((f) => !f);
+              if (firstEmpty !== -1) newArr[firstEmpty] = fileToTransfer;
+              return newArr;
+            });
             setAssignedFiles((prev) => [...prev, fileToTransfer]);
           }
           setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
@@ -401,7 +396,7 @@ const handleCloseFunction = (passValue) =>{
       proofTransferredFiles.length,
       maxQuantity,
       uploadedFiles,
-      transferredFiles.length,
+  transferredFiles, // include full array ref so non-null count updates
       hasExistingTickets,
       hasPartialUploads,
     ]
@@ -416,13 +411,13 @@ const handleCloseFunction = (passValue) =>{
         if (hasExistingTickets && !hasPartialUploads) {
           return false;
         }
-        return transferredFiles.length < maxQuantity;
+  return transferredFiles.filter(Boolean).length < maxQuantity;
       }
     },
     [
       proofUploadView,
       proofTransferredFiles.length,
-      transferredFiles.length,
+  transferredFiles, // recalc when content changes (nulls)
       maxQuantity,
       hasExistingTickets,
       hasPartialUploads,
@@ -761,7 +756,10 @@ const handleCloseFunction = (passValue) =>{
       const currentTransferredFiles = proofUploadView
         ? proofTransferredFiles
         : transferredFiles;
-      return { completed: currentTransferredFiles.length, total: maxQuantity };
+      return {
+        completed: currentTransferredFiles.filter(Boolean).length,
+        total: maxQuantity,
+      };
     }
     return { completed: 0, total: 0 };
   }, [
@@ -1225,7 +1223,7 @@ const handleCloseFunction = (passValue) =>{
     // Enhanced drag area disabled logic
     const isDragAreaDisabled = proofUploadView
       ? currentTransferredFiles.length >= 1
-      : transferredFiles.length >= maxQuantity;
+      : transferredFiles.filter(Boolean).length >= maxQuantity;
 
     // Enhanced no files message
     const getNoFilesMessage = () => {
@@ -1755,17 +1753,18 @@ const handleCloseFunction = (passValue) =>{
             })
           );
         } else {
-          setTransferredFiles((prev) =>
-            prev.filter((file) => {
-              if (assignedFile.existingId) {
-                return file.existingId !== assignedFile.existingId;
-              }
-              if (assignedFile.id) {
-                return file.id !== assignedFile.id;
-              }
-              return true;
-            })
-          );
+          setTransferredFiles((prev) => {
+            const newArr = [...prev];
+            const idx = newArr.findIndex((f) => f && (f.id === assignedFile.id || f.existingId === assignedFile.existingId));
+            if (idx !== -1) newArr[idx] = null; // leave placeholder
+            return newArr;
+          });
+          // Keep assignedFiles in sync (used for 'Show assigned')
+          setAssignedFiles((prev) => prev.filter((f) => {
+            if (!f) return false;
+            if (assignedFile.existingId) return f.existingId !== assignedFile.existingId;
+            return f.id !== assignedFile.id;
+          }));
         }
       } catch (error) {
         console.error("Error in handleDeleteUpload:", error);
@@ -1798,8 +1797,8 @@ const handleCloseFunction = (passValue) =>{
         <div className="flex justify-between items-center mb-2">
           <h4 className="text-sm font-medium text-[#323A70]">
             {proofUploadView
-              ? `Proof Assignment (${currentTransferredFiles.length}/${maxQuantity})`
-              : `Ticket Assignment (${currentTransferredFiles.length}/${maxQuantity})`}
+              ? `Proof Assignment (${currentTransferredFiles.filter(Boolean).length}/${maxQuantity})`
+              : `Ticket Assignment (${currentTransferredFiles.filter(Boolean).length}/${maxQuantity})`}
           </h4>
           {dragOver && (
             <div className="text-xs text-blue-600 animate-pulse">
@@ -1875,6 +1874,8 @@ const handleCloseFunction = (passValue) =>{
                           <span className="text-xs text-gray-700 truncate ">
                             {assignedFile.name}
                           </span>
+                          {/* Show full name without truncation when assigned */}
+                          {/* Updated: removed truncate and allow wrapping via break-all */}
                         </div>
                         <div className="flex items-center gap-1">
                           <button
