@@ -1166,6 +1166,37 @@ export const getmarketingInsights = async (token, params) => {
   }
 };
 
+// Fetch UI field settings (used for dynamic column/filter visibility)
+export const getFieldSettings = async (token) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.FIELD_SETTINGS}`,
+      method: "GET",
+      ...(token && { token }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in getFieldSettings", error);
+    return {};
+  }
+};
+
+// Save UI field settings (persist ordering/checked)
+export const saveFieldSettings = async (token, payload) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.SAVE_FIELD_SETTINGS}`,
+      method: "POST",
+      ...(token && { token }),
+      data: payload,
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in saveFieldSettings", error);
+    return {};
+  }
+};
+
 export const DeleteUserDetails = async (
   token,
   id,

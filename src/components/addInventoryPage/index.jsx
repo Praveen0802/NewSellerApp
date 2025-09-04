@@ -56,6 +56,8 @@ import {
   saveAddListing,
   saveBulkListing,
   saveListing,
+  getFieldSettings,
+  saveFieldSettings,
 } from "@/utils/apiHandler/request";
 import { useRouter } from "next/router";
 import SearchedList from "../tradePage/components/searchedList";
@@ -159,46 +161,35 @@ const AddInventoryPage = (props) => {
     }
   };
 
-  // KEEP THE ORIGINAL formatDateForInput function (EXACT SAME)
-  const formatDateForInput = (dateString) => {
-    if (!dateString) return "";
-
+  // Safe date formatting (supports string, Date, or {startDate})
+  const formatDateForInput = (value) => {
+    if (!value) return "";
     try {
-      // Handle different date formats
-      let date;
-
-      // If it's in format "22 August 2025"
-      if (
-        typeof dateString === "string" &&
-        dateString.match(/^\d{1,2}\s\w+\s\d{4}$/)
-      ) {
-        date = new Date(dateString);
-      }
-      // If it's already a Date object
-      else if (dateString instanceof Date) {
-        date = dateString;
-      }
-      // If it's in YYYY-MM-DD format
-      else if (
-        typeof dateString === "string" &&
-        dateString.match(/^\d{4}-\d{2}-\d{2}$/)
-      ) {
-        date = new Date(dateString);
-      }
-      // Try to parse any other format
-      else {
-        date = new Date(dateString);
-      }
-
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
+      // If object with startDate/endDate
+      if (typeof value === 'object' && !(value instanceof Date)) {
+        if (value.startDate) return formatDateForInput(value.startDate);
+        if (value.endDate) return formatDateForInput(value.endDate);
         return "";
       }
-
-      // Return in YYYY-MM-DD format for input fields
-      return date.toISOString().split("T")[0];
-    } catch (error) {
-      console.error("Error formatting date:", error);
+      let date;
+      if (value instanceof Date) {
+        date = value;
+      } else if (typeof value === 'string') {
+        if (/^\d{1,2}\s\w+\s\d{4}$/.test(value)) {
+          date = new Date(value);
+        } else if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          date = new Date(value);
+        } else {
+          // Fallback parse
+          date = new Date(value);
+        }
+      } else {
+        return ""; // unsupported type
+      }
+      if (isNaN(date.getTime())) return "";
+      return date.toISOString().split('T')[0];
+    } catch (err) {
+      console.error('Error formatting date:', err);
       return "";
     }
   };
@@ -227,387 +218,394 @@ const AddInventoryPage = (props) => {
     }
   }, [filtersApplied?.ticket_category, matchId]);
 
-  // Updated filters array with validation errors and handleFilterChange
-  const filters = [
-    {
+  // Dynamic field settings from API
+  const [fieldSettings, setFieldSettings] = useState(null);
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const res = await getFieldSettings("");
+        setFieldSettings(res?.field_settings || null);
+      } catch (e) {
+        console.error("Failed to load field settings", e);
+        setFieldSettings(null);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  // Base filter configs (static definitions)
+  const baseFilterConfigs = useMemo(() => ({
+    ticket_types: {
       type: "select",
       name: "ticket_types",
       label: "Ticket Type",
-      value: filtersApplied?.ticket_types,
       mandatory: true,
-      error: validationErrors?.ticket_types,
       options: [
-        ...(ticket_types?.map((note) => ({
-          value: note.id.toString(),
-          label: note.name,
-        })) || []),
+        ...(ticket_types?.map((note) => ({ value: note.id.toString(), label: note.name })) || []),
       ],
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow  md:max-w-[180px] lg:max-w-[212px]",
-      className:
-        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow  md:max-w-[180px] lg:max-w-[212px]",
+      className: "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) => handleFilterChange("ticket_types", value),
     },
-    {
+    add_qty_addlist: {
       type: "number",
       name: "add_qty_addlist",
       label: "Quantity",
       mandatory: true,
-      value: filtersApplied?.add_qty_addlist,
-      error: validationErrors?.add_qty_addlist,
       increasedWidth: "!w-[100px]",
-      options: [
-        { value: "1", label: "1" },
-        { value: "2", label: "2" },
-        { value: "3", label: "3" },
-        { value: "4", label: "4" },
-        { value: "5", label: "5" },
-      ],
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[120px] lg:max-w-[212px]",
-      className:
-        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      options: [1,2,3,4,5].map(n=>({value:String(n),label:String(n)})),
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[120px] lg:max-w-[212px]",
+      className: "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (e) => handleFilterChange("add_qty_addlist", e.target.value),
     },
-    {
+    split_type: {
       type: "select",
       name: "split_type",
       label: "Split Type",
       increasedWidth: "!w-[120px]",
       mandatory: true,
-      value: filtersApplied?.split_type,
-      error: validationErrors?.split_type,
       options: [
-        ...(split_types?.map((note) => ({
-          value: note.id.toString(),
-          label: note.name,
-        })) || []),
+        ...(split_types?.map((note) => ({ value: note.id.toString(), label: note.name })) || []),
       ],
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[150px] lg:max-w-[212px]",
-      className:
-        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[150px] lg:max-w-[212px]",
+      className: "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) => {
         let updated = { split_type: value };
-        if (value === "6") {
-          updated.split_details = "27";
-        } else if (filtersApplied.split_details === "27") {
-          updated.split_details = "";
-        }
+        if (value === "6") { updated.split_details = "27"; }
+        else if (filtersApplied.split_details === "27") { updated.split_details = ""; }
         setFiltersApplied((prev) => ({ ...prev, ...updated }));
-        
-        // Clear validation errors for both fields
-        setValidationErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors.split_type;
-          if (updated.split_details !== undefined) {
-            delete newErrors.split_details;
-          }
-          return newErrors;
-        });
+        setValidationErrors((prev) => { const ne={...prev}; delete ne.split_type; if(updated.split_details!==undefined) delete ne.split_details; return ne; });
       },
     },
-    {
+    split_details: {
       type: "select",
       name: "split_details",
       label: "Seating Arrangement",
       mandatory: true,
-      value: filtersApplied?.split_details,
-      error: validationErrors?.split_details,
       options: [
-        ...(split_details_left?.map((note) => ({
-          value: note.id.toString(),
-          label: note.name,
-        })) || []),
-        ...(split_details_right?.map((note) => ({
-          value: note.id.toString(),
-          label: note.name,
-        })) || []),
+        ...(split_details_left?.map((note) => ({ value: note.id.toString(), label: note.name })) || []),
+        ...(split_details_right?.map((note) => ({ value: note.id.toString(), label: note.name })) || []),
       ],
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[180px] lg:max-w-[212px]",
-      className:
-        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[180px] lg:max-w-[212px]",
+      className: "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) => {
         let updated = { split_details: value };
-        if (filtersApplied.split_type === "6" && value !== "27") {
-          updated.split_type = "5";
-        }
+        if (filtersApplied.split_type === "6" && value !== "27") { updated.split_type = "5"; }
         setFiltersApplied((prev) => ({ ...prev, ...updated }));
-        
-        // Clear validation errors for both fields
-        setValidationErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors.split_details;
-          if (updated.split_type !== undefined) {
-            delete newErrors.split_type;
-          }
-          return newErrors;
-        });
+        setValidationErrors((prev) => { const ne={...prev}; delete ne.split_details; if(updated.split_type!==undefined) delete ne.split_type; return ne; });
       },
     },
-    {
+    max_display_qty: {
       type: "number",
       name: "max_display_qty",
       label: "Max Display Quantity",
-      value: filtersApplied?.max_display_qty,
-      error: validationErrors?.max_display_qty,
-      options: [
-        { value: "1", label: "1" },
-        { value: "2", label: "2" },
-        { value: "3", label: "3" },
-        { value: "4", label: "4" },
-        { value: "5", label: "5" },
-      ],
+      options: [1,2,3,4,5].map(n=>({value:String(n),label:String(n)})),
       increasedWidth: "min-w-[100px]",
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
-      className:
-        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
+      className: "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (e) => handleFilterChange("max_display_qty", e?.target?.value),
     },
-    {
+    home_town: {
       type: "select",
       name: "home_town",
       increasedWidth: "!w-[100px]",
       label: "Fan Area",
-      value: filtersApplied?.home_town,
-      error: validationErrors?.home_town,
-      options: Object.entries(home_town || {}).map(([key, value]) => ({
-        value: key,
-        label: value,
-      })),
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[140px] lg:max-w-[212px]",
-      className:
-        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      options: Object.entries(home_town || {}).map(([key, value]) => ({ value: key, label: value })),
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[140px] lg:max-w-[212px]",
+      className: "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) => handleFilterChange("home_town", value),
     },
-    {
+    ticket_category: {
       type: "select",
       name: "ticket_category",
       label: "Seating Category",
       mandatory: true,
-      increasedWidth:
-        " sm:!w-[160px] sm:!min-w-[160px] !w-[160px] ",
-      value: filtersApplied?.ticket_category,
-      error: validationErrors?.ticket_category,
-      options: Object.entries(block_data || {}).map(([key, value]) => ({
-        value: key,
-        label: value,
-      })),
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[180px] lg:max-w-[212px]",
-      className:
-        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) => {
-        setFiltersApplied((prev) => ({
-          ...prev,
-          ticket_category: value,
-          ticket_block: "",
-        }));
-        
-        // Clear validation errors
-        setValidationErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors.ticket_category;
-          delete newErrors.ticket_block;
-          return newErrors;
-        });
-      },
+      increasedWidth: " sm:!w-[160px] sm:!min-w-[160px] !w-[160px] ",
+      options: Object.entries(block_data || {}).map(([key, value]) => ({ value: key, label: value })),
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[180px] lg:max-w-[212px]",
+      className: "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      onChange: (value) => { setFiltersApplied(prev=>({...prev,ticket_category:value,ticket_block:""})); setValidationErrors(prev=>{const ne={...prev}; delete ne.ticket_category; delete ne.ticket_block; return ne;}); },
     },
-    {
+    ticket_block: {
       type: "select",
       name: "ticket_block",
       label: "Section/Block",
       increasedWidth: "!w-[110px]",
-      value: filtersApplied?.ticket_block,
-      error: validationErrors?.ticket_block,
       options: blockDetails,
       disabled: !filtersApplied?.ticket_category,
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[150px] lg:max-w-[212px]",
-      className:
-        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[150px] lg:max-w-[212px]",
+      className: "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) => handleFilterChange("ticket_block", value),
     },
-    {
+    row: {
       type: "text",
       name: "row",
       label: "Row",
-      value: filtersApplied?.row,
-      error: validationErrors?.row,
       increasedWidth: "!w-[100px]",
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[100px] lg:max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[100px] lg:max-w-[212px]",
       className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (e) => handleFilterChange("row", e?.target?.value),
     },
-    {
+    first_seat: {
       type: "number",
       name: "first_seat",
       label: "First Seat",
       increasedWidth: "!w-[110px]",
-      value: filtersApplied?.first_seat,
-      error: validationErrors?.first_seat,
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[120px] lg:max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[120px] lg:max-w-[212px]",
       className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (e) => handleFilterChange("first_seat", e?.target?.value),
     },
-    {
+    face_value: {
       type: "number",
       name: "face_value",
       label: "Face Value",
       increasedWidth: "!w-[120px]",
       currencyFormat: true,
-      decimalValue:true,
-      value: filtersApplied?.face_value,
-      error: validationErrors?.face_value,
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[140px] lg:max-w-[212px]",
-      iconBefore: (
-        <div className="border-r-[1px] pr-2 border-[#E0E1EA]">
-          <p className="text-xs sm:text-[10px] lg:text-xs">
-            {matchDetails?.currency_icon?.[0] || "$"}
-          </p>
-        </div>
-      ),
+      decimalValue: true,
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[140px] lg:max-w-[212px]",
+      iconBefore: (<div className="border-r-[1px] pr-2 border-[#E0E1EA]"><p className="text-xs sm:text-[10px] lg:text-xs">{matchDetails?.currency_icon?.[0] || "$"}</p></div>),
       className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (e) => handleFilterChange("face_value", e?.target?.value),
     },
-    {
+    add_price_addlist: {
       type: "number",
       name: "add_price_addlist",
       label: "Processed Price",
-      decimalValue:true,
       increasedWidth: "!w-[120px]",
       currencyFormat: true,
       mandatory: true,
-      value: filtersApplied?.add_price_addlist,
-      error: validationErrors?.add_price_addlist,
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
-      iconBefore: (
-        <div className="border-r-[1px] pr-2 border-[#E0E1EA]">
-          <p className="text-xs sm:text-[10px] lg:text-xs">
-            {matchDetails?.currency_icon?.[0] || "$"}
-          </p>
-        </div>
-      ),
+      decimalValue: true,
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
+      iconBefore: (<div className="border-r-[1px] pr-2 border-[#E0E1EA]"><p className="text-xs sm:text-[10px] lg:text-xs">{matchDetails?.currency_icon?.[0] || "$"}</p></div>),
       className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (e) => handleFilterChange("add_price_addlist", e?.target?.value),
     },
-    {
+    notes: {
       type: "select",
       name: "notes",
       label: "Benifits",
-      value: filtersApplied?.notes,
-      error: validationErrors?.notes,
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[140px] lg:max-w-[212px]",
       multiselect: true,
       options: [
-        ...(notes_left?.map((note) => ({
-          value: note.id.toString(),
-          label: note.name,
-        })) || []),
-        ...(notes_right?.map((note) => ({
-          value: note.id.toString(),
-          label: note.name,
-        })) || []),
+        ...(notes_left?.map((note) => ({ value: note.id.toString(), label: note.name })) || []),
+        ...(notes_right?.map((note) => ({ value: note.id.toString(), label: note.name })) || []),
       ],
-      className:
-        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[140px] lg:max-w-[212px]",
+      className: "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) => handleFilterChange("notes", value),
     },
-    {
+    restrictions: {
       type: "select",
       name: "restrictions",
       label: "Restrictions",
-      value: filtersApplied?.restrictions,
-      error: validationErrors?.restrictions,
       multiselect: true,
       options: [
-        ...(restriction_left?.map((note) => ({
-          value: note.id.toString(),
-          label: note.name,
-        })) || []),
-        ...(restriction_right?.map((note) => ({
-          value: note.id.toString(),
-          label: note.name,
-        })) || []),
+        ...(restriction_left?.map((note) => ({ value: note.id.toString(), label: note.name })) || []),
+        ...(restriction_right?.map((note) => ({ value: note.id.toString(), label: note.name })) || []),
       ],
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
-      className:
-        "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
+      className: "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) => handleFilterChange("restrictions", value),
     },
-    {
+    ship_date: {
       type: "date",
       name: "ship_date",
       label: "Date to Ship",
-      value: filtersApplied?.ship_date || {
-        startDate: matchDetails?.ship_date,
-        endDate: matchDetails?.ship_date,
-      },
-      error: validationErrors?.ship_date,
+      value: filtersApplied?.ship_date || { startDate: matchDetails?.ship_date, endDate: matchDetails?.ship_date },
       minDate: new Date().toISOString().split("T")[0],
       maxDate: matchDetails?.ship_date,
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
       singleDateMode: true,
-      className:
-        "!pb-[10px] !pt-[12px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      className: "!pb-[10px] !pt-[12px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) => handleFilterChange("ship_date", value),
     },
-    {
+    ticket_in_hand: {
       type: "checkbox",
       name: "ticket_in_hand",
       label: "Tickets In Hand",
       value: filtersApplied?.ticket_in_hand || false,
-      error: validationErrors?.ticket_in_hand,
-      parentClassName:
-        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
-      className:
-        "!py-[4px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
-      labelClassName:
-        "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
+      className: "!py-[4px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       hideFromTable: true,
       onChange: (e) => handleFilterChange("ticket_in_hand", e?.target?.checked),
     },
-  ];
+    upload_tickets: {
+      type: "text", // placeholder (UI action handled elsewhere)
+      name: "upload_tickets",
+      label: "Upload Tickets",
+      placeholder: "Use row action after adding listing",
+      disabled: true,
+      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[180px] lg:max-w-[212px]",
+      className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs opacity-60 cursor-not-allowed",
+      labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+      hideFromTable: true,
+      onChange: () => {},
+    },
+  }), [ticket_types, split_types, split_details_left, split_details_right, notes_left, notes_right, restriction_left, restriction_right, block_data, blockDetails, filtersApplied, matchDetails, home_town]);
+
+  // Map API names to internal keys (case-insensitive)
+  const apiNameToKey = {
+    "quantity": "add_qty_addlist",
+    "ticket type": "ticket_types",
+    "split type": "split_type",
+    "seating arrangement": "split_details",
+    "max display quantity": "max_display_qty",
+    "category": "ticket_category",
+  "seating category": "ticket_category",
+    "section": "ticket_block",
+  "section/block": "ticket_block",
+  "section / block": "ticket_block",
+    "row": "row",
+  "first seat": "first_seat",
+    "face value": "face_value",
+  "proceed price": "add_price_addlist",
+  "processed price": "add_price_addlist",
+  "restriction": "restrictions",
+  "restrictions": "restrictions",
+  "benefits": "notes",
+  "benifits": "notes",
+    "date to ship": "ship_date",
+    "tickets in hand": "ticket_in_hand",
+    "fan area": "home_town",
+    "upload tickets": "upload_tickets",
+  };
+
+  // Build filters from API settings or fallback to all
+  const filters = useMemo(() => {
+    const list = fieldSettings?.addInventoryTableFilter;
+    let built = [];
+    if (Array.isArray(list)) {
+      const seen = new Set();
+      list.forEach(item => {
+        const rawName = item?.name?.toLowerCase?.().trim() || "";
+        const key = apiNameToKey[rawName];
+        let finalConfig;
+        if (key && baseFilterConfigs[key]) {
+          if (seen.has(key)) return; // avoid duplicates mapping to same key
+          finalConfig = { ...baseFilterConfigs[key], label: item.name };
+          seen.add(key);
+        } else {
+          const unknownName = `unknown_${rawName.replace(/[^a-z0-9_]/g,'_')}`;
+          if (seen.has(unknownName)) return;
+          finalConfig = {
+            type: "text",
+            name: unknownName,
+            label: item.name,
+            placeholder: "Enter value",
+            parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[180px] lg:max-w-[212px]",
+            className: "!py-[10px] w-full text-xs sm:text-[10px] lg:text-xs",
+            labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
+            hideFromTable: true,
+            onChange: (e) => handleFilterChange(unknownName, e?.target?.value),
+          };
+          seen.add(unknownName);
+        }
+        built.push(finalConfig);
+      });
+      // If split_type included but seating arrangement implicit
+      const hasSplitType = built.find(b=>b.name==='split_type');
+      const hasSplitDetails = built.find(b=>b.name==='split_details');
+      if(hasSplitType && !hasSplitDetails && baseFilterConfigs.split_details){
+        built.splice(built.indexOf(hasSplitType)+1,0, baseFilterConfigs.split_details);
+      }
+    }
+    if (built.length === 0) {
+      // Fallback to original full set
+      built = Object.values(baseFilterConfigs);
+    }
+    // Inject dynamic value & error each render
+    return built.map(cfg => ({
+      ...cfg,
+      value: (filtersApplied?.[cfg.name] !== undefined && filtersApplied?.[cfg.name] !== null && filtersApplied?.[cfg.name] !== "")
+        ? filtersApplied?.[cfg.name]
+        : (cfg.name === 'ship_date'
+            ? (cfg.value || { startDate: matchDetails?.ship_date, endDate: matchDetails?.ship_date })
+            : cfg.value),
+      error: validationErrors?.[cfg.name],
+    }));
+  }, [fieldSettings, baseFilterConfigs, filtersApplied, validationErrors]);
+
+  // Ensure ship_date default initialized once when matchDetails available
+  useEffect(() => {
+    if (matchDetails?.ship_date && !filtersApplied?.ship_date) {
+      setFiltersApplied(prev => ({
+        ...prev,
+        ship_date: { startDate: matchDetails.ship_date, endDate: matchDetails.ship_date }
+      }));
+    }
+  }, [matchDetails?.ship_date, filtersApplied?.ship_date]);
+
+  // Initialize active & ordered filters from API 'checked' flags (one-time)
+  const apiInitRef = useRef(false);
+  useEffect(() => {
+    if (apiInitRef.current) return;
+    const list = fieldSettings?.addInventoryTableFilter;
+    if (Array.isArray(list) && list.length) {
+      const active = [];
+      const ordered = [];
+      const seen = new Set();
+      list.forEach(item => {
+        const rawName = item?.name?.toLowerCase?.().trim() || "";
+        const key = apiNameToKey[rawName] || `unknown_${rawName.replace(/[^a-z0-9_]/g,'_')}`;
+        if (!seen.has(key)) {
+          ordered.push(key);
+          if (item.checked) active.push(key);
+          seen.add(key);
+        }
+      });
+      if (active.length) setActiveFilters(active);
+      if (ordered.length) setOrderedFilters(ordered);
+      apiInitRef.current = true;
+    }
+  }, [fieldSettings, apiNameToKey]);
+
+  // Reconcile previously unknown placeholders if mapping updated (e.g., Benefits/Restrictions variants)
+  useEffect(() => {
+    if (!fieldSettings?.addInventoryTableFilter) return;
+    let changed = false;
+    const list = fieldSettings.addInventoryTableFilter;
+    const replacementMap = {};
+    list.forEach(item => {
+      const rawName = item?.name?.toLowerCase?.().trim() || "";
+      const mapped = apiNameToKey[rawName];
+      if (mapped) {
+        const unknownKey = `unknown_${rawName.replace(/[^a-z0-9_]/g,'_')}`;
+        replacementMap[unknownKey] = mapped;
+      }
+    });
+    if (Object.keys(replacementMap).length === 0) return;
+    setOrderedFilters(prev => {
+      let updated = prev.map(k => replacementMap[k] ? replacementMap[k] : k);
+      const dedup = [];
+      const seen = new Set();
+      updated.forEach(k => { if(!seen.has(k)) { seen.add(k); dedup.push(k);} });
+      if (dedup.join(',') !== prev.join(',')) { changed = true; return dedup; }
+      return prev;
+    });
+    setActiveFilters(prev => {
+      let updated = prev.map(k => replacementMap[k] ? replacementMap[k] : k);
+      const dedup = [];
+      const seen = new Set();
+      updated.forEach(k => { if(!seen.has(k)) { seen.add(k); dedup.push(k);} });
+      if (dedup.join(',') !== prev.join(',')) { changed = true; return dedup; }
+      return prev;
+    });
+  }, [fieldSettings, apiNameToKey]);
 
   const columnOrder = [
     "ticket_types",
@@ -909,6 +907,54 @@ const AddInventoryPage = (props) => {
     return orderedVisibleHeaders;
   };
 
+  // Persist field settings (order + checked state) to API
+  const persistFieldSettings = async (
+    activeFiltersOverride = null,
+    orderedFiltersOverride = null
+  ) => {
+    const currentActive = activeFiltersOverride || activeFilters;
+    const currentOrder = orderedFiltersOverride || orderedFilters;
+
+    const apiSource = fieldSettings?.addInventoryTableFilter || [];
+    const labelMap = {};
+    filters.forEach((f) => {
+      labelMap[f.name] = f.label;
+    });
+
+    // Union of current order and all filter keys to ensure completeness
+    const allKeys = Array.from(
+      new Set([...currentOrder, ...filters.map((f) => f.name)])
+    );
+
+    const valueArray = allKeys.map((internalKey, idx) => {
+      const original = apiSource.find((item) => {
+        const mappedKey =
+          apiNameToKey[item.name?.toLowerCase?.()] ||
+          `unknown_${item.name
+            ?.toLowerCase?.()
+            .replace(/[^a-z0-9_]/g, "_")}`;
+        return mappedKey === internalKey;
+      });
+      return {
+        id: original?.id || idx + 1,
+        name: original?.name || labelMap[internalKey] || internalKey,
+        checked: currentActive.includes(internalKey),
+      };
+    });
+
+    const payload = {
+      settings: [
+        { key: "addInventoryTableFilter", value: valueArray },
+      ],
+    };
+
+    try {
+      await saveFieldSettings("", payload);
+    } catch (e) {
+      console.error("Failed to save field settings", e);
+    }
+  };
+
   // Handle filter toggle
   const handleFilterToggle = (filterKey) => {
     console.log("Toggling filter:", filterKey);
@@ -917,6 +963,8 @@ const AddInventoryPage = (props) => {
         ? prev.filter((key) => key !== filterKey)
         : [...prev, filterKey];
       console.log("New activeFilters:", newActiveFilters);
+      // Persist immediately after toggle
+      persistFieldSettings(newActiveFilters);
       return newActiveFilters;
     });
   };
@@ -934,20 +982,11 @@ const AddInventoryPage = (props) => {
   };
 
   // Handle filters reordering with proper debugging
-  const handleFiltersReorder = (reorderedItems) => {
+  const handleFiltersReorder = async (reorderedItems) => {
     const newOrder = reorderedItems.map((item) => item.key);
-    console.log("Reordering filters from:", orderedFilters);
-    console.log("Reordering filters to:", newOrder);
-
     setOrderedFilters(newOrder);
-
-    // Force a re-render to ensure the changes are applied immediately
-    setTimeout(() => {
-      console.log(
-        "Filter order updated. Current visible filters:",
-        getVisibleFilters().map((f) => f.name)
-      );
-    }, 100);
+  // Persist after reordering (order changed, active unchanged)
+  await persistFieldSettings(null, newOrder);
   };
 
   // Handle columns reordering with proper debugging

@@ -660,6 +660,11 @@ const SimpleEditableCell = ({
   // Date formatting helper functions (keeping existing)
   const formatDateForDisplay = (dateString) => {
     if (!dateString) return "";
+    if (typeof dateString !== 'string') {
+      // Attempt to extract if object like {startDate}
+      if (dateString.startDate) return formatDateForDisplay(dateString.startDate);
+      return "";
+    }
 
     try {
       // If already in DD/MM/YYYY format
@@ -697,6 +702,10 @@ const SimpleEditableCell = ({
   // Convert date string to FloatingDateRange format (keeping existing)
   const convertToDateRangeFormat = (dateString) => {
     if (!dateString) return { startDate: "", endDate: "" };
+    if (typeof dateString === 'object') {
+      if (dateString.startDate) return { startDate: dateString.startDate, endDate: dateString.endDate || dateString.startDate };
+      return { startDate: "", endDate: "" };
+    }
 
     let formattedDate = "";
 
@@ -732,7 +741,7 @@ const SimpleEditableCell = ({
 
     const dateString = dateRangeValue.startDate;
 
-    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+  if (typeof dateString === 'string' && dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
       const [year, month, day] = dateString.split("-");
       return `${day}-${month}-${year}`;
     }

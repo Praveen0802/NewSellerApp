@@ -141,6 +141,8 @@ export const API_ROUTES = {
   NOTIFICATION_ACTIVITY_HISTORY: "/notification/activity-history",
   NOTIFICATION_UPDATE: "/notification/update-notification",
   GET_NOTIFICATION_COUNT: "/ui-settings/menu-notification",
+  FIELD_SETTINGS: "/ui-settings/field-settings",
+  SAVE_FIELD_SETTINGS: "/ui-settings/save-field-settings",
   GET_TX_PAY: "/settings/lmt-pay",
   ZOHO_EMBED: "/zoho-sign/embed",
   FETCH_CURRENCY: "/currencies",
