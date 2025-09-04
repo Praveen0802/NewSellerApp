@@ -703,12 +703,6 @@ const SalesPage = (props) => {
       count: getCountByStatus("pending") || "0",
       route: "/sales/pending",
       amount: getAmountByStatus("pending"),
-      options: response?.currencyValues?.map((list) => {
-        return {
-          label: list?.code,
-          value: list?.code,
-        };
-      }),
     },
     {
       name: "Awaiting Delivery",
@@ -716,12 +710,6 @@ const SalesPage = (props) => {
       count: getCountByStatus("confirmed"),
       route: "/sales/confirmed",
       amount: getAmountByStatus("confirmed"),
-      options: response?.currencyValues?.map((list) => {
-        return {
-          label: list?.code,
-          value: list?.code,
-        };
-      }),
     },
     {
       name: "Delivered",
@@ -729,13 +717,6 @@ const SalesPage = (props) => {
       count: getCountByStatus("delivered"),
       route: "/sales/delivered",
       amount: getAmountByStatus("delivered"),
-      currencyDropdown: true,
-      options: response?.currencyValues?.map((list) => {
-        return {
-          label: list?.code,
-          value: list?.code,
-        };
-      }),
     },
     {
       name: "Completed",
@@ -743,12 +724,6 @@ const SalesPage = (props) => {
       count: getCountByStatus("completed"),
       route: "/sales/completed",
       amount: getAmountByStatus("completed"),
-      options: response?.currencyValues?.map((list) => {
-        return {
-          label: list?.code,
-          value: list?.code,
-        };
-      }),
     },
     {
       name: "Cancelled",
@@ -756,12 +731,6 @@ const SalesPage = (props) => {
       count: getCountByStatus("cancelled"),
       route: "/sales/cancelled",
       amount: getAmountByStatus("cancelled"),
-      options: response?.currencyValues?.map((list) => {
-        return {
-          label: list?.code,
-          value: list?.code,
-        };
-      }),
     },
     {
       name: "Replaced",
@@ -769,12 +738,6 @@ const SalesPage = (props) => {
       count: getCountByStatus("replaced"),
       route: "/sales/replaced",
       amount: getAmountByStatus("replaced"),
-      options: response?.currencyValues?.map((list) => {
-        return {
-          label: list?.code,
-          value: list?.code,
-        };
-      }),
     },
   ];
 
@@ -1136,7 +1099,6 @@ const SalesPage = (props) => {
         toast.success("Report downloaded");
       } else {
         console.error("No data received from server");
-        toast.error("No data received");
       }
     } catch (error) {
       console.error("Error downloading CSV:", error);
@@ -1253,6 +1215,12 @@ const SalesPage = (props) => {
     );
   };
 
+  // Global currency options (shared across tabs)
+  const globalCurrencyOptions = (response?.currencyValues || []).map((c) => ({
+    label: c?.code,
+    value: c?.code,
+  }));
+
   return (
     <div className="min-h-screen bg-gray-50">
       <TabbedLayout
@@ -1269,7 +1237,7 @@ const SalesPage = (props) => {
         onColumnToggle={handleColumnToggle}
         onCurrencyChange={handleCurrencyChange}
         selectedCurrency={currency}
-        tabCurrencies={tabCurrencies}
+        tabCurrencies={{ options: globalCurrencyOptions }}
         visibleColumns={visibleColumns}
         showSelectedFilterPills={true}
         headerV2ClassName="mb-4"

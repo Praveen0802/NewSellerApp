@@ -48,6 +48,11 @@ const HeaderV2 = ({
   isDraggableFilters = false,
   showColumnSearch = false,
   showFilterSearch = false,
+  // Global currency dropdown props (optional)
+  showGlobalCurrency = false,
+  currencyOptions = [],
+  selectedCurrency = "",
+  onCurrencyChange = () => {},
 }) => {
   return (
     <div className="w-full bg-white border-b border-gray-200">
@@ -120,6 +125,20 @@ const HeaderV2 = ({
 
         {/* Right side - Add Inventory Button and Toggle Icon */}
         <div className="flex items-center gap-3">
+          
+          {showGlobalCurrency && (
+            <div className="flex items-center gap-2">
+              <select
+                value={selectedCurrency}
+                onChange={(e) => onCurrencyChange(e.target.value)}
+                className="px-3 py-2 text-sm border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {currencyOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <button
             onClick={onAddInventory}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#343432] border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
@@ -127,6 +146,7 @@ const HeaderV2 = ({
             <PlusIcon className="w-4 h-4" />
             {addInventoryText}
           </button>
+
 
           {/* Toggle List Items Chevron */}
           <button

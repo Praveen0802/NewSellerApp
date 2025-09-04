@@ -274,7 +274,6 @@ const TabbedLayout = ({
 
   const handleFiltersReorder = (reorderedItems) => {
     const newOrder = reorderedItems.map((item) => item.key);
-
     setOrderedFilters((prev) => ({
       ...prev,
       [selectedTab]: newOrder,
@@ -648,6 +647,10 @@ const TabbedLayout = ({
             isDraggableFilters={isDraggableFilters}
             showColumnSearch={showColumnSearch}
             showFilterSearch={showFilterSearch}
+              showGlobalCurrency={!!onCurrencyChange}
+              currencyOptions={(tabCurrencies && tabCurrencies[selectedTab]) ? (tabCurrencies[selectedTab].options || tabCurrencies.options || []) : (tabCurrencies?.options || [])}
+              selectedCurrency={selectedCurrency}
+              onCurrencyChange={(val) => onCurrencyChange && onCurrencyChange(val, selectedTab)}
           />
         </div>
       ) : (
