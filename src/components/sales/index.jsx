@@ -1114,9 +1114,8 @@ const SalesPage = (props) => {
   };
 
   const refreshPopupData = () => {
-    console.log(showInfoPopup,'showInfoPopupshowInfoPopup')
     if (showInfoPopup.flag) {
-      getOrderDetails({ id: showInfoPopup?.data?.order_details?.order_id });
+      getOrderDetails({ id: showInfoPopup?.data?.[0]?.order_details?.order_id });
     }
   };
 
