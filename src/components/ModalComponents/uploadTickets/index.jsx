@@ -1453,9 +1453,9 @@ const handleCloseFunction = (passValue) =>{
                         isSmallMobile
                           ? "text-[10px] max-w-20"
                           : "text-[12px] max-w-32"
-                      } text-[#323A70] truncate`}
+                      } text-[#323A70]`}
                     >
-                      {file.name}
+                     {file.name}
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
