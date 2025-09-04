@@ -136,8 +136,8 @@ const SalesPage = (props) => {
       sortableKey: "section_block",
     },
     { key: "category", label: "Category" },
+    { key: "delivery_status_label", label: "Ticket Status" },
     { key: "order_status_label", label: "Order Status" },
-    // { key: "delivery_status_label", label: "Delivery Status" },
     {
       key: "row",
       label: "Row",
