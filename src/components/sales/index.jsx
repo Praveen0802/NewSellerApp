@@ -113,6 +113,10 @@ const SalesPage = (props) => {
       sortableKey: "event_date",
     },
     {
+      key: "delivery_date",
+      label: "Expected Delivery Date",
+    },
+    {
       key: "ticket_details",
       label: "Ticket Category",
       sortable: true,
@@ -494,6 +498,7 @@ const SalesPage = (props) => {
   };
 
   const handleUploadClick = async (rowData, attendee) => {
+    console.log(rowData,'rowDatarowDatarowData',attendee)
     try {
       // Set loading state before API call
       setUploadPopupLoading(true);
@@ -857,7 +862,10 @@ const SalesPage = (props) => {
         type: "date",
         name: "orderDate",
         singleDateMode: false,
-        value: filtersApplied?.orderDate,
+        value: {
+          startDate: filtersApplied?.order_date_from,
+          endDate: filtersApplied?.order_date_to,
+        },
         label: "Order Date",
         parentClassName: "!w-[150px] max-sm:!w-full",
         className: "!py-[8px] !px-[16px] mobile:text-xs",
@@ -866,6 +874,10 @@ const SalesPage = (props) => {
         type: "date",
         name: "delivery_date",
         singleDateMode: false,
+        value: {
+          startDate: filtersApplied?.delivery_date_from,
+          endDate: filtersApplied?.delivery_date_to,
+        },
         label: "Delivery Date",
         parentClassName: "!w-[150px] max-sm:!w-full",
         className: "!py-[8px] !px-[16px] mobile:text-xs",
@@ -874,6 +886,10 @@ const SalesPage = (props) => {
         type: "date",
         name: "event_date",
         singleDateMode: false,
+        value: {
+          startDate: filtersApplied?.event_start_date,
+          endDate: filtersApplied?.event_end_date,
+        },
         label: "Event Date",
         parentClassName: "!w-[150px] max-sm:!w-full",
         className: "!py-[8px] !px-[16px] mobile:text-xs",
@@ -894,7 +910,7 @@ const SalesPage = (props) => {
       },
     ],
   };
-
+console.log(filtersApplied,'lkllllll')
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setSelectedItems([]);
@@ -936,8 +952,7 @@ const SalesPage = (props) => {
     // Reset sort state when filters change (optional)
     setSortState(null);
     console.log(
-      filterKey === "event_date",
-      "🚀 ~ file: index.jsx:164 ~ handleFilterChange ~ value:",
+     
       value,
       filterKey
     );
@@ -959,8 +974,8 @@ const SalesPage = (props) => {
     } else if (filterKey === "event_date") {
       params = {
         ...params,
-        event_date_from: value?.startDate,
-        event_date_to: value?.endDate,
+        event_start_date: value?.startDate,
+        event_end_date: value?.endDate,
         page: 1,
       };
     } else if (filterKey == "order_date_to") {
@@ -983,6 +998,13 @@ const SalesPage = (props) => {
         [filterKey]: value ? 1 : 0,
         page: 1,
       };
+    } else if(filterKey == "event_end_date"){
+      params = {
+        ...params,
+        event_end_date: "",
+        event_start_date: "",
+        page: 1,
+      };
     } else {
       params = {
         ...params,
@@ -999,7 +1021,7 @@ const SalesPage = (props) => {
     await apiCall(params);
   };
 
-  const handleCheckboxToggle = (checkboxKey, isChecked, allCheckboxValues) => {
+  const handleCheckboxToggle = (checkboxKey, isChecked) => {
     // Get the current item config to check if it's disabled
     const currentItems = itemConfig[profile] || [];
     const currentItem = currentItems.find((item) => item.key === checkboxKey);
@@ -1053,6 +1075,8 @@ const SalesPage = (props) => {
 
     apiCall(params);
   };
+
+  console.log(filtersApplied, "ooooooooo");
   // Handle column toggle
   const handleColumnToggle = (columnKey) => {
     setVisibleColumns((prev) => ({
@@ -1080,10 +1104,12 @@ const SalesPage = (props) => {
     // Update global currency state if needed
     setCurrency(currencyCode);
     try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('sales_currency', currencyCode);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("sales_currency", currencyCode);
       }
-    } catch(e) { /* ignore storage errors */ }
+    } catch (e) {
+      /* ignore storage errors */
+    }
   };
 
   const { downloadCSV } = useCSVDownload();
@@ -1115,23 +1141,27 @@ const SalesPage = (props) => {
 
   const refreshPopupData = () => {
     if (showInfoPopup.flag) {
-      getOrderDetails({ id: showInfoPopup?.data?.[0]?.order_details?.order_id });
+      getOrderDetails({
+        id: showInfoPopup?.data?.[0]?.order_details?.order_id,
+      });
     }
   };
 
   // Rehydrate currency from localStorage (persist across /sales/* route/tab changes)
   useEffect(() => {
     try {
-      if (typeof window !== 'undefined') {
-        const saved = localStorage.getItem('sales_currency');
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("sales_currency");
         if (saved && saved !== currency) {
           setCurrency(saved);
           // Refetch with saved currency so data matches UI selection
           apiCall({ currency: saved, page: 1 }, true);
         }
       }
-    } catch(e) { /* ignore */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    } catch (e) {
+      /* ignore */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const handleClearAllFilters = async () => {
     setSelectedTicketTypes([]); // Reset to empty array
@@ -1247,8 +1277,8 @@ const SalesPage = (props) => {
         initialTab={profile || "pending"}
         listItemsConfig={itemConfig}
         useHeaderV2={true}
-  onAddInventory={handleAddInventory}
-  addInventoryText="Add Inventory"
+        onAddInventory={handleAddInventory}
+        addInventoryText="Add Inventory"
         filterConfig={filterConfig}
         onTabChange={handleTabChange}
         onFilterChange={handleFilterChange}

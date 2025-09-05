@@ -32,7 +32,7 @@ const TemplateContentRenderer = ({
     if (!templateContent) return "";
 
     // Replace the [DYNAMIC_CONTENT] placeholder with actual dynamic content
-    let processed = templateContent.replace(/\[DYNAMIC_CONTENT\]/g, "");
+    let processed = templateContent.replace(/\[DYNAMIC_CONTENT\]/g, dynamicContent ? dynamicContent : '[DYNAMIC CONTENT]');
 
     return processed;
   }, [templateContent, dynamicContent]);
@@ -81,13 +81,13 @@ const TemplateContentRenderer = ({
             lineHeight: "1.6",
           }}
         />
-        {dynamicContent && (
+        {/* {dynamicContent && (
           <div className="bg-blue-50 border-t border-blue-200 px-3 py-2">
             <p className="text-xs text-gray-600">
               <strong>Dynamic Content:</strong> {dynamicContent}
             </p>
           </div>
-        )}
+        )} */}
       </div>
     </>
   );

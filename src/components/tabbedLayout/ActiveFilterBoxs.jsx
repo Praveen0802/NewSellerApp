@@ -44,6 +44,7 @@ const ActiveFiltersBox = ({
       { from: 'order_date_from', to: 'order_date_to', displayName: 'Order Date' },
       { from: 'delivery_date_from', to: 'delivery_date_to', displayName: 'Delivery Date' },
       { from: 'event_date_from', to: 'event_date_to', displayName: 'Event Date' },
+      { from: 'event_start_date', to: 'event_end_date', displayName: 'Event Date' },
       { from: 'transaction_date_from', to: 'transaction_date_to', displayName: 'Transaction Date' },
       { from: 'transaction_start_date', to: 'transaction_end_date', displayName: 'Transaction Date' },
     ];
@@ -522,7 +523,7 @@ const ActiveFiltersBox = ({
         // Check if this is a date range filter (combined key)
         const { dateRanges } = getDateRangeFilters();
         const dateRange = dateRanges.find(dr => dr.key === filterKey);
-        
+        console.log(dateRange,'dateRangedateRange')
         if (dateRange) {
           // This is a combined date range key, clear both from and to values
           updatedFilters[dateRange.fromKey] = '';

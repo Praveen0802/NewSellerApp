@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { Trash2, Lock } from "lucide-react";
+import { Trash2, Lock, Eye } from "lucide-react";
 import Image from "next/image";
 import uploadIcon from "../../../../public/uploadIconNew.svg";
+import FilePreviewModal from "./previewFile";
 
 const PaperTicketCourierSection = React.forwardRef(
   ({ maxQuantity = 0, initialData = null, onChange, rowData }, ref) => {
@@ -9,6 +10,15 @@ const PaperTicketCourierSection = React.forwardRef(
 
     // Check if component should be in disabled/readonly mode
     const isDisabled = false;
+
+    const [previewFile, setPreviewFile] = useState(null);
+    const [showPreview, setShowPreview] = useState(false);
+
+    const handlePreviewClick = useCallback((file, e) => {
+      e?.stopPropagation();
+      setPreviewFile(file);
+      setShowPreview(true);
+    }, []);
 
     // Transform updated data to component format
     const transformUpdatedData = useCallback((updatedArray) => {
@@ -40,7 +50,7 @@ const PaperTicketCourierSection = React.forwardRef(
       }
       return initialData;
     }, [updated, transformUpdatedData, initialData]);
-console.log(getInitialData(),'getInitialDatagetInitialData')
+    console.log(getInitialData(), "getInitialDatagetInitialData");
     // Internal state for courier details
     const [courierDetails, setCourierDetails] = useState(() => {
       const data = getInitialData();
@@ -510,15 +520,29 @@ console.log(getInitialData(),'getInitialDatagetInitialData')
                             Existing
                           </span>
                         )}
-                        {file.url && (
+
+                        {/* Updated View/Preview section */}
+                        {file.url ? (
+                          // For existing files with URLs, show traditional "View" link
                           <a
                             href={file.url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs text-gray-600 hover:text-blue-800 underline"
+                            onClick={(e) => e.stopPropagation()}
                           >
                             View
                           </a>
+                        ) : (
+                          // For newly uploaded files, show preview button with eye icon
+                          <button
+                            onClick={(e) => handlePreviewClick(file, e)}
+                            className="flex items-center gap-1 text-xs text-gray-600 hover:text-blue-800"
+                            title="Preview file"
+                          >
+                            <Eye className="w-3 h-3" />
+                            Preview
+                          </button>
                         )}
                       </div>
                       {!isDisabled && (
@@ -536,6 +560,11 @@ console.log(getInitialData(),'getInitialDatagetInitialData')
             </div>
           )}
         </div>
+        <FilePreviewModal
+          show={showPreview}
+          onClose={() => setShowPreview(false)}
+          file={previewFile}
+        />
       </div>
     );
   }

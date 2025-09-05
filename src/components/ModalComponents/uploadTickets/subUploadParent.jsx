@@ -31,14 +31,13 @@ const SubUploadParent = React.forwardRef(
     },
     ref
   ) => {
-    console.log(existingUploadedTickets[0]?.additional_file_type,'existingUploadedTicketsexistingUploadedTickets')
     const [templateData, setTemplateData] = useState();
     const [showPopupView, setShowPopupView] = useState(false);
 
     // Additional Info State - now using template ID instead of template name
     const [additionalInfo, setAdditionalInfo] = useState({
       templateId:
-        initialAdditionalData?.templateId ||
+        initialAdditionalData?.template ||
         existingUploadedTickets[0]?.additional_file_type ||
         "",
       dynamicContent:
@@ -48,13 +47,15 @@ const SubUploadParent = React.forwardRef(
       templateContent: initialAdditionalData?.templateContent || "",
       templateFile: initialAdditionalData?.templateFile || null, // Add file state
     });
-
+console.log(initialAdditionalData?.template, initialAdditionalData?.template ||
+  existingUploadedTickets[0]?.additional_file_type ||
+  "",'additionalInfoadditionalInfoadditionalInfo',additionalInfo)
     const [additionalTemplateData, setAdditionalTemplateData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [selectedTemplateContent, setSelectedTemplateContent] = useState("");
     // Ref to store the latest additional info data for instant access
     const additionalInfoRef = useRef(additionalInfo);
-
+console.log(initialAdditionalData?.template,'initialAdditionalData?.template')
     // Update ref whenever additional info state changes
     useEffect(() => {
       additionalInfoRef.current = additionalInfo;
@@ -318,7 +319,7 @@ const SubUploadParent = React.forwardRef(
     useEffect(() => {
       if (initialAdditionalData) {
         const newData = {
-          templateId: initialAdditionalData.templateId || "",
+          templateId: initialAdditionalData.template || "",
           dynamicContent: initialAdditionalData.dynamicContent || "",
           templateContent: initialAdditionalData.templateContent || "",
           templateFile: initialAdditionalData.templateFile || null,

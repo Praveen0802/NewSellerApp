@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import DisplayValues from "./displayValues";
 
 const OrderedTickets = ({ ticket_details }) => {
-  console.log(ticket_details,'ticket_detailsticket_details')
+  console.log(ticket_details, "ticket_detailsticket_details");
   if (!ticket_details) {
     return (
       <div className="border-[1px] border-[#E0E1EA] rounded-md">
@@ -65,10 +65,17 @@ const OrderedTickets = ({ ticket_details }) => {
             `${ticket_details?.currency_type || "GBP"} 0`,
         },
         {
-          name: "Order Value",
-          text:
-            ticket_details?.order_value ||
-            `${ticket_details?.currency_type || "GBP"} 0`,
+          name: "Block",
+          text: ticket_details?.block,
+        },
+      ],
+      twoKeys: true,
+    },
+    {
+      values: [
+        {
+          name: "Row",
+          text: ticket_details?.row,
         },
       ],
       twoKeys: true,

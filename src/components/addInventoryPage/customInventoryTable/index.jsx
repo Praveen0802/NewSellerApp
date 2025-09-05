@@ -623,10 +623,11 @@ const CommonInventoryTable = ({
                 {/* Top Row - Event Info */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-[#51428E]">
                   <div className="flex-1 min-w-0">
-                    <h3 
+                    <h3
                       className="font-medium text-white text-sm leading-tight truncate"
                       title={
-                        matchDetails?.match_name && matchDetails?.tournament_name
+                        matchDetails?.match_name &&
+                        matchDetails?.tournament_name
                           ? `${matchDetails.match_name} - ${matchDetails.tournament_name}`
                           : matchDetails?.match_name || "Match Details"
                       }
@@ -639,7 +640,7 @@ const CommonInventoryTable = ({
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Chevron */}
                   <div
                     className={`bg-[#FFFFFF26] rounded-full cursor-pointer transition-transform duration-200 flex-shrink-0 p-1.5 ml-3 ${
@@ -660,9 +661,14 @@ const CommonInventoryTable = ({
                   {/* Date & Time */}
                   <div className="flex items-center space-x-3 flex-shrink-0">
                     <div className="flex items-center space-x-1">
-                      <Calendar1Icon size={12} className="text-white flex-shrink-0" />
+                      <Calendar1Icon
+                        size={12}
+                        className="text-white flex-shrink-0"
+                      />
                       <span className="text-white text-xs">
-                        {dayOfWeek(matchDetails?.match_date_format)?.split(",")[0] || ""}
+                        {dayOfWeek(matchDetails?.match_date_format)?.split(
+                          ","
+                        )[0] || ""}
                       </span>
                     </div>
                     <div className="flex items-center space-x-1">
@@ -678,9 +684,15 @@ const CommonInventoryTable = ({
                     <MapPin size={12} className="text-white flex-shrink-0" />
                     <span className="text-white text-xs truncate">
                       {[
-                        matchDetails?.stadium_name ? `${matchDetails.stadium_name},` : "",
-                        matchDetails?.city_name ? `${matchDetails.city_name},` : "",
-                        matchDetails?.country_name ? `${matchDetails.country_name}` : "",
+                        matchDetails?.stadium_name
+                          ? `${matchDetails.stadium_name},`
+                          : "",
+                        matchDetails?.city_name
+                          ? `${matchDetails.city_name},`
+                          : "",
+                        matchDetails?.country_name
+                          ? `${matchDetails.country_name}`
+                          : "",
                       ]
                         .filter(Boolean)
                         .join(" ")}
@@ -690,7 +702,9 @@ const CommonInventoryTable = ({
                   {/* Stats */}
                   <div className="flex items-center space-x-2 ml-3 flex-shrink-0">
                     {matchDetails?.totalTickets && (
-                      <Tooltip content={`${matchDetails?.totalTickets} Tickets`}>
+                      <Tooltip
+                        content={`${matchDetails?.totalTickets} Tickets`}
+                      >
                         <div className="flex gap-1 items-center">
                           <Image
                             src={ticketService}
@@ -707,7 +721,9 @@ const CommonInventoryTable = ({
                     )}
 
                     {matchDetails?.listingTickets && (
-                      <Tooltip content={`${matchDetails?.listingTickets} Listing`}>
+                      <Tooltip
+                        content={`${matchDetails?.listingTickets} Listing`}
+                      >
                         <div className="flex gap-1 items-center">
                           <div className="w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
                             <SquareCheck size={8} className="text-white" />
@@ -837,7 +853,9 @@ const CommonInventoryTable = ({
                   }`}
                 >
                   {matchDetails?.listingTickets && (
-                    <Tooltip content={`${matchDetails?.listingTickets} Listing`}>
+                    <Tooltip
+                      content={`${matchDetails?.listingTickets} Listing`}
+                    >
                       <div className="flex w-[30px] gap-1 items-center">
                         <Image
                           src={listUnpublished}
@@ -969,7 +987,22 @@ const CommonInventoryTable = ({
                         isMobile ? "px-2 py-2" : "px-3 py-3"
                       } text-center text-[#7D82A4] font-medium whitespace-nowrap ${
                         isMobile ? "text-[10px]" : "text-xs"
-                      } border-r border-[#DADBE5]`}
+                      } border-r border-[#DADBE5] ${
+                        isEditMode ? "cursor-not-allowed" : "cursor-pointer"
+                      }`}
+                      onClick={(e) => {
+                        if (isEditMode) return;
+
+                        // Prevent toggling if clicking directly on the checkbox
+                        if (e.target.type === "checkbox") return;
+
+                        // Use the same logic as the checkbox onChange
+                        if (selectedRows.length > 0) {
+                          handleDeselectAll();
+                        } else {
+                          handleSelectAll();
+                        }
+                      }}
                     >
                       <div className="flex justify-center items-center">
                         <input
@@ -986,7 +1019,7 @@ const CommonInventoryTable = ({
                           }
                           className={`${
                             isMobile ? "w-3 h-3" : "w-4 h-4"
-                          } text-gray-600 accent-[#343432]  border-[#DADBE5] rounded focus:ring-blue-500 ${
+                          } text-gray-600 accent-[#343432] border-[#DADBE5] rounded focus:ring-blue-500 ${
                             isEditMode
                               ? "cursor-not-allowed opacity-50"
                               : "cursor-pointer"
@@ -1008,11 +1041,26 @@ const CommonInventoryTable = ({
                     return (
                       <tr
                         key={`sticky-left-${row.id || rowIndex}`}
-                        className={`border-b border-[#DADBE5] transition-colors ${
+                        className={`border-b border-[#DADBE5] transition-colors cursor-pointer ${
                           isSelected
                             ? "bg-[#EEF1FD]"
                             : "bg-white hover:bg-gray-50"
-                        } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
+                        } ${
+                          isRowDisabled
+                            ? "opacity-60 bg-gray-50 cursor-not-allowed"
+                            : ""
+                        }`}
+                        onClick={(e) => {
+                          if (isRowDisabled) return;
+
+                          // Prevent toggling if clicking directly on the checkbox
+                          if (e.target.type === "checkbox") return;
+
+                          const newSelectedRows = isSelected
+                            ? selectedRows.filter((index) => index !== rowIndex)
+                            : [...selectedRows, rowIndex];
+                          setSelectedRows(newSelectedRows);
+                        }}
                       >
                         <td
                           className={`${
@@ -1020,28 +1068,28 @@ const CommonInventoryTable = ({
                           } text-center whitespace-nowrap border-r border-[#DADBE5]`}
                         >
                           <div className="flex justify-center items-center">
-                          <input
-  type="checkbox"
-  checked={isSelected}
-  disabled={isRowDisabled}
-  onChange={(e) => {
-    if (isRowDisabled) return;
-    e.stopPropagation();
-    const newSelectedRows = isSelected
-      ? selectedRows.filter(
-          (index) => index !== rowIndex
-        )
-      : [...selectedRows, rowIndex];
-    setSelectedRows(newSelectedRows);
-  }}
-  className={`${
-    isMobile ? "w-3 h-3" : "w-4 h-4"
-  } accent-[#343432] border-[#DADBE5] rounded focus:ring-blue-500 ${
-    isRowDisabled
-      ? "cursor-not-allowed opacity-50"
-      : "cursor-pointer"
-  }`}
-/>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              disabled={isRowDisabled}
+                              onChange={(e) => {
+                                if (isRowDisabled) return;
+                                e.stopPropagation();
+                                const newSelectedRows = isSelected
+                                  ? selectedRows.filter(
+                                      (index) => index !== rowIndex
+                                    )
+                                  : [...selectedRows, rowIndex];
+                                setSelectedRows(newSelectedRows);
+                              }}
+                              className={`${
+                                isMobile ? "w-3 h-3" : "w-4 h-4"
+                              } accent-[#343432] border-[#DADBE5] rounded focus:ring-blue-500 ${
+                                isRowDisabled
+                                  ? "cursor-not-allowed opacity-50"
+                                  : "cursor-pointer"
+                              }`}
+                            />
                           </div>
                         </td>
                       </tr>
@@ -1064,7 +1112,9 @@ const CommonInventoryTable = ({
             <table
               ref={mainTableRef}
               className="w-full border-none"
-              style={{ minWidth: isMobile ? "800px" : isTablet ? "1000px" : "1200px" }}
+              style={{
+                minWidth: isMobile ? "800px" : isTablet ? "1000px" : "1200px",
+              }}
             >
               <thead>
                 <tr className="bg-gray-50 border-b border-[#DADBE5]">
@@ -1117,7 +1167,9 @@ const CommonInventoryTable = ({
                               isMobile
                                 ? "py-1.5 px-2 text-[10px]"
                                 : "py-2 px-3 text-xs"
-                            } whitespace-nowrap ${header?.increasedWidth}  overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
+                            } whitespace-nowrap ${
+                              header?.increasedWidth
+                            }  overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
                               isRowDisabled ? "bg-gray-50" : ""
                             } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
                             style={columnStyles}

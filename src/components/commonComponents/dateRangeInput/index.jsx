@@ -762,7 +762,7 @@ const FloatingDateRange = ({
             <div className="flex gap-1">
               <button
                 onClick={handleApply}
-                className="px-2 py-1 text-xs cursor-pointer bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="px-2 py-1 text-xs cursor-pointer bg-[#343432] text-white rounded  disabled:bg-gray-400 disabled:cursor-not-allowed"
                 disabled={
                   !tempStartDate ||
                   !tempEndDate ||

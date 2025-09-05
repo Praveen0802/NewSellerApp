@@ -1,10 +1,20 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { Trash2, Lock } from "lucide-react";
+import { Trash2, Lock, Eye } from "lucide-react";
+import FilePreviewModal from "../previewFile";
 
 const MySalesPaperTicketCourierSection = React.forwardRef(
   ({ maxQuantity = 0, initialData = null, onChange, rowData }, ref) => {
     const updated = rowData?.rawTicketData?.uploadTickets;
     const isDisabled = false;
+
+    const [previewFile, setPreviewFile] = useState(null);
+    const [showPreview, setShowPreview] = useState(false);
+
+    const handlePreviewClick = useCallback((file, e) => {
+      e?.stopPropagation();
+      setPreviewFile(file);
+      setShowPreview(true);
+    }, []);
 
     const transformUpdatedData = useCallback((updatedArray) => {
       if (!updatedArray || updatedArray.length === 0) return null;
@@ -15,12 +25,16 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
         courier_company: firstItem.courier?.name || "",
         tracking_details: firstItem.courier?.tracking_details || "",
         tracking_link: firstItem.courier?.tracking_link || "",
-        upload_tickets: firstItem.upload_tickets ? [{
-          id: firstItem.id || Date.now(),
-          name: `Ticket_${firstItem.id || 'file'}.png`,
-          url: firstItem.upload_tickets,
-          isExisting: true
-        }] : []
+        upload_tickets: firstItem.upload_tickets
+          ? [
+              {
+                id: firstItem.id || Date.now(),
+                name: `Ticket_${firstItem.id || "file"}.png`,
+                url: firstItem.upload_tickets,
+                isExisting: true,
+              },
+            ]
+          : [],
       };
     }, []);
 
@@ -54,19 +68,25 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
     // FIXED: Critical - Update refs whenever state changes
     useEffect(() => {
       courierDetailsRef.current = courierDetails;
-      console.log("Paper ticket courierDetailsRef updated:", courierDetailsRef.current);
+      console.log(
+        "Paper ticket courierDetailsRef updated:",
+        courierDetailsRef.current
+      );
     }, [courierDetails]);
 
     useEffect(() => {
       uploadedFilesRef.current = uploadedFiles;
-      console.log("Paper ticket uploadedFilesRef updated:", uploadedFilesRef.current);
+      console.log(
+        "Paper ticket uploadedFilesRef updated:",
+        uploadedFilesRef.current
+      );
     }, [uploadedFiles]);
 
     // FIXED: Enhanced handleCourierDetailChange with immediate ref update
     const handleCourierDetailChange = useCallback(
       (field, value) => {
         console.log(`Changing ${field} to:`, value);
-        
+
         setCourierDetails((prevDetails) => {
           const newDetails = {
             ...prevDetails,
@@ -75,7 +95,10 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
 
           // FIXED: Update ref immediately - this is crucial
           courierDetailsRef.current = newDetails;
-          console.log("Paper ticket courierDetailsRef updated immediately:", courierDetailsRef.current);
+          console.log(
+            "Paper ticket courierDetailsRef updated immediately:",
+            courierDetailsRef.current
+          );
 
           // Call onChange with the new data using current refs
           if (onChange && typeof onChange === "function") {
@@ -102,7 +125,7 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
             id: Date.now() + index,
             name: file.name,
             file: file,
-            isExisting: false
+            isExisting: false,
           }));
 
           setUploadedFiles((prevFiles) => {
@@ -110,7 +133,10 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
 
             // FIXED: Update ref immediately
             uploadedFilesRef.current = updatedFiles;
-            console.log("Paper ticket uploadedFilesRef updated immediately:", uploadedFilesRef.current);
+            console.log(
+              "Paper ticket uploadedFilesRef updated immediately:",
+              uploadedFilesRef.current
+            );
 
             // Call onChange with the new data using current refs
             if (onChange && typeof onChange === "function") {
@@ -137,7 +163,10 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
 
           // FIXED: Update ref immediately
           uploadedFilesRef.current = updatedFiles;
-          console.log("Paper ticket uploadedFilesRef updated immediately after delete:", uploadedFilesRef.current);
+          console.log(
+            "Paper ticket uploadedFilesRef updated immediately after delete:",
+            uploadedFilesRef.current
+          );
 
           // Call onChange with the new data using current refs
           if (onChange && typeof onChange === "function") {
@@ -180,15 +209,20 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
     const getCurrentData = useCallback(() => {
       const currentData = {
         courierDetails: courierDetailsRef.current,
-        uploadedFiles: uploadedFilesRef.current
+        uploadedFiles: uploadedFilesRef.current,
       };
-      console.log("Paper ticket getCurrentData called, returning from refs:", currentData);
+      console.log(
+        "Paper ticket getCurrentData called, returning from refs:",
+        currentData
+      );
       return currentData;
     }, []);
 
     const hasCourierDetails = useCallback(() => {
       const details = courierDetailsRef.current;
-      const hasDetails = !!(details.courier_company && details.tracking_details);
+      const hasDetails = !!(
+        details.courier_company && details.tracking_details
+      );
       console.log("Paper ticket hasCourierDetails:", hasDetails, details);
       return hasDetails;
     }, []);
@@ -223,25 +257,34 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
         getCurrentData: () => {
           const data = {
             courierDetails: courierDetailsRef.current,
-            uploadedFiles: uploadedFilesRef.current
+            uploadedFiles: uploadedFilesRef.current,
           };
-          console.log("REF Paper ticket getCurrentData called, returning from refs:", data);
+          console.log(
+            "REF Paper ticket getCurrentData called, returning from refs:",
+            data
+          );
           return data;
         },
         getCourierData: () => ({
           courierDetails: courierDetailsRef.current,
-          uploadedFiles: uploadedFilesRef.current
+          uploadedFiles: uploadedFilesRef.current,
         }),
         getData: () => ({
           courierDetails: courierDetailsRef.current,
-          uploadedFiles: uploadedFilesRef.current
+          uploadedFiles: uploadedFilesRef.current,
         }),
         getCourierDetails: () => {
-          console.log("REF Paper ticket getCourierDetails called, returning from ref:", courierDetailsRef.current);
+          console.log(
+            "REF Paper ticket getCourierDetails called, returning from ref:",
+            courierDetailsRef.current
+          );
           return courierDetailsRef.current;
         },
         getUploadedFiles: () => {
-          console.log("REF Paper ticket getUploadedFiles called, returning from ref:", uploadedFilesRef.current);
+          console.log(
+            "REF Paper ticket getUploadedFiles called, returning from ref:",
+            uploadedFilesRef.current
+          );
           return uploadedFilesRef.current;
         },
         hasData,
@@ -264,7 +307,10 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
           setUploadedFiles(updatedUploadedFiles);
         },
         updateCourierDetails: (newDetails) => {
-          console.log("REF Paper ticket updateCourierDetails called with:", newDetails);
+          console.log(
+            "REF Paper ticket updateCourierDetails called with:",
+            newDetails
+          );
           setCourierDetails((prev) => ({
             ...prev,
             ...newDetails,
@@ -299,15 +345,30 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
           setUploadedFiles(emptyData.uploadedFiles);
         },
         debugCurrentState: () => {
-          console.log("DEBUG - Paper ticket Current courier details from ref:", courierDetailsRef.current);
-          console.log("DEBUG - Paper ticket Current uploaded files from ref:", uploadedFilesRef.current);
-          console.log("DEBUG - Paper ticket Current courier details from state:", courierDetails);
-          console.log("DEBUG - Paper ticket Current uploaded files from state:", uploadedFiles);
-          return { 
-            fromRefs: { courierDetails: courierDetailsRef.current, uploadedFiles: uploadedFilesRef.current },
-            fromState: { courierDetails, uploadedFiles }
+          console.log(
+            "DEBUG - Paper ticket Current courier details from ref:",
+            courierDetailsRef.current
+          );
+          console.log(
+            "DEBUG - Paper ticket Current uploaded files from ref:",
+            uploadedFilesRef.current
+          );
+          console.log(
+            "DEBUG - Paper ticket Current courier details from state:",
+            courierDetails
+          );
+          console.log(
+            "DEBUG - Paper ticket Current uploaded files from state:",
+            uploadedFiles
+          );
+          return {
+            fromRefs: {
+              courierDetails: courierDetailsRef.current,
+              uploadedFiles: uploadedFilesRef.current,
+            },
+            fromState: { courierDetails, uploadedFiles },
           };
-        }
+        },
       }),
       [
         hasData,
@@ -322,13 +383,18 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
     );
 
     return (
-      <div className={`border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1 ${isDisabled ? 'bg-gray-50' : ''}`}>
+      <div
+        className={`border-[1px] border-[#E0E1EA] rounded-md mt-4 flex-1 ${
+          isDisabled ? "bg-gray-50" : ""
+        }`}
+      >
         <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA] flex items-center justify-between">
           <h4 className="text-sm font-medium text-[#323A70]">
             Courier Details ({maxQuantity} tickets)
           </h4>
           <div className="text-xs text-gray-500">
-            Company: {courierDetails.courier_company}, Tracking: {courierDetails.tracking_details}
+            Company: {courierDetails.courier_company}, Tracking:{" "}
+            {courierDetails.tracking_details}
           </div>
         </div>
 
@@ -341,14 +407,17 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
               <select
                 value={courierDetails.courier_type}
                 onChange={(e) => {
-                  console.log("Courier type select changed to:", e.target.value);
+                  console.log(
+                    "Courier type select changed to:",
+                    e.target.value
+                  );
                   handleCourierDetailChange("courier_type", e.target.value);
                 }}
                 disabled={isDisabled}
                 className={`w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent ${
-                  isDisabled 
-                    ? 'bg-gray-100 cursor-not-allowed text-gray-600' 
-                    : 'bg-white'
+                  isDisabled
+                    ? "bg-gray-100 cursor-not-allowed text-gray-600"
+                    : "bg-white"
                 }`}
               >
                 <option value="company">Company</option>
@@ -366,14 +435,17 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
                 placeholder="FedEx"
                 value={courierDetails.courier_company}
                 onChange={(e) => {
-                  console.log("Courier company input changed to:", e.target.value);
+                  console.log(
+                    "Courier company input changed to:",
+                    e.target.value
+                  );
                   handleCourierDetailChange("courier_company", e.target.value);
                 }}
                 disabled={isDisabled}
                 className={`w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent ${
-                  isDisabled 
-                    ? 'bg-gray-100 cursor-not-allowed text-gray-600' 
-                    : 'bg-white'
+                  isDisabled
+                    ? "bg-gray-100 cursor-not-allowed text-gray-600"
+                    : "bg-white"
                 }`}
               />
             </div>
@@ -387,14 +459,17 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
                 placeholder="DSG684864SG56"
                 value={courierDetails.tracking_details}
                 onChange={(e) => {
-                  console.log("Tracking details input changed to:", e.target.value);
+                  console.log(
+                    "Tracking details input changed to:",
+                    e.target.value
+                  );
                   handleCourierDetailChange("tracking_details", e.target.value);
                 }}
                 disabled={isDisabled}
                 className={`w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent ${
-                  isDisabled 
-                    ? 'bg-gray-100 cursor-not-allowed text-gray-600' 
-                    : 'bg-white'
+                  isDisabled
+                    ? "bg-gray-100 cursor-not-allowed text-gray-600"
+                    : "bg-white"
                 }`}
               />
             </div>
@@ -408,14 +483,17 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
                 placeholder="https://tracking.fedex.com/..."
                 value={courierDetails.tracking_link}
                 onChange={(e) => {
-                  console.log("Tracking link input changed to:", e.target.value);
+                  console.log(
+                    "Tracking link input changed to:",
+                    e.target.value
+                  );
                   handleCourierDetailChange("tracking_link", e.target.value);
                 }}
                 disabled={isDisabled}
                 className={`w-full px-3 py-2 text-xs border border-[#E0E1EA] rounded-md text-[#323A70] focus:outline-none focus:ring-2 focus:ring-[#0137D5] focus:border-transparent ${
-                  isDisabled 
-                    ? 'bg-gray-100 cursor-not-allowed text-gray-600' 
-                    : 'bg-white'
+                  isDisabled
+                    ? "bg-gray-100 cursor-not-allowed text-gray-600"
+                    : "bg-white"
                 }`}
               />
             </div>
@@ -482,7 +560,8 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
             <div className="border border-[#E0E1EA] rounded-lg bg-white">
               <div className="bg-[#F9F9FB] px-3 py-2 border-b border-[#E0E1EA]">
                 <h5 className="text-xs font-medium text-[#323A70]">
-                  {isDisabled ? 'Existing POD Files' : 'Uploaded POD Files'} ({uploadedFiles.length})
+                  {isDisabled ? "Existing Files" : "Uploaded Files"} (
+                  {uploadedFiles.length})
                 </h5>
               </div>
               <div className="p-3">
@@ -491,7 +570,7 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
                     <div
                       key={file.id}
                       className={`flex items-center justify-between p-2 border border-[#E0E1EA] rounded-md ${
-                        isDisabled ? 'bg-gray-50' : 'bg-[#F9F9FB]'
+                        isDisabled ? "bg-gray-50" : "bg-[#F9F9FB]"
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -510,23 +589,37 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
                             />
                           </svg>
                         </div>
-                        <span className="text-xs text-[#323A70] truncate max-w-32">
+                        <span className="text-xs text-[#323A70] max-w-32">
                           {file.name}
                         </span>
                         {file.isExisting && (
-                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          <span className="text-xs bg-gray-100 text-blue-800 px-2 py-1 rounded">
                             Existing
                           </span>
                         )}
-                        {file.url && (
+
+                        {/* Updated View/Preview section */}
+                        {file.url ? (
+                          // For existing files with URLs, show traditional "View" link
                           <a
                             href={file.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:text-blue-800 underline"
+                            className="text-xs text-gray-600 hover:text-blue-800 underline"
+                            onClick={(e) => e.stopPropagation()}
                           >
                             View
                           </a>
+                        ) : (
+                          // For newly uploaded files, show preview button with eye icon
+                          <button
+                            onClick={(e) => handlePreviewClick(file, e)}
+                            className="flex items-center gap-1 text-xs text-gray-600 hover:text-blue-800"
+                            title="Preview file"
+                          >
+                            <Eye className="w-3 h-3" />
+                            Preview
+                          </button>
                         )}
                       </div>
                       {!isDisabled && (
@@ -544,11 +637,17 @@ const MySalesPaperTicketCourierSection = React.forwardRef(
             </div>
           )}
         </div>
+        <FilePreviewModal
+          show={showPreview}
+          onClose={() => setShowPreview(false)}
+          file={previewFile}
+        />
       </div>
     );
   }
 );
 
-MySalesPaperTicketCourierSection.displayName = "MySalesPaperTicketCourierSection";
+MySalesPaperTicketCourierSection.displayName =
+  "MySalesPaperTicketCourierSection";
 
 export default MySalesPaperTicketCourierSection;

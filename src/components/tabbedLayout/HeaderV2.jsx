@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import DropdownList from "./DropdownList";
 
 // Simple chevron icons - filled with black
@@ -44,7 +44,7 @@ const HeaderV2 = ({
   showListItems = true,
   onToggleListItems,
   // New props for enhanced functionality
-  isDraggableColumns = false,
+  isDraggableColumns = true,
   isDraggableFilters = false,
   showColumnSearch = false,
   showFilterSearch = false,
@@ -54,6 +54,44 @@ const HeaderV2 = ({
   selectedCurrency = "",
   onCurrencyChange = () => {},
 }) => {
+  // Handle clicks outside dropdowns to close them
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const isClickInFilterDropdown = filterDropdownRef?.current?.contains(event.target);
+      const isClickInColumnDropdown = columnDropdownRef?.current?.contains(event.target);
+
+      if (!isClickInFilterDropdown && showFilterDropdown) {
+        setShowFilterDropdown(false);
+      }
+      
+      if (!isClickInColumnDropdown && showColumnDropdown) {
+        setShowColumnDropdown(false);
+      }
+    };
+
+    // Only add listener if any dropdown is open
+    if (showFilterDropdown || showColumnDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [showFilterDropdown, showColumnDropdown, filterDropdownRef, columnDropdownRef, setShowFilterDropdown, setShowColumnDropdown]);
+
+  const handleFilterButtonClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowFilterDropdown(!showFilterDropdown);
+    setShowColumnDropdown(false);
+  };
+
+  const handleColumnButtonClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowColumnDropdown(!showColumnDropdown);
+    setShowFilterDropdown(false);
+  };
+
   return (
     <div className="w-full bg-white border-b border-gray-200">
       {/* Desktop Layout (md and above) */}
@@ -64,10 +102,7 @@ const HeaderV2 = ({
           {showFilters && (
             <div className="relative" ref={filterDropdownRef}>
               <button
-                onClick={() => {
-                  setShowFilterDropdown(!showFilterDropdown);
-                  setShowColumnDropdown(false);
-                }}
+                onClick={handleFilterButtonClick}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-transparent hover:bg-gray-50 focus:outline-none"
               >
                 Filter
@@ -95,10 +130,7 @@ const HeaderV2 = ({
           {!hideVisibleColumns && (
             <div className="relative" ref={columnDropdownRef}>
               <button
-                onClick={() => {
-                  setShowColumnDropdown(!showColumnDropdown);
-                  setShowFilterDropdown(false);
-                }}
+                onClick={handleColumnButtonClick}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-transparent hover:bg-gray-50 focus:outline-none"
               >
                 Columns
@@ -147,7 +179,6 @@ const HeaderV2 = ({
             {addInventoryText}
           </button>
 
-
           {/* Toggle List Items Chevron */}
           <button
             onClick={onToggleListItems}
@@ -193,10 +224,7 @@ const HeaderV2 = ({
           {showFilters && (
             <div className="relative flex-1" ref={filterDropdownRef}>
               <button
-                onClick={() => {
-                  setShowFilterDropdown(!showFilterDropdown);
-                  setShowColumnDropdown(false);
-                }}
+                onClick={handleFilterButtonClick}
                 className="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none rounded border border-gray-200"
               >
                 Filter
@@ -224,10 +252,7 @@ const HeaderV2 = ({
           {!hideVisibleColumns && (
             <div className="relative flex-1" ref={columnDropdownRef}>
               <button
-                onClick={() => {
-                  setShowColumnDropdown(!showColumnDropdown);
-                  setShowFilterDropdown(false);
-                }}
+                onClick={handleColumnButtonClick}
                 className="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none rounded border border-gray-200"
               >
                 Columns

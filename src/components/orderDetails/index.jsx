@@ -17,7 +17,7 @@ import useIsMobile from "@/utils/helperFunctions/useIsmobile";
 const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
   // Handle case where data might be an array or null/undefined
   const normalizedData = Array.isArray(data) || !data ? {} : data;
-  
+
   const {
     order_details = {},
     customer_details = {},
@@ -28,7 +28,7 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
     tickets = {},
   } = normalizedData;
   const isMobile = useIsMobile();
-  
+
   const [expandedVersion, setExpandedVersion] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -53,7 +53,9 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
           {/* Order Values and Customer Details Row Shimmer */}
           <div className={`flex ${expandedVersion ? "" : "flex-col"} gap-4`}>
             {/* Order Values Shimmer */}
-            <div className={`${expandedVersion ? "w-full sm:w-1/2" : "w-full"}`}>
+            <div
+              className={`${expandedVersion ? "w-full sm:w-1/2" : "w-full"}`}
+            >
               <div className="border border-gray-200 rounded-lg p-4">
                 <div className="h-5 bg-gray-200 rounded w-28 mb-3"></div>
                 <div className="space-y-3">
@@ -92,7 +94,11 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
             </div>
 
             {/* Customer Details Shimmer */}
-            <div className={`${expandedVersion ? "w-full sm:w-1/2 h-full" : "w-full"}`}>
+            <div
+              className={`${
+                expandedVersion ? "w-full sm:w-1/2 h-full" : "w-full"
+              }`}
+            >
               <div className="border border-gray-200 rounded-lg p-4">
                 <div className="h-5 bg-gray-200 rounded w-32 mb-3"></div>
                 <div className="space-y-3">
@@ -222,29 +228,38 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
       </div>
     </div>
   );
-  
+
   const ctaText = [
     { title: "Order Notes", cta: "+ Add Note" },
     { title: "Additional File", cta: "Download File" },
   ];
 
   // Improved date formatting function with better error handling and multiple date formats
-  function formatTimestamp(dateString, format = 'full') {
-    if (!dateString || dateString === "" || dateString === "null" || dateString === "undefined") {
+  function formatTimestamp(dateString, format = "full") {
+    if (
+      !dateString ||
+      dateString === "" ||
+      dateString === "null" ||
+      dateString === "undefined"
+    ) {
       return "-";
     }
 
     // Handle different input formats
     let dateToFormat;
-    
+
     // If it's already in DD/MM/YYYY format, convert to a Date object
-    if (typeof dateString === 'string' && dateString.includes("/") && dateString.split("/").length === 3) {
+    if (
+      typeof dateString === "string" &&
+      dateString.includes("/") &&
+      dateString.split("/").length === 3
+    ) {
       const parts = dateString.split(" ");
       const datePart = parts[0]; // DD/MM/YYYY
       const timePart = parts[1]; // HH:MM (if exists)
-      
+
       const [day, month, year] = datePart.split("/");
-      
+
       if (timePart) {
         dateToFormat = new Date(`${year}-${month}-${day}T${timePart}:00`);
       } else {
@@ -261,13 +276,13 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
     }
 
     try {
-      if (format === 'date') {
+      if (format === "date") {
         return dateToFormat.toLocaleDateString("en-GB", {
           day: "2-digit",
           month: "short",
           year: "numeric",
         });
-      } else if (format === 'time') {
+      } else if (format === "time") {
         return dateToFormat.toLocaleTimeString("en-GB", {
           hour: "2-digit",
           minute: "2-digit",
@@ -291,26 +306,89 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
 
   // Get order status with better null handling
   function getOrderStatus() {
-    if (!order_details || typeof order_details !== 'object') {
+    if (!order_details || typeof order_details !== "object") {
       return "Pending";
     }
-    
+
     const { booking_status = null, ticket_status = null } = order_details;
     return booking_status || ticket_status || "Pending";
   }
+
+  function convertDateFormat(dateString) {
+    // Handle null, undefined, empty string, or non-string inputs
+    if (!dateString || typeof dateString !== 'string' || dateString.trim() === '') {
+        return "-";
+    }
+
+    try {
+        // Parse the input date string (DD/MM/YYYY)
+        const parts = dateString.trim().split("/");
+        
+        // Check if we have exactly 3 parts
+        if (parts.length !== 3) {
+            return "-";
+        }
+        
+        const [day, month, year] = parts;
+        
+        // Check if all parts are valid numbers
+        if (!day || !month || !year || 
+            isNaN(parseInt(day)) || isNaN(parseInt(month)) || isNaN(parseInt(year))) {
+            return "-";
+        }
+
+        // Create a Date object (month is 0-indexed in JavaScript)
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+
+        // Check if the date is valid
+        if (isNaN(date.getTime())) {
+            return "-";
+        }
+        
+        // Additional validation: check if the date components match what we put in
+        // This catches cases like 31/02/2023 which would roll over to March
+        if (date.getDate() !== parseInt(day) || 
+            date.getMonth() !== parseInt(month) - 1 || 
+            date.getFullYear() !== parseInt(year)) {
+            return "-";
+        }
+
+        // Format options for the desired output
+        const options = {
+            weekday: "short", // Mon, Tue, Wed, etc.
+            year: "numeric", // 2022
+            month: "short", // Jan, Feb, Mar, etc.
+            day: "numeric", // 1, 2, 3, etc.
+        };
+
+        // Format the date
+        return date.toLocaleDateString("en-US", options);
+        
+    } catch (error) {
+        // If any error occurs during processing, return the fallback
+        console.warn('Date conversion error:', error.message, 'for input:', dateString);
+        return "-";
+    }
+}
 
   // Updated orderObject with safe property access
   const orderObject = {
     order_id: orderId,
     order_date: formatTimestamp(order_details?.booking_date),
     order_status: getOrderStatus(),
-    delivered_by: order_details?.expected_ticket_delivery || "Not specified",
+    delivered_by:
+      convertDateFormat(order_details?.expected_ticket_delivery) ||
+      "Not specified",
     delivery_details: order_details?.delivery_status_label || "-",
     days_to_event: order_details?.days_left_to_event || "-",
     ticket_type: ticket_details?.ticket_type || "-",
     payout_date: formatTimestamp(order_details?.expected_payout_date) || "-",
   };
-
+  console.log(
+    order_details?.expected_ticket_delivery,
+    convertDateFormat(order_details?.expected_ticket_delivery),
+    "order_details?.expected_ticket_deliveryorder_details?.expected_ticket_delivery"
+  );
   // Define OrderValueObject
   const OrderValueObject = [
     {
@@ -339,51 +417,73 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
     // },
   ];
 
-  console.log("Raw ticket_details.match_datetime:", ticket_details?.match_datetime);
+  console.log(
+    "Raw ticket_details.match_datetime:",
+    ticket_details?.match_datetime
+  );
 
   // IMPROVED: Enhanced transformation of ticket details with comprehensive null checks and better date handling
-  const transformedTicketDetails = ticket_details && typeof ticket_details === 'object' && Object.keys(ticket_details).length > 0
-    ? {
-        match_name: ticket_details.match_name || "-",
-        venue: ticket_details.venue_name || "-",
-        match_date: (() => {
-          // Try multiple sources for the match date
-          const rawDateTime = ticket_details.match_datetime || 
-                             order_details?.match_datetime || 
-                             ticket_details.match_date ||
-                             order_details?.match_date;
-          
-          console.log("Processing match_date from:", rawDateTime);
-          
-          if (!rawDateTime || rawDateTime === "" || rawDateTime === "null" || rawDateTime === "undefined") {
-            return "-";
-          }
-          
-          return formatTimestamp(rawDateTime, 'date');
-        })(),
-        match_time: (() => {
-          // Try multiple sources for the match time
-          const rawDateTime = ticket_details.match_datetime || 
-                             order_details?.match_datetime || 
-                             ticket_details.match_date ||
-                             order_details?.match_date;
-          
-          console.log("Processing match_time from:", rawDateTime);
-          
-          if (!rawDateTime || rawDateTime === "" || rawDateTime === "null" || rawDateTime === "undefined") {
-            return "-";
-          }
-          
-          return formatTimestamp(rawDateTime, 'time');
-        })(),
-        seat_category: ticket_details.seat_category || "-",
-        ticket_types: ticket_details.ticket_type || "-",
-        quantity: ticket_details.quantity || 0,
-        ticket_price: ticket_details.total_paid_converted || ticket_details.ticket_price_converted || 0,
-        order_value: ticket_details.ticket_price_converted || ticket_details.total_paid_converted || 0,
-        currency_type: ticket_details.currency || "USD",
-      }
-    : null;
+  const transformedTicketDetails =
+    ticket_details &&
+    typeof ticket_details === "object" &&
+    Object.keys(ticket_details).length > 0
+      ? {
+          match_name: ticket_details.match_name || "-",
+          venue: ticket_details.venue_name || "-",
+          match_date: (() => {
+            // Try multiple sources for the match date
+            const rawDateTime =
+              ticket_details.match_datetime ||
+              order_details?.match_datetime ||
+              ticket_details.match_date ||
+              order_details?.match_date;
+
+            console.log("Processing match_date from:", rawDateTime);
+
+            if (
+              !rawDateTime ||
+              rawDateTime === "" ||
+              rawDateTime === "null" ||
+              rawDateTime === "undefined"
+            ) {
+              return "-";
+            }
+
+            return formatTimestamp(rawDateTime, "date");
+          })(),
+          match_time: (() => {
+            // Try multiple sources for the match time
+            const rawDateTime =
+              ticket_details.match_datetime ||
+              order_details?.match_datetime ||
+              ticket_details.match_date ||
+              order_details?.match_date;
+
+            console.log("Processing match_time from:", rawDateTime);
+
+            if (
+              !rawDateTime ||
+              rawDateTime === "" ||
+              rawDateTime === "null" ||
+              rawDateTime === "undefined"
+            ) {
+              return "-";
+            }
+
+            return formatTimestamp(rawDateTime, "time");
+          })(),
+          seat_category: ticket_details.seat_category || "-",
+          ticket_types: ticket_details.ticket_type || "-",
+          quantity: ticket_details.quantity || 0,
+          ticket_price:
+            ticket_details.ticket_price_converted ||
+            ticket_details.total_paid_converted ||
+            0,
+          block:ticket_details?.block || "Not specified",
+          row:ticket_details?.row,
+          currency_type: ticket_details.currency || "USD",
+        }
+      : null;
 
   // Debug logging for match_datetime
   console.log("Final transformedTicketDetails:", transformedTicketDetails);
@@ -418,8 +518,6 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
       </RightViewModal>
     );
   }
-
-
 
   return (
     <>
@@ -460,11 +558,7 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
           <div
             className={`
               transition-custom overflow-auto z-[999] rounded-md bg-white
-              ${
-                expandedVersion
-                  ? "w-full h-full"
-                  : "max-w-[676px]  "
-              }
+              ${expandedVersion ? "w-full h-full" : "max-w-[676px]  "}
               ${isTransitioning ? "scale-transition" : ""}
             `}
             style={{
@@ -519,52 +613,57 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
                       orderObject={orderObject}
                       OrderValueObject={OrderValueObject}
                     />
-                    {(bookingId == 4 || bookingId == 5 || bookingId == 6) && 
-                     tickets && 
-                     typeof tickets === 'object' && 
-                     Object.keys(tickets).length > 0 && (
-                      <DownLoadYourTickets
-                        tickets={tickets}
-                        bookingId={order_details?.booking_id}
-                      />
-                    )}
+                    {(bookingId == 4 || bookingId == 5 || bookingId == 6) &&
+                      tickets &&
+                      typeof tickets === "object" &&
+                      Object.keys(tickets).length > 0 && (
+                        <DownLoadYourTickets
+                          tickets={tickets}
+                          bookingId={order_details?.booking_id}
+                        />
+                      )}
                   </div>
                   <div
                     className={`flex flex-col gap-4 ${`transition-custom ${
                       expandedVersion ? "w-full sm:w-1/2 h-full" : "w-full"
                     }`}`}
                   >
-                    {customer_details && typeof customer_details === 'object' && (
-                      <CustomerDetails
-                        customerEmail={customer_details.email || ""}
-                        customerName={customer_details.first_name || ""}
-                        mobileNumber={customer_details.mobile_no || ""}
-                      />
-                    )}
+                    {customer_details &&
+                      typeof customer_details === "object" && (
+                        <CustomerDetails
+                          customerEmail={customer_details.email || ""}
+                          customerName={customer_details.first_name || ""}
+                          mobileNumber={customer_details.mobile_no || ""}
+                        />
+                      )}
 
-                    {payment_details && typeof payment_details === 'object' && (
+                    {payment_details && typeof payment_details === "object" && (
                       <PaymentOrderDetails payment_details={payment_details} />
                     )}
                   </div>
                 </div>
-                
+
                 {transformedTicketDetails && (
                   <OrderedTickets ticket_details={transformedTicketDetails} />
                 )}
-                
-                {benefits_restrictions && Array.isArray(benefits_restrictions) && benefits_restrictions.length > 0 && (
-                  <Benifits
-                    expandedVersion={expandedVersion}
-                    benefits_restrictions={benefits_restrictions}
-                  />
-                )}
-                
-                {attendee_details && Array.isArray(attendee_details) && attendee_details.length > 0 && (
-                  <AttendeeDetails
-                    attendee_details={attendee_details}
-                    bookingId={order_details?.booking_id}
-                  />
-                )}
+
+                {benefits_restrictions &&
+                  Array.isArray(benefits_restrictions) &&
+                  benefits_restrictions.length > 0 && (
+                    <Benifits
+                      expandedVersion={expandedVersion}
+                      benefits_restrictions={benefits_restrictions}
+                    />
+                  )}
+
+                {attendee_details &&
+                  Array.isArray(attendee_details) &&
+                  attendee_details.length > 0 && (
+                    <AttendeeDetails
+                      attendee_details={attendee_details}
+                      bookingId={order_details?.booking_id}
+                    />
+                  )}
               </div>
             ) : (
               <div className="p-6 flex flex-col items-center justify-center min-h-[200px]">
@@ -574,9 +673,12 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
                       <span className="text-gray-400 text-xl">!</span>
                     </div>
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Order Data Available</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No Order Data Available
+                  </h3>
                   <p className="text-gray-500 text-sm">
-                    The order information could not be loaded. Please try again later.
+                    The order information could not be loaded. Please try again
+                    later.
                   </p>
                 </div>
               </div>

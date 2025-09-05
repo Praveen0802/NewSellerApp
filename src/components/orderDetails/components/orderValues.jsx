@@ -33,7 +33,7 @@ const OrderValues = ({
 
   // Function to get the formatted value based on the key
   const getFormattedValue = (key, value) => {
-    if (key === "delivered_by" || key == "payout_date") {
+    if ( key == "payout_date") {
       return formatDeliveredByDate(value);
     }
     return value;

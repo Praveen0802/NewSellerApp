@@ -1948,6 +1948,8 @@ const handleCloseFunction = (passValue) =>{
     );
   };
 
+  console.log(rowData?.additional_info,'rowData?.initialAdditionalData?.additional_info')
+
   return (
     <div>
       <RightViewModal
@@ -1995,7 +1997,7 @@ const handleCloseFunction = (passValue) =>{
             showInstruction={showInstruction}
             ETicketsFlow={ETicketsFlow}
             paperTicketFlow={paperTicketFlow}
-            initialAdditionalData={null}
+            initialAdditionalData={rowData?.additional_info}
             onAdditionalInfoChange={handleAdditionalInfoChange}
             onTemplateSelect={handleTemplateSelect}
             MatchHeader={MatchHeader}

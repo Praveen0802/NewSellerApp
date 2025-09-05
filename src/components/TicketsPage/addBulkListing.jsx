@@ -63,7 +63,7 @@ import Tooltip from "../addInventoryPage/simmpleTooltip";
 
 const BulkInventory = (props) => {
   const { matchId, response } = props;
-  
+
   // Mobile breakpoint detection
   const [isMobile, setIsMobile] = useState(false);
   const [isSmallMobile, setIsSmallMobile] = useState(false);
@@ -78,14 +78,24 @@ const BulkInventory = (props) => {
     };
 
     checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
   if (Object.keys(response) == 0) {
     return (
-      <div className={`bg-[#F5F7FA] w-full ${isMobile ? 'max-md:pb-[150px]' : ''} max-h-[calc(100vh-100px)] overflow-auto relative min-h-screen`}>
-        <div className={`${isSmallMobile ? 'm-3' : 'm-6'} bg-white rounded-lg shadow-sm ${isSmallMobile ? 'p-6' : 'p-12'} text-center`}>
+      <div
+        className={`bg-[#F5F7FA] w-full ${
+          isMobile ? "max-md:pb-[150px]" : ""
+        } max-h-[calc(100vh-100px)] overflow-auto relative min-h-screen`}
+      >
+        <div
+          className={`${
+            isSmallMobile ? "m-3" : "m-6"
+          } bg-white rounded-lg shadow-sm ${
+            isSmallMobile ? "p-6" : "p-12"
+          } text-center`}
+        >
           <div className="max-w-md mx-auto">
             <div className="mb-6">
               <svg
@@ -102,10 +112,18 @@ const BulkInventory = (props) => {
                 />
               </svg>
             </div>
-            <h3 className={`${isSmallMobile ? 'text-lg' : 'text-xl'} font-semibold text-gray-900 mb-3`}>
+            <h3
+              className={`${
+                isSmallMobile ? "text-lg" : "text-xl"
+              } font-semibold text-gray-900 mb-3`}
+            >
               No Data Available
             </h3>
-            <p className={`text-gray-600 mb-6 leading-relaxed ${isSmallMobile ? 'text-sm' : ''}`}>
+            <p
+              className={`text-gray-600 mb-6 leading-relaxed ${
+                isSmallMobile ? "text-sm" : ""
+              }`}
+            >
               Unable to load match data. Please try again or contact support.
             </p>
           </div>
@@ -328,9 +346,9 @@ const BulkInventory = (props) => {
   // MODIFIED: Global cell edit handler - Fixed to work across all matches
   const handleGlobalCellEdit = (matchId, rowIndex, columnKey, value, row) => {
     console.log("Global cell edited:", { matchId, rowIndex, columnKey, value });
-  
+
     let updateValues = {};
-    
+
     // Existing logic for ticket_types
     if (columnKey === "ticket_types") {
       updateValues = {
@@ -341,7 +359,7 @@ const BulkInventory = (props) => {
         paper_ticket_details: {},
       };
     }
-  
+
     // New conditional logic for split_type and split_details
     if (columnKey === "split_type") {
       if (value === "6") {
@@ -353,19 +371,19 @@ const BulkInventory = (props) => {
         }
       }
     }
-  
+
     if (columnKey === "split_details") {
       // If split_type is "6" and trying to set split_details to something other than "27"
       if (row.split_type === "6" && value !== "27") {
         updateValues.split_type = "5";
       }
     }
-  
+
     if (isGlobalEditMode && globalEditingTickets.length > 0) {
       // In global edit mode, update ALL selected tickets across ALL matches
       setInventoryDataByMatch((prevData) => {
         const newData = { ...prevData };
-  
+
         // Group editing tickets by match for efficient updates
         const ticketsByMatch = {};
         globalEditingTickets.forEach((uniqueId) => {
@@ -376,7 +394,7 @@ const BulkInventory = (props) => {
           }
           ticketsByMatch[ticketMatchId].push(index);
         });
-  
+
         // Update tickets in each match that are in edit mode
         Object.entries(ticketsByMatch).forEach(([editMatchId, indices]) => {
           if (newData[editMatchId]) {
@@ -388,7 +406,7 @@ const BulkInventory = (props) => {
             });
           }
         });
-  
+
         return newData;
       });
     } else {
@@ -511,83 +529,86 @@ const BulkInventory = (props) => {
 
   // MODIFIED: Global publish function
   // MODIFIED: Global publish function with price validation
-const handleGlobalPublishLive = async () => {
-  if (globalSelectedTickets.length === 0) {
-    toast.error("Please select tickets to publish");
-    return;
-  }
+  const handleGlobalPublishLive = async () => {
+    if (globalSelectedTickets.length === 0) {
+      toast.error("Please select tickets to publish");
+      return;
+    }
 
-  // Collect all selected tickets with their match details for validation
-  const selectedTicketsData = [];
-  const invalidPriceTickets = [];
+    // Collect all selected tickets with their match details for validation
+    const selectedTicketsData = [];
+    const invalidPriceTickets = [];
 
-  globalSelectedTickets.forEach((uniqueId) => {
-    const [matchId, originalIndex] = uniqueId.split("_");
-    const index = parseInt(originalIndex);
-    const matchDetails = allMatchDetails.find(
-      (m) => m.match_id.toString() === matchId
-    );
-    const ticketData = inventoryDataByMatch[matchId][index];
+    globalSelectedTickets.forEach((uniqueId) => {
+      const [matchId, originalIndex] = uniqueId.split("_");
+      const index = parseInt(originalIndex);
+      const matchDetails = allMatchDetails.find(
+        (m) => m.match_id.toString() === matchId
+      );
+      const ticketData = inventoryDataByMatch[matchId][index];
 
-    if (ticketData && matchDetails) {
-      const ticketPrice = parseFloat(ticketData.add_price_addlist) || 0;
-      
-      // Check if price is greater than 5
-      if (ticketPrice < 5) {
-        invalidPriceTickets.push({
-          matchName: matchDetails.match_name,
-          ticketIndex: index + 1,
-          currentPrice: ticketPrice,
-          uniqueId
+      if (ticketData && matchDetails) {
+        const ticketPrice = parseFloat(ticketData.add_price_addlist) || 0;
+
+        // Check if price is greater than 5
+        if (ticketPrice < 5) {
+          invalidPriceTickets.push({
+            matchName: matchDetails.match_name,
+            ticketIndex: index + 1,
+            currentPrice: ticketPrice,
+            uniqueId,
+          });
+        }
+
+        selectedTicketsData.push({
+          match_id: matchDetails.match_id,
+          add_pricetype_addlist: matchDetails.price_type || "EUR",
+          ...ticketData,
         });
       }
+    });
 
-      selectedTicketsData.push({
-        match_id: matchDetails.match_id,
-        add_pricetype_addlist: matchDetails.price_type || "EUR",
-        ...ticketData,
-      });
-    }
-  });
+    // If there are tickets with invalid prices, show error and return
+    if (invalidPriceTickets.length > 0) {
+      const errorMessage =
+        invalidPriceTickets.length === 1
+          ? `Cannot publish: Ticket #${invalidPriceTickets[0].ticketIndex} from "${invalidPriceTickets[0].matchName}" has a processed price of ${invalidPriceTickets[0].currentPrice}. Minimum required price is greater than 5.`
+          : `Cannot publish: ${invalidPriceTickets.length} tickets have processed prices of 5 or less. All tickets must have a processed price greater than 5 to publish.`;
 
-  // If there are tickets with invalid prices, show error and return
-  if (invalidPriceTickets.length > 0) {
-    const errorMessage = invalidPriceTickets.length === 1 
-      ? `Cannot publish: Ticket #${invalidPriceTickets[0].ticketIndex} from "${invalidPriceTickets[0].matchName}" has a processed price of ${invalidPriceTickets[0].currentPrice}. Minimum required price is greater than 5.`
-      : `Cannot publish: ${invalidPriceTickets.length} tickets have processed prices of 5 or less. All tickets must have a processed price greater than 5 to publish.`;
-    
-    toast.error(errorMessage);
-    
-    // Optional: You could also highlight the invalid tickets in the UI
-    // by selecting only the invalid ones
-    const invalidTicketIds = invalidPriceTickets.map(ticket => ticket.uniqueId);
-    setGlobalSelectedTickets(invalidTicketIds);
-    
-    return;
-  }
+      toast.error(errorMessage);
 
-  setLoader(true);
+      // Optional: You could also highlight the invalid tickets in the UI
+      // by selecting only the invalid ones
+      const invalidTicketIds = invalidPriceTickets.map(
+        (ticket) => ticket.uniqueId
+      );
+      setGlobalSelectedTickets(invalidTicketIds);
 
-  try {
-    const formData = constructFormDataAsFields(selectedTicketsData);
-
-    if (selectedTicketsData.length > 1) {
-      await saveBulkListing("", formData);
-    } else {
-      await saveListing("", formData);
+      return;
     }
 
-    router.push("/my-listings?success=true");
-    toast.success(
-      `${selectedTicketsData.length} listing(s) published successfully`
-    );
-    setLoader(false);
-  } catch (error) {
-    console.error("Error publishing listings:", error);
-    toast.error("Error in publishing listing");
-    setLoader(false);
-  }
-};
+    setLoader(true);
+
+    try {
+      const formData = constructFormDataAsFields(selectedTicketsData);
+
+      if (selectedTicketsData.length > 1) {
+        await saveBulkListing("", formData);
+      } else {
+        await saveListing("", formData);
+      }
+
+      router.push("/my-listings?success=true");
+      toast.success(
+        `${selectedTicketsData.length} listing(s) published successfully`
+      );
+      setLoader(false);
+    } catch (error) {
+      console.error("Error publishing listings:", error);
+      toast.error("Error in publishing listing");
+      setLoader(false);
+    }
+  };
 
   const [searchEventLoader, setSearchEventLoader] = useState(false);
   const [searchedEvents, setSearchedEvents] = useState([]);
@@ -604,6 +625,21 @@ const handleGlobalPublishLive = async () => {
   const columnButtonRef = useRef(null);
 
   const [showTicketInfoPopup, setShowTicketInfoPopup] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
+
+  const handleFilterChange = (fieldName, value) => {
+    // Update filter value
+    setFiltersApplied((prev) => ({ ...prev, [fieldName]: value }));
+
+    // Clear validation error for this field when user starts typing/selecting
+    if (validationErrors[fieldName]) {
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
+  };
 
   // Enhanced block details fetching for multiple matches
   const getBlockDetails = async (matchId) => {
@@ -686,6 +722,7 @@ const handleGlobalPublishLive = async () => {
       name: "ticket_types",
       label: "Ticket Type",
       value: filtersApplied?.ticket_types,
+      error: validationErrors?.ticket_types, // Add this line
       mandatory: true,
       options: [
         ...(ticket_types?.map((note) => ({
@@ -693,12 +730,12 @@ const handleGlobalPublishLive = async () => {
           label: note.name,
         })) || []),
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, ticket_types: value })),
+      onChange: (value) => handleFilterChange("ticket_types", value), // Updated
     },
     {
       type: "number",
@@ -707,6 +744,7 @@ const handleGlobalPublishLive = async () => {
       label: "Quantity",
       mandatory: true,
       value: filtersApplied?.add_qty_addlist,
+      error: validationErrors?.add_qty_addlist, // Add this line
       options: [
         { value: "1", label: "1" },
         { value: "2", label: "2" },
@@ -714,15 +752,12 @@ const handleGlobalPublishLive = async () => {
         { value: "4", label: "4" },
         { value: "5", label: "5" },
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({
-          ...prev,
-          add_qty_addlist: value?.target?.value,
-        })),
+      onChange: (e) => handleFilterChange("add_qty_addlist", e?.target?.value), // Updated
     },
     {
       type: "select",
@@ -731,26 +766,37 @@ const handleGlobalPublishLive = async () => {
       increasedWidth: "!w-[120px]",
       mandatory: true,
       value: filtersApplied?.split_type,
+      error: validationErrors?.split_type, // Add this line
       options: [
         ...(split_types?.map((note) => ({
           value: note.id.toString(),
           label: note.name,
         })) || []),
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) => {
-        setFiltersApplied((prev) => {
-          let updated = { ...prev, split_type: value };
-          if (value === "6") {
-            updated.split_details = "27";
-          } else if (prev.split_details === "27") {
-            updated.split_details = "";
+        // Special handling for split_type while also clearing validation errors
+        let updated = { split_type: value };
+        if (value === "6") {
+          updated.split_details = "27";
+        } else if (filtersApplied.split_details === "27") {
+          updated.split_details = "";
+        }
+
+        setFiltersApplied((prev) => ({ ...prev, ...updated }));
+
+        // Clear validation errors for affected fields
+        setValidationErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.split_type;
+          if (updated.split_details !== undefined) {
+            delete newErrors.split_details;
           }
-console.log(updated,'updatedupdated')
-          return updated;
+          return newErrors;
         });
       },
     },
@@ -760,6 +806,7 @@ console.log(updated,'updatedupdated')
       label: "Seating Arrangement",
       mandatory: true,
       value: filtersApplied?.split_details,
+      error: validationErrors?.split_details, // Add this line
       options: [
         ...(split_details_left?.map((note) => ({
           value: note.id.toString(),
@@ -770,18 +817,28 @@ console.log(updated,'updatedupdated')
           label: note.name,
         })) || []),
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (value) => {
-        setFiltersApplied((prev) => {
-          let updated = { ...prev, split_details: value };
-          if (prev.split_type === "6" && value !== "27") {
-            updated.split_type = "5";
-          }
+        // Special handling for split_details while also clearing validation errors
+        let updated = { split_details: value };
+        if (filtersApplied.split_type === "6" && value !== "27") {
+          updated.split_type = "5";
+        }
 
-          return updated;
+        setFiltersApplied((prev) => ({ ...prev, ...updated }));
+
+        // Clear validation errors for affected fields
+        setValidationErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.split_details;
+          if (updated.split_type !== undefined) {
+            delete newErrors.split_type;
+          }
+          return newErrors;
         });
       },
     },
@@ -791,6 +848,7 @@ console.log(updated,'updatedupdated')
       increasedWidth: "min-w-[100px]",
       label: "Max Display Quantity",
       value: filtersApplied?.max_display_qty,
+      error: validationErrors?.max_display_qty, // Add this line
       options: [
         { value: "1", label: "1" },
         { value: "2", label: "2" },
@@ -803,11 +861,7 @@ console.log(updated,'updatedupdated')
       className:
         "!py-[9px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px]",
-      onChange: (e) =>
-        setFiltersApplied((prev) => ({
-          ...prev,
-          max_display_qty: e?.target?.value,
-        })),
+      onChange: (e) => handleFilterChange("max_display_qty", e?.target?.value), // Updated
     },
     {
       type: "select",
@@ -815,16 +869,17 @@ console.log(updated,'updatedupdated')
       label: "Fan Area",
       increasedWidth: "!w-[100px]",
       value: filtersApplied?.home_town,
+      error: validationErrors?.home_town, // Add this line
       options: Object.entries(home_town || {}).map(([key, value]) => ({
         value: key,
         label: value,
       })),
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, home_town: value })),
+      onChange: (value) => handleFilterChange("home_town", value), // Updated
     },
     {
       type: "select",
@@ -834,20 +889,32 @@ console.log(updated,'updatedupdated')
       increasedWidth:
         "!w-[180px] !min-w-[180px] sm:!w-[160px] sm:!min-w-[160px] lg:!w-[180px] lg:!min-w-[180px]",
       value: filtersApplied?.ticket_category,
+      error: validationErrors?.ticket_category, // Add this line
       options: Object.entries(block_data || {}).map(([key, value]) => ({
         value: key,
         label: value,
       })),
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
+      onChange: (value) => {
+        // Special handling for ticket_category while clearing validation errors
         setFiltersApplied((prev) => ({
           ...prev,
           ticket_category: value,
           ticket_block: "",
-        })),
+        }));
+
+        // Clear validation errors for affected fields
+        setValidationErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.ticket_category;
+          delete newErrors.ticket_block;
+          return newErrors;
+        });
+      },
     },
     {
       type: "select",
@@ -855,14 +922,15 @@ console.log(updated,'updatedupdated')
       increasedWidth: "!w-[110px]",
       label: "Section/Block",
       value: filtersApplied?.ticket_block,
+      error: validationErrors?.ticket_block, // Add this line
       options: blockData, // Will be dynamically populated per match
       disabled: !filtersApplied?.ticket_category,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, ticket_block: value })),
+      onChange: (value) => handleFilterChange("ticket_block", value), // Updated
     },
     {
       type: "text",
@@ -870,15 +938,13 @@ console.log(updated,'updatedupdated')
       label: "Row",
       increasedWidth: "!w-[100px]",
       value: filtersApplied?.row,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
+      error: validationErrors?.row, // Add this line
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[10px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (e) =>
-        setFiltersApplied((prev) => ({
-          ...prev,
-          row: e?.target?.value,
-        })),
+      onChange: (e) => handleFilterChange("row", e?.target?.value), // Updated
     },
     {
       type: "text",
@@ -886,25 +952,25 @@ console.log(updated,'updatedupdated')
       label: "First Seat",
       increasedWidth: "!w-[110px]",
       value: filtersApplied?.first_seat,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
+      error: validationErrors?.first_seat, // Add this line
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[10px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (e) =>
-        setFiltersApplied((prev) => ({
-          ...prev,
-          first_seat: e?.target?.value,
-        })),
+      onChange: (e) => handleFilterChange("first_seat", e?.target?.value), // Updated
     },
     {
       type: "number",
       name: "face_value",
       currencyFormat: true,
-      decimalValue:true,
+      decimalValue: true,
       label: "Face Value",
       increasedWidth: "!w-[120px]",
       value: filtersApplied?.face_value,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
+      error: validationErrors?.face_value, // Add this line
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       iconBefore: (
         <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
           <p className="text-xs">
@@ -915,11 +981,7 @@ console.log(updated,'updatedupdated')
       className: "!py-[10px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (e) =>
-        setFiltersApplied((prev) => ({
-          ...prev,
-          face_value: e?.target?.value,
-        })),
+      onChange: (e) => handleFilterChange("face_value", e?.target?.value), // Updated
     },
     {
       type: "number",
@@ -928,9 +990,11 @@ console.log(updated,'updatedupdated')
       mandatory: true,
       increasedWidth: "!w-[120px]",
       currencyFormat: true,
-      decimalValue:true,
+      decimalValue: true,
       value: filtersApplied?.add_price_addlist,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
+      error: validationErrors?.add_price_addlist, // Add this line
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       iconBefore: (
         <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
           <p className="text-xs">
@@ -942,17 +1006,16 @@ console.log(updated,'updatedupdated')
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       onChange: (e) =>
-        setFiltersApplied((prev) => ({
-          ...prev,
-          add_price_addlist: e?.target?.value,
-        })),
+        handleFilterChange("add_price_addlist", e?.target?.value), // Updated
     },
     {
       type: "select",
       name: "notes",
       label: "Benefits",
       value: filtersApplied?.notes,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
+      error: validationErrors?.notes, // Add this line
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       multiselect: true,
       options: [
         ...(notes_left?.map((note) => ({
@@ -967,14 +1030,14 @@ console.log(updated,'updatedupdated')
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, notes: value })),
+      onChange: (value) => handleFilterChange("notes", value), // Updated
     },
     {
       type: "select",
       name: "restrictions",
       label: "Restrictions",
       value: filtersApplied?.restrictions,
+      error: validationErrors?.restrictions, // Add this line
       multiselect: true,
       options: [
         ...(restriction_left?.map((note) => ({
@@ -986,12 +1049,12 @@ console.log(updated,'updatedupdated')
           label: note.name,
         })) || []),
       ],
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[9px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, restrictions: value })),
+      onChange: (value) => handleFilterChange("restrictions", value), // Updated
     },
     {
       type: "date",
@@ -1001,33 +1064,35 @@ console.log(updated,'updatedupdated')
         startDate: allMatchDetails[0]?.ship_date,
         endDate: allMatchDetails[0]?.ship_date,
       },
+      error: validationErrors?.ship_date, // Add this line
       minDate: new Date().toISOString().split("T")[0],
       maxDate: allMatchDetails[0]?.ship_date,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       singleDateMode: true,
       className: "!py-[10px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
-      onChange: (value) =>
-        setFiltersApplied((prev) => ({ ...prev, ship_date: value })),
+      onChange: (value) => handleFilterChange("ship_date", value), // Updated
     },
     {
       type: "checkbox",
       name: "tickets_in_hand",
       label: "Tickets In Hand",
       value: filtersApplied?.tickets_in_hand || false,
-      parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
+      error: validationErrors?.tickets_in_hand, // Add this line
+      parentClassName:
+        "flex-shrink flex-basis-[200px] flex-grow md:max-w-[212px]",
       className: "!py-[4px] !px-[12px] w-full mobile:text-xs",
       labelClassName:
         "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
       hideFromTable: true,
       onChange: (e) =>
-        setFiltersApplied((prev) => ({
-          ...prev,
-          tickets_in_hand: e?.target?.checked,
-        })),
+        handleFilterChange("tickets_in_hand", e?.target?.checked), // Updated
     },
   ];
+
+
 
   // KEEP THE ORIGINAL allHeaders generation (EXACT SAME)
   const allHeaders = filters.map((filter) => {
@@ -1042,7 +1107,7 @@ console.log(updated,'updatedupdated')
       hideFromTable: filter?.hideFromTable,
       iconBefore: filter?.iconBefore,
       currencyFormat: filter.currencyFormat || false,
-      decimalValue:filter.decimalValue || false,
+      decimalValue: filter.decimalValue || false,
     };
 
     if (filter.multiselect) {
@@ -1398,90 +1463,101 @@ console.log(updated,'updatedupdated')
     return newItem;
   };
 
-  // Validation function
   const validateMandatoryFields = () => {
-    const errors = [];
+    const errors = {};
+    const errorMessages = [];
+  
+    // Get all mandatory fields from filters
     const mandatoryFields = filters.filter(
       (filter) => filter.mandatory === true
     );
-
+  
+    // Check each mandatory field
     mandatoryFields.forEach((field) => {
       const fieldValue = filtersApplied[field.name];
-
+  
+      // Check if field is empty or invalid
       if (
         fieldValue === undefined ||
         fieldValue === null ||
         fieldValue === "" ||
         (Array.isArray(fieldValue) && fieldValue.length === 0)
       ) {
-        errors.push({
+        errors[field.name] = `${field.label} is required`;
+        errorMessages.push({
           field: field.name,
           label: field.label,
           message: `${field.label} is required`,
         });
       }
     });
-
+  
     return {
-      isValid: errors.length === 0,
-      errors: errors,
+      isValid: Object.keys(errors).length === 0,
+      errors: errorMessages,
+      fieldErrors: errors,
     };
   };
+
   // Add listings to all matches at once
   const handleAddListings = () => {
+    // First validate mandatory fields
     const validation = validateMandatoryFields();
-
+  
+    // Set validation errors in state
+    setValidationErrors(validation.fieldErrors);
+  
     if (!validation.isValid) {
+      // Show error toast with all missing mandatory fields
       const fieldNames = validation.errors
         .map((error) => error.label)
         .join(", ");
       toast.error(`Please fill in all mandatory fields: ${fieldNames}`);
       return;
     }
-
+  
+    // Clear validation errors if validation passes
+    setValidationErrors({});
+  
+    // Check if any filter values are present (your existing logic)
     const hasFilterValues = Object.values(filtersApplied).some((value) => {
       if (Array.isArray(value)) {
         return value.length > 0;
       }
       return value && value.toString().trim() !== "";
     });
-
+  
     if (!hasFilterValues) {
       toast.error(
         "Please select at least one filter value before adding listings."
       );
       return;
     }
-
-    // Add listings to all matches
+  
+    // If all validations pass, create the listings (your existing logic)
     const updatedInventoryData = {};
-    const newlyAddedTicketIds = []; // Track newly added tickets for selection
-
+    const newlyAddedTicketIds = [];
+  
     allMatchDetails.forEach((match) => {
       const newListing = createInventoryItemFromFilters(match);
       const existingTickets = inventoryDataByMatch[match.match_id] || [];
-      const newIndex = existingTickets.length; // Index of the new ticket
-
+      const newIndex = existingTickets.length;
+  
       updatedInventoryData[match.match_id] = [...existingTickets, newListing];
-
-      // Create uniqueId for the newly added ticket
+  
       const newTicketUniqueId = `${match.match_id}_${newIndex}`;
       newlyAddedTicketIds.push(newTicketUniqueId);
     });
-
-    // Update inventory data
+  
     setInventoryDataByMatch((prev) => ({
       ...prev,
       ...updatedInventoryData,
     }));
-
-    // Auto-select all newly added tickets
+  
     setGlobalSelectedTickets((prevSelected) => [
-      ...prevSelected, // Keep existing selections
-      ...newlyAddedTicketIds, // Add newly created tickets
+      ...prevSelected,
+      ...newlyAddedTicketIds,
     ]);
-
-    // Show success message indicating tickets were added and selected
   };
 
   // Handle confirm click for upload popup
@@ -1523,7 +1599,11 @@ console.log(updated,'updatedupdated')
   const [showRequestPopup, setShowRequestPopup] = useState(false);
 
   return (
-    <div className={`bg-[#F5F7FA] w-full ${isMobile ? 'max-md:pb-[150px]' : ''} max-h-[calc(100vh-100px)] overflow-auto relative min-h-screen`}>
+    <div
+      className={`bg-[#F5F7FA] w-full ${
+        isMobile ? "max-md:pb-[150px]" : ""
+      } max-h-[calc(100vh-100px)] overflow-auto relative min-h-screen`}
+    >
       {/* Header with selected match info */}
       <ViewMapPopup
         image={allMatchDetails[0]?.venue_image}
@@ -1573,70 +1653,74 @@ console.log(updated,'updatedupdated')
             </div>
           </div>
           {allMatchDetails.length > 0 && (
-        <div className="space-y-3">
-          {/* Desktop/Tablet View - Hidden on mobile */}
-          <div className="hidden sm:flex gap-4 items-center flex-wrap">
-            {allMatchDetails?.map((list, index) => (
-              <div
-                key={index}
-                className="flex gap-3 items-center border border-[#DADBE5] p-2 rounded-md bg-white transition-shadow"
-              >
-                <p className="text-[#323A70] text-[14px] font-medium">
-                  {list?.match_name}
-                </p>
-                <div className="flex gap-1 items-center">
-                  <Calendar className="w-3 h-3 text-[#00A3ED]" />
-                  <p className="text-[12px] text-gray-600">{list?.match_date_format}</p>
-                </div>
-                <div className="flex gap-1 items-center">
-                  <Clock className="w-3 h-3 text-[#00A3ED]" />
-                  <p className="text-[12px] text-gray-600">{list?.match_time}</p>
-                </div>
-                <X
-                  className="w-3.5 h-3.5 text-gray-600 cursor-pointer hover:text-red-500 transition-colors"
-                  onClick={() => handleDeleteMatch(list.match_id)}
-                  title={`Remove ${list?.match_name}`}
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Mobile View - Compact and Professional */}
-          <div className="sm:hidden space-y-2">
-            {allMatchDetails?.map((list, index) => (
-              <div
-                key={index}
-                className="bg-white border border-[#DADBE5] rounded-lg p-3 "
-              >
-                <div className="flex justify-between items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-[#323A70] text-sm font-medium truncate mb-2">
+            <div className="space-y-3">
+              {/* Desktop/Tablet View - Hidden on mobile */}
+              <div className="hidden sm:flex gap-4 items-center flex-wrap">
+                {allMatchDetails?.map((list, index) => (
+                  <div
+                    key={index}
+                    className="flex gap-3 items-center border border-[#DADBE5] p-2 rounded-md bg-white transition-shadow"
+                  >
+                    <p className="text-[#323A70] text-[14px] font-medium">
                       {list?.match_name}
-                    </h3>
-                    <div className="flex gap-4 text-xs text-gray-600">
-                      <div className="flex gap-1 items-center">
-                        <Calendar className="w-3 h-3 text-[#00A3ED] flex-shrink-0" />
-                        <span>{list?.match_date_format}</span>
+                    </p>
+                    <div className="flex gap-1 items-center">
+                      <Calendar className="w-3 h-3 text-[#00A3ED]" />
+                      <p className="text-[12px] text-gray-600">
+                        {list?.match_date_format}
+                      </p>
+                    </div>
+                    <div className="flex gap-1 items-center">
+                      <Clock className="w-3 h-3 text-[#00A3ED]" />
+                      <p className="text-[12px] text-gray-600">
+                        {list?.match_time}
+                      </p>
+                    </div>
+                    <X
+                      className="w-3.5 h-3.5 text-gray-600 cursor-pointer hover:text-red-500 transition-colors"
+                      onClick={() => handleDeleteMatch(list.match_id)}
+                      title={`Remove ${list?.match_name}`}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Mobile View - Compact and Professional */}
+              <div className="sm:hidden space-y-2">
+                {allMatchDetails?.map((list, index) => (
+                  <div
+                    key={index}
+                    className="bg-white border border-[#DADBE5] rounded-lg p-3 "
+                  >
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-[#323A70] text-sm font-medium truncate mb-2">
+                          {list?.match_name}
+                        </h3>
+                        <div className="flex gap-4 text-xs text-gray-600">
+                          <div className="flex gap-1 items-center">
+                            <Calendar className="w-3 h-3 text-[#00A3ED] flex-shrink-0" />
+                            <span>{list?.match_date_format}</span>
+                          </div>
+                          <div className="flex gap-1 items-center">
+                            <Clock className="w-3 h-3 text-[#00A3ED] flex-shrink-0" />
+                            <span>{list?.match_time}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex gap-1 items-center">
-                        <Clock className="w-3 h-3 text-[#00A3ED] flex-shrink-0" />
-                        <span>{list?.match_time}</span>
-                      </div>
+                      <button
+                        onClick={() => handleDeleteMatch(list.match_id)}
+                        className="p-1 rounded-full hover:bg-red-50 transition-colors"
+                        title={`Remove ${list?.match_name}`}
+                      >
+                        <X className="w-4 h-4 text-gray-500 hover:text-red-500 transition-colors" />
+                      </button>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDeleteMatch(list.match_id)}
-                    className="p-1 rounded-full hover:bg-red-50 transition-colors"
-                    title={`Remove ${list?.match_name}`}
-                  >
-                    <X className="w-4 h-4 text-gray-500 hover:text-red-500 transition-colors" />
-                  </button>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            </div>
+          )}
         </div>
         {allMatchDetails.length > 0 && (
           <>
@@ -1747,9 +1831,15 @@ console.log(updated,'updatedupdated')
 
       {/* Show message when no matches are available */}
       {allMatchDetails.length === 0 && (
-        <div className={`${isSmallMobile ? 'm-3' : 'm-6'} bg-white rounded-lg shadow-sm ${isSmallMobile ? 'p-6' : 'p-12'} text-center`}>
+        <div
+          className={`${
+            isSmallMobile ? "m-3" : "m-6"
+          } bg-white rounded-lg shadow-sm ${
+            isSmallMobile ? "p-6" : "p-12"
+          } text-center`}
+        >
           <div className="max-w-md mx-auto">
-            <div className={`${isSmallMobile ? 'mb-4' : 'mb-6'}`}>
+            <div className={`${isSmallMobile ? "mb-4" : "mb-6"}`}>
               <svg
                 className="mx-auto h-16 w-16 text-gray-400"
                 fill="none"
@@ -1776,9 +1866,15 @@ console.log(updated,'updatedupdated')
 
       {/* Show message when no tickets added yet */}
       {allMatchDetails.length > 0 && totalTicketCount === 0 && (
-        <div className={`${isSmallMobile ? 'm-3' : 'm-6'} bg-white rounded-lg shadow-sm ${isSmallMobile ? 'p-6' : 'p-12'} text-center`}>
+        <div
+          className={`${
+            isSmallMobile ? "m-3" : "m-6"
+          } bg-white rounded-lg shadow-sm ${
+            isSmallMobile ? "p-6" : "p-12"
+          } text-center`}
+        >
           <div className="max-w-md mx-auto">
-            <div className={`${isSmallMobile ? 'mb-4' : 'mb-6'}`}>
+            <div className={`${isSmallMobile ? "mb-4" : "mb-6"}`}>
               <svg
                 className="mx-auto h-16 w-16 text-gray-400"
                 fill="none"

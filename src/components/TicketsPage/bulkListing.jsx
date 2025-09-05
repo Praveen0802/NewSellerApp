@@ -11,6 +11,8 @@ import { fetchBulkListing } from "@/utils/apiHandler/request";
 import { ChevronDown, Filter, X } from "lucide-react";
 import reloadIcon from "../../../public/reload.svg";
 import Image from "next/image";
+import useIsMobile from "@/utils/helperFunctions/useIsmobile";
+import RequestEvent from "../addInventoryPage/requestFeaturePopup";
 
 // Debounce hook
 const useDebounce = (value, delay) => {
@@ -40,7 +42,6 @@ const BulkListings = (props) => {
   const [eventsData, setEventsData] = useState(
     response?.bulkListingData?.value?.events
   );
-  console.log(response, "responseresponse");
   const [searchValue, setSearchValue] = useState(filters?.query || "");
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [visibleFilters, setVisibleFilters] = useState({
@@ -107,9 +108,9 @@ const BulkListings = (props) => {
 
   const headers = [
     { title: "Event Name", key: "match_name" },
-    { title: "Event Date", key: "match_date" },
-    { title: "Event Time", key: "match_time" },
+    { title: "Event Date Time (Local)", key: "match_date_time" },
     { title: "Tournament", key: "tournament_name" },
+    { title: "Venue", key: "stadium" },
     { title: "Price Range", key: "ticket_fare_from" },
     { title: "Tickets Available", key: "tickets_available" },
   ];
@@ -183,14 +184,43 @@ const BulkListings = (props) => {
     setEventsData(response?.bulkListingData?.value?.events);
   };
 
+  function convertDateFormat(dateString) {
+    // Parse the input date string
+    const date = new Date(dateString);
+
+    // Options for formatting
+    const options = {
+      weekday: "short", // Sat
+      day: "2-digit", // 23
+      month: "short", // Nov
+      year: "numeric", // 2024
+      hour: "2-digit", // 08
+      minute: "2-digit", // 00
+      hour12: true, // AM/PM
+    };
+
+    // Format the date
+    const formattedDate = date.toLocaleDateString("en-US", options);
+
+    // The above gives us something like "Sat, 23 Nov 2024, 08:00 AM"
+    // But we need to adjust the format slightly
+    return formattedDate.replace(
+      /(\d{1,2}):(\d{2}):(\d{2})\s(AM|PM)/,
+      "$1:$2 $4"
+    );
+  }
+
   // Memoize eventListViews to prevent unnecessary re-renders
   const eventListViews = useMemo(() => {
     return (
       eventsData?.map((list) => ({
         ...list,
+        match_date_time: convertDateFormat(list.match_date),
       })) || []
     );
   }, [eventsData]);
+
+  console.log(eventsData, "eventsDataeventsData");
 
   const activeFiltersCount =
     Object.values(visibleFilters).filter(Boolean).length;
@@ -227,6 +257,8 @@ const BulkListings = (props) => {
     await fetchApiCall(params);
   };
 
+  const [showRequestPopup, setShowRequestPopup] = useState(false);
+
   const onClearAllFilters = async () => {
     const params = { query: filtersApplied?.query };
 
@@ -238,6 +270,8 @@ const BulkListings = (props) => {
     }));
     await fetchApiCall(params);
   };
+
+  const isMobile = useIsMobile();
   const ActiveFilterPills = ({
     activeFilters,
     filterConfig,
@@ -536,25 +570,30 @@ const BulkListings = (props) => {
     /* Mobile responsive adjustments */
     sm:pl-0 /* Remove left padding on mobile */
     ${
-      showFullDisplay ? "lg:pl-42" : "lg:pl-15"
+      showFullDisplay ? "md:pl-46" : "md:pl-15"
     } /* Apply desktop padding only on large screens */`}
         >
           <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
             {/* Left section - Request Event button */}
-            <div className="flex items-center gap-2 sm:gap-4">
-              {/* <Button
-                type="outlined"
-                classNames={{
-                  root: "px-3 py-2 sm:px-4 sm:py-2 text-[#374151] bg-[#03BA8A]",
-                  label_: "text-xs sm:text-sm text-white font-medium",
-                }}
-                label="Request Event"
-              /> */}
-              {/* Show selected count on mobile */}
-              <span className="text-xs text-[#6B7280] sm:hidden">
-                {selectedRows.length} selected
-              </span>
-            </div>
+            {!isMobile && (
+              <div className="flex items-center gap-2 sm:gap-4">
+                <Button
+                  type="outlined"
+                  classNames={{
+                    root: "px-3 py-2 sm:px-4 sm:py-2 text-[#374151] bg-[#03BA8A]",
+                    label_: "text-xs sm:text-sm text-white font-medium",
+                  }}
+                  onClick={() => {
+                    setShowRequestPopup(true);
+                  }}
+                  label="Request Event"
+                />
+                {/* Show selected count on mobile */}
+                <span className="text-xs text-[#6B7280] sm:hidden">
+                  {selectedRows.length} selected
+                </span>
+              </div>
+            )}
 
             {/* Right section - Action buttons */}
             <div className="flex items-center gap-2 sm:gap-3">
@@ -593,6 +632,7 @@ const BulkListings = (props) => {
             </div>
           </div>
 
+
           {/* Optional: Mobile-specific selected items indicator */}
           {/* <div className="sm:hidden px-4 pb-2">
             <div className="text-xs text-[#6B7280]">
@@ -601,6 +641,12 @@ const BulkListings = (props) => {
             </div>
           </div> */}
         </div>
+      )}
+      {showRequestPopup && (
+        <RequestEvent
+          show={showRequestPopup}
+          onClose={() => setShowRequestPopup(false)}
+        />
       )}
     </div>
   );

@@ -2,6 +2,9 @@ import { ChevronDown, ChevronUp, X, Info } from "lucide-react";
 import { useState } from "react";
 import RightViewModal from "../commonComponents/rightViewModal";
 
+// Mock RightViewModal component since it's imported
+
+
 // Mock shimmer component
 const InventoryLogsShimmer = ({ count }) => (
   <div className="p-3">
@@ -116,6 +119,8 @@ const InventoryLogsInfo = ({
   const [expandedLogs, setExpandedLogs] = useState(new Set());
   const [activeTab, setActiveTab] = useState("order");
 
+  
+
   function convertTimestamp(isoTimestamp) {
     const date = new Date(isoTimestamp);
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -186,50 +191,27 @@ const InventoryLogsInfo = ({
       return activeTab === "order" ? orderLogs : inventoryLogs;
     }
     // Use sample data for demonstration if no data provided
-    return data.length > 0 ? data : [];
+    return  data ;
   };
 
-  const getReferencePayload = () => {
-    const currentData = getCurrentData();
-    const firstEntry = currentData.find(
-      (entry) =>
-        entry.json_payload?.changes &&
-        Object.keys(entry.json_payload?.changes).length > 1
-    );
-    return firstEntry?.json_payload?.changes || {};
-  };
-
+  // Get all unique fields from all log entries
   const getAllFields = () => {
     const currentData = getCurrentData();
     const allFields = new Set();
     currentData.forEach((entry) => {
-      if (entry.json_payload?.changes) {
-        Object.keys(entry.json_payload?.changes).forEach((key) =>
-          allFields.add(key)
-        );
+      if (entry.json_payload) {
+        // Get all fields from json_payload except 'changes'
+        Object.keys(entry.json_payload).forEach((key) => {
+          if (key !== 'changes') {
+            allFields.add(key);
+          }
+        });
       }
     });
     return Array.from(allFields);
   };
 
-  const getCurrentFieldValues = (upToIndex) => {
-    const referencePayload = getReferencePayload();
-    const currentValues = { ...referencePayload };
-    const currentData = getCurrentData();
-
-    for (let i = 0; i <= upToIndex; i++) {
-      const logEntry = currentData[i];
-      if (logEntry && logEntry.json_payload?.changes) {
-        Object.entries(logEntry.json_payload?.changes).forEach(
-          ([key, value]) => {
-            currentValues[key] = value;
-          }
-        );
-      }
-    }
-    return currentValues;
-  };
-
+  // Check if a field was changed in the current log (exists in changes object)
   const isFieldChangedInCurrentLog = (key, logEntry) => {
     return (
       logEntry.json_payload?.changes &&
@@ -328,8 +310,8 @@ const InventoryLogsInfo = ({
                 key={idx}
                 className={`block px-2 py-1 rounded text-sm break-all max-w-full ${
                   isChangedInCurrentLog
-                    ? " text-green-800 font-semibold"
-                    : "font-light"
+                    ? " text-green-800 font-semibold border border-green-300"
+                    : "text-[#323A70] font-light"
                 }`}
               >
                 {String(item)}
@@ -346,14 +328,16 @@ const InventoryLogsInfo = ({
         className={`inline-block px-2 py-1 rounded text-sm break-all max-w-full ${
           isChangedInCurrentLog
             ? " text-green-800 font-semibold"
-            : "font-light"
+            : "text-[#323A70] font-light"
         }`}
       >
         {formattedValue}
       </span>
     );
   };
+
   const hideKeys = ["tracking_file_status"];
+
   return (
     <RightViewModal className="md:!w-[800px] max-md:!w-full" show={show} onClose={onClose}>
       {/* Add relative positioning and ensure overflow is visible */}
@@ -402,11 +386,7 @@ const InventoryLogsInfo = ({
           <div className="max-h-[90vh] overflow-y-auto p-3 relative">
             {displayData.map((logEntry, index) => {
               const isExpanded = expandedLogs.has(index);
-              const payloadKeys = Object.keys(
-                logEntry.json_payload?.changes || {}
-              );
-              const hasPayload = payloadKeys.length > 0;
-              const currentFieldValues = getCurrentFieldValues(index);
+              const hasPayload = logEntry.json_payload && Object.keys(logEntry.json_payload).length > 0;
 
               return (
                 <div
@@ -438,6 +418,8 @@ const InventoryLogsInfo = ({
                             Ticket ID: {logEntry.ticket_id}
                           </span>
                         )}
+                        {/* Show which fields were changed */}
+                        
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -478,7 +460,7 @@ const InventoryLogsInfo = ({
                       {allFields.length > 0 ? (
                         <div className="w-full overflow-visible">
                           <h4 className="text-sm font-medium text-gray-700 mb-2">
-                            Current State:
+                            Log Entry Values:
                           </h4>
                           <div className="flex max-md:flex-col md:flex-wrap gap-2 overflow-visible">
                             {/* First Table */}
@@ -489,22 +471,17 @@ const InventoryLogsInfo = ({
                                     {allFields
                                       .slice(0, Math.ceil(allFields.length / 2))
                                       .map((key, fieldIndex) => {
-                                        const isChangedInCurrentLog =
-                                          index > 0 &&
-                                          isFieldChangedInCurrentLog(
-                                            key,
-                                            logEntry
-                                          );
-                                        const currentValue =
-                                          currentFieldValues[key];
-                                        if (hideKeys?.includes(key))
-                                          return null;
+                                        const isChangedInCurrentLog = isFieldChangedInCurrentLog(key, logEntry);
+                                        const currentValue = logEntry.json_payload?.[key];
+                                        
+                                        if (hideKeys?.includes(key)) return null;
+                                        
                                         return (
                                           <tr
                                             key={fieldIndex}
                                             className={`${
                                               isChangedInCurrentLog
-                                                ? "bg-green-100"
+                                                ? "bg-green-50 border-l-4 border-l-green-400"
                                                 : "hover:bg-gray-50"
                                             }`}
                                           >
@@ -513,6 +490,7 @@ const InventoryLogsInfo = ({
                                               title={formatKeyName(key)}
                                             >
                                               {formatKeyName(key)}
+                                             
                                             </td>
                                             <td className="w-3/5 px-2 py-2 text-[#323A70] text-[12px] font-normal align-top overflow-visible">
                                               <div className="break-all overflow-visible">
@@ -539,22 +517,17 @@ const InventoryLogsInfo = ({
                                     {allFields
                                       .slice(Math.ceil(allFields.length / 2))
                                       .map((key, fieldIndex) => {
-                                        const isChangedInCurrentLog =
-                                          index > 0 &&
-                                          isFieldChangedInCurrentLog(
-                                            key,
-                                            logEntry
-                                          );
-                                        const currentValue =
-                                          currentFieldValues[key];
-                                        if (hideKeys?.includes(key))
-                                          return null;
+                                        const isChangedInCurrentLog = isFieldChangedInCurrentLog(key, logEntry);
+                                        const currentValue = logEntry.json_payload?.[key];
+                                        
+                                        if (hideKeys?.includes(key)) return null;
+                                        
                                         return (
                                           <tr
                                             key={fieldIndex}
                                             className={`${
                                               isChangedInCurrentLog
-                                                ? "bg-green-100"
+                                                ? "bg-green-50 border-l-4 border-l-green-400"
                                                 : "hover:bg-gray-50"
                                             }`}
                                           >
@@ -563,6 +536,7 @@ const InventoryLogsInfo = ({
                                               title={formatKeyName(key)}
                                             >
                                               {formatKeyName(key)}
+                                             
                                             </td>
                                             <td className="w-3/5 px-2 py-2 text-[#323A70] text-[12px] font-normal align-top overflow-visible">
                                               <div className="break-all overflow-visible">

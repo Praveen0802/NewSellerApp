@@ -133,7 +133,7 @@ const RequestEvent = ({ show, onClose }) => {
   };
 
   return (
-    <CustomModal show={show} onClose={onClose}>
+    <CustomModal show={show} onClose={onClose} className="!w-[400px]">
       <div className="w-[400px] rounded-lg bg-white">
         <div className="py-4 px-[24px] flex justify-between border-b-[1px] border-[#E0E1EA]">
           <p className="text-[#323A70] text-[18px] font-semibold">

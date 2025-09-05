@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Download, CheckCircle } from "lucide-react";
 import { downloadTicketLinks } from "@/utils/apiHandler/request";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
+import { toast } from "react-toastify";
 
 const DownloadYourTickets = ({ tickets, bookingId }) => {
   // State to track active tab
@@ -38,10 +39,16 @@ const DownloadYourTickets = ({ tickets, bookingId }) => {
       id ? `/${id}` : ""
     }/${downloadType}`;
     const response = await downloadTicketLinks("", generateUrl);
-    const createdAnchor = document.createElement("a");
-    createdAnchor.href = response?.url;
-    createdAnchor.download = "Download";
-    createdAnchor.click();
+    console.log(response,'responseresponse')
+    if(response?.success){
+      const createdAnchor = document.createElement("a");
+      createdAnchor.href = response?.data?.url;
+      createdAnchor.download = `Document.${response?.data?.extension}`;
+      createdAnchor.click();
+    }else{
+      toast.error(response?.error?.message || "Something went wrong")
+    }
+   
   };
 
   const handleCopy = (value, index) => {

@@ -326,6 +326,63 @@ const OrderInfo = ({
       : "Inactive";
   }
 
+  function convertDateFormat(dateString) {
+    // Handle null, undefined, empty string, or non-string inputs
+    if (!dateString || typeof dateString !== 'string' || dateString.trim() === '') {
+        return "-";
+    }
+
+    try {
+        // Parse the input date string (DD/MM/YYYY)
+        const parts = dateString.trim().split("/");
+        
+        // Check if we have exactly 3 parts
+        if (parts.length !== 3) {
+            return "-";
+        }
+        
+        const [day, month, year] = parts;
+        
+        // Check if all parts are valid numbers
+        if (!day || !month || !year || 
+            isNaN(parseInt(day)) || isNaN(parseInt(month)) || isNaN(parseInt(year))) {
+            return "-";
+        }
+
+        // Create a Date object (month is 0-indexed in JavaScript)
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+
+        // Check if the date is valid
+        if (isNaN(date.getTime())) {
+            return "-";
+        }
+        
+        // Additional validation: check if the date components match what we put in
+        // This catches cases like 31/02/2023 which would roll over to March
+        if (date.getDate() !== parseInt(day) || 
+            date.getMonth() !== parseInt(month) - 1 || 
+            date.getFullYear() !== parseInt(year)) {
+            return "-";
+        }
+
+        // Format options for the desired output
+        const options = {
+            weekday: "short", // Mon, Tue, Wed, etc.
+            year: "numeric", // 2022
+            month: "short", // Jan, Feb, Mar, etc.
+            day: "numeric", // 1, 2, 3, etc.
+        };
+
+        // Format the date
+        return date.toLocaleDateString("en-US", options);
+        
+    } catch (error) {
+        // If any error occurs during processing, return the fallback
+        console.warn('Date conversion error:', error.message, 'for input:', dateString);
+        return "-";
+    }
+}
+
   // Format order object for OrderValues component
   const orderObject = {
     order_id: order_details?.booking_no || order_details?.order_id,
@@ -333,13 +390,12 @@ const OrderInfo = ({
       ? formatTimestamp(order_details?.order_date)
       : "-",
     order_status: getOrderStatus?.(),
-    delivered_by: order_details?.delivered_by || "Not specified",
+    delivered_by: formatTimestamp(order_details?.delivered_by) || "Not specified",
     delivery_details: order_details?.delivery_status_label,
     days_to_event: order_details?.days_in_event,
     ticket_type: ticket_details?.[0]?.ticket_types,
     payout_date: order_details?.payout_date,
   };
-  console.log(orderObject, "orderObjectorderObject");
   // Format customer details - prioritize attendee details, then user address, then address
   const attendee = attendee_details?.[0];
 
