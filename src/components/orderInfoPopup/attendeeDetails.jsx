@@ -13,7 +13,7 @@ const AttendeeDetails = ({
   currentOrderObject,
 }) => {
   const { downloadFile } = useS3Download();
-  
+
   if (!attendee_details || attendee_details.length === 0) {
     return (
       <div className="border border-gray-200 rounded-lg p-4">
@@ -44,7 +44,7 @@ const AttendeeDetails = ({
         return { label: "Unknown", color: "bg-gray-100 text-gray-800" };
     }
   };
-
+  console.log(currentOrderObject, "currentOrderObjectcurrentOrderObject");
   const uploadDownLoadTicket = (attendee) => {
     return (
       <td
@@ -60,7 +60,15 @@ const AttendeeDetails = ({
             }}
             onClick={() => {
               if (showAttendeeUpload) {
-                handleUploadClick({ ...rowData, quantity: 1 }, attendee);
+                handleUploadClick(
+                  {
+                    ...rowData,
+                    quantity: 1,
+                    ticket_type: currentOrderObject?.ticket_type_id,
+                    ticket_type_label: currentOrderObject?.ticket_type,
+                  },
+                  attendee
+                );
               }
             }}
           >
@@ -78,7 +86,10 @@ const AttendeeDetails = ({
                   label_: "text-white pl-0",
                 }}
                 onClick={() => {
-                  downloadFile(attendee?.display_fields?.ticket_file_url, "ticket");
+                  downloadFile(
+                    attendee?.display_fields?.ticket_file_url,
+                    "ticket"
+                  );
                 }}
               >
                 {showAttendeeUpload ? (
@@ -101,10 +112,11 @@ const AttendeeDetails = ({
   // Get all available display fields from the first attendee to determine table columns
   const getAvailableFields = () => {
     const allFields = new Set();
-    attendee_details.forEach(attendee => {
+    attendee_details.forEach((attendee) => {
       if (attendee.display_fields) {
-        Object.keys(attendee.display_fields).forEach(field => {
-          if (field !== 'ticket_file_url') { // Exclude ticket_file_url from regular columns
+        Object.keys(attendee.display_fields).forEach((field) => {
+          if (field !== "ticket_file_url") {
+            // Exclude ticket_file_url from regular columns
             allFields.add(field);
           }
         });
@@ -124,9 +136,12 @@ const AttendeeDetails = ({
       nationality: "Nationality",
       city: "City",
       first_name: "First Name",
-      last_name: "Last Name"
+      last_name: "Last Name",
     };
-    return labelMap[field] || field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, ' ');
+    return (
+      labelMap[field] ||
+      field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, " ")
+    );
   };
 
   return (
@@ -143,8 +158,11 @@ const AttendeeDetails = ({
               <th className="text-left py-2 px-2 font-medium text-gray-700">
                 Ticket ID
               </th>
-              {availableFields.map(field => (
-                <th key={field} className="text-left py-2 px-2 font-medium text-gray-700">
+              {availableFields.map((field) => (
+                <th
+                  key={field}
+                  className="text-left py-2 px-2 font-medium text-gray-700"
+                >
                   {getFieldLabel(field)}
                 </th>
               ))}
@@ -167,7 +185,7 @@ const AttendeeDetails = ({
                   <td className="py-3 px-2 text-gray-900 font-medium">
                     {attendee.ticketid || "-"}
                   </td>
-                  {availableFields.map(field => (
+                  {availableFields.map((field) => (
                     <td key={field} className="py-3 px-2 text-gray-600 text-xs">
                       {attendee.display_fields?.[field] || "-"}
                     </td>
@@ -217,7 +235,7 @@ const AttendeeDetails = ({
                   <span className="font-medium">Serial:</span>{" "}
                   {attendee.serial || index + 1}
                 </div>
-                {availableFields.map(field => (
+                {availableFields.map((field) => (
                   <div key={field}>
                     <span className="font-medium">{getFieldLabel(field)}:</span>{" "}
                     {attendee.display_fields?.[field] || "-"}

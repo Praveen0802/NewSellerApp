@@ -384,11 +384,7 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
     ticket_type: ticket_details?.ticket_type || "-",
     payout_date: formatTimestamp(order_details?.expected_payout_date) || "-",
   };
-  console.log(
-    order_details?.expected_ticket_delivery,
-    convertDateFormat(order_details?.expected_ticket_delivery),
-    "order_details?.expected_ticket_deliveryorder_details?.expected_ticket_delivery"
-  );
+  
   // Define OrderValueObject
   const OrderValueObject = [
     {

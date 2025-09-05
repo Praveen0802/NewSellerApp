@@ -5,6 +5,7 @@ import { Download, CheckCircle } from "lucide-react";
 import { downloadTicketLinks } from "@/utils/apiHandler/request";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import { toast } from "react-toastify";
+import useS3Download from "@/Hooks/useS3Download";
 
 const DownloadYourTickets = ({ tickets, bookingId }) => {
   // State to track active tab
@@ -14,7 +15,7 @@ const DownloadYourTickets = ({ tickets, bookingId }) => {
 
   // Define available tabs based on data
   const availableTabs = [];
- 
+
   if (tickets?.etickets?.length > 0)
     availableTabs.push({ id: "etickets", label: "E-Tickets" });
   if (tickets?.links?.length > 0)
@@ -34,21 +35,21 @@ const DownloadYourTickets = ({ tickets, bookingId }) => {
     }
   }, [tickets, activeTab]);
 
+  const { downloadFile } = useS3Download();
+
   const fetchDownloadLinks = async (type, id, downloadType = "") => {
     const generateUrl = `/bookings/${bookingId}/${type}${
       id ? `/${id}` : ""
     }/${downloadType}`;
     const response = await downloadTicketLinks("", generateUrl);
-    console.log(response,'responseresponse')
-    if(response?.success){
+    console.log(response, "responseresponse ");
+    if (response?.success) {
       const createdAnchor = document.createElement("a");
       createdAnchor.href = response?.data?.url;
-      createdAnchor.download = `Document.${response?.data?.extension}`;
-      createdAnchor.click();
-    }else{
-      toast.error(response?.error?.message || "Something went wrong")
+      downloadFile(response?.data?.url, "ticket");
+    } else {
+      toast.error(response?.error?.message || "Something went wrong");
     }
-   
   };
 
   const handleCopy = (value, index) => {

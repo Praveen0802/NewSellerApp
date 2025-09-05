@@ -498,7 +498,7 @@ const SalesPage = (props) => {
   };
 
   const handleUploadClick = async (rowData, attendee) => {
-    console.log(rowData,'rowDatarowDatarowData',attendee)
+    console.log('rowDatarowDatarowData',attendee)
     try {
       // Set loading state before API call
       setUploadPopupLoading(true);
@@ -512,10 +512,12 @@ const SalesPage = (props) => {
       });
 
       // Fetch ticket details from API
+      const response = await getSalesTicketDetails("", {
+        booking_id: rowData?.id,
+      });
 
       // Check different possible response structures
-      let ticketDetails = [attendee];
-
+      let ticketDetails = [response.ticket_details.find(ticket => ticket?.id === attendee?.id)];
       // Check ticket type to determine flow
       const ticketType = parseInt(
         rowData?.ticket_type || rowData?.ticket_types || rowData?.ticket_type_id

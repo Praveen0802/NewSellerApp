@@ -933,6 +933,7 @@ const MySalesUploadTickets = ({
     );
     formData.append("dynamic_content", currentAdditionalInfo?.dynamicContent);
     formData.append("ticket_type", currentAdditionalInfo?.template || "");
+    formData.append("booking_id", rowData?.bookingId || "");
     if (currentAdditionalInfo?.templateFile && currentAdditionalInfo?.templateFile instanceof File) {
       formData.append(
         "additional_file",
@@ -951,7 +952,7 @@ const MySalesUploadTickets = ({
 
           await additionalInfoCheck();
 
-          // FIXED: Now this will get the latest data
+          // FIXED: Now thi s will get the latest data
           const currentQRLinks = qrLinksRef.current?.getCurrentData() || [];
           const originalQRLinks = rowData?.qrLinksData || [];
 

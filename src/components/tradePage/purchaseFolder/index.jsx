@@ -300,7 +300,7 @@ const PurchaseFolder = (props) => {
             }`}
           />
         </button>
-        <span className="text-sm text-gray-500">{data?.length} purchases</span>
+        <span className="text-sm text-gray-500">{displayTabValues?.total_count} purchases</span>
       </div>
 
       {isFilterExpanded && (
@@ -557,7 +557,7 @@ const PurchaseFolder = (props) => {
                   "p-[20px] text-[14px] w-fit text-[#343432] font-semibold border-r-[1px] border-[#E0E1EA]"
                 }
               >
-                {data?.length} purchases
+                {displayTabValues?.total_count} purchases
               </p>
               <button
                 onClick={() => resetFilters()}

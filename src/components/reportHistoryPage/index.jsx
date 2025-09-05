@@ -641,6 +641,13 @@ const RportHistory = (props) => {
         event_end_date: value?.endDate,
         page: 1,
       };
+    } else if (filterKey === "event_end_date") {
+      params = {
+        ...params,
+        event_start_date: "",
+        event_end_date: "",
+        page: 1,
+      };
     } else if (filterKey === "transaction_end_date") {
       params = {
         ...params,
@@ -728,6 +735,10 @@ const RportHistory = (props) => {
         name: "transactionDate",
         singleDateMode: false,
         label: "Transaction Date",
+        value: {
+          startDate: filtersApplied?.transaction_start_date,
+          endDate: filtersApplied?.transaction_end_date,
+        },
         parentClassName: "md:!w-[150px]",
         className: "!py-[8px] !px-[16px] mobile:text-xs",
       },
@@ -735,6 +746,10 @@ const RportHistory = (props) => {
         type: "date",
         name: "eventDate",
         singleDateMode: false,
+        value: {
+          startDate: filtersApplied?.event_start_date,
+          endDate: filtersApplied?.event_end_date,
+        },
         label: "Event Date",
         parentClassName: "md:!w-[150px]",
         className: "!py-[8px] !px-[16px] mobile:text-xs",
