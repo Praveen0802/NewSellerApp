@@ -117,6 +117,7 @@ export const API_ROUTES = {
   PURCHASE_TRACKING_SEARCH: "/purchase/lmt-trade/tracking/history",
   PURCHASE_TICKETS: "/purchase/lmt-trade/tickets",
   PURCHASE_HISTORY: "/purchase/lmt-trade/history",
+  UPDATE_PUBLISH_TICKETS:"/my-listings/update-ticket-status",
   TICKET_QUANTITY_UPDATE: "/purchase/lmt-trade/tickets-quantity-update",
   NOTIFICATION_LOG: "/notification/notification-details",
   PURCHASE_PAYMENT_METHODS: "/purchase/lmt-trade/payment-methods",

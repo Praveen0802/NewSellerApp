@@ -1803,6 +1803,20 @@ export const FetchAllCategories = async (token, params = {}) => {
   }
 };
 
+export const updatePublishApiCall = async (token, data = {}) => {
+  try {
+    const response = await makeRequest({
+      url: API_ROUTES.UPDATE_PUBLISH_TICKETS,
+      method: "POST",
+      ...(token && { token: token }),
+      ...(data && { data: data }),
+    });
+    return response?.data?.success ? response?.data?.data : {};
+  } catch (error) {
+    console.log("ERROR in FetchAllCategories", error);
+  }
+};
+
 export const FetchTabTotal = async (token, params = {}) => {
   try {
     const response = await makeRequest({

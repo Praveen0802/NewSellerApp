@@ -30,6 +30,7 @@ import {
   SearchIcon,
   HardDriveUpload,
   SquareCheck,
+  Hexagon,
 } from "lucide-react";
 import {
   FetchEventSearch,
@@ -40,6 +41,7 @@ import {
   deleteMyListing,
   saveListing,
   saveBulkListing,
+  updatePublishApiCall,
 } from "@/utils/apiHandler/request";
 import UploadTickets from "../ModalComponents/uploadTickets";
 import InventoryLogsInfo from "../inventoryLogsInfo";
@@ -224,60 +226,66 @@ const ActiveFilterPills = ({
 
   return (
     <div className="flex items-center gap-2">
-    {/* Fixed clear all button */}
-    {activeEntries.length > 0 && (
-      <Image
-        onClick={onClearAllFilters}
-        src={reloadIcon}
-        width={isSmallMobile ? 24 : 30}
-        height={isSmallMobile ? 24 : 30}
-        className="cursor-pointer flex-shrink-0"
-        alt="image-logo"
-      />
-    )}
-    
-    {/* Scrollable filters container */}
-    <div className="flex gap-2 items-center overflow-x-auto scrollbar-hide min-w-0 flex-1">
-      <div className="flex gap-2 items-center whitespace-nowrap">
-        {activeEntries.map(({ key, value, displayValue }) => (
-          <div
-            key={key}
-            className={`inline-flex items-center gap-1 ${
-              isSmallMobile ? "px-2 py-0.5" : "px-3 py-1"
-            } border-1 border-gray-300 rounded-sm ${
-              isSmallMobile ? "text-xs" : "text-sm"
-            } flex-shrink-0`}
-          >
-            <span className="font-medium capitalize whitespace-nowrap">
-              {isMobile
-                ? key.replace(/_/g, " ").split(" ")[0]
-                : key.replace(/_/g, " ")}
-              :
-            </span>
-            <span className={`${isMobile ? "max-w-16 truncate" : ""} whitespace-nowrap`}>
-              {displayValue}
-            </span>
-            <button
-              onClick={() => onFilterChange(key, "", activeFilters, currentTab)}
-              className="ml-1 hover:bg-blue-200 rounded-full p-0.5 flex-shrink-0"
+      {/* Fixed clear all button */}
+      {activeEntries.length > 0 && (
+        <Image
+          onClick={onClearAllFilters}
+          src={reloadIcon}
+          width={isSmallMobile ? 24 : 30}
+          height={isSmallMobile ? 24 : 30}
+          className="cursor-pointer flex-shrink-0"
+          alt="image-logo"
+        />
+      )}
+
+      {/* Scrollable filters container */}
+      <div className="flex gap-2 items-center overflow-x-auto scrollbar-hide min-w-0 flex-1">
+        <div className="flex gap-2 items-center whitespace-nowrap">
+          {activeEntries.map(({ key, value, displayValue }) => (
+            <div
+              key={key}
+              className={`inline-flex items-center gap-1 ${
+                isSmallMobile ? "px-2 py-0.5" : "px-3 py-1"
+              } border-1 border-gray-300 rounded-sm ${
+                isSmallMobile ? "text-xs" : "text-sm"
+              } flex-shrink-0`}
             >
-              <X size={isSmallMobile ? 12 : 14} />
-            </button>
-          </div>
-        ))}
+              <span className="font-medium capitalize whitespace-nowrap">
+                {isMobile
+                  ? key.replace(/_/g, " ").split(" ")[0]
+                  : key.replace(/_/g, " ")}
+                :
+              </span>
+              <span
+                className={`${
+                  isMobile ? "max-w-16 truncate" : ""
+                } whitespace-nowrap`}
+              >
+                {displayValue}
+              </span>
+              <button
+                onClick={() =>
+                  onFilterChange(key, "", activeFilters, currentTab)
+                }
+                className="ml-1 hover:bg-blue-200 rounded-full p-0.5 flex-shrink-0"
+              >
+                <X size={isSmallMobile ? 12 : 14} />
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
+
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
-  
-    <style jsx>{`
-      .scrollbar-hide {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-      }
-      .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-      }
-    `}</style>
-  </div>
   );
 };
 
@@ -305,7 +313,9 @@ const Pagination = ({
       {/* Left side - Total items count */}
       <div
         className={`flex items-center ${
-          isMobile ? "justify-between w-full overflow-auto hideScrollbar" : "gap-4"
+          isMobile
+            ? "justify-between w-full overflow-auto hideScrollbar"
+            : "gap-4"
         }`}
       >
         <div
@@ -498,7 +508,7 @@ const TicketsPage = (props) => {
       const tickets = item.tickets || [];
 
       // In your ticketsPage useEffect where you transform tickets data:
-      const transformedTickets = tickets.map((ticket, ticketIndex) => ({
+      const transformedTickets = Object.values(tickets).map((ticket, ticketIndex) => ({
         id: `${matchIndex}-${ticketIndex}`,
         uniqueId: `${matchIndex}_${ticketIndex}`,
         s_no: ticket.s_no || "",
@@ -572,7 +582,6 @@ const TicketsPage = (props) => {
 
   const getSelectedClonedTickets = useCallback(() => {
     const allTickets = getAllTicketsFromMatches();
-    console.log(allTickets, "allTicketsallTickets", globalSelectedTickets);
     return allTickets.filter(
       (ticket) =>
         globalSelectedTickets.includes(ticket.uniqueId) && ticket.isCloned
@@ -927,7 +936,6 @@ const TicketsPage = (props) => {
     // No change needed to globalSelectedTickets since we want to keep the original selection as-is
 
     console.log("🔍 Keeping original selection only:", globalSelectedTickets);
-
   }, [globalSelectedTickets, getAllTicketsFromMatches]);
 
   // NEW: Function to construct FormData for cloned tickets (similar to AddInventory)
@@ -1310,7 +1318,7 @@ const TicketsPage = (props) => {
         editable: true,
         iconHandling: true,
         currencyFormat: true,
-        decimalValue:true,
+        decimalValue: true,
         type: "number",
         iconBefore: (rowValue) => (
           <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
@@ -1324,7 +1332,7 @@ const TicketsPage = (props) => {
         key: "price",
         label: "Price",
         currencyFormat: true,
-        decimalValue:true,
+        decimalValue: true,
         editable: true,
         iconHandling: true,
         type: "number",
@@ -1541,7 +1549,7 @@ const TicketsPage = (props) => {
           editable: true,
           iconHandling: true,
           currencyFormat: true,
-          decimalValue:true,
+          decimalValue: true,
           type: "number",
           iconBefore: (rowValue) => (
             <div className="border-r-[1px] pr-1 border-[#E0E1EA]">
@@ -1555,7 +1563,7 @@ const TicketsPage = (props) => {
           key: "price",
           label: "Price",
           currencyFormat: true,
-          decimalValue:true,
+          decimalValue: true,
           editable: true,
           iconHandling: true,
           type: "number",
@@ -2229,6 +2237,15 @@ const TicketsPage = (props) => {
     [handleCellEdit]
   );
 
+  const handlePublishValueClick = async (rowData, rowIndex) => {
+    const payload = {
+      status: rowData?.status == "Active" ? 0 : 1,
+      ticket_id:rowData?.s_no
+    };
+    const data = await updatePublishApiCall("", payload);
+    fetchData({ ...filtersApplied, page: currentPage });
+  };
+
   // Custom sticky columns configuration
   const getStickyColumnsForRow = useCallback(
     (rowData, rowIndex) => {
@@ -2236,8 +2253,9 @@ const TicketsPage = (props) => {
         isGlobalEditMode && globalEditingTickets.length > 1;
       const hasEdits = hasPendingEdits(rowData?.matchIndex, rowIndex);
       const isCloned = rowData?.isCloned;
-
+      console.log(rowData, "rowDatarowDatarowData");
       // Base columns
+      const activeData = rowData?.status === "Active";
       const baseColumns = [
         {
           key: "hand",
@@ -2318,6 +2336,53 @@ const TicketsPage = (props) => {
                     : "cursor-pointer"
                 }`}
               />
+            </Tooltip>
+          ),
+          className: "py-2 text-center border-r border-[#E0E1EA]",
+        },
+        {
+          key: "publish",
+          toolTipContent: activeData ? "Unpublish" : "Publish",
+          icon: (
+            <Tooltip content={activeData ? "Unpublish" : "Publish"}>
+              <div
+                onClick={() => {
+                  handlePublishValueClick(rowData, rowIndex);
+                }}
+                className="relative group cursor-pointer"
+              >
+                {/* Active state: Show green Hexagon with check, hover shows different color plain Hexagon */}
+                {activeData ? (
+                  <>
+                    <Hexagon className="size-5 fill-[#28e65e] stroke-[#28e65e] group-hover:opacity-0 transition-opacity duration-200">
+                      <path
+                        d="m9 12 2 2 4-4"
+                        stroke="white"
+                        strokeWidth="2"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </Hexagon>
+                    <Hexagon className="size-5 fill-[#ff6b6b] stroke-[#ff6b6b] absolute top-0 left-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  </>
+                ) : (
+                  <>
+                    {/* Inactive state: Show gray Hexagon, hover shows green Hexagon with check */}
+                    <Hexagon className="size-5 fill-[#E0E1EA] stroke-[#E0E1EA] group-hover:opacity-0 transition-opacity duration-200" />
+                    <Hexagon className="size-5 fill-[#28e65e] stroke-[#28e65e] absolute top-0 left-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <path
+                        d="m9 12 2 2 4-4"
+                        stroke="white"
+                        strokeWidth="2"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </Hexagon>
+                  </>
+                )}
+              </div>
             </Tooltip>
           ),
           className: "py-2 text-center border-r border-[#E0E1EA]",
@@ -3044,9 +3109,9 @@ const TicketsPage = (props) => {
             showAccordion={true}
             matchIndex={matchIndex}
             getStickyColumnsForRow={getStickyColumnsForRow}
-            stickyHeaders={["", "", "", ""]}
+            stickyHeaders={["", "", "", "", ""]}
             myListingPage={true}
-            stickyColumnsWidth={140}
+            stickyColumnsWidth={160}
             // Pass the pending edits and handlers
             pendingEdits={pendingEdits}
             onConfirmEdit={handleConfirmEdit}
@@ -3115,7 +3180,7 @@ const TicketsPage = (props) => {
     ticket_category: "Ticket Category",
     currency_symbol: "Currency",
     price_type: "Price Type",
-    ticket_in_hand: "Tickets In Hand"
+    ticket_in_hand: "Tickets In Hand",
   };
 
   return (

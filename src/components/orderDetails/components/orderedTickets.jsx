@@ -59,7 +59,7 @@ const OrderedTickets = ({ ticket_details }) => {
     {
       values: [
         {
-          name: "Ticket Price",
+          name: "Order Value",
           text:
             ticket_details?.ticket_price ||
             `${ticket_details?.currency_type || "GBP"} 0`,
