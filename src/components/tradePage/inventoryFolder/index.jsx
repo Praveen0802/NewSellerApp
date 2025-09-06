@@ -38,6 +38,7 @@ import OrderDetails from "@/components/orderDetails";
 import useIsMobile from "@/utils/helperFunctions/useIsmobile";
 import StadiumMap from "./pinPatchMap/mapSvg";
 import ClearChip from "./components/clearChip";
+import { Heart } from "lucide-react";
 
 const InventoryFolder = (props) => {
   const { response = {}, matchId } = props;
@@ -152,8 +153,13 @@ const InventoryFolder = (props) => {
     return [
       // Price as first sticky column for both mobile and desktop
       {
-        icon: <p className="text-[12px] lg:text-[14px] font-medium">{item?.price_with_symbol}</p>,
-        className: "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px] bg-white",
+        icon: (
+          <p className="text-[12px] lg:text-[14px] font-medium">
+            {item?.price_with_symbol}
+          </p>
+        ),
+        className:
+          "border-r-[1px] border-[#E0E1EA] text-[#343432] text-[12px] bg-white",
       },
       // Desktop-only action icons
       ...(isMobile
@@ -252,18 +258,32 @@ const InventoryFolder = (props) => {
       // Star (favorites) - common for both mobile and desktop
       {
         icon: (
-          <Image
+          // <Image
+          //   onClick={() => {
+          //     handleClickFavourites(item);
+          //   }}
+          //   width={isMobile ? 16 : 20}
+          //   height={isMobile ? 16 : 20}
+          //   src={item?.trackingfound == 1 ? star : beforeFaviurates}
+          //   alt="star"
+          // />
+          <div
+            className={`${
+              item?.trackingfound == 1 ? "bg-[#FFBE5E]" : "bg-[#130061]"
+            }  rounded-full cursor-pointer`}
             onClick={() => {
               handleClickFavourites(item);
             }}
-            width={isMobile ? 16 : 20}
-            height={isMobile ? 16 : 20}
-            src={item?.trackingfound == 1 ? star : beforeFaviurates}
-            alt="star"
-          />
+          >
+            <Heart className="size-6 fill-white p-1" />
+          </div>
         ),
-        tooltipComponent: <p className="text-center text-[12px]">Track this ticket</p>,
-        className: `border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer bg-white ${isMobile ? 'px-1' : 'px-2'}`,
+        tooltipComponent: (
+          <p className="text-center text-[12px]">Track this ticket</p>
+        ),
+        className: `border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer bg-white ${
+          isMobile ? "px-1" : "px-2"
+        }`,
         key: "star",
       },
       // Buy button - common for both mobile and desktop
@@ -274,7 +294,7 @@ const InventoryFolder = (props) => {
               handleClickItem(item);
             }}
             className={`bg-[#343432] py-1 rounded-md hover:bg-[#343432] text-white font-medium transition-colors whitespace-nowrap ${
-              isMobile ? 'px-2 text-[10px]' : 'px-2 text-xs'
+              isMobile ? "px-2 text-[10px]" : "px-2 text-xs"
             }`}
           >
             Buy
@@ -298,7 +318,6 @@ const InventoryFolder = (props) => {
   };
 
   const fetchScrollEnd = async () => {
-    console.log(currentPage, lastPage, "ppppppppppppppppppppppp");
     if (currentPage >= lastPage) return;
     const scrollPosition = window.scrollY || document.documentElement.scrollTop;
     const params = {
@@ -385,7 +404,6 @@ const InventoryFolder = (props) => {
   const rightStickyHeaders = isMobile ? ["Price"] : ["Ticket Price"];
 
   // Enhanced right sticky columns with better mobile handling
- 
 
   const handleTicketMouseEnter = (categoryId) => {
     if (!svgContainerRef.current) return;
@@ -685,18 +703,20 @@ const InventoryFolder = (props) => {
                   handleTicketMouseEnter={handleTicketMouseEnter}
                   handleTicketMouseLeave={handleTicketMouseLeave}
                   stickyColumnsConfig={{
-                    columnWidths: isMobile ? [
-                      80, // Price
-                      40, // Star icon
-                      60, // Buy button
-                    ] : [
-                      120, // Ticket Price
-                      50,  // Attachment icon
-                      50,  // Hand icon
-                      50,  // Document icon
-                      50,  // Star icon
-                      80,  // Buy button
-                    ],
+                    columnWidths: isMobile
+                      ? [
+                          80, // Price
+                          40, // Star icon
+                          60, // Buy button
+                        ]
+                      : [
+                          120, // Ticket Price
+                          50, // Attachment icon
+                          50, // Hand icon
+                          50, // Document icon
+                          50, // Star icon
+                          80, // Buy button
+                        ],
                   }}
                 />
               </div>

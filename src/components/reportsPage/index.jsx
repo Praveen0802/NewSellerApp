@@ -49,7 +49,7 @@ const ReportsPage = (props) => {
   const [transactionHistory, setTransactionHistory] =
     useState(transaction_history);
   const [depositHistory, setDepositHistory] = useState(deposit_history);
-  console.log(depositHistory, "depositHistory", transactionHistory);
+  console.log(depositHistory, "depositHistory");
   const values = overview?.map((item) => {
     return {
       icon: flagMap?.[item.currency],
@@ -168,6 +168,8 @@ const ReportsPage = (props) => {
       headers: [
         "Payment Reference",
         "Amount",
+        "Charges",
+        "Deposit Amount",
         "Payment Method",
         "Date",
         "Status",
@@ -177,6 +179,8 @@ const ReportsPage = (props) => {
         return {
           referenceNo: listItems?.reference_no,
           amount: listItems?.price_with_currency,
+          charges: listItems?.charge_with_currency,
+          depositAmount:listItems?.deposit_amount_with_currency,
           paymentMethod: listItems?.payment_transfer_by,
           date: formatDate(listItems?.created_date_time, "dateOnly"),
           status: getStatusText(listItems?.status_label),

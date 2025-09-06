@@ -483,8 +483,8 @@ const MultiSelectEditableCell = ({
                   return (
                     <div
                       key={option.value}
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-start space-x-2 transition-colors ${
-                        isSelected ? "bg-blue-50" : ""
+                      className={`px-3 py-2 cursor-pointer hover:bg-gray-200 flex items-start space-x-2 transition-colors ${
+                        isSelected ? "bg-gray-100" : ""
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();

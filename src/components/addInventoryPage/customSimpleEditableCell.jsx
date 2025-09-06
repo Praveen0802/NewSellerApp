@@ -346,8 +346,8 @@ const CustomSelectEditableCell = ({
                   return (
                     <div
                       key={option.value}
-                      className={`px-3 py-2 cursor-pointer hover:bg-gray-100 transition-colors ${
-                        isSelected ? "bg-blue-50 text-blue-700" : "text-[#323A70]"
+                      className={`px-3 py-2 cursor-pointer hover:bg-gray-200 transition-colors ${
+                        isSelected ? "bg-gray-100 text-gray-700" : "text-[#323A70]"
                       }`}
                       onClick={(e) => {
                         e.stopPropagation();

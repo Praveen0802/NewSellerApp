@@ -1479,7 +1479,7 @@ const LeftMenuBar = () => {
                           onClick={() => handleSubItemClick(subItem)}
                           className={`cursor-pointer flex items-center justify-between p-2 text-sm transition-colors duration-200 rounded relative ${
                             subItem?.key === active
-                              ? "bg-[#64EAA5] text-black"
+                              ? "bg-[#64EAA5] text-white"
                               : "text-gray-300 hover:bg-[#5f6365]"
                           }`}
                         >

@@ -22,7 +22,7 @@ import {
   getSalesTicketDetails,
   getTicketTypes,
 } from "@/utils/apiHandler/request";
-import { Clock, Eye, Upload } from "lucide-react";
+import { Clock, Eye, Hand, Upload } from "lucide-react";
 import { inventoryLog } from "@/data/testOrderDetails";
 import useTeamMembersDetails from "@/Hooks/useTeamMembersDetails";
 import { toast } from "react-toastify";
@@ -498,7 +498,7 @@ const SalesPage = (props) => {
   };
 
   const handleUploadClick = async (rowData, attendee) => {
-    console.log('rowDatarowDatarowData',attendee)
+    console.log("rowDatarowDatarowData", attendee);
     try {
       // Set loading state before API call
       setUploadPopupLoading(true);
@@ -517,7 +517,9 @@ const SalesPage = (props) => {
       });
 
       // Check different possible response structures
-      let ticketDetails = [response.ticket_details.find(ticket => ticket?.id === attendee?.id)];
+      let ticketDetails = [
+        response.ticket_details.find((ticket) => ticket?.id === attendee?.id),
+      ];
       // Check ticket type to determine flow
       const ticketType = parseInt(
         rowData?.ticket_type || rowData?.ticket_types || rowData?.ticket_type_id
@@ -852,9 +854,10 @@ const SalesPage = (props) => {
         name: "ticket_in_hand",
         label: "Tickets In Hand",
         value: filtersApplied?.ticket_in_hand || false,
+        beforeIcon: <Hand className="size-4"/>,
         parentClassName: " !w-[15%] max-sm:!w-full",
         className:
-          "!py-[3px] !px-[12px] pr-[20px] w-full text-xs sm:text-[10px] lg:text-xs",
+          "!py-[3px]  w-full text-xs sm:text-[10px] lg:text-xs",
         labelClassName:
           "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
         hideFromTable: true,
@@ -912,7 +915,7 @@ const SalesPage = (props) => {
       },
     ],
   };
-console.log(filtersApplied,'lkllllll')
+  console.log(filtersApplied, "lkllllll");
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setSelectedItems([]);
@@ -953,11 +956,7 @@ console.log(filtersApplied,'lkllllll')
   const handleFilterChange = async (filterKey, value) => {
     // Reset sort state when filters change (optional)
     setSortState(null);
-    console.log(
-     
-      value,
-      filterKey
-    );
+    console.log(value, filterKey);
     let params = {};
     if (filterKey === "orderDate") {
       params = {
@@ -1000,7 +999,7 @@ console.log(filtersApplied,'lkllllll')
         [filterKey]: value ? 1 : 0,
         page: 1,
       };
-    } else if(filterKey == "event_end_date"){
+    } else if (filterKey == "event_end_date") {
       params = {
         ...params,
         event_end_date: "",

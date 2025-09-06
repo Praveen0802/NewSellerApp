@@ -119,6 +119,16 @@ const DepositPopup = ({ onClose, data, showShimmer = false }) => {
               <div className="h-4 bg-gray-200 rounded w-16"></div>
               <div className="h-4 bg-gray-200 rounded w-20"></div>
             </div>
+            {/* Deposit Amount */}
+            <div className="flex justify-between items-center px-4 py-3">
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+              <div className="h-4 bg-gray-200 rounded w-20"></div>
+            </div>
+            {/* Charge */}
+            <div className="flex justify-between items-center px-4 py-3">
+              <div className="h-4 bg-gray-200 rounded w-16"></div>
+              <div className="h-4 bg-gray-200 rounded w-16"></div>
+            </div>
             {/* Transaction Type */}
             <div className="flex justify-between items-center px-4 py-3">
               <div className="h-4 bg-gray-200 rounded w-28"></div>
@@ -266,6 +276,29 @@ const DepositPopup = ({ onClose, data, showShimmer = false }) => {
                   `${data?.amount} ${data?.currency}`}
               </span>
             </div>
+            {(data?.charge || data?.charge_with_currency) && (
+              <div className="flex justify-between items-center px-4 py-3">
+                <span className="text-sm text-gray-600">
+                  {data?.charge_description || 'Charge'}
+                </span>
+                <span className="text-sm font-medium text-gray-800">
+                  {data?.charge_with_currency ||
+                    `${data?.charge} ${data?.currency}`}
+                </span>
+              </div>
+            )}
+            {/* Deposit Amount */}
+            {data?.deposit_amount && (
+              <div className="flex justify-between items-center px-4 py-3">
+                <span className="text-sm text-gray-600">Deposit Amount</span>
+                <span className="text-sm font-medium text-gray-800">
+                  {data?.deposit_amount_with_currency ||
+                    `${data?.deposit_amount} ${data?.currency}`}
+                </span>
+              </div>
+            )}
+            {/* Charge */}
+           
             <div className="flex justify-between items-center px-4 py-3">
               <span className="text-sm text-gray-600">Transaction Type</span>
               <span className="text-sm font-medium text-gray-800">

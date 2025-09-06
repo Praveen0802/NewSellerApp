@@ -30,6 +30,7 @@ import { useDispatch } from "react-redux";
 import useIsMobile from "@/utils/helperFunctions/useIsmobile";
 import ClearChip from "../inventoryFolder/components/clearChip";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
+import { Heart } from "lucide-react";
 
 const TrackingPage = (props) => {
   const { response = {} } = props;
@@ -212,10 +213,7 @@ const TrackingPage = (props) => {
                 />
               ),
               tooltipComponent: (
-                <p className="text-center">
-                 
-                  {item?.ticket_type}
-                </p>
+                <p className="text-center">{item?.ticket_type}</p>
               ),
               tooltipPosition: "top",
               className: "cursor-pointer ",
@@ -235,7 +233,7 @@ const TrackingPage = (props) => {
               tooltipPosition: "top",
             },
             {
-              icon:  (
+              icon: (
                 <Image
                   width={20}
                   height={20}
@@ -245,64 +243,77 @@ const TrackingPage = (props) => {
               ),
               className: "cursor-pointer ",
               key: "document",
-              tooltipComponent:
-                
-              ((item?.listing_note?.length > 0
+              tooltipComponent: (item?.listing_note?.length > 0
                 ? item?.listing_note
                 : [{ ticket_note: "No Restrictions" }]
-              ))?.map((note, index) => (
-                  <div className="flex flex-col gap-2" key={index}>
-                    <p className="text-left">Benifits/Restrictions</p>
-                    <ul
-                      className={`list-disc ml-5 ${
-                        item?.listing_note?.length > 3
-                          ? "grid grid-cols-2 gap-1"
-                          : ""
-                      }`}
-                    >
-                      {Object.values(note).map((value, i) => (
-                        <li key={i}>{value}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )),
+              )?.map((note, index) => (
+                <div className="flex flex-col gap-2" key={index}>
+                  <p className="text-left">Benifits/Restrictions</p>
+                  <ul
+                    className={`list-disc ml-5 ${
+                      item?.listing_note?.length > 3
+                        ? "grid grid-cols-2 gap-1"
+                        : ""
+                    }`}
+                  >
+                    {Object.values(note).map((value, i) => (
+                      <li key={i}>{value}</li>
+                    ))}
+                  </ul>
+                </div>
+              )),
               tooltipPosition: "top",
             },
           ]),
       {
         icon: (
-          <Image
+          // <Image
+          //   onClick={() => {
+          //     handleRemoveFavourite(item);
+          //   }}
+          //   width={20}
+          //   height={20}
+          //   src={star}
+          //   alt="star"
+          // />
+          <div
+            className={`${
+             "bg-[#FFBE5E]" 
+            }  rounded-full cursor-pointer`}
             onClick={() => {
               handleRemoveFavourite(item);
             }}
-            width={20}
-            height={20}
-            src={star}
-            alt="star"
-          />
+          >
+            <Heart className="size-6 fill-white p-1" />
+          </div>
         ),
-        tooltipComponent: (
-          <p className="text-center">
-           
-            Remove
-          </p>
-        ),
+        tooltipComponent: <p className="text-center">Remove</p>,
         tooltipPosition: "top",
         className: "border-x-[1px] px-2 border-[#E0E1EA] cursor-pointer",
         key: "star",
       },
       {
         icon: (
-          <Button
-            label="Buy"
-            classNames={{
-              label_: "text-white text-xs sm:text-sm",
-              root: "bg-[#343432] py-1 px-2 rounded-md hover:bg-[#343432] transition-colors whitespace-nowrap",
-            }}
+          <button
             onClick={() => {
               handleClickItem(item);
             }}
-          />
+            className={`bg-[#343432] py-1 rounded-md hover:bg-[#343432] text-white font-medium transition-colors whitespace-nowrap ${
+              isMobile ? "px-2 text-[10px]" : "px-2 text-xs"
+            }`}
+          >
+            Buy
+          </button>
+          // <Button
+          //   label="Buy"
+          //   classNames={{
+          //     label_: "text-white text-xs sm:text-sm",
+          //     root: "bg-[#343432] py-1 px-2 rounded-md hover:bg-[#343432] transition-colors whitespace-nowrap",
+          //   }}
+          //   onClick={() => {
+          //     handleClickItem(item);
+          //   }}
+          // />
         ),
         key: "buy",
       },
@@ -385,24 +396,24 @@ const TrackingPage = (props) => {
       <div className="bg-white">
         {/* Filter section */}
         <div className="py-[16px] md:py-[20px] px-[16px] md:px-[24px] border-b-[1px] border-[#E0E1EA] overflow-x-auto">
-  <div className="flex gap-3 md:gap-4 md:w-[70%] overflow-x-auto scrollbar-hide">
-    {items.map((item, index) => (
-      <AvailableList
-        key={index}
-        list={{
-          name: item.name,
-          value: item.value,
-          showCheckbox: item.showCheckbox,
-          isChecked: item.isChecked,
-          onCheckChange: () => toggleItem(index),
-          onClick: item.showCheckbox
-            ? () => toggleItem(index)
-            : undefined,
-        }}
-      />
-    ))}
-  </div>
-</div>
+          <div className="flex gap-3 md:gap-4 md:w-[70%] overflow-x-auto scrollbar-hide">
+            {items.map((item, index) => (
+              <AvailableList
+                key={index}
+                list={{
+                  name: item.name,
+                  value: item.value,
+                  showCheckbox: item.showCheckbox,
+                  isChecked: item.isChecked,
+                  onCheckChange: () => toggleItem(index),
+                  onClick: item.showCheckbox
+                    ? () => toggleItem(index)
+                    : undefined,
+                }}
+              />
+            ))}
+          </div>
+        </div>
 
         {/* Search filters section */}
         <div className="md:py-[20px] md:px-[24px] border-b-[1px] border-[#E0E1EA]">
