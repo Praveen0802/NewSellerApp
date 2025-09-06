@@ -698,6 +698,27 @@ const SalesPage = (props) => {
     return salesCount?.find((item) => item.status === status)?.orders || "0";
   };
 
+  const columnHeadersMap = {
+    order_id: "Order Id",
+    order_date: "Order Date", 
+    order_value: "Order Value",
+    event: "Event",
+    venue: "Venue",
+    event_date: "Event Date",
+    delivery_date: "Expected Delivery Date",
+    ticket_details: "Ticket Category",
+    quantity: "Quantity",
+    ticket_type_label: "Ticket Type",
+    section: "Section",
+    category: "Category",
+    delivery_status_label: "Ticket Status",
+    order_status_label: "Order Status",
+    row: "Row",
+    days_to_event: "Days to Event",
+    tournament_id: "Tournament ID",
+    match_id: "Match ID"
+  };
+
   // Helper function to get amount by status
   const getAmountByStatus = (status) => {
     return (
@@ -1298,18 +1319,21 @@ const SalesPage = (props) => {
           "currency",
           "page",
           "ticket_type_value",
-          "order_by", // Add sorting parameter
-          "sort_order", // Add sorting parameter
+          "order_by",
+          "sort_order",
           ...(filtersApplied?.ticket_in_hand == 0 ? ["ticket_in_hand"] : []),
         ]}
         customTableComponent={customTableComponent}
         showCustomTable={true}
-        // NEW PROPS FOR SCROLL HANDLING
         onScrollEnd={handleScrollEnd}
+        isDraggableColumns={false}
+        isDraggableFilters={true}
+        showColumnSearch={true} 
         loadingMore={loadingMore}
         hasNextPage={hasNextPage}
         scrollThreshold={100}
         onClearAllFilters={handleClearAllFilters}
+        columnHeadersMap={columnHeadersMap} // ADD THIS LINE
       />
       {showLogDetailsModal?.flag && (
         <InventoryLogsInfo

@@ -465,7 +465,6 @@ const TicketsPage = (props) => {
   const [filtersApplied, setFiltersApplied] = useState({
     page: 1,
   });
-  console.log(filtersApplied, "filtersAppliedfiltersApplied");
   const [isLoading, setIsLoading] = useState(false);
 
   // ENHANCED: Global selection state
@@ -3090,6 +3089,35 @@ const TicketsPage = (props) => {
     await fetchData(params);
   };
 
+  const allHeaders = {
+    s_no: "Listing ID",
+    ticket_type_id: "Ticket Type",
+    ticket_category_id: "Seating Category",
+    block: "Section/Block",
+    home_town: "Fan Area",
+    row: "Row",
+    quantity: "Quantity",
+    sold_count: "Sold",
+    web_price: "Face Value",
+    price: "Price",
+    listing_note: "Listing Note",
+    first_seat: "First Seat",
+    ship_date: "Date to Ship",
+    split_type_id: "Split Type",
+    status: "Status",
+    sell_date: "Listed Date",
+    match_name: "Match Name",
+    venue: "Venue",
+    tournament: "Tournament",
+    match_date: "Match Date",
+    match_time: "Match Time",
+    ticket_type: "Ticket Type",
+    ticket_category: "Ticket Category",
+    currency_symbol: "Currency",
+    price_type: "Price Type",
+    ticket_in_hand: "Tickets In Hand"
+  };
+
   return (
     <div className=" w-full max-h-[calc(100vh-100px)] overflow-auto relative ">
       <div className="bg-white">
@@ -3116,6 +3144,7 @@ const TicketsPage = (props) => {
           showColumnSearch={true}
           showFilterSearch={false}
           onColumnsReorder={handleColumnsReorder}
+          columnHeadersMap={allHeaders}
         />
 
         <div className="border-[1px] border-[#E0E1EA]">

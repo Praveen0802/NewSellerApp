@@ -1,4 +1,4 @@
-// Updated TabbedLayout component with mobile responsiveness and scroll handling for pagination
+// Updated TabbedLayout component with proper column name mapping
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState, useCallback } from "react";
 import AvailableList from "../tradePage/components/availableList";
@@ -74,7 +74,7 @@ const TabbedLayout = ({
   onAddInventory = () => {},
   addInventoryText = "Add Inventory",
   isDraggableColumns = false,
-  isDraggableFilters = false,
+  isDraggableFilters = true,
   showColumnSearch = false,
   showFilterSearch = false,
   onColumnsReorder,
@@ -85,7 +85,9 @@ const TabbedLayout = ({
   loadingMore = false,
   hasNextPage = true,
   scrollThreshold = 100, // Distance from bottom to trigger load more
-  reportsPage
+  reportsPage,
+  // NEW PROP FOR COLUMN HEADERS MAPPING
+  columnHeadersMap = {}, // Object mapping column keys to display names
 }) => {
   console.log(customTableComponent,'customTableComponent')
   const router = useRouter();
@@ -156,16 +158,18 @@ const TabbedLayout = ({
     setShowListItems(!showListItems);
   };
 
-  // Enhanced function to get available columns with ordering
+  // UPDATED: Enhanced function to get available columns with proper name mapping
   const getAvailableColumns = () => {
     if (!visibleColumns) return [];
 
     const baseColumns = Object.entries(visibleColumns).map(
       ([columnKey, isVisible]) => ({
         key: columnKey,
-        label: columnKey
-          .replace(/([A-Z])/g, " $1")
-          .replace(/^./, (str) => str.toUpperCase()),
+        // Use the provided mapping or generate a fallback label
+        label: columnHeadersMap[columnKey] || 
+               columnKey
+                 .replace(/([A-Z])/g, " $1")
+                 .replace(/^./, (str) => str.toUpperCase()),
         isVisible: isVisible,
       })
     );
@@ -194,6 +198,7 @@ const TabbedLayout = ({
     return baseColumns;
   };
 
+  console.log(getAvailableColumns(),'getAvailableColumnsgetAvailableColumns')
   // Enhanced function to get available filters with ordering
   const getAvailableFilters = () => {
     if (!filterConfig || !filterConfig[selectedTab]) return [];
