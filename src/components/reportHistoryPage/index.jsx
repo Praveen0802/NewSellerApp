@@ -264,6 +264,11 @@ const RportHistory = (props) => {
     },
   ];
 
+  // NEW: maintain column order based on drag-and-drop in the Columns dropdown
+  const [orderedColumnKeys, setOrderedColumnKeys] = useState(
+    () => headers.map((h) => h.key)
+  );
+
   const createInitialVisibleColumns = () => {
     return headers.reduce((acc, header) => {
       acc[header.key] = true; // Set all columns as visible by default
@@ -275,8 +280,22 @@ const RportHistory = (props) => {
     createInitialVisibleColumns()
   );
 
-  const filteredHeaders = headers.filter(
-    (header) => visibleColumns[header.key]
+  // NEW: apply ordering to headers, then filter by visibility
+  const orderedHeaders = useMemo(() => {
+    const allKeys = headers.map((h) => h.key);
+    const order = (orderedColumnKeys?.length ? orderedColumnKeys : allKeys).filter((k) =>
+      allKeys.includes(k)
+    );
+    const byKey = new Map(headers.map((h) => [h.key, h]));
+    const inOrder = order.map((k) => byKey.get(k)).filter(Boolean);
+    // Append any keys not present in order (safety)
+    const remaining = headers.filter((h) => !inOrder.includes(h));
+    return [...inOrder, ...remaining];
+  }, [headers, orderedColumnKeys]);
+
+  const filteredHeaders = useMemo(
+    () => orderedHeaders.filter((header) => visibleColumns[header.key]),
+    [orderedHeaders, visibleColumns]
   );
 
   const handleColumnToggle = (columnKey) => {
@@ -284,6 +303,15 @@ const RportHistory = (props) => {
       ...prev,
       [columnKey]: !prev[columnKey],
     }));
+  };
+
+  // NEW: when user reorders columns in dropdown, update table order
+  const handleColumnsReorder = (newOrderKeys /*, reorderedItems */) => {
+    // Ensure only known keys are used and append any missing keys at the end
+    const allKeys = headers.map((h) => h.key);
+    const cleaned = (newOrderKeys || []).filter((k) => allKeys.includes(k));
+    const missing = allKeys.filter((k) => !cleaned.includes(k));
+    setOrderedColumnKeys([...cleaned, ...missing]);
   };
 
   // Transform data for the table
@@ -938,6 +966,9 @@ const RportHistory = (props) => {
           showCustomTable={true}
           customTableComponent={customTableComponent}
           reportsPage={true}
+          // NEW: enable draggable columns and handle their order updates
+          isDraggableColumns={true}
+          onColumnsReorder={handleColumnsReorder}
           // NEW PROPS FOR SCROLL HANDLING - same as SalesPage
           onScrollEnd={handleScrollEnd}
           loadingMore={loadingMore}

@@ -80,6 +80,8 @@ const TabbedLayout = ({
   onColumnsReorder,
   onFiltersReorder,
   excludedKeys = [],
+  // NEW callback to notify parent when filter visibility toggles
+  onFilterToggle, // <-- added
   // NEW PROPS FOR SCROLL HANDLING
   onScrollEnd,
   loadingMore = false,
@@ -89,7 +91,6 @@ const TabbedLayout = ({
   // NEW PROP FOR COLUMN HEADERS MAPPING
   columnHeadersMap = {}, // Object mapping column keys to display names
 }) => {
-  console.log(customTableComponent,'customTableComponent')
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState(initialTab || tabs[0]?.key);
   const [checkboxValues, setCheckboxValues] = useState({});
@@ -166,11 +167,17 @@ const TabbedLayout = ({
       ([columnKey, isVisible]) => ({
         key: columnKey,
         // Use the provided mapping or generate a fallback label
-        label: columnHeadersMap[columnKey] || 
-               columnKey
-                 .replace(/([A-Z])/g, " $1")
-                 .replace(/^./, (str) => str.toUpperCase()),
+        label:
+          columnHeadersMap[columnKey] ||
+          columnKey
+            .replace(/_/g, " ")
+            .replace(/([A-Z])/g, " $1")
+            .replace(/^./, (str) => str.toUpperCase()),
         isVisible: isVisible,
+        // Ensure DropdownList sees the right flags
+        isActive: isVisible,     // added
+        isChecked: isVisible,
+        checked: isVisible,
       })
     );
 
@@ -444,6 +451,16 @@ const TabbedLayout = ({
     }
 
     setActiveFilters(newActiveFilters);
+
+    // NEW: notify parent with active + current order for this tab
+    if (onFilterToggle) {
+      const activeKeys = Array.from(newActiveFilters);
+      const orderedKeys =
+        (orderedFilters[selectedTab] && orderedFilters[selectedTab].length > 0)
+          ? orderedFilters[selectedTab]
+          : (filterConfig?.[selectedTab]?.map((f) => f.name) || []);
+      onFilterToggle(selectedTab, activeKeys, orderedKeys);
+    }
   };
 
   const handleColumnToggle = (columnKey) => {

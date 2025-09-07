@@ -42,6 +42,8 @@ import {
   saveListing,
   saveBulkListing,
   updatePublishApiCall,
+   getFieldSettings,
+  saveFieldSettings,
 } from "@/utils/apiHandler/request";
 import UploadTickets from "../ModalComponents/uploadTickets";
 import InventoryLogsInfo from "../inventoryLogsInfo";
@@ -455,6 +457,70 @@ const TicketsPage = (props) => {
 
   // MAIN STATE: Using ticketsByMatch instead of ticketsData
   const [ticketsByMatch, setTicketsByMatch] = useState({});
+
+    const [fieldSettings, setFieldSettings] = useState(null);
+    const ticketsApiInitRef = useRef(false);
+    const ticketsColumnApiInitRef = useRef(false);
+  
+    // Load field settings on component mount
+    useEffect(() => {
+      const loadSettings = async () => {
+        try {
+          const res = await getFieldSettings("");
+          setFieldSettings(res?.field_settings || null);
+        } catch (e) {
+          console.error("Failed to load field settings", e);
+          setFieldSettings(null);
+        }
+      };
+      loadSettings();
+    }, []);
+  
+    // Normalize helper for robust name matching
+    const normalize = useCallback((str) => {
+      return (str || "")
+        .toString()
+        .toLowerCase()
+        .trim()
+        .replace(/[\s/]+/g, " ")
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/_+/g, "_")
+        .replace(/^_+|_+$/g, "");
+    }, []);
+  
+    // Map API filter names to internal keys
+    const filterApiNameToKey = useMemo(() => ({
+      "team members": "team_member",
+      "event date": "eventDate",
+      "ticket type": "ticket_type", 
+      "tournament": "tournament",
+      "category": "category",
+    }), []);
+  
+    // Map API column names to internal keys
+    const columnApiNameToKey = useMemo(() => ({
+      "listing id": "s_no",
+      "ticket type": "ticket_type_id",
+      "seating category": "ticket_category_id",
+      "section/block": "block",
+      "section / block": "block",
+      "fan area": "home_town",
+      "row": "row",
+      "quantity": "quantity",
+      "sold": "sold_count",
+      "face value": "web_price",
+      "price": "price",
+      "listing note": "listing_note",
+      "first seat": "first_seat",
+      "date to ship": "ship_date",
+      "date_to_ship": "ship_date",
+      "split type": "split_type_id",
+      "status": "status",
+      "listed date": "sell_date",
+    }), []);
+
+    // Create enhanced filter config with API integration
+  
   console.log(ticketsByMatch, "ticketsByMatchticketsByMatch");
   // Mock data based on your JSON structure
   const mockListingHistory = useMemo(
@@ -1243,6 +1309,129 @@ const TicketsPage = (props) => {
     [isGlobalEditMode, globalEditingTickets]
   );
 
+const enhancedFilterConfig = useMemo(() => {
+    const baseConfig = {
+      tickets: [
+        {
+          type: "select",
+          name: "team_member",
+          label: "Team Members",
+          value: filtersApplied?.team_member,
+          options:
+            response?.filters?.user_info?.map((category) => ({
+              value: category?.id,
+              label: category?.first_name,
+            })) || [],
+          parentClassName:
+            "flex-grow flex-shrink flex-basis-[15%] p-0 w-full md:!max-w-[15%]",
+          className: "!py-[6px] !px-[12px] max-md:text-xs",
+          labelClassName: "!text-[11px]",
+        },
+        {
+          type: "date",
+          name: "eventDate",
+          label: "Event Date",
+          value: {
+            startDate: filtersApplied?.start_date,
+            endDate: filtersApplied?.end_date,
+          },
+          parentClassName:
+            "flex-grow flex-shrink flex-basis-[15%] p-0 w-full md:!max-w-[15%]",
+          className: "!py-[9px] !px-[12px] max-md:text-xs",
+          labelClassName: "!text-[11px]",
+        },
+        {
+          type: "select",
+          name: "ticket_type",
+          label: "Ticket Type",
+          value: filtersApplied?.ticket_type,
+          options:
+            response?.filters?.ticket_types?.map((category) => ({
+              value: category?.id,
+              label: category?.name,
+            })) || [],
+          parentClassName:
+            "flex-grow flex-shrink flex-basis-[15%] p-0 w-full md:!max-w-[15%]",
+          className: "!py-[6px] !px-[12px] max-md:text-xs",
+          labelClassName: "!text-[11px]",
+        },
+        {
+          type: "select",
+          name: "tournament",
+          label: "Tournament",
+          value: filtersApplied?.tournament,
+          options:
+            response?.filters?.tournament?.map((category) => ({
+              value: category?.id,
+              label: category?.name,
+            })) || [],
+          parentClassName:
+            "flex-grow flex-shrink flex-basis-[15%] p-0 w-full md:!max-w-[15%]",
+          className: "!py-[6px] !px-[12px] max-md:text-xs",
+          labelClassName: "!text-[11px]",
+        },
+        {
+          type: "select",
+          name: "category",
+          label: "Category",
+          value: filtersApplied?.category,
+          options:
+            response?.filters?.category?.map((category) => ({
+              value: category?.id,
+              label: category?.name,
+            })) || [],
+          parentClassName:
+            "flex-grow flex-shrink flex-basis-[15%] p-0 w-full md:!max-w-[15%]",
+          className: "!py-[6px] !px-[12px] mobile:text-xs",
+          labelClassName: "!text-[11px]",
+        },
+      ],
+    };
+
+    // Apply API filter settings if available
+    const apiFilterList = fieldSettings?.myListingTableFilter;
+    if (!Array.isArray(apiFilterList) || !apiFilterList.length) {
+      return baseConfig;
+    }
+
+    // Build map from normalized label -> filter object
+    const filterByNormLabel = {};
+    baseConfig.tickets.forEach((f) => {
+      filterByNormLabel[normalize(f.label)] = f;
+    });
+
+    // Order by API, include only checked ones
+    const orderedVisibleFilters = [];
+    const usedFilters = new Set();
+    
+    apiFilterList.forEach((item) => {
+      const normalizedName = normalize(item?.name);
+      const key = filterApiNameToKey[normalizedName];
+      const match = baseConfig.tickets.find(f => f.name === key) || 
+                   filterByNormLabel[normalizedName];
+      
+      if (match && item?.checked && !usedFilters.has(match.name)) {
+        orderedVisibleFilters.push(match);
+        usedFilters.add(match.name);
+      }
+    });
+
+    // Append any base filters not present in settings
+    baseConfig.tickets.forEach((f) => {
+      if (!usedFilters.has(f.name)) {
+        orderedVisibleFilters.push(f);
+      }
+    });
+
+    return { tickets: orderedVisibleFilters };
+  }, [fieldSettings?.myListingTableFilter, filtersApplied, response, filterApiNameToKey, normalize]);
+
+
+
+
+    // Enhanced handleColumnsReorder with persistence
+
+
   // NEW: Construct headers dynamically from filters - REMAINS SAME
   const constructHeadersFromListingHistory = useMemo(() => {
     if (!mockListingHistory || mockListingHistory.length === 0) return [];
@@ -1709,6 +1898,9 @@ const TicketsPage = (props) => {
     },
     [ticketsByMatch]
   );
+
+
+  
 
   // Enhanced updateCellValues function with better error handling
   const updateCellValues = async (updatedParams, id) => {
@@ -2511,12 +2703,7 @@ const TicketsPage = (props) => {
 
   const [columnOrder, setColumnOrder] = useState([]);
 
-  const handleColumnToggle = useCallback((columnKey) => {
-    setVisibleColumns((prev) => ({
-      ...prev,
-      [columnKey]: !prev[columnKey],
-    }));
-  }, []);
+
 
   // Memoized function to get filtered headers in the correct order
   const getFilteredHeadersInOrder = useMemo(() => {
@@ -2977,9 +3164,7 @@ const TicketsPage = (props) => {
     router.push("/add-listings");
   }, [router]);
 
-  const handleColumnsReorder = useCallback((newColumns) => {
-    setColumnOrder(newColumns);
-  }, []);
+
 
   // Initialize column order when headers change
   useEffect(() => {
@@ -3183,6 +3368,186 @@ const TicketsPage = (props) => {
     ticket_in_hand: "Tickets In Hand",
   };
 
+    useEffect(() => {
+      if (ticketsColumnApiInitRef.current) return;
+      const columnList = fieldSettings?.myListingTableColumn;
+      if (!Array.isArray(columnList) || !columnList.length) return;
+  
+      const headerKeyMap = {};
+      constructHeadersFromListingHistory.forEach((h) => {
+        headerKeyMap[normalize(h.label)] = h.key;
+      });
+  
+      const seen = new Set();
+      const newOrder = [];
+      const visibleSet = new Set();
+  
+      columnList.forEach((item) => {
+        const normalizedName = normalize(item?.name);
+        const key = columnApiNameToKey[normalizedName] || 
+                   headerKeyMap[normalizedName];
+        
+        if (key && !seen.has(key)) {
+          newOrder.push(key);
+          if (item?.checked) visibleSet.add(key);
+          seen.add(key);
+        }
+      });
+  
+      // Append any headers not present in settings
+      constructHeadersFromListingHistory.forEach((h) => {
+        if (!seen.has(h.key)) {
+          newOrder.push(h.key);
+          visibleSet.add(h.key); // default to visible
+        }
+      });
+  
+      // Update column order and visibility
+      setColumnOrder(newOrder);
+      setVisibleColumns((prev) => {
+        const updated = {};
+        newOrder.forEach((k) => {
+          updated[k] = visibleSet.has(k);
+        });
+        return updated;
+      });
+  
+      ticketsColumnApiInitRef.current = true;
+    }, [fieldSettings?.myListingTableColumn, constructHeadersFromListingHistory, columnApiNameToKey, normalize]);
+  
+    // Persist column settings to API
+    const persistColumnSettings = useCallback(
+      async (visibleMap = visibleColumns, order = columnOrder) => {
+        try {
+          const labelMap = {};
+          constructHeadersFromListingHistory.forEach((h) => {
+            labelMap[h.key] = h.label;
+          });
+  
+          const apiSource = fieldSettings?.myListingTableColumn || [];
+  
+          const valueArray = order.map((key, idx) => {
+            const original = apiSource.find((item) => {
+              const normalizedName = normalize(item?.name);
+              return columnApiNameToKey[normalizedName] === key ||
+                     constructHeadersFromListingHistory.find(h => 
+                       h.key === key && normalize(h.label) === normalizedName
+                     );
+            });
+            
+            return {
+              id: original?.id || idx + 1,
+              name: original?.name || labelMap[key] || key,
+              checked: !!visibleMap[key],
+            };
+          });
+  
+          const payload = {
+            settings: [{ key: "myListingTableColumn", value: valueArray }],
+          };
+          
+          await saveFieldSettings("", payload);
+        } catch (e) {
+          console.error("Failed to save myListingTableColumn", e);
+        }
+      },
+      [visibleColumns, columnOrder, constructHeadersFromListingHistory, fieldSettings, columnApiNameToKey, normalize]
+    );
+  
+    // Persist filter settings to API
+    const persistFilterSettings = useCallback(
+      async (activeFiltersList, orderedFiltersList) => {
+        try {
+          const apiSource = fieldSettings?.myListingTableFilter || [];
+          const labelMap = {};
+          enhancedFilterConfig.tickets.forEach((f) => {
+            labelMap[f.name] = f.label;
+          });
+  
+          const finalOrder = orderedFiltersList?.length
+            ? orderedFiltersList
+            : enhancedFilterConfig.tickets.map((f) => f.name);
+  
+          const valueArray = finalOrder.map((key, idx) => {
+            const label = labelMap[key] || key;
+            const original = apiSource.find((item) => {
+              const normalizedName = normalize(item?.name);
+              return filterApiNameToKey[normalizedName] === key ||
+                     normalize(label) === normalizedName;
+            });
+            
+            return {
+              id: original?.id || idx + 1,
+              name: original?.name || label,
+              checked: activeFiltersList
+                ? activeFiltersList.includes(key)
+                : true,
+            };
+          });
+  
+          const payload = {
+            settings: [{ key: "myListingTableFilter", value: valueArray }],
+          };
+          
+          await saveFieldSettings("", payload);
+        } catch (e) {
+          console.error("Failed to save myListingTableFilter", e);
+        }
+      },
+      [fieldSettings?.myListingTableFilter, enhancedFilterConfig, filterApiNameToKey, normalize]
+    );
+  
+    // Enhanced handleColumnsReorder with persistence
+    const handleColumnsReorder = useCallback(
+      async (reorderedItems) => {
+        const newOrder = reorderedItems?.map((item) => item.key || item);
+        setColumnOrder(newOrder);
+        // Persist after reordering
+        await persistColumnSettings(visibleColumns, newOrder);
+      },
+      [persistColumnSettings, visibleColumns]
+    );
+  
+    // Enhanced handleColumnToggle with persistence
+    const handleColumnToggle = useCallback(
+      (columnKey) => {
+        setVisibleColumns((prev) => {
+          const next = { ...prev, [columnKey]: !prev[columnKey] };
+          // Persist after toggle
+          setTimeout(() => persistColumnSettings(next, columnOrder), 0);
+          return next;
+        });
+      },
+      [persistColumnSettings, columnOrder]
+    );
+  
+    // Filter reorder handler (if you need filter reordering)
+   const handleFiltersReorder = useCallback(
+  async (selectedTab, newOrder, reorderedItems) => {
+    console.log('selectedTab:', selectedTab); // "tickets"
+    console.log('newOrder:', newOrder); // array of keys
+    console.log('reorderedItems:', reorderedItems); // array of objects
+    
+    const orderToUse = newOrder; // Use newOrder directly since it's already computed
+    const activeKeys = reorderedItems
+      ?.filter((item) => item.isActive)
+      ?.map((item) => item.key) || [];
+    
+    await persistFilterSettings(activeKeys, orderToUse);
+  },
+  [persistFilterSettings]
+);
+  
+    // Filter toggle handler (if you need filter toggling)
+    const handleFilterToggle = useCallback(
+      async (tabKey, activeKeys, orderedKeys) => {
+        // TabbedLayout passes: (selectedTab, activeKeys, orderedKeys)
+        await persistFilterSettings(activeKeys, orderedKeys);
+      },
+      [persistFilterSettings]
+    );
+  
+
   return (
     <div className=" w-full max-h-[calc(100vh-100px)] overflow-auto relative ">
       <div className="bg-white">
@@ -3190,10 +3555,10 @@ const TicketsPage = (props) => {
           tabs={[]}
           initialTab="tickets"
           listItemsConfig={listItemsConfig}
-          filterConfig={filterConfig}
+          filterConfig={enhancedFilterConfig} // Use enhanced config
           onTabChange={() => {}}
           customComponent={filterSearch}
-          onColumnToggle={handleColumnToggle}
+          onColumnToggle={handleColumnToggle} // Enhanced with persistence
           visibleColumns={visibleColumns}
           onFilterChange={handleFilterChange}
           currentFilterValues={{ ...filtersApplied, page: "" }}
@@ -3208,7 +3573,9 @@ const TicketsPage = (props) => {
           isDraggableFilters={true}
           showColumnSearch={true}
           showFilterSearch={false}
-          onColumnsReorder={handleColumnsReorder}
+          onColumnsReorder={handleColumnsReorder} // Enhanced with persistence
+          onFiltersReorder={handleFiltersReorder} // Add if needed
+          onFilterToggle={handleFilterToggle} // Add if needed
           columnHeadersMap={allHeaders}
         />
 

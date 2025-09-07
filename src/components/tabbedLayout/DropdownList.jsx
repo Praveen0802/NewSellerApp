@@ -15,6 +15,8 @@ const DropdownList = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
+  // NEW: track dragged key to make reordering robust even when filtered
+  const [draggedKey, setDraggedKey] = useState(null);
 
   // Filter items based on search term
   const filteredItems = useMemo(() => {
@@ -46,38 +48,61 @@ const DropdownList = ({
   };
 
   const handleDragStart = (e, index) => {
+    if (!isDraggable) return;
+    // Track both visual index (for styling) and actual key (for accurate reorder)
+    const key = filteredItems[index]?.key;
     setDraggedIndex(index);
+    setDraggedKey(key);
     e.dataTransfer.effectAllowed = "move";
   };
 
   const handleDragOver = (e, index) => {
+    if (!isDraggable) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
     setDragOverIndex(index);
   };
 
   const handleDragLeave = () => {
+    if (!isDraggable) return;
     setDragOverIndex(null);
   };
 
   const handleDrop = (e, dropIndex) => {
+    if (!isDraggable) return;
     e.preventDefault();
 
-    if (draggedIndex === null || draggedIndex === dropIndex) {
+    // Validate drag/drop
+    if (draggedIndex === null || dropIndex === null) {
       setDraggedIndex(null);
       setDragOverIndex(null);
+      setDraggedKey(null);
       return;
     }
 
-    // Create new array with reordered items
+    const dropKey = filteredItems[dropIndex]?.key;
+    if (!draggedKey || !dropKey || draggedKey === dropKey) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      setDraggedKey(null);
+      return;
+    }
+
+    // Find positions in the full items array by key
+    const fromIndex = items.findIndex((it) => it.key === draggedKey);
+    const toIndex = items.findIndex((it) => it.key === dropKey);
+
+    if (fromIndex === -1 || toIndex === -1) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      setDraggedKey(null);
+      return;
+    }
+
+    // Create new array with reordered items (by full items indexing)
     const newItems = [...items];
-    const draggedItem = newItems[draggedIndex];
-
-    // Remove dragged item
-    newItems.splice(draggedIndex, 1);
-
-    // Insert at new position
-    newItems.splice(dropIndex, 0, draggedItem);
+    const [draggedItem] = newItems.splice(fromIndex, 1);
+    newItems.splice(toIndex, 0, draggedItem);
 
     // Call parent callback with reordered items
     if (onItemsReorder) {
@@ -86,11 +111,14 @@ const DropdownList = ({
 
     setDraggedIndex(null);
     setDragOverIndex(null);
+    setDraggedKey(null);
   };
 
   const handleDragEnd = () => {
+    if (!isDraggable) return;
     setDraggedIndex(null);
     setDragOverIndex(null);
+    setDraggedKey(null);
   };
 
   return (

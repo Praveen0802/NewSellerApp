@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import TabbedLayout from "../tabbedLayout";
 import { IconStore } from "@/utils/helperFunctions/iconStore";
 import StickyDataTable from "../tradePage/components/stickyDataTable";
@@ -21,6 +21,8 @@ import {
   getSalesCount,
   getSalesTicketDetails,
   getTicketTypes,
+  getFieldSettings,          // added
+  saveFieldSettings,         // added
 } from "@/utils/apiHandler/request";
 import { Clock, Eye, Hand, Upload } from "lucide-react";
 import { inventoryLog } from "@/data/testOrderDetails";
@@ -79,6 +81,37 @@ const SalesPage = (props) => {
   const [selectedTournament, setSelectedTournament] = useState(null);
   const [selectedTicketType, setSelectedTicketType] = useState("");
   const [sortState, setSortState] = useState(null);
+
+  // Field settings for Sales page (columns + filters)
+  const [fieldSettings, setFieldSettings] = useState(null);
+  const salesApiInitRef = useRef(false);
+
+  // Normalize helper for robust name matching (labels/names vary)
+  const normalize = useCallback((str) => {
+    return (str || "")
+      .toString()
+      .toLowerCase()
+      .trim()
+      .replace(/[\s/]+/g, " ")
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }, []);
+
+  // Load field settings
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const res = await getFieldSettings("");
+        setFieldSettings(res?.field_settings || null);
+      } catch (e) {
+        console.error("Failed to load field settings", e);
+        setFieldSettings(null);
+      }
+    };
+    loadSettings();
+  }, []);
+
   // Define table headers - filter based on visible columns
   const allHeaders = [
     { key: "order_id", label: "Order Id" },
@@ -151,6 +184,20 @@ const SalesPage = (props) => {
     },
     { key: "days_to_event", label: "Days to Event" },
   ];
+
+  // Map normalized header labels -> keys (for API name matching)
+  const headerNameToKeyMap = useMemo(() => {
+    const map = {};
+    allHeaders.forEach((h) => {
+      map[normalize(h.label)] = h.key;
+    });
+    return map;
+  }, [allHeaders, normalize]);
+
+  // Column ordering (persisted)
+  const [orderedColumns, setOrderedColumns] = useState(() =>
+    allHeaders.map((h) => h.key)
+  );
 
   // Modified API call to handle pagination
   const apiCall = async (
@@ -250,6 +297,92 @@ const SalesPage = (props) => {
     createInitialVisibleColumns()
   );
 
+  // Initialize columns from salesTableColumn when fieldSettings arrives
+  useEffect(() => {
+    if (salesApiInitRef.current) return;
+    const columnList = fieldSettings?.salesTableColumn;
+    if (!Array.isArray(columnList) || !columnList.length) return;
+
+    const seen = new Set();
+    const newOrder = [];
+    const visibleSet = new Set();
+
+    columnList.forEach((item) => {
+      const key =
+        headerNameToKeyMap[normalize(item?.name)] ||
+        null;
+      if (key && !seen.has(key)) {
+        newOrder.push(key);
+        if (item?.checked) visibleSet.add(key);
+        seen.add(key);
+      }
+    });
+
+    // Append any headers not present in settings (to avoid loss)
+    allHeaders.forEach((h) => {
+      if (!seen.has(h.key)) {
+        newOrder.push(h.key);
+        visibleSet.add(h.key); // default to visible for missing
+      }
+    });
+
+    // Apply to state
+    setOrderedColumns(newOrder);
+    setVisibleColumns((prev) => {
+      const map = {};
+      newOrder.forEach((k) => {
+        map[k] = visibleSet.has(k);
+      });
+      return map;
+    });
+
+    salesApiInitRef.current = true;
+  }, [fieldSettings?.salesTableColumn, allHeaders, headerNameToKeyMap, normalize]);
+
+  // Persist column settings to API (salesTableColumn)
+  const persistSalesColumnSettings = useCallback(
+    async (visibleMap = visibleColumns, order = orderedColumns) => {
+      try {
+        // Build label map for friendly names
+        const labelMap = {};
+        allHeaders.forEach((h) => (labelMap[h.key] = h.label));
+
+        // Use server-provided IDs when available
+        const apiSource = fieldSettings?.salesTableColumn || [];
+
+        const valueArray = order.map((key, idx) => {
+          const original = apiSource.find(
+            (item) => headerNameToKeyMap[normalize(item?.name)] === key
+          );
+          return {
+            id: original?.id || idx + 1,
+            name: original?.name || labelMap[key] || key,
+            checked: !!visibleMap[key],
+          };
+        });
+
+        const payload = {
+          settings: [{ key: "salesTableColumn", value: valueArray }],
+        };
+        await saveFieldSettings("", payload);
+      } catch (e) {
+        console.error("Failed to save salesTableColumn", e);
+      }
+    },
+    [visibleColumns, orderedColumns, allHeaders, fieldSettings, headerNameToKeyMap, normalize]
+  );
+
+  // NEW: Handle columns reorder -> update state and persist
+  const handleColumnsReorderPersist = useCallback(
+    (newOrder /* array of keys */, reorderedItems) => {
+      // Update local order so headers re-render in the new order
+      setOrderedColumns(newOrder);
+      // Persist the new order + current visibility
+      persistSalesColumnSettings(visibleColumns, newOrder);
+    },
+    [persistSalesColumnSettings, visibleColumns]
+  );
+
   // Helper function to safely format tab name
   const formatTabName = (tabKey) => {
     if (!tabKey || typeof tabKey !== "string") {
@@ -277,8 +410,16 @@ const SalesPage = (props) => {
     ...item,
   }));
 
-  // Filter headers based on visibility
-  const headers = allHeaders.filter((header) => visibleColumns[header.key]);
+  // Filter headers based on visibility with persisted order
+  const headers = useMemo(() => {
+    const desiredOrder = orderedColumns && orderedColumns.length
+      ? orderedColumns
+      : allHeaders.map((h) => h.key);
+    return desiredOrder
+      .filter((key) => visibleColumns[key])
+      .map((key) => allHeaders.find((h) => h.key === key))
+      .filter(Boolean);
+  }, [allHeaders, orderedColumns, visibleColumns]);
 
   const getOrderDetails = async (item) => {
     setShowInfoPopup((prev) => {
@@ -936,7 +1077,108 @@ const SalesPage = (props) => {
       },
     ],
   };
-  console.log(filtersApplied, "lkllllll");
+
+  // Apply salesTableFilter (reorder + show only checked) from fieldSettings
+  const computedFilterConfig = useMemo(() => {
+    const baseList = filterConfig[profile] || [];
+    const salesFilterList = fieldSettings?.salesTableFilter;
+    if (!Array.isArray(salesFilterList) || !salesFilterList.length) {
+      return filterConfig;
+    }
+
+    // Build map from normalized label -> filter object
+    const byNormLabel = {};
+    baseList.forEach((f) => {
+      byNormLabel[normalize(f.label)] = f;
+    });
+
+    // Order by API, include only checked ones first in API order
+    const orderedVisible = [];
+    const used = new Set();
+    salesFilterList.forEach((item) => {
+      const match = byNormLabel[normalize(item?.name)];
+      if (match && item?.checked && !used.has(match.name)) {
+        orderedVisible.push(match);
+        used.add(match.name);
+      }
+    });
+
+    // Append any base filters not present in settings (kept visible by default)
+    baseList.forEach((f) => {
+      if (!used.has(f.name)) orderedVisible.push(f);
+    });
+
+    return { [profile]: orderedVisible };
+  }, [filterConfig, profile, fieldSettings?.salesTableFilter, normalize]);
+
+  // Persist filters (optional hooks if your UI exposes toggles/reorder)
+  const persistSalesFilterSettings = useCallback(
+    async (activeFiltersList, orderedFiltersList) => {
+      try {
+        const apiSource = fieldSettings?.salesTableFilter || [];
+        const labelMap = {};
+        (filterConfig[profile] || []).forEach((f) => {
+          labelMap[f.name] = f.label;
+        });
+
+        const finalOrder = orderedFiltersList?.length
+          ? orderedFiltersList
+          : (filterConfig[profile] || []).map((f) => f.name);
+
+        const valueArray = finalOrder.map((key, idx) => {
+          const label = labelMap[key] || key;
+          const original = apiSource.find(
+            (item) => normalize(item?.name) === normalize(label)
+          );
+          return {
+            id: original?.id || idx + 1,
+            name: original?.name || label,
+            checked: activeFiltersList
+              ? activeFiltersList.includes(key)
+              : true,
+          };
+        });
+
+        const payload = {
+          settings: [{ key: "salesTableFilter", value: valueArray }],
+        };
+        await saveFieldSettings("", payload);
+      } catch (e) {
+        console.error("Failed to save salesTableFilter", e);
+      }
+    },
+    [fieldSettings?.salesTableFilter, filterConfig, profile, normalize]
+  );
+
+  // Handle column toggle with persistence
+  const handleColumnToggle = (columnKey) => {
+    setVisibleColumns((prev) => {
+      const next = { ...prev, [columnKey]: !prev[columnKey] };
+      // Persist after local state update (fire-and-forget)
+      setTimeout(() => persistSalesColumnSettings(next, orderedColumns), 0);
+      return next;
+    });
+  };
+
+  // NEW: Handle filters reorder -> persist using salesTableFilter
+  const handleFiltersReorderPersist = useCallback(
+    (tabKey, newOrder, reorderedItems) => {
+      const activeKeys = (reorderedItems || [])
+        .filter((i) => i.isActive)
+        .map((i) => i.key);
+      persistSalesFilterSettings(activeKeys, newOrder);
+    },
+    [persistSalesFilterSettings]
+  );
+
+  // NEW: Handle filter toggle -> persist using salesTableFilter
+  const handleFilterTogglePersist = useCallback(
+    (tabKey, activeKeys, orderedKeys) => {
+      persistSalesFilterSettings(activeKeys, orderedKeys);
+    },
+    [persistSalesFilterSettings]
+  );
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setSelectedItems([]);
@@ -1100,12 +1342,12 @@ const SalesPage = (props) => {
 
   console.log(filtersApplied, "ooooooooo");
   // Handle column toggle
-  const handleColumnToggle = (columnKey) => {
-    setVisibleColumns((prev) => ({
-      ...prev,
-      [columnKey]: !prev[columnKey],
-    }));
-  };
+  // const handleColumnToggle = (columnKey) => {
+  //   setVisibleColumns((prev) => ({
+  //     ...prev,
+  //     [columnKey]: !prev[columnKey],
+  //   }));
+  // };
 
   const [tabCurrencies, setTabCurrencies] = useState({});
 
@@ -1266,15 +1508,14 @@ const SalesPage = (props) => {
           </div>
 
           {/* StickyDataTable with sorting functionality */}
-          <div className="max-h-[calc(100vh-410px)] max-sm:max-h-[calc(100vh-350px)] overflow-auto">
+          <div className="max-h-[calc(100vh-410px)] max-sm:max-h=[calc(100vh-350px)] overflow-auto">
             <StickyDataTable
               headers={headers}
               data={listData}
               rightStickyColumns={rightStickyColumns}
               loading={pageLoader}
-              onSort={handleSort} // Add sort handler
-              currentSort={sortState} // Add current sort state
-              // Add date format config if needed
+              onSort={handleSort}
+              currentSort={sortState}
               dateFormatConfig={{
                 order_date: "dateOnly",
                 event_date: "dateOnly",
@@ -1301,11 +1542,17 @@ const SalesPage = (props) => {
         useHeaderV2={true}
         onAddInventory={handleAddInventory}
         addInventoryText="Add Inventory"
-        filterConfig={filterConfig}
+        // Use computed filter config ordered/filtered by salesTableFilter
+        filterConfig={computedFilterConfig}
         onTabChange={handleTabChange}
         onFilterChange={handleFilterChange}
         onCheckboxToggle={handleCheckboxToggle}
         onColumnToggle={handleColumnToggle}
+        // NEW: persist on filter reorder/toggle
+        onFiltersReorder={handleFiltersReorderPersist}
+        onFilterToggle={handleFilterTogglePersist}
+        // NEW: handle columns reorder so the table order updates
+        onColumnsReorder={handleColumnsReorderPersist}
         onCurrencyChange={handleCurrencyChange}
         selectedCurrency={currency}
         tabCurrencies={{ options: globalCurrencyOptions }}
@@ -1326,14 +1573,17 @@ const SalesPage = (props) => {
         customTableComponent={customTableComponent}
         showCustomTable={true}
         onScrollEnd={handleScrollEnd}
-        isDraggableColumns={false}
+        isDraggableColumns={true}
         isDraggableFilters={true}
-        showColumnSearch={true} 
+        showColumnSearch={true}
         loadingMore={loadingMore}
         hasNextPage={hasNextPage}
         scrollThreshold={100}
         onClearAllFilters={handleClearAllFilters}
-        columnHeadersMap={columnHeadersMap} // ADD THIS LINE
+        columnHeadersMap={columnHeadersMap}
+        // Optionally, if TabbedLayout supports these, they will persist filter settings:
+        // onFiltersReorder={(items)=>persistSalesFilterSettings(items.filter(i=>i.isActive).map(i=>i.key), items.map(i=>i.key))}
+        // onFilterToggle={(activeKeys, orderedKeys)=>persistSalesFilterSettings(activeKeys, orderedKeys)}
       />
       {showLogDetailsModal?.flag && (
         <InventoryLogsInfo
