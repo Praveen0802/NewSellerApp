@@ -233,6 +233,64 @@ const AddInventoryPage = (props) => {
     loadSettings();
   }, []);
 
+  // Map API filter names to internal keys (case-insensitive)
+  const apiNameToKey = {
+    "quantity": "add_qty_addlist",
+    "ticket type": "ticket_types",
+    "split type": "split_type",
+    "seating arrangement": "split_details",
+    "max display quantity": "max_display_qty",
+    "category": "ticket_category",
+    "seating category": "ticket_category",
+    "section": "ticket_block",
+    "section/block": "ticket_block",
+    "section / block": "ticket_block",
+    "row": "row",
+    "first seat": "first_seat",
+    "face value": "face_value",
+    "proceed price": "add_price_addlist",
+    "processed price": "add_price_addlist",
+    "restriction": "restrictions",
+    "restrictions": "restrictions",
+    "benefits": "notes",
+    "benifits": "notes",
+    "date to ship": "ship_date",
+    "tickets in hand": "ticket_in_hand",
+    "fan area": "home_town",
+    "upload tickets": "upload_tickets",
+  };
+
+  // Map API column names to internal keys (case-insensitive)
+  const apiColumnNameToKey = {
+    "quantity": "add_qty_addlist",
+    "ticket type": "ticket_types",
+    "split type": "split_type",
+    "seating arrangement": "split_details",
+    "max display quantity": "max_display_qty",
+    "category": "ticket_category",
+    "seating category": "ticket_category",
+    "section": "ticket_block",
+    "section/block": "ticket_block",
+    "section / block": "ticket_block",
+    "row": "row",
+    "first seat": "first_seat",
+    "face value": "face_value",
+    "proceed price": "add_price_addlist",
+    "processed price": "add_price_addlist",
+    "restriction": "restrictions",
+    "restrictions": "restrictions",
+    "benefits": "notes",
+    "benifits": "notes",
+    "date to ship": "ship_date",
+    "tickets in hand": "ticket_in_hand",
+    "fan area": "home_town",
+    "upload tickets": "upload_tickets",
+    "listing id": "listing_id",
+    "sold": "sold",
+    "price": "add_price_addlist",
+    "listing note": "listing_note",
+  };
+
   // Base filter configs (static definitions)
   const baseFilterConfigs = useMemo(() => ({
     ticket_types: {
@@ -438,6 +496,7 @@ const AddInventoryPage = (props) => {
       name: "ticket_in_hand",
       label: "Tickets In Hand",
       value: filtersApplied?.ticket_in_hand || false,
+      beforeIcon: <Hand className="size-4"/>,
       parentClassName: "flex-shrink flex-basis-[200px] flex-grow md:max-w-[160px] lg:max-w-[212px]",
       className: "!py-[4px] !px-[12px] w-full text-xs sm:text-[10px] lg:text-xs",
       labelClassName: "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
@@ -457,33 +516,6 @@ const AddInventoryPage = (props) => {
       onChange: () => {},
     },
   }), [ticket_types, split_types, split_details_left, split_details_right, notes_left, notes_right, restriction_left, restriction_right, block_data, blockDetails, filtersApplied, matchDetails, home_town]);
-
-  // Map API names to internal keys (case-insensitive)
-  const apiNameToKey = {
-    "quantity": "add_qty_addlist",
-    "ticket type": "ticket_types",
-    "split type": "split_type",
-    "seating arrangement": "split_details",
-    "max display quantity": "max_display_qty",
-    "category": "ticket_category",
-  "seating category": "ticket_category",
-    "section": "ticket_block",
-  "section/block": "ticket_block",
-  "section / block": "ticket_block",
-    "row": "row",
-  "first seat": "first_seat",
-    "face value": "face_value",
-  "proceed price": "add_price_addlist",
-  "processed price": "add_price_addlist",
-  "restriction": "restrictions",
-  "restrictions": "restrictions",
-  "benefits": "notes",
-  "benifits": "notes",
-    "date to ship": "ship_date",
-    "tickets in hand": "ticket_in_hand",
-    "fan area": "home_town",
-    "upload tickets": "upload_tickets",
-  };
 
   // Build filters from API settings or fallback to all
   const filters = useMemo(() => {
@@ -550,63 +582,6 @@ const AddInventoryPage = (props) => {
     }
   }, [matchDetails?.ship_date, filtersApplied?.ship_date]);
 
-  // Initialize active & ordered filters from API 'checked' flags (one-time)
-  const apiInitRef = useRef(false);
-  useEffect(() => {
-    if (apiInitRef.current) return;
-    const list = fieldSettings?.addInventoryTableFilter;
-    if (Array.isArray(list) && list.length) {
-      const active = [];
-      const ordered = [];
-      const seen = new Set();
-      list.forEach(item => {
-        const rawName = item?.name?.toLowerCase?.().trim() || "";
-        const key = apiNameToKey[rawName] || `unknown_${rawName.replace(/[^a-z0-9_]/g,'_')}`;
-        if (!seen.has(key)) {
-          ordered.push(key);
-          if (item.checked) active.push(key);
-          seen.add(key);
-        }
-      });
-      if (active.length) setActiveFilters(active);
-      if (ordered.length) setOrderedFilters(ordered);
-      apiInitRef.current = true;
-    }
-  }, [fieldSettings, apiNameToKey]);
-
-  // Reconcile previously unknown placeholders if mapping updated (e.g., Benefits/Restrictions variants)
-  useEffect(() => {
-    if (!fieldSettings?.addInventoryTableFilter) return;
-    let changed = false;
-    const list = fieldSettings.addInventoryTableFilter;
-    const replacementMap = {};
-    list.forEach(item => {
-      const rawName = item?.name?.toLowerCase?.().trim() || "";
-      const mapped = apiNameToKey[rawName];
-      if (mapped) {
-        const unknownKey = `unknown_${rawName.replace(/[^a-z0-9_]/g,'_')}`;
-        replacementMap[unknownKey] = mapped;
-      }
-    });
-    if (Object.keys(replacementMap).length === 0) return;
-    setOrderedFilters(prev => {
-      let updated = prev.map(k => replacementMap[k] ? replacementMap[k] : k);
-      const dedup = [];
-      const seen = new Set();
-      updated.forEach(k => { if(!seen.has(k)) { seen.add(k); dedup.push(k);} });
-      if (dedup.join(',') !== prev.join(',')) { changed = true; return dedup; }
-      return prev;
-    });
-    setActiveFilters(prev => {
-      let updated = prev.map(k => replacementMap[k] ? replacementMap[k] : k);
-      const dedup = [];
-      const seen = new Set();
-      updated.forEach(k => { if(!seen.has(k)) { seen.add(k); dedup.push(k);} });
-      if (dedup.join(',') !== prev.join(',')) { changed = true; return dedup; }
-      return prev;
-    });
-  }, [fieldSettings, apiNameToKey]);
-
   const columnOrder = [
     "ticket_types",
     "add_qty_addlist",
@@ -664,6 +639,12 @@ const AddInventoryPage = (props) => {
   const headers = allHeaders.filter(
     (header) => visibleColumns.includes(header.key) && !header?.hideFromTable
   );
+
+  // Initialize with the original filter order
+  const [orderedFilters, setOrderedFilters] = useState(() => {
+    return filters.map((f) => f.name);
+  });
+
   const [orderedColumns, setOrderedColumns] = useState(() => {
     if (columnOrder && columnOrder.length > 0) {
       return columnOrder;
@@ -671,10 +652,139 @@ const AddInventoryPage = (props) => {
     return allHeaders.map((h) => h.key);
   });
 
-  // Initialize with the original filter order
-  const [orderedFilters, setOrderedFilters] = useState(() => {
-    return filters.map((f) => f.name);
-  });
+  // Initialize active & ordered filters from API 'checked' flags (one-time)
+  const apiInitRef = useRef(false);
+  useEffect(() => {
+    if (apiInitRef.current) return;
+    const list = fieldSettings?.addInventoryTableFilter;
+    if (Array.isArray(list) && list.length) {
+      const active = [];
+      const ordered = [];
+      const seen = new Set();
+      list.forEach(item => {
+        const rawName = item?.name?.toLowerCase?.().trim() || "";
+        const key = apiNameToKey[rawName] || `unknown_${rawName.replace(/[^a-z0-9_]/g,'_')}`;
+        if (!seen.has(key)) {
+          ordered.push(key);
+          if (item.checked) active.push(key);
+          seen.add(key);
+        }
+      });
+      if (active.length) setActiveFilters(active);
+      if (ordered.length) setOrderedFilters(ordered);
+      apiInitRef.current = true;
+    }
+  }, [fieldSettings, apiNameToKey]);
+
+  // Initialize columns from API settings (one-time)
+  const apiColumnInitRef = useRef(false);
+  useEffect(() => {
+    if (apiColumnInitRef.current) return;
+    const columnList = fieldSettings?.addInventoryTableColumn;
+    if (Array.isArray(columnList) && columnList.length) {
+      const visible = [];
+      const ordered = [];
+      const seen = new Set();
+      
+      columnList.forEach(item => {
+        const rawName = item?.name?.toLowerCase?.().trim() || "";
+        const key = apiColumnNameToKey[rawName] || `unknown_${rawName.replace(/[^a-z0-9_]/g,'_')}`;
+        if (!seen.has(key) && allHeaders.find(h => h.key === key)) {
+          ordered.push(key);
+          if (item.checked) visible.push(key);
+          seen.add(key);
+        }
+      });
+      
+      // Add any missing columns
+      allHeaders.forEach(header => {
+        if (!seen.has(header.key)) {
+          ordered.push(header.key);
+          visible.push(header.key); // Default to visible for missing columns
+        }
+      });
+      
+      if (visible.length) setVisibleColumns(visible);
+      if (ordered.length) setOrderedColumns(ordered);
+      apiColumnInitRef.current = true;
+    }
+  }, [fieldSettings, apiColumnNameToKey, allHeaders]);
+
+  // Reconcile previously unknown placeholders if mapping updated (e.g., Benefits/Restrictions variants)
+  useEffect(() => {
+    if (!fieldSettings?.addInventoryTableFilter) return;
+    let changed = false;
+    const list = fieldSettings.addInventoryTableFilter;
+    const replacementMap = {};
+    list.forEach(item => {
+      const rawName = item?.name?.toLowerCase?.().trim() || "";
+      const mapped = apiNameToKey[rawName];
+      if (mapped) {
+        const unknownKey = `unknown_${rawName.replace(/[^a-z0-9_]/g,'_')}`;
+        replacementMap[unknownKey] = mapped;
+      }
+    });
+    if (Object.keys(replacementMap).length === 0) return;
+    setOrderedFilters(prev => {
+      let updated = prev.map(k => replacementMap[k] ? replacementMap[k] : k);
+      const dedup = [];
+      const seen = new Set();
+      updated.forEach(k => { if(!seen.has(k)) { seen.add(k); dedup.push(k);} });
+      if (dedup.join(',') !== prev.join(',')) { changed = true; return dedup; }
+      return prev;
+    });
+    setActiveFilters(prev => {
+      let updated = prev.map(k => replacementMap[k] ? replacementMap[k] : k);
+      const dedup = [];
+      const seen = new Set();
+      updated.forEach(k => { if(!seen.has(k)) { seen.add(k); dedup.push(k);} });
+      if (dedup.join(',') !== prev.join(',')) { changed = true; return dedup; }
+      return prev;
+    });
+  }, [fieldSettings, apiNameToKey]);
+
+  // Reconcile column placeholders if mapping updated
+  useEffect(() => {
+    if (!fieldSettings?.addInventoryTableColumn) return;
+    let changed = false;
+    const columnList = fieldSettings.addInventoryTableColumn;
+    const replacementMap = {};
+    
+    columnList.forEach(item => {
+      const rawName = item?.name?.toLowerCase?.().trim() || "";
+      const mapped = apiColumnNameToKey[rawName];
+      if (mapped) {
+        const unknownKey = `unknown_${rawName.replace(/[^a-z0-9_]/g,'_')}`;
+        replacementMap[unknownKey] = mapped;
+      }
+    });
+    
+    if (Object.keys(replacementMap).length === 0) return;
+    
+    setOrderedColumns(prev => {
+      let updated = prev.map(k => replacementMap[k] ? replacementMap[k] : k);
+      const dedup = [];
+      const seen = new Set();
+      updated.forEach(k => { if(!seen.has(k)) { seen.add(k); dedup.push(k);} });
+      if (dedup.join(',') !== prev.join(',')) { 
+        changed = true; 
+        return dedup; 
+      }
+      return prev;
+    });
+    
+    setVisibleColumns(prev => {
+      let updated = prev.map(k => replacementMap[k] ? replacementMap[k] : k);
+      const dedup = [];
+      const seen = new Set();
+      updated.forEach(k => { if(!seen.has(k)) { seen.add(k); dedup.push(k);} });
+      if (dedup.join(',') !== prev.join(',')) { 
+        changed = true; 
+        return dedup; 
+      }
+      return prev;
+    });
+  }, [fieldSettings, apiColumnNameToKey]);
 
   useEffect(() => {
     console.log("Current orderedFilters:", orderedFilters);
@@ -955,6 +1065,54 @@ const AddInventoryPage = (props) => {
     }
   };
 
+  // Persist column settings (order + checked state) to API
+  const persistColumnSettings = async (
+    visibleColumnsOverride = null,
+    orderedColumnsOverride = null
+  ) => {
+    const currentVisible = visibleColumnsOverride || visibleColumns;
+    const currentOrder = orderedColumnsOverride || orderedColumns;
+
+    const apiColumnSource = fieldSettings?.addInventoryTableColumn || [];
+    const labelMap = {};
+    allHeaders.forEach((h) => {
+      labelMap[h.key] = h.label;
+    });
+
+    // Union of current order and all column keys to ensure completeness
+    const allKeys = Array.from(
+      new Set([...currentOrder, ...allHeaders.map((h) => h.key)])
+    );
+
+    const valueArray = allKeys.map((internalKey, idx) => {
+      const original = apiColumnSource.find((item) => {
+        const mappedKey =
+          apiColumnNameToKey[item.name?.toLowerCase?.()] ||
+          `unknown_${item.name
+            ?.toLowerCase?.()
+            .replace(/[^a-z0-9_]/g, "_")}`;
+        return mappedKey === internalKey;
+      });
+      return {
+        id: original?.id || idx + 1,
+        name: original?.name || labelMap[internalKey] || internalKey,
+        checked: currentVisible.includes(internalKey),
+      };
+    });
+
+    const payload = {
+      settings: [
+        { key: "addInventoryTableColumn", value: valueArray },
+      ],
+    };
+
+    try {
+      await saveFieldSettings("", payload);
+    } catch (e) {
+      console.error("Failed to save column settings", e);
+    }
+  };
+
   // Handle filter toggle
   const handleFilterToggle = (filterKey) => {
     console.log("Toggling filter:", filterKey);
@@ -977,6 +1135,8 @@ const AddInventoryPage = (props) => {
         ? prev.filter((key) => key !== columnKey)
         : [...prev, columnKey];
       console.log("New visibleColumns:", newVisibleColumns);
+      // Persist immediately after toggle
+      persistColumnSettings(newVisibleColumns);
       return newVisibleColumns;
     });
   };
@@ -985,17 +1145,19 @@ const AddInventoryPage = (props) => {
   const handleFiltersReorder = async (reorderedItems) => {
     const newOrder = reorderedItems.map((item) => item.key);
     setOrderedFilters(newOrder);
-  // Persist after reordering (order changed, active unchanged)
-  await persistFieldSettings(null, newOrder);
+    // Persist after reordering (order changed, active unchanged)
+    await persistFieldSettings(null, newOrder);
   };
 
   // Handle columns reordering with proper debugging
-  const handleColumnsReorder = (reorderedItems) => {
+  const handleColumnsReorder = async (reorderedItems) => {
     const newOrder = reorderedItems.map((item) => item.key);
     console.log("Reordering columns from:", orderedColumns);
     console.log("Reordering columns to:", newOrder);
 
     setOrderedColumns(newOrder);
+    // Persist after reordering (order changed, visible unchanged)
+    await persistColumnSettings(null, newOrder);
   };
 
   // Memoize the visible filters to prevent unnecessary re-renders
@@ -1263,10 +1425,6 @@ const AddInventoryPage = (props) => {
       formData.append(
         `data[${index}][ticket_category]`,
         publishingData.ticket_category || ""
-      );
-      formData.append(
-        `data[${index}][ticket_block]`,
-        publishingData.ticket_block || ""
       );
       formData.append(
         `data[${index}][ticket_block]`,
