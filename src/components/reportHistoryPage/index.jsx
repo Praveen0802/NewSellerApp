@@ -14,6 +14,8 @@ import {
   reportEventSearch,
   reportHistory,
   reportsOverview,
+  getFieldSettings,          // added
+  saveFieldSettings,         // added
 } from "@/utils/apiHandler/request";
 import useTeamMembersDetails from "@/Hooks/useTeamMembersDetails";
 import { toast } from "react-toastify";
@@ -183,6 +185,64 @@ const RportHistory = (props) => {
   // Debounce timer ref
   const debounceTimer = useRef(null);
 
+  // NEW: Add field settings state and refs
+  const [fieldSettings, setFieldSettings] = useState(null);
+  const reportsApiInitRef = useRef(false);
+  const reportsColumnApiInitRef = useRef(false);
+
+  // NEW: Load field settings on component mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const res = await getFieldSettings("");
+        setFieldSettings(res?.field_settings || null);
+      } catch (e) {
+        console.error("Failed to load field settings", e);
+        setFieldSettings(null);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  // NEW: Normalize helper for robust name matching
+  const normalize = useCallback((str) => {
+    return (str || "")
+      .toString()
+      .toLowerCase()
+      .trim()
+      .replace(/[\s/]+/g, " ")
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }, []);
+
+  // NEW: Map API filter names to internal keys
+  const filterApiNameToKey = useMemo(() => ({
+    "transaction date": "transactionDate",
+    "venue": "venue",
+    "event date": "eventDate",
+    "search match event or booking number": "query",
+    "team members": "team_members",
+    "order status": "order_status",
+    "payment status": "payment_status",
+    "category": "category",
+  }), []);
+
+  // NEW: Map API column names to internal keys
+  const columnApiNameToKey = useMemo(() => ({
+    "order id": "order_id",
+    "order date": "order_date",
+    "order value": "order_value",
+    "event": "event",
+    "venue": "venue",
+    "event date": "event_date",
+    "ticket details": "ticket_details",
+    "qty": "quantity",
+    "ticket type": "ticket_type",
+    "order status": "order_status_label",
+    "payment status": "payment_status_label",
+  }), []);
+
   // Get currency slider data with transition direction setter
   const currencySliderResult = CurrencySlider({
     overViewData,
@@ -280,6 +340,54 @@ const RportHistory = (props) => {
     createInitialVisibleColumns()
   );
 
+  // NEW: Initialize column visibility and order from API settings
+  useEffect(() => {
+    if (reportsColumnApiInitRef.current) return;
+    const columnList = fieldSettings?.reportTableColumn;
+    if (!Array.isArray(columnList) || !columnList.length) return;
+
+    const headerKeyMap = {};
+    headers.forEach((h) => {
+      headerKeyMap[normalize(h.label)] = h.key;
+    });
+
+    const seen = new Set();
+    const newOrder = [];
+    const visibleSet = new Set();
+
+    columnList.forEach((item) => {
+      const normalizedName = normalize(item?.name);
+      const key = columnApiNameToKey[normalizedName] || 
+                 headerKeyMap[normalizedName];
+      
+      if (key && !seen.has(key)) {
+        newOrder.push(key);
+        if (item?.checked) visibleSet.add(key);
+        seen.add(key);
+      }
+    });
+
+    // Append any headers not present in settings
+    headers.forEach((h) => {
+      if (!seen.has(h.key)) {
+        newOrder.push(h.key);
+        visibleSet.add(h.key); // default to visible
+      }
+    });
+
+    // Update column order and visibility
+    setOrderedColumnKeys(newOrder);
+    setVisibleColumns((prev) => {
+      const updated = {};
+      newOrder.forEach((k) => {
+        updated[k] = visibleSet.has(k);
+      });
+      return updated;
+    });
+
+    reportsColumnApiInitRef.current = true;
+  }, [fieldSettings?.reportTableColumn, headers, columnApiNameToKey, normalize]);
+
   // NEW: apply ordering to headers, then filter by visibility
   const orderedHeaders = useMemo(() => {
     const allKeys = headers.map((h) => h.key);
@@ -298,21 +406,73 @@ const RportHistory = (props) => {
     [orderedHeaders, visibleColumns]
   );
 
-  const handleColumnToggle = (columnKey) => {
-    setVisibleColumns((prev) => ({
-      ...prev,
-      [columnKey]: !prev[columnKey],
-    }));
-  };
+  // NEW: Persist column settings to API
+  const persistColumnSettings = useCallback(
+    async (visibleMap = visibleColumns, order = orderedColumnKeys) => {
+      try {
+        const labelMap = {};
+        headers.forEach((h) => {
+          labelMap[h.key] = h.label;
+        });
 
-  // NEW: when user reorders columns in dropdown, update table order
-  const handleColumnsReorder = (newOrderKeys /*, reorderedItems */) => {
-    // Ensure only known keys are used and append any missing keys at the end
-    const allKeys = headers.map((h) => h.key);
-    const cleaned = (newOrderKeys || []).filter((k) => allKeys.includes(k));
-    const missing = allKeys.filter((k) => !cleaned.includes(k));
-    setOrderedColumnKeys([...cleaned, ...missing]);
-  };
+        const apiSource = fieldSettings?.reportTableColumn || [];
+
+        const valueArray = order.map((key, idx) => {
+          const original = apiSource.find((item) => {
+            const normalizedName = normalize(item?.name);
+            return columnApiNameToKey[normalizedName] === key ||
+                   headers.find(h => 
+                     h.key === key && normalize(h.label) === normalizedName
+                   );
+          });
+          
+          return {
+            id: original?.id || idx + 1,
+            name: original?.name || labelMap[key] || key,
+            checked: !!visibleMap[key],
+          };
+        });
+
+        const payload = {
+          settings: [{ key: "reportTableColumn", value: valueArray }],
+        };
+        
+        await saveFieldSettings("", payload);
+      } catch (e) {
+        console.error("Failed to save reportTableColumn", e);
+      }
+    },
+    [visibleColumns, orderedColumnKeys, headers, fieldSettings, columnApiNameToKey, normalize]
+  );
+
+  // NEW: Enhanced handleColumnsReorder with persistence
+  const handleColumnsReorder = useCallback(
+    async (newOrderKeys) => {
+      // Ensure only known keys are used and append any missing keys at the end
+      const allKeys = headers.map((h) => h.key);
+      const cleaned = (newOrderKeys || []).filter((k) => allKeys.includes(k));
+      const missing = allKeys.filter((k) => !cleaned.includes(k));
+      const finalOrder = [...cleaned, ...missing];
+      
+      setOrderedColumnKeys(finalOrder);
+      // Persist after reordering
+      await persistColumnSettings(visibleColumns, finalOrder);
+    },
+    [persistColumnSettings, visibleColumns, headers]
+  );
+
+  // NEW: Enhanced handleColumnToggle with persistence
+  const handleColumnToggle = useCallback(
+    (columnKey) => {
+      setVisibleColumns((prev) => {
+        const next = { ...prev, [columnKey]: !prev[columnKey] };
+        // Persist after toggle
+        setTimeout(() => persistColumnSettings(next, orderedColumnKeys), 0);
+        return next;
+      });
+    },
+    [persistColumnSettings, orderedColumnKeys]
+  );
 
   // Transform data for the table
   const transformedData = useMemo(() => {
@@ -729,117 +889,227 @@ const RportHistory = (props) => {
     apiCall({}, false, false, true);
   };
 
-  // Configuration for filters
-  const filterConfig = {
-    reports: [
-      {
-        type: "text",
-        name: "query",
-        value: filtersApplied?.query,
-        showDelete: true,
-        iconBefore: <SearchIcon />,
-        deleteFunction: () => handleFilterChange("query", ""),
-        label: "Search Match event or Booking number",
-        className: "!py-[7px]  !text-[#343432] !text-[14px]",
-        parentClassName: "md:!w-[300px]",
-      },
-      {
-        type: "select",
-        name: "venue",
-        label: "Venue",
-        value: filtersApplied?.venue,
-        options: props?.response?.reportFilter?.value?.stadiums?.map(
-          (item) => ({
-            value: item?.id,
-            label: item?.name,
-          })
-        ),
-        parentClassName: "md:!w-[12%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-        labelClassName: "!text-[11px]",
-      },
-      {
-        type: "date",
-        name: "transactionDate",
-        singleDateMode: false,
-        label: "Transaction Date",
-        value: {
-          startDate: filtersApplied?.transaction_start_date,
-          endDate: filtersApplied?.transaction_end_date,
+  // NEW: Create enhanced filter config with API integration
+  const enhancedFilterConfig = useMemo(() => {
+    const baseConfig = {
+      reports: [
+        {
+          type: "text",
+          name: "query",
+          value: filtersApplied?.query,
+          showDelete: true,
+          iconBefore: <SearchIcon />,
+          deleteFunction: () => handleFilterChange("query", ""),
+          label: "Search Match event or Booking number",
+          className: "!py-[7px]  !text-[#343432] !text-[14px]",
+          parentClassName: "md:!w-[300px]",
         },
-        parentClassName: "md:!w-[150px]",
-        className: "!py-[8px] !px-[16px] mobile:text-xs",
-      },
-      {
-        type: "date",
-        name: "eventDate",
-        singleDateMode: false,
-        value: {
-          startDate: filtersApplied?.event_start_date,
-          endDate: filtersApplied?.event_end_date,
+        {
+          type: "select",
+          name: "venue",
+          label: "Venue",
+          value: filtersApplied?.venue,
+          options: props?.response?.reportFilter?.value?.stadiums?.map(
+            (item) => ({
+              value: item?.id,
+              label: item?.name,
+            })
+          ),
+          parentClassName: "md:!w-[12%]",
+          className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+          labelClassName: "!text-[11px]",
         },
-        label: "Event Date",
-        parentClassName: "md:!w-[150px]",
-        className: "!py-[8px] !px-[16px] mobile:text-xs",
-      },
-      {
-        type: "select",
-        name: "team_members",
-        label: "Team Members",
-        value: filtersApplied?.team_members,
-        multiselect: true,
-        options: teamMembers,
-        parentClassName: "md:!w-[12%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-        labelClassName: "!text-[11px]",
-      },
-      {
-        type: "select",
-        name: "order_status",
-        label: "Order Status",
-        value: filtersApplied?.order_status,
-        options: [
-          { value: "pending", label: "Pending" },
-          { value: "confirmed", label: "Awaiting Delivery" },
-          { value: "delivered", label: "Delivered" },
-          { value: "completed", label: "Completed" },
-          { value: "cancelled", label: "Cancelled" },
-          { value: "replaced", label: "Replaced" },
-        ],
-        parentClassName: "md:!w-[12%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-        labelClassName: "!text-[11px]",
-      },
-      {
-        type: "select",
-        name: "payment_status",
-        label: "Payment Status",
-        value: filtersApplied?.payment_status,
-        options: [
-          { value: "paid", label: "Paid" },
-          { value: "unpaid", label: "Unpaid" },
-        ],
-        parentClassName: "md:!w-[12%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-        labelClassName: "!text-[11px]",
-      },
-      {
-        type: "select",
-        name: "category",
-        label: "Category",
-        value: filtersApplied?.category,
-        options: props?.response?.reportFilter?.value?.categories?.map(
-          (item) => ({
-            value: item?.id,
-            label: item?.name,
-          })
-        ),
-        parentClassName: "md:!w-[12%]",
-        className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
-        labelClassName: "!text-[11px]",
-      },
-    ],
-  };
+        {
+          type: "date",
+          name: "transactionDate",
+          singleDateMode: false,
+          label: "Transaction Date",
+          value: {
+            startDate: filtersApplied?.transaction_start_date,
+            endDate: filtersApplied?.transaction_end_date,
+          },
+          parentClassName: "md:!w-[150px]",
+          className: "!py-[8px] !px-[16px] mobile:text-xs",
+        },
+        {
+          type: "date",
+          name: "eventDate",
+          singleDateMode: false,
+          value: {
+            startDate: filtersApplied?.event_start_date,
+            endDate: filtersApplied?.event_end_date,
+          },
+          label: "Event Date",
+          parentClassName: "md:!w-[150px]",
+          className: "!py-[8px] !px-[16px] mobile:text-xs",
+        },
+        {
+          type: "select",
+          name: "team_members",
+          label: "Team Members",
+          value: filtersApplied?.team_members,
+          multiselect: true,
+          options: teamMembers,
+          parentClassName: "md:!w-[12%]",
+          className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+          labelClassName: "!text-[11px]",
+        },
+        {
+          type: "select",
+          name: "order_status",
+          label: "Order Status",
+          value: filtersApplied?.order_status,
+          options: [
+            { value: "pending", label: "Pending" },
+            { value: "confirmed", label: "Awaiting Delivery" },
+            { value: "delivered", label: "Delivered" },
+            { value: "completed", label: "Completed" },
+            { value: "cancelled", label: "Cancelled" },
+            { value: "replaced", label: "Replaced" },
+          ],
+          parentClassName: "md:!w-[12%]",
+          className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+          labelClassName: "!text-[11px]",
+        },
+        {
+          type: "select",
+          name: "payment_status",
+          label: "Payment Status",
+          value: filtersApplied?.payment_status,
+          options: [
+            { value: "paid", label: "Paid" },
+            { value: "unpaid", label: "Unpaid" },
+          ],
+          parentClassName: "md:!w-[12%]",
+          className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+          labelClassName: "!text-[11px]",
+        },
+        {
+          type: "select",
+          name: "category",
+          label: "Category",
+          value: filtersApplied?.category,
+          options: props?.response?.reportFilter?.value?.categories?.map(
+            (item) => ({
+              value: item?.id,
+              label: item?.name,
+            })
+          ),
+          parentClassName: "md:!w-[12%]",
+          className: "!py-[6px] !px-[12px] w-full mobile:text-xs",
+          labelClassName: "!text-[11px]",
+        },
+      ],
+    };
+
+    // Apply API filter settings if available
+    const apiFilterList = fieldSettings?.reportTableFilter;
+    if (!Array.isArray(apiFilterList) || !apiFilterList.length) {
+      return baseConfig;
+    }
+
+    // Build map from normalized label -> filter object
+    const filterByNormLabel = {};
+    baseConfig.reports.forEach((f) => {
+      filterByNormLabel[normalize(f.label)] = f;
+    });
+
+    // Order by API, include only checked ones
+    const orderedVisibleFilters = [];
+    const usedFilters = new Set();
+    
+    apiFilterList.forEach((item) => {
+      const normalizedName = normalize(item?.name);
+      const key = filterApiNameToKey[normalizedName];
+      const match = baseConfig.reports.find(f => f.name === key) || 
+                   filterByNormLabel[normalizedName];
+      
+      if (match && item?.checked && !usedFilters.has(match.name)) {
+        orderedVisibleFilters.push(match);
+        usedFilters.add(match.name);
+      }
+    });
+
+    // Append any base filters not present in settings
+    baseConfig.reports.forEach((f) => {
+      if (!usedFilters.has(f.name)) {
+        orderedVisibleFilters.push(f);
+      }
+    });
+
+    return { reports: orderedVisibleFilters };
+  }, [
+    fieldSettings?.reportTableFilter, 
+    filtersApplied, 
+    props?.response, 
+    teamMembers, 
+    filterApiNameToKey, 
+    normalize,
+    handleFilterChange
+  ]);
+
+  // NEW: Persist filter settings to API
+  const persistFilterSettings = useCallback(
+    async (activeFiltersList, orderedFiltersList) => {
+      try {
+        const apiSource = fieldSettings?.reportTableFilter || [];
+        const labelMap = {};
+        enhancedFilterConfig.reports.forEach((f) => {
+          labelMap[f.name] = f.label;
+        });
+
+        const finalOrder = orderedFiltersList?.length
+          ? orderedFiltersList
+          : enhancedFilterConfig.reports.map((f) => f.name);
+
+        const valueArray = finalOrder.map((key, idx) => {
+          const label = labelMap[key] || key;
+          const original = apiSource.find((item) => {
+            const normalizedName = normalize(item?.name);
+            return filterApiNameToKey[normalizedName] === key ||
+                   normalize(label) === normalizedName;
+          });
+          
+          return {
+            id: original?.id || idx + 1,
+            name: original?.name || label,
+            checked: activeFiltersList
+              ? activeFiltersList.includes(key)
+              : true,
+          };
+        });
+
+        const payload = {
+          settings: [{ key: "reportTableFilter", value: valueArray }],
+        };
+        
+        await saveFieldSettings("", payload);
+      } catch (e) {
+        console.error("Failed to save reportTableFilter", e);
+      }
+    },
+    [fieldSettings?.reportTableFilter, enhancedFilterConfig, filterApiNameToKey, normalize]
+  );
+
+  // NEW: Filter reorder handler
+  const handleFiltersReorder = useCallback(
+    async (selectedTab, newOrder, reorderedItems) => {
+      const activeKeys = reorderedItems
+        ?.filter((item) => item.isActive)
+        ?.map((item) => item.key) || [];
+      
+      await persistFilterSettings(activeKeys, newOrder);
+    },
+    [persistFilterSettings]
+  );
+
+  // NEW: Filter toggle handler
+  const handleFilterToggle = useCallback(
+    async (selectedTab, activeKeys, orderedKeys) => {
+      await persistFilterSettings(activeKeys, orderedKeys);
+    },
+    [persistFilterSettings]
+  );
 
   const apiCallDebounceTimer = useRef(null);
 
@@ -904,6 +1174,15 @@ const RportHistory = (props) => {
     "offset",
   ];
 
+  // NEW: Create column headers mapping for TabbedLayout
+  const columnHeadersMap = useMemo(() => {
+    const map = {};
+    headers.forEach((header) => {
+      map[header.key] = header.label;
+    });
+    return map;
+  }, [headers]);
+
   const customTableComponent = () => {
     return (
       <div className="p-4">
@@ -952,9 +1231,9 @@ const RportHistory = (props) => {
         <TabbedLayout
           initialTab="reports"
           listItemsConfig={listItemsConfig}
-          filterConfig={filterConfig}
+          filterConfig={enhancedFilterConfig} // Use enhanced config
           onTabChange={() => {}}
-          onColumnToggle={handleColumnToggle}
+          onColumnToggle={handleColumnToggle} // Enhanced with persistence
           visibleColumns={visibleColumns}
           onClearAllFilters={handleClearAllFilters}
           onFilterChange={handleFilterChange}
@@ -966,16 +1245,21 @@ const RportHistory = (props) => {
           showCustomTable={true}
           customTableComponent={customTableComponent}
           reportsPage={true}
-          // NEW: enable draggable columns and handle their order updates
           isDraggableColumns={true}
-          onColumnsReorder={handleColumnsReorder}
-          // NEW PROPS FOR SCROLL HANDLING - same as SalesPage
+          isDraggableFilters={true}
+          showColumnSearch={true}
+          showFilterSearch={true}
+          onColumnsReorder={handleColumnsReorder} // Enhanced with persistence
+          onFiltersReorder={handleFiltersReorder} // Add filter reordering
+          onFilterToggle={handleFilterToggle} // Add filter toggling
           onScrollEnd={handleScrollEnd}
           loadingMore={loadingMore}
           hasNextPage={hasNextPage}
           scrollThreshold={100}
+          columnHeadersMap={columnHeadersMap} // Add column headers mapping
         />
       </div>
+      
       {showLogDetailsModal?.flag && (
         <InventoryLogsInfo
           show={showLogDetailsModal?.flag}
