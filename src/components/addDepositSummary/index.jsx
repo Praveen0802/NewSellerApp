@@ -69,7 +69,6 @@ const AddDepositSummary = ({ onClose } = {}) => {
       "deposit_amount",
       "currency",
       "payment_transfer_by",
-      "notes",
     ];
     return requiredFields.every((field) => formFieldValues[field]);
   };

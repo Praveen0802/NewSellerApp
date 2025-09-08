@@ -967,10 +967,10 @@ export const getTransactionDetails = async (token, params) => {
 
 export const sendDepositRequest = async (data) => {
   try {
-    const response = await makeRequest({
-      url: API_ROUTES.SEND_DEPOSIT_REQUEST,
+    const response = await axios({
+      url: '/api/send-deposit-request',
       method: "POST",
-      formData: data,
+      data: data,
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {

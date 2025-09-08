@@ -188,6 +188,8 @@ const ConfirmPurchasePopup = ({ onClose }) => {
     }
   };
 
+  console.log(selectedPaymentMethod,'selectedPaymentMethodselectedPaymentMethod')
+
   const paymentSubmit = async (paymentMethod, bookingId, bookingNo) => {
     if (paymentMethod == 1) {
       // SB Pay - existing logic
@@ -279,7 +281,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
           ? 1
           : selectedPayment?.name == "New Credit or Debit Card"
           ? 2
-          : 3;
+          : 2;
       setSelectedPaymentMethod(paymentMethod);
 
       if (guestDetails?.length > 0) {
@@ -491,6 +493,7 @@ const ConfirmPurchasePopup = ({ onClose }) => {
           amount={totalAmount || 0}
           currency={data?.purchase?.price_breakdown?.currency || "usd"}
           formFieldValues={formFieldValues}
+          selectedPayment={selectedPayment}
         />
       )}
     </div>

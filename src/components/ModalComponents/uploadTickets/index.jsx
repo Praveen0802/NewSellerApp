@@ -992,9 +992,10 @@ const UploadTickets = ({
         if (updatedObject.additional_info) {
           try {
             const newFormData = constructNewFormData(updatedObject);
+            
             if (
               updatedObject.additional_info?.templateFile &&
-              typeof updateAdditionalFile === "file"
+              updatedObject.additional_info?.templateFile instanceof File
             ) {
               const data = await updateAdditionalFile("", newFormData);
             }

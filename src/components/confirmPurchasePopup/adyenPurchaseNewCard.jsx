@@ -16,6 +16,7 @@ const StripeDropIn = ({
   formFieldValues,
   setShowStripeDropIn,
   setLoader,
+  selectedPayment
 }) => {
   const cardElementRef = useRef(null);
   const cardErrorsRef = useRef(null);
@@ -24,6 +25,9 @@ const StripeDropIn = ({
   const [card, setCard] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Check if we have a pre-selected payment method
+  const hasSelectedPaymentMethod = selectedPayment?.field?.id;
 
   useEffect(() => {
     const loadStripe = async () => {
@@ -45,50 +49,55 @@ const StripeDropIn = ({
 
         // Initialize Stripe
         const stripeInstance = window.Stripe(process.env.STRIPE_PUBLIC_KEY);
-        const elementsInstance = stripeInstance.elements();
-
-        // Create card element with custom styling
-        const cardElement = elementsInstance.create("card", {
-          hidePostalCode: true,
-          style: {
-            base: {
-              fontSize: "16px",
-              color: "#424770",
-              "::placeholder": {
-                color: "#aab7c4",
-              },
-              fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-              fontSmoothing: "antialiased",
-            },
-            invalid: {
-              color: "#9e2146",
-            },
-          },
-        });
-
-        // Mount card element
-        if (cardElementRef.current) {
-          cardElement.mount(cardElementRef.current);
-        }
-
-        // Handle card changes
-        cardElement.on("change", (event) => {
-          if (cardErrorsRef.current) {
-            cardErrorsRef.current.textContent = event.error
-              ? event.error.message
-              : "";
-          }
-          setError(event.error ? event.error.message : null);
-        });
-
         setStripe(stripeInstance);
-        setElements(elementsInstance);
-        setCard(cardElement);
-        // setHideCta(false);
+
+        // Only create card elements if no payment method is selected
+        if (!hasSelectedPaymentMethod) {
+          const elementsInstance = stripeInstance.elements();
+
+          // Create card element with custom styling
+          const cardElement = elementsInstance.create("card", {
+            hidePostalCode: true,
+            style: {
+              base: {
+                fontSize: "16px",
+                color: "#424770",
+                "::placeholder": {
+                  color: "#aab7c4",
+                },
+                fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+                fontSmoothing: "antialiased",
+              },
+              invalid: {
+                color: "#9e2146",
+              },
+            },
+          });
+
+          // Mount card element
+          if (cardElementRef.current) {
+            cardElement.mount(cardElementRef.current);
+          }
+
+          // Handle card changes
+          cardElement.on("change", (event) => {
+            if (cardErrorsRef.current) {
+              cardErrorsRef.current.textContent = event.error
+                ? event.error.message
+                : "";
+            }
+            setError(event.error ? event.error.message : null);
+          });
+
+          setElements(elementsInstance);
+          setCard(cardElement);
+        } else {
+          // Auto-initiate payment for selected card
+          handlePayment(stripeInstance);
+        }
       } catch (error) {
         console.error("Failed to initialize Stripe:", error);
         setError("Failed to load payment form");
-        // setHideCta(false);
       }
     };
 
@@ -99,13 +108,18 @@ const StripeDropIn = ({
       if (card) {
         card.destroy();
       }
-      // setHideCta(false);
     };
-  }, [bookingId, paymentMethod, setHideCta]);
+  }, [bookingId, paymentMethod, setHideCta, hasSelectedPaymentMethod]);
 
-  const handlePayment = async () => {
-    if (!stripe || !elements || !card) {
+  const handlePayment = async (stripeInstance = stripe) => {
+    if (!stripeInstance) {
       setError("Stripe is not loaded yet");
+      return;
+    }
+
+    // If using existing payment method, we don't need elements or card
+    if (!hasSelectedPaymentMethod && (!elements || !card)) {
+      setError("Payment form is not ready");
       return;
     }
 
@@ -130,28 +144,33 @@ const StripeDropIn = ({
         throw new Error("Failed to create payment intent");
       }
 
-      // Step 2: Confirm payment with Stripe
-      const result = await stripe.confirmCardPayment(
-        paymentData.client_secret,
-        {
+      let result;
+
+      if (hasSelectedPaymentMethod) {
+        // Use existing payment method - auto payment
+        result = await stripeInstance.confirmCardPayment(paymentData.client_secret, {
+          payment_method: selectedPayment.field.id,
+        });
+      } else {
+        // Use new card details
+        result = await stripeInstance.confirmCardPayment(paymentData.client_secret, {
           payment_method: {
             card: card,
             billing_details: {
-              // You can add billing details here if needed
-              name:
-                formFieldValues.first_name + " " + formFieldValues.last_name,
+              name: formFieldValues.first_name + " " + formFieldValues.last_name,
               email: formFieldValues.email,
             },
           },
-        }
-      );
+        });
+      }
+
       console.log(result, "result");
+      
       if (result.error) {
         setError(result.error.message);
         bookingConfirm(false, `Payment failed: ${result.error.message}`);
       } else if (result.paymentIntent.status === "succeeded") {
         // Step 3: Confirm payment on your backend
-        // SB Pay - existing logic
         const confirmationPayload = {
           booking_id: bookingId,
           payment_method: `${paymentMethod}`,
@@ -173,16 +192,6 @@ const StripeDropIn = ({
             confirmResponse?.result?.message || "Booking confirmation failed"
           );
         }
-
-        // if (confirmData.success) {
-        //   bookingConfirm(
-        //     true,
-        //     "Payment successful & ticket booked!",
-        //     bookingNo
-        //   );
-        // } else {
-        //   bookingConfirm(false, "Payment succeeded but booking failed!");
-        // }
       }
     } catch (error) {
       console.error("Payment error:", error);
@@ -193,6 +202,100 @@ const StripeDropIn = ({
     }
   };
 
+  // Show loading state for auto-payment with selected card
+  if (hasSelectedPaymentMethod && loading) {
+    return (
+      <div className="stripe-payment-container p-4 bg-white rounded-lg shadow-sm">
+        <div className="flex flex-col items-center justify-center py-8">
+          <div className="flex items-center mb-4">
+            <svg
+              className="animate-spin h-8 w-8 text-green-500 mr-3"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            <span className="text-lg font-medium text-gray-700">Processing Payment...</span>
+          </div>
+          <div className="text-sm text-gray-600 text-center">
+            <div className="mb-2">Using {selectedPayment.name}</div>
+            <div>Amount: {currency.toUpperCase()} {amount}</div>
+          </div>
+          
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md w-full">
+              <div className="text-red-800 text-sm text-center">{error}</div>
+              <button
+                onClick={() => {
+                  setLoader(false);
+                  setHideCta(false);
+                  setShowStripeDropIn(false);
+                }}
+                className="mt-3 w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors duration-200"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state for auto-payment with selected card
+  if (hasSelectedPaymentMethod && error && !loading) {
+    return (
+      <div className="stripe-payment-container p-4 bg-white rounded-lg shadow-sm">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+            Payment Failed
+          </h3>
+          <div className="text-sm text-gray-600 mb-4">
+            Amount: {currency.toUpperCase()} {amount}
+          </div>
+        </div>
+
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+          <div className="text-red-800 text-sm">{error}</div>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              setLoader(false);
+              setHideCta(false);
+              setShowStripeDropIn(false);
+            }}
+            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors duration-200"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => handlePayment()}
+            disabled={loading}
+            className="flex-1 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          >
+            Retry Payment
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show normal form for new card entry
   return (
     <div className="stripe-payment-container p-4 bg-white rounded-lg shadow-sm">
       <div className="mb-4">
@@ -237,8 +340,8 @@ const StripeDropIn = ({
           Cancel
         </button>
         <button
-          onClick={handlePayment}
-          disabled={loading || !stripe || !elements}
+          onClick={()=>{handlePayment(stripe)}}
+          disabled={loading || !stripe || (!hasSelectedPaymentMethod && (!elements || !card))}
           className="flex-1 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center"
         >
           {loading ? (

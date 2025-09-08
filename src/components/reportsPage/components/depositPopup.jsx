@@ -276,14 +276,25 @@ const DepositPopup = ({ onClose, data, showShimmer = false }) => {
                   `${data?.amount} ${data?.currency}`}
               </span>
             </div>
+
             {(data?.charge || data?.charge_with_currency) && (
               <div className="flex justify-between items-center px-4 py-3">
                 <span className="text-sm text-gray-600">
-                  {data?.charge_description || 'Charge'}
+                  {data?.charge_description || "Charge"}
                 </span>
                 <span className="text-sm font-medium text-gray-800">
                   {data?.charge_with_currency ||
                     `${data?.charge} ${data?.currency}`}
+                </span>
+              </div>
+            )}
+            {data?.charge_description && (
+              <div className="flex justify-between items-center px-4 py-3">
+                <span className="text-sm text-gray-600">
+                  {"Charge Description"}
+                </span>
+                <span className="text-sm font-medium text-gray-800">
+                  {data?.charge_description}
                 </span>
               </div>
             )}
@@ -298,7 +309,7 @@ const DepositPopup = ({ onClose, data, showShimmer = false }) => {
               </div>
             )}
             {/* Charge */}
-           
+
             <div className="flex justify-between items-center px-4 py-3">
               <span className="text-sm text-gray-600">Transaction Type</span>
               <span className="text-sm font-medium text-gray-800">

@@ -1073,6 +1073,7 @@ const RportHistory = (props) => {
           return {
             id: original?.id || idx + 1,
             name: original?.name || label,
+            key: original?.key,
             checked: activeFiltersList
               ? activeFiltersList.includes(key)
               : true,
