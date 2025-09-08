@@ -117,7 +117,7 @@ const InventoryLogsInfo = ({
 }) => {
   const [expandedLogs, setExpandedLogs] = useState(new Set());
   const [activeTab, setActiveTab] = useState("order");
-
+  console.log(orderLogs, "orderLogsorderLogs");
   function convertTimestamp(isoTimestamp) {
     const date = new Date(isoTimestamp);
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -157,15 +157,15 @@ const InventoryLogsInfo = ({
   };
 
   const isLink = (value, key) => {
-    const linkKeys = ["additional_template", "ticket_file_status"];
-    if (linkKeys.includes(key)) return true;
-    if (key?.toLowerCase().includes("link")) return true;
-    if (
-      typeof value === "string" &&
-      (value.startsWith("http://") || value.startsWith("https://"))
-    ) {
-      return true;
-    }
+    // const linkKeys = ["additional_template", "ticket_file_status"];
+    // if (linkKeys.includes(key)) return true;
+    // if (key?.toLowerCase().includes("link")) return true;
+    // if (
+    //   typeof value === "string" &&
+    //   (value.startsWith("http://") || value.startsWith("https://"))
+    // ) {
+    //   return true;
+    // }
     return false;
   };
 
@@ -204,6 +204,12 @@ const InventoryLogsInfo = ({
           }
         });
       }
+      if (entry.diff_only) {
+        // Get all fields from json_payload except 'changes'
+        Object.keys(entry.diff_only).forEach((key) => {
+          allFields.add(key);
+        });
+      }
     });
     return Array.from(allFields);
   };
@@ -211,8 +217,9 @@ const InventoryLogsInfo = ({
   // Check if a field was changed in the current log (exists in changes object)
   const isFieldChangedInCurrentLog = (key, logEntry) => {
     return (
-      logEntry.json_payload?.changes &&
-      logEntry.json_payload?.changes.hasOwnProperty(key)
+      (logEntry.json_payload?.changes &&
+        logEntry.json_payload?.changes.hasOwnProperty(key)) ||
+      (logEntry?.diff_only && logEntry?.diff_only.hasOwnProperty(key))
     );
   };
 
