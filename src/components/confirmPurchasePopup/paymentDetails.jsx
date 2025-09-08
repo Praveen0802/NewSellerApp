@@ -24,7 +24,93 @@ const PaymentDetails = ({
     );
   };
 
-  const linkedCards = paymentDetails?.[1]?.linked_cards || [];
+  // Handle both Stripe and Adyen formats
+  const linkedCards = paymentDetails?.[1]?.linked_cards?.data || [];
+
+  // Function to get brand name
+  const getBrandName = (item) => {
+    // For Stripe format
+    if (item.card?.brand) {
+      const brand = item.card.brand.toLowerCase();
+      switch (brand) {
+        case 'visa':
+          return 'Visa';
+        case 'mastercard':
+          return 'Mastercard';
+        case 'amex':
+          return 'American Express';
+        case 'discover':
+          return 'Discover';
+        case 'diners':
+          return 'Diners Club';
+        case 'jcb':
+          return 'JCB';
+        case 'unionpay':
+          return 'UnionPay';
+        default:
+          return brand.charAt(0).toUpperCase() + brand.slice(1);
+      }
+    }
+    
+    // For Adyen format (existing logic)
+    if (item.RecurringDetail?.paymentMethodVariant) {
+      const variant = item.RecurringDetail.paymentMethodVariant;
+      switch (variant) {
+        case 'mc':
+          return 'Mastercard';
+        case 'visacredit':
+          return 'Visa';
+        case 'amex':
+          return 'American Express';
+        default:
+          return variant;
+      }
+    }
+    
+    return 'Card';
+  };
+
+  // Function to get last 4 digits
+  const getLastFour = (item) => {
+    // For Stripe format
+    if (item.card?.last4) {
+      return item.card.last4;
+    }
+    
+    // For Adyen format (existing logic)
+    if (item.RecurringDetail?.card?.number) {
+      return item.RecurringDetail.card.number;
+    }
+    
+    return '****';
+  };
+
+  // Function to get card logo URL
+  const getCardLogoUrl = (item) => {
+    // For Stripe format
+    if (item.card?.brand) {
+      const brand = item.card.brand.toLowerCase();
+      // Using a generic card logo service or you can host your own
+      const logoMap = {
+        'visa': 'https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg',
+        'mastercard': 'https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg',
+        'amex': 'https://upload.wikimedia.org/wikipedia/commons/f/fa/American_Express_logo_%282018%29.svg',
+        'discover': 'https://upload.wikimedia.org/wikipedia/commons/5/57/Discover_Card_logo.svg',
+        'diners': 'https://upload.wikimedia.org/wikipedia/commons/a/a6/Diners_Club_Logo3.svg',
+        'jcb': 'https://upload.wikimedia.org/wikipedia/commons/4/40/JCB_logo.svg',
+        'unionpay': 'https://upload.wikimedia.org/wikipedia/commons/1/1b/UnionPay_logo.svg'
+      };
+      return logoMap[brand] || '';
+    }
+    
+    // For Adyen format (existing logic)
+    if (item.RecurringDetail?.variant) {
+      return `https://cdf6519016.cdn.adyen.com/checkoutshopper/images/logos/${item.RecurringDetail.variant}.svg`;
+    }
+    
+    return '';
+  };
+
   const radioButtonFields = [
     {
       name: "SB Pay",
@@ -51,30 +137,26 @@ const PaymentDetails = ({
         </div>
       ),
     },
-    // ...linkedCards.map((item) => ({
-    //   name: `${
-    //     item.RecurringDetail.paymentMethodVariant === "mc"
-    //       ? "Mastercard"
-    //       : item.RecurringDetail.paymentMethodVariant === "visacredit"
-    //       ? "Visa"
-    //       : item.RecurringDetail.paymentMethodVariant === "amex"
-    //       ? "American Express"
-    //       : item.RecurringDetail.paymentMethodVariant
-    //   } ****${item.RecurringDetail.card.number}`,
-    //   component: (
-    //     <div className="flex items-center">
-    //       <img
-    //         src={`https://cdf6519016.cdn.adyen.com/checkoutshopper/images/logos/${item.RecurringDetail.variant}.svg`}
-    //         alt="Card Image"
-    //         style={{ width: "50px", height: "auto", margin: "0 10px" }}
-    //       />
-    //       <p className="text-[12px] text-gray-700">
-    //         **** **** **** {item.RecurringDetail.card.number}
-    //       </p>
-    //     </div>
-    //   ),
-    //   field: item,
-    // })),
+    ...(linkedCards.length > 0 ? linkedCards.map((item) => ({
+      name: `${getBrandName(item)} ****${getLastFour(item)}`,
+      component: (
+        <div className="flex items-center">
+          <img
+            src={getCardLogoUrl(item)}
+            alt="Card Image"
+            style={{ width: "50px", height: "auto", margin: "0 10px" }}
+            onError={(e) => {
+              // Fallback if image fails to load
+              e.target.style.display = 'none';
+            }}
+          />
+          <p className="text-[12px] text-gray-700">
+            **** **** **** {getLastFour(item)}
+          </p>
+        </div>
+      ),
+      field: item,
+    })) : []),
     {
       name: "New Credit or Debit Card",
       component: (

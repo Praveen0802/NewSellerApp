@@ -472,7 +472,7 @@ const OrderDetails = ({ show, onClose, data = {}, showShimmer = false }) => {
           ticket_types: ticket_details.ticket_type || "-",
           quantity: ticket_details.quantity || 0,
           ticket_price:
-            ticket_details.ticket_price_converted ||
+            ticket_details.total_paid_converted ||
             ticket_details.total_paid_converted ||
             0,
           block:ticket_details?.block || "Not specified",

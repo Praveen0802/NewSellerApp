@@ -4,7 +4,6 @@ import RightViewModal from "../commonComponents/rightViewModal";
 
 // Mock RightViewModal component since it's imported
 
-
 // Mock shimmer component
 const InventoryLogsShimmer = ({ count }) => (
   <div className="p-3">
@@ -119,8 +118,6 @@ const InventoryLogsInfo = ({
   const [expandedLogs, setExpandedLogs] = useState(new Set());
   const [activeTab, setActiveTab] = useState("order");
 
-  
-
   function convertTimestamp(isoTimestamp) {
     const date = new Date(isoTimestamp);
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -191,7 +188,7 @@ const InventoryLogsInfo = ({
       return activeTab === "order" ? orderLogs : inventoryLogs;
     }
     // Use sample data for demonstration if no data provided
-    return  data ;
+    return data;
   };
 
   // Get all unique fields from all log entries
@@ -202,7 +199,7 @@ const InventoryLogsInfo = ({
       if (entry.json_payload) {
         // Get all fields from json_payload except 'changes'
         Object.keys(entry.json_payload).forEach((key) => {
-          if (key !== 'changes') {
+          if (key !== "changes") {
             allFields.add(key);
           }
         });
@@ -339,7 +336,11 @@ const InventoryLogsInfo = ({
   const hideKeys = ["tracking_file_status"];
 
   return (
-    <RightViewModal className="md:!w-[800px] max-md:!w-full" show={show} onClose={onClose}>
+    <RightViewModal
+      className="md:!w-[800px] max-md:!w-full"
+      show={show}
+      onClose={onClose}
+    >
       {/* Add relative positioning and ensure overflow is visible */}
       <div className="w-full bg-white rounded-lg relative overflow-visible">
         {/* Header */}
@@ -386,7 +387,9 @@ const InventoryLogsInfo = ({
           <div className="max-h-[90vh] overflow-y-auto p-3 relative">
             {displayData.map((logEntry, index) => {
               const isExpanded = expandedLogs.has(index);
-              const hasPayload = logEntry.json_payload && Object.keys(logEntry.json_payload).length > 0;
+              const hasPayload =
+                logEntry.json_payload &&
+                Object.keys(logEntry.json_payload).length > 0;
 
               return (
                 <div
@@ -419,7 +422,6 @@ const InventoryLogsInfo = ({
                           </span>
                         )}
                         {/* Show which fields were changed */}
-                        
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -471,11 +473,17 @@ const InventoryLogsInfo = ({
                                     {allFields
                                       .slice(0, Math.ceil(allFields.length / 2))
                                       .map((key, fieldIndex) => {
-                                        const isChangedInCurrentLog = isFieldChangedInCurrentLog(key, logEntry);
-                                        const currentValue = logEntry.json_payload?.[key];
-                                        
-                                        if (hideKeys?.includes(key)) return null;
-                                        
+                                        const isChangedInCurrentLog =
+                                          isFieldChangedInCurrentLog(
+                                            key,
+                                            logEntry
+                                          );
+                                        const currentValue =
+                                          logEntry.json_payload?.[key];
+
+                                        if (hideKeys?.includes(key))
+                                          return null;
+
                                         return (
                                           <tr
                                             key={fieldIndex}
@@ -490,7 +498,6 @@ const InventoryLogsInfo = ({
                                               title={formatKeyName(key)}
                                             >
                                               {formatKeyName(key)}
-                                             
                                             </td>
                                             <td className="w-3/5 px-2 py-2 text-[#323A70] text-[12px] font-normal align-top overflow-visible">
                                               <div className="break-all overflow-visible">
@@ -517,11 +524,17 @@ const InventoryLogsInfo = ({
                                     {allFields
                                       .slice(Math.ceil(allFields.length / 2))
                                       .map((key, fieldIndex) => {
-                                        const isChangedInCurrentLog = isFieldChangedInCurrentLog(key, logEntry);
-                                        const currentValue = logEntry.json_payload?.[key];
-                                        
-                                        if (hideKeys?.includes(key)) return null;
-                                        
+                                        const isChangedInCurrentLog =
+                                          isFieldChangedInCurrentLog(
+                                            key,
+                                            logEntry
+                                          );
+                                        const currentValue =
+                                          logEntry.json_payload?.[key];
+
+                                        if (hideKeys?.includes(key))
+                                          return null;
+
                                         return (
                                           <tr
                                             key={fieldIndex}
@@ -536,7 +549,6 @@ const InventoryLogsInfo = ({
                                               title={formatKeyName(key)}
                                             >
                                               {formatKeyName(key)}
-                                             
                                             </td>
                                             <td className="w-3/5 px-2 py-2 text-[#323A70] text-[12px] font-normal align-top overflow-visible">
                                               <div className="break-all overflow-visible">
