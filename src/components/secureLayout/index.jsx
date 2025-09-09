@@ -33,6 +33,7 @@ import LeftMenuBar from "../leftMenuBar";
 import PageLoader from "../pageLoader";
 import { ArrowRight, Bell, ChevronLeft } from "lucide-react";
 import RouteAccessChecker from "./RouteAccessChecker";
+import { IconStore } from "@/utils/helperFunctions/iconStore";
 
 const LeftArrowIcon = ({ className }) => (
   <svg
@@ -222,8 +223,8 @@ const SecureLayout = ({ children }) => {
       allowedRoutes: ["reports"],
     },
     {
-      image: Bulkticket,
-      name: "SB Trade",
+      icon: <IconStore.search className="size-6 stroke-white shrink-0" />,
+      name: "Search Tickets",
       canAccessKey: "lmt-trade",
       key: "sb-trade",
       route: "trade/home",

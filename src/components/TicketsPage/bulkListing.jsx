@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import Button from "../commonComponents/button";
 import { useDispatch, useSelector } from "react-redux";
 import { updateWalletPopupFlag } from "@/utils/redux/common/action";
@@ -7,12 +7,13 @@ import FloatingSelect from "../floatinginputFields/floatingSelect";
 import FloatingDateRange from "../commonComponents/dateRangeInput";
 import EventsTable from "./eventsTable";
 import { useRouter } from "next/router";
-import { fetchBulkListing } from "@/utils/apiHandler/request";
+import { fetchBulkListing, uploadExcelTickets } from "@/utils/apiHandler/request";
 import { ChevronDown, Filter, X } from "lucide-react";
 import reloadIcon from "../../../public/reload.svg";
 import Image from "next/image";
 import useIsMobile from "@/utils/helperFunctions/useIsmobile";
 import RequestEvent from "../addInventoryPage/requestFeaturePopup";
+import CustomModal from "@/components/commonComponents/customModal";
 
 // Debounce hook
 const useDebounce = (value, delay) => {
@@ -54,9 +55,85 @@ const BulkListings = (props) => {
   const dispatch = useDispatch();
   const [loader, setLoader] = useState(false);
   const router = useRouter();
+  const { currentUser } = useSelector((state) => state.currentUser || {});
 
   // Debounce search value
   const debouncedSearchValue = useDebounce(searchValue, 500);
+
+  // Upload Excel modal state and handlers
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [excelFile, setExcelFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadMessage, setUploadMessage] = useState({ type: null, text: "" });
+
+  const resetUploadState = () => {
+    setExcelFile(null);
+    setUploading(false);
+    setUploadProgress(0);
+    setUploadMessage({ type: null, text: "" });
+  };
+
+  // Auto-close modal after a short delay on successful upload
+  useEffect(() => {
+    if (uploadMessage?.type === "success" && showUploadModal) {
+      const timeout = setTimeout(() => {
+        setShowUploadModal(false);
+        resetUploadState();
+        // Redirect to My Listings after closing the modal
+        router.push("/my-listings");
+      }, 1500); // keep success message visible briefly
+      return () => clearTimeout(timeout);
+    }
+  }, [uploadMessage?.type, showUploadModal]);
+
+  const handleUploadClick = () => {
+    resetUploadState();
+    setShowUploadModal(true);
+  };
+
+  const handleModalFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const allowedTypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-excel",
+  "text/csv",
+    ];
+    const isExcel =
+  allowedTypes.includes(file.type) || /\.(xlsx|xls|csv)$/i.test(file.name);
+    if (!isExcel) {
+  setUploadMessage({ type: "error", text: "Please select a valid file (.xlsx, .xls, or .csv)" });
+      return;
+    }
+    setUploadMessage({ type: null, text: "" });
+    setExcelFile(file);
+  };
+
+  const handleModalUpload = async () => {
+    if (!excelFile || uploading) return;
+    setUploadMessage({ type: null, text: "" });
+    const form = new FormData();
+    if (currentUser?.seller_id) form.append("seller_id", currentUser.seller_id);
+    form.append("excel_file", excelFile);
+    try {
+      setUploading(true);
+      setUploadProgress(0);
+      const res = await uploadExcelTickets("", form, (evt) => {
+        if (!evt?.total) return;
+        const percent = Math.round((evt.loaded / evt.total) * 100);
+        setUploadProgress(percent);
+      });
+      const success = res?.success !== false; // default treat as success if API returns success flag true
+      setUploadMessage({ type: success ? "success" : "error", text: res?.message || (success ? "Uploaded successfully." : "Upload failed.") });
+      // Optionally refresh events on success
+      // if (success) await fetchApiCall(filtersApplied);
+    } catch (err) {
+      setUploadMessage({ type: "error", text: "Upload failed. Please try again." });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   // Available filters configuration
   const filterOptions = [
@@ -410,16 +487,27 @@ const BulkListings = (props) => {
           </div>
         </div>
 
-        <Button
-          type="primary"
-          classNames={{
-            root: "px-2 md:px-3 py-1.5 md:py-2",
-            label_: "text-xs md:text-sm font-medium",
-          }}
-          onClick={handleAddticket}
-          disabled={selectedRows.length === 0}
-          label="+ Add Tickets"
-        />
+  <div className="flex items-center gap-3">
+          <Button
+            type="primary"
+            classNames={{
+              root: "px-2 md:px-3 py-1.5 md:py-2",
+              label_: "text-xs md:text-sm font-medium",
+            }}
+            onClick={handleUploadClick}
+            label="Upload Excel"
+          />
+            <Button
+            type="primary"
+            classNames={{
+              root: "px-2 md:px-3 py-1.5 md:py-2",
+              label_: "text-xs md:text-sm font-medium",
+            }}
+            onClick={handleAddticket}
+            disabled={selectedRows.length === 0}
+            label="+ Add Tickets"
+          />
+        </div>
       </div>
 
       {/* Dynamic Filters Section */}
@@ -647,6 +735,99 @@ const BulkListings = (props) => {
           show={showRequestPopup}
           onClose={() => setShowRequestPopup(false)}
         />
+      )}
+
+      {/* Upload Excel Modal */}
+      {showUploadModal && (
+        <CustomModal
+          show={showUploadModal}
+          onClose={() => {
+            setShowUploadModal(false);
+            resetUploadState();
+          }}
+          outSideClickClose={!uploading}
+          className="!w-auto !max-w-[560px]"
+        >
+          <div className="bg-white rounded-lg w-[92vw] max-w-[520px]">
+            <div className="flex px-4 md:px-[24px] py-3 md:py-[16px] border-b-[1px] border-[#E0E1EA] justify-between items-center">
+              <p className="text-[16px] md:text-[18px] text-[#343432] font-semibold">Upload Excel</p>
+              <button
+                onClick={() => {
+                  if (!uploading) {
+                    setShowUploadModal(false);
+                    resetUploadState();
+                  }
+                }}
+                className="cursor-pointer"
+              >
+                <X className="size-5 stroke-[#323A70]" />
+              </button>
+            </div>
+
+            <div className="p-4 md:p-6">
+              <div className="mb-3">
+                <label className="block text-sm text-[#343432] font-medium mb-1">Choose Excel file</label>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  disabled={uploading}
+                  onChange={handleModalFileChange}
+                  className="block w-full text-sm text-gray-700 file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-[#EEF2FF] file:text-[#323A70] hover:file:bg-[#E5E9FF]"
+                />
+                <p className="text-xs text-gray-500 mt-1">Accepted: .xlsx, .xls, .csv</p>
+              </div>
+
+              {uploading && (
+                <div className="w-full bg-gray-200 rounded h-2 mb-3">
+                  <div
+                    className="bg-[#343432] h-2 rounded"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                  <p className="text-xs text-gray-600 mt-1">{uploadProgress}%</p>
+                </div>
+              )}
+
+              {uploadMessage?.text && (
+                <div
+                  className={`text-sm mb-3 ${
+                    uploadMessage.type === "success"
+                      ? "text-green-600"
+                      : uploadMessage.type === "error"
+                      ? "text-red-600"
+                      : "text-gray-600"
+                  }`}
+                >
+                  {uploadMessage.text}
+                </div>
+              )}
+
+              <div className="flex gap-3 md:gap-4 items-center justify-end mt-4">
+                <Button
+                  type="secondary"
+                  label="Cancel"
+                  onClick={() => {
+                    if (!uploading) {
+                      setShowUploadModal(false);
+                      resetUploadState();
+                    }
+                  }}
+                  classNames={{
+                    root: "px-[10px] justify-center w-[80px] py-[8px]",
+                  }}
+                />
+                <Button
+                  type="primary"
+                  onClick={handleModalUpload}
+                  disabled={!excelFile || uploading}
+                  label={uploading ? "Uploading..." : "Upload"}
+                  classNames={{
+                    root: "w-[80px] justify-center py-[8px] bg-[#343432]",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </CustomModal>
       )}
     </div>
   );
