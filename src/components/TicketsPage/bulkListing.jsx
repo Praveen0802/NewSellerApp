@@ -8,7 +8,7 @@ import FloatingDateRange from "../commonComponents/dateRangeInput";
 import EventsTable from "./eventsTable";
 import { useRouter } from "next/router";
 import { fetchBulkListing, uploadExcelTickets } from "@/utils/apiHandler/request";
-import { ChevronDown, Filter, X } from "lucide-react";
+import { ChevronDown, Filter, X, Download } from "lucide-react";
 import reloadIcon from "../../../public/reload.svg";
 import Image from "next/image";
 import useIsMobile from "@/utils/helperFunctions/useIsmobile";
@@ -108,6 +108,20 @@ const BulkListings = (props) => {
     }
     setUploadMessage({ type: null, text: "" });
     setExcelFile(file);
+  };
+
+  const handleDownloadSample = () => {
+    try {
+      const link = document.createElement("a");
+      link.href = "/url_excel_template/sample_ticket_upload.xlsx";
+      link.download = "sample_ticket_upload.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      // Fallback: open in new tab
+      window.open("/url_excel_template/sample_ticket_upload.xlsx", "_blank");
+    }
   };
 
   const handleModalUpload = async () => {
@@ -488,15 +502,17 @@ const BulkListings = (props) => {
         </div>
 
   <div className="flex items-center gap-3">
-          <Button
-            type="primary"
-            classNames={{
-              root: "px-2 md:px-3 py-1.5 md:py-2",
-              label_: "text-xs md:text-sm font-medium",
-            }}
-            onClick={handleUploadClick}
-            label="Upload Excel"
-          />
+          {currentUser?.email?.toLowerCase() === "trade@1boxoffice.ae" && (
+            <Button
+              type="primary"
+              classNames={{
+                root: "px-2 md:px-3 py-1.5 md:py-2",
+                label_: "text-xs md:text-sm font-medium",
+              }}
+              onClick={handleUploadClick}
+              label="Upload Excel"
+            />
+          )}
             <Button
             type="primary"
             classNames={{
@@ -801,7 +817,24 @@ const BulkListings = (props) => {
                 </div>
               )}
 
-              <div className="flex gap-3 md:gap-4 items-center justify-end mt-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4 mt-4">
+                <div>
+                  <Button
+                    type="outlined"
+                    onClick={handleDownloadSample}
+                    label={
+                      <span className="inline-flex items-center gap-2">
+                        <Download size={16} />
+                        <span>Download Sample File</span>
+                      </span>
+                    }
+                    classNames={{
+                      root: "px-[10px] py-[8px]",
+                      label_: "text-xs md:text-sm font-medium",
+                    }}
+                  />
+                </div>
+                <div className="flex gap-3 md:gap-4 items-center justify-end">
                 <Button
                   type="secondary"
                   label="Cancel"
@@ -824,6 +857,7 @@ const BulkListings = (props) => {
                     root: "w-[80px] justify-center py-[8px] bg-[#343432]",
                   }}
                 />
+                </div>
               </div>
             </div>
           </div>
