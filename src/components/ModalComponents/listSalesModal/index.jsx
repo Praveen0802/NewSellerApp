@@ -736,7 +736,8 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                                       : "Price not editable"
                                   }
                                 >
-                                  {item.price || "-"}
+                                  {/* {item.price || "-"} */}
+                                  {item.price != null ? Number(item.price).toFixed(2) : "-"}
                                 </span>
                                 {item.flag === 1 && (
                                   <button
