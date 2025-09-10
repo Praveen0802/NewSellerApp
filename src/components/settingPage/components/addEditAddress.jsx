@@ -305,7 +305,7 @@ const AddEditAddress = ({
                     name: "phone_code",
                     value: formFieldValues?.phone_code,
                     onChange: (e) => handleChange(e, "phone_code", "select"),
-                    className: `!py-2 !px-4 !w-[90px] ${fieldStyle}`,
+                    className: `!py-2 !px-4 !w-[120px] ${fieldStyle}`,
                     searchable: true,
                     options: phoneCodeOptions,
                     mandatory: true,
