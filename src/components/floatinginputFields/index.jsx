@@ -69,14 +69,12 @@ const FloatingLabelInput = ({
     return formattedValue.replace(/,/g, '');
   };
 
-  // Update display value when value prop changes
+  // Update display value when value prop changes (only for currency formatted numbers and when not focused)
   useEffect(() => {
-    if (currencyFormat && type === "number") {
+    if (currencyFormat && type === "number" && !isFocused) {
       setDisplayValue(formatCurrency(value));
-    } else {
-      setDisplayValue(value || "");
     }
-  }, [value, currencyFormat, type]);
+  }, [value, currencyFormat, type, isFocused]);
 
   // Update focus state when value changes
   useEffect(() => {
@@ -204,8 +202,9 @@ const FloatingLabelInput = ({
         // Remove commas and validate as number
         inputValue = inputValue.replace(/,/g, "");
       }
-      
-      inputValue = inputValue.replace(/[^0-9.-]/g, "");
+
+      // Allow digits, one dot, and optional leading minus
+      inputValue = inputValue.replace(/[^0-9.\-]/g, "");
 
       const decimalCount = (inputValue.match(/\./g) || []).length;
       if (decimalCount > 1) {
@@ -222,6 +221,11 @@ const FloatingLabelInput = ({
         } else {
           inputValue = "-" + inputValue.substring(1).replace(/-/g, "");
         }
+      }
+
+      // If starts with a dot, normalize to 0.xxx for currency typing UX
+      if (currencyFormat && inputValue.startsWith('.')) {
+        inputValue = `0${inputValue}`;
       }
 
       // Create a synthetic event with the clean value
@@ -241,7 +245,7 @@ const FloatingLabelInput = ({
       // Call onChange with clean numeric value
       onChange(syntheticEvent, keyValue);
     } else {
-      onChange(e, keyValue);
+  onChange(e, keyValue);
     }
   };
 
@@ -356,7 +360,7 @@ const FloatingLabelInput = ({
           id={id}
           type={currencyFormat && type === "number" ? "text" : actualType}
           name={name}
-          value={displayValue}
+          value={currencyFormat && type === "number" ? (displayValue ?? "") : (value ?? "")}
           onChange={handleInputChange}
           onFocus={handleFocus}
           onBlur={handleBlur}

@@ -96,6 +96,29 @@ export const fetchBulkListing = async (token, params = {}) => {
   }
 };
 
+// Upload excel tickets (multipart/form-data)
+export const uploadExcelTickets = async (token, formData, onUploadProgress) => {
+  try {
+    // Use axios directly to support onUploadProgress for progress UI
+    const ROOT_URL = process.env.API_BASE_URL;
+    const url = `${ROOT_URL}${API_ROUTES.UPLOAD_EXCEL_TICKETS}`;
+    const response = await axios({
+      url,
+      method: "POST",
+      headers: {
+        ...fetchAuthorizationKey(token),
+        domainkey: process.env.DOMAIN_KEY,
+      },
+      data: formData,
+      ...(onUploadProgress && { onUploadProgress }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in uploadExcelTickets", error);
+    return error?.response?.data;
+  }
+};
+
 export const LogoutCall = async (token, data) => {
   try {
     const response = await makeRequest({

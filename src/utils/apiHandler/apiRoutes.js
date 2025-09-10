@@ -22,6 +22,7 @@ export const API_ROUTES = {
   UPDATE_TICKETS_PRICE: `/my-listings/update-ticket-price`,
   MARKETING_INSIGHTS: `/my-listings/market-insights`,
   SAVE_BULK_LISTING: `/bulk-listing/save-bulk-listing`,
+  UPLOAD_EXCEL_TICKETS: `/bulk-listing/upload-excel-tickets`,
   ADDITIONAL_TEMPLATE: `/settings/add-additional-template`,
   DELETE_TEAM_MEMBERS: `/settings/delete-my-team`,
   ADD_TEAM_MEMBERS: `/settings/add-my-team`,

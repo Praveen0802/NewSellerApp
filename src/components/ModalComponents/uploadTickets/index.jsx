@@ -869,9 +869,11 @@ const UploadTickets = ({
         hasChanges = true;
 
         // Filter only new files that need to be uploaded
-        const newFilesToUpload = updatedObject.upload_tickets.filter(
-          (fileObj) => !fileObj.isExisting && fileObj.file instanceof File
-        );
+        // const newFilesToUpload = updatedObject.upload_tickets.filter(
+        //   (fileObj) => !fileObj.isExisting && fileObj.file instanceof File
+        // );
+        const newFilesToUpload = updatedObject.upload_tickets
+        .filter((fileObj) => fileObj && !fileObj.isExisting && fileObj.file instanceof File);
 
         newFilesToUpload.forEach((fileObj, idx) => {
           const uploadId = fileObj.existingId || fileObj.id;
@@ -956,8 +958,7 @@ const UploadTickets = ({
         if (updatedObject.additional_info?.templateFile) {
           newFormData.append(
             "additional_file",
-            updatedObject.additional_info.templateFile,
-            "additional_file"
+            updatedObject.additional_info.templateFile  || "",
           );
         }
 
