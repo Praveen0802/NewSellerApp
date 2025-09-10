@@ -593,9 +593,19 @@ const BulkInventory = (props) => {
       const formData = constructFormDataAsFields(selectedTicketsData);
 
       if (selectedTicketsData.length > 1) {
-        await saveBulkListing("", formData);
+        const response = await saveBulkListing("", formData);
+        if (response?.status !== 200) {
+          toast.error("Error in publishing listing");
+          setLoader(false);
+          return;
+        }
       } else {
-        await saveListing("", formData);
+        const response = await saveListing("", formData);
+        if (response?.status !== 200) {
+          toast.error("Error in publishing listing");
+          setLoader(false);
+          return;
+        }
       }
 
       router.push("/my-listings?success=true");
@@ -1092,8 +1102,6 @@ const BulkInventory = (props) => {
     },
   ];
 
-
-
   // KEEP THE ORIGINAL allHeaders generation (EXACT SAME)
   const allHeaders = filters.map((filter) => {
     const baseHeader = {
@@ -1466,16 +1474,16 @@ const BulkInventory = (props) => {
   const validateMandatoryFields = () => {
     const errors = {};
     const errorMessages = [];
-  
+
     // Get all mandatory fields from filters
     const mandatoryFields = filters.filter(
       (filter) => filter.mandatory === true
     );
-  
+
     // Check each mandatory field
     mandatoryFields.forEach((field) => {
       const fieldValue = filtersApplied[field.name];
-  
+
       // Check if field is empty or invalid
       if (
         fieldValue === undefined ||
@@ -1491,7 +1499,7 @@ const BulkInventory = (props) => {
         });
       }
     });
-  
+
     return {
       isValid: Object.keys(errors).length === 0,
       errors: errorMessages,
@@ -1503,10 +1511,10 @@ const BulkInventory = (props) => {
   const handleAddListings = () => {
     // First validate mandatory fields
     const validation = validateMandatoryFields();
-  
+
     // Set validation errors in state
     setValidationErrors(validation.fieldErrors);
-  
+
     if (!validation.isValid) {
       // Show error toast with all missing mandatory fields
       const fieldNames = validation.errors
@@ -1515,10 +1523,10 @@ const BulkInventory = (props) => {
       toast.error(`Please fill in all mandatory fields: ${fieldNames}`);
       return;
     }
-  
+
     // Clear validation errors if validation passes
     setValidationErrors({});
-  
+
     // Check if any filter values are present (your existing logic)
     const hasFilterValues = Object.values(filtersApplied).some((value) => {
       if (Array.isArray(value)) {
@@ -1526,34 +1534,34 @@ const BulkInventory = (props) => {
       }
       return value && value.toString().trim() !== "";
     });
-  
+
     if (!hasFilterValues) {
       toast.error(
         "Please select at least one filter value before adding listings."
       );
       return;
     }
-  
+
     // If all validations pass, create the listings (your existing logic)
     const updatedInventoryData = {};
     const newlyAddedTicketIds = [];
-  
+
     allMatchDetails.forEach((match) => {
       const newListing = createInventoryItemFromFilters(match);
       const existingTickets = inventoryDataByMatch[match.match_id] || [];
       const newIndex = existingTickets.length;
-  
+
       updatedInventoryData[match.match_id] = [...existingTickets, newListing];
-  
+
       const newTicketUniqueId = `${match.match_id}_${newIndex}`;
       newlyAddedTicketIds.push(newTicketUniqueId);
     });
-  
+
     setInventoryDataByMatch((prev) => ({
       ...prev,
       ...updatedInventoryData,
     }));
-  
+
     setGlobalSelectedTickets((prevSelected) => [
       ...prevSelected,
       ...newlyAddedTicketIds,

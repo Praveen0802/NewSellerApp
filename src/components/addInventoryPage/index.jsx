@@ -1681,9 +1681,19 @@
         // Construct FormData for multiple rows
         const formData = constructFormDataAsFields(selectedRowsData);
         if (selectedRows?.length > 1) {
-          await saveBulkListing("", formData);
+         const response= await saveBulkListing("", formData);
+          if(response?.status !== 200){
+            toast.error("Error in publishing listing");
+            setLoader(false);
+            return;
+           }
         } else {
-          await saveListing("", formData);
+         const response =  await saveListing("", formData);
+         if(response?.status !== 200){
+          toast.error("Error in publishing listing");
+          setLoader(false);
+          return;
+         }
         }
 
         router.push("/my-listings?success=true");

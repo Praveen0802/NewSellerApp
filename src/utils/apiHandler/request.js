@@ -1094,7 +1094,7 @@ export const saveListing = async (token, data) => {
         },
       }),
     });
-    return response?.data?.success ? response?.data?.data : {};
+    return response || {};
   } catch (error) {
     console.log("ERROR in saveListing", error);
   }
@@ -1112,7 +1112,7 @@ export const saveBulkListing = async (token, data) => {
         },
       }),
     });
-    return response?.data?.success ? response?.data?.data : {};
+    return response || {};
   } catch (error) {
     console.log("ERROR in saveListing", error);
   }

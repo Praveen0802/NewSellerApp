@@ -35,7 +35,7 @@ const LinkedCards = (props) => {
     const script = document.createElement("script");
     script.src = "https://js.stripe.com/v3/";
     script.onload = () => {
-      stripeRef.current = window.Stripe(process.env.STRIPE_PUBLIC_KEY);
+      stripeRef.current = window.Stripe(process.env.STRIPE_KEY_GBP);
       setStripeLoaded(true);
     };
     script.onerror = (err) => console.error("Stripe load error", err);

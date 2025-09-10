@@ -16,7 +16,7 @@ const StripeDropIn = ({
   formFieldValues,
   setShowStripeDropIn,
   setLoader,
-  selectedPayment
+  selectedPayment,
 }) => {
   const cardElementRef = useRef(null);
   const cardErrorsRef = useRef(null);
@@ -28,6 +28,14 @@ const StripeDropIn = ({
 
   // Check if we have a pre-selected payment method
   const hasSelectedPaymentMethod = selectedPayment?.field?.id;
+
+  const stripeKey =
+    currency?.toLocaleLowerCase() == "gbp"
+      ? process.env.STRIPE_KEY_GBP
+      : currency?.toLocaleLowerCase() == "eur"
+      ? process.env.STRIPE_KEY_EUR
+      : process.env.STRIPE_PUBLIC_KEY;
+
 
   useEffect(() => {
     const loadStripe = async () => {
@@ -48,7 +56,7 @@ const StripeDropIn = ({
         }
 
         // Initialize Stripe
-        const stripeInstance = window.Stripe(process.env.STRIPE_PUBLIC_KEY);
+        const stripeInstance = window.Stripe(stripeKey);
         setStripe(stripeInstance);
 
         // Only create card elements if no payment method is selected
@@ -148,24 +156,31 @@ const StripeDropIn = ({
 
       if (hasSelectedPaymentMethod) {
         // Use existing payment method - auto payment
-        result = await stripeInstance.confirmCardPayment(paymentData.client_secret, {
-          payment_method: selectedPayment.field.id,
-        });
+        result = await stripeInstance.confirmCardPayment(
+          paymentData.client_secret,
+          {
+            payment_method: selectedPayment.field.id,
+          }
+        );
       } else {
         // Use new card details
-        result = await stripeInstance.confirmCardPayment(paymentData.client_secret, {
-          payment_method: {
-            card: card,
-            billing_details: {
-              name: formFieldValues.first_name + " " + formFieldValues.last_name,
-              email: formFieldValues.email,
+        result = await stripeInstance.confirmCardPayment(
+          paymentData.client_secret,
+          {
+            payment_method: {
+              card: card,
+              billing_details: {
+                name:
+                  formFieldValues.first_name + " " + formFieldValues.last_name,
+                email: formFieldValues.email,
+              },
             },
-          },
-        });
+          }
+        );
       }
 
       console.log(result, "result");
-      
+
       if (result.error) {
         setError(result.error.message);
         bookingConfirm(false, `Payment failed: ${result.error.message}`);
@@ -228,13 +243,17 @@ const StripeDropIn = ({
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            <span className="text-lg font-medium text-gray-700">Processing Payment...</span>
+            <span className="text-lg font-medium text-gray-700">
+              Processing Payment...
+            </span>
           </div>
           <div className="text-sm text-gray-600 text-center">
             <div className="mb-2">Using {selectedPayment.name}</div>
-            <div>Amount: {currency.toUpperCase()} {amount}</div>
+            <div>
+              Amount: {currency.toUpperCase()} {amount}
+            </div>
           </div>
-          
+
           {error && (
             <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md w-full">
               <div className="text-red-800 text-sm text-center">{error}</div>
@@ -340,8 +359,14 @@ const StripeDropIn = ({
           Cancel
         </button>
         <button
-          onClick={()=>{handlePayment(stripe)}}
-          disabled={loading || !stripe || (!hasSelectedPaymentMethod && (!elements || !card))}
+          onClick={() => {
+            handlePayment(stripe);
+          }}
+          disabled={
+            loading ||
+            !stripe ||
+            (!hasSelectedPaymentMethod && (!elements || !card))
+          }
           className="flex-1 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center"
         >
           {loading ? (
