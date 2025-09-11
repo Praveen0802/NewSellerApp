@@ -757,7 +757,7 @@ const TicketsPage = (props) => {
 
       // If expanding and tickets haven't been loaded yet, load them
       // if (collapsedMatches[matchIndex] && !matchData.hasTicketsLoaded) {
-        await loadMatchTickets(matchIndex);
+      await loadMatchTickets(matchIndex);
       // }
     },
     [matchesData, collapsedMatches, loadMatchTickets]
@@ -1043,7 +1043,19 @@ const TicketsPage = (props) => {
   const [pendingEdits, setPendingEdits] = useState({}); // { "matchIndex_rowIndex": { field1: value1, field2: value2 } }
   const [originalValues, setOriginalValues] = useState({}); // Store original values for reset
 
-  // UPDATED: Enhanced clone function
+  const matchScrollRefsRef = useRef({});
+
+  // Helper function to set scroll ref for each match
+  const setMatchScrollRef = useCallback((matchIndex, element) => {
+    if (element) {
+      matchScrollRefsRef.current[matchIndex] = element;
+      console.log(`Scroll ref set for match ${matchIndex}:`, element);
+    } else {
+      delete matchScrollRefsRef.current[matchIndex];
+    }
+  }, []);
+
+  // UPDATED: Enhanced handleGlobalClone function with auto-scroll
   const handleGlobalClone = useCallback(() => {
     if (globalSelectedTickets.length === 0) {
       toast.error("Please select tickets to clone");
@@ -1068,7 +1080,7 @@ const TicketsPage = (props) => {
 
     // Group cloned tickets by match
     const clonedTicketsByMatch = {};
-    const newClonedTicketIds = []; // Track new IDs for selection
+    const newClonedTicketIds = [];
 
     setTicketsByMatch((prevData) => {
       const newData = { ...prevData };
@@ -1080,27 +1092,25 @@ const TicketsPage = (props) => {
           clonedTicketsByMatch[matchIndex] = [];
         }
 
-        // IMPORTANT: Calculate the correct ticketIndex for the cloned ticket
+        // Calculate the correct ticketIndex for the cloned ticket
         const currentTicketsCount = newData[matchIndex]?.tickets.length || 0;
-        const newTicketIndex = currentTicketsCount; // This will be the index of the new ticket
+        const newTicketIndex = currentTicketsCount;
 
         // Create correct uniqueId format: matchIndex_ticketIndex
         const correctUniqueId = `${matchIndex}_${newTicketIndex}`;
 
         const clonedTicket = {
           ...ticket,
-          id: `${matchIndex}-clone-${Date.now()}-${Math.random()}`, // Keep this for internal ID
-          uniqueId: correctUniqueId, // FIX: Use correct format
-          ticketIndex: newTicketIndex, // Update the ticket index
-          s_no: "", // Empty instead of CLONE_ prefix
-          isCloned: true, // Mark as cloned item
+          id: `${matchIndex}-clone-${Date.now()}-${Math.random()}`,
+          uniqueId: correctUniqueId,
+          ticketIndex: newTicketIndex,
+          s_no: "",
+          isCloned: true,
           rawTicketData: {
             ...ticket.rawTicketData,
-            s_no: "", // Empty instead of CLONE_ prefix
+            s_no: "",
           },
         };
-
-        console.log("🔍 Created cloned ticket with uniqueId:", correctUniqueId);
 
         // Add to the match data immediately
         if (newData[matchIndex]) {
@@ -1110,19 +1120,145 @@ const TicketsPage = (props) => {
           };
         }
 
-        // Track the new ID for selection
+        // Track for auto-scroll
         newClonedTicketIds.push(correctUniqueId);
+        clonedTicketsByMatch[matchIndex].push(clonedTicket);
       });
 
       return newData;
     });
 
-    // FIXED: Keep only the original selection (don't select cloned tickets)
-    // The original tickets remain selected, cloned tickets are not auto-selected
-    // No change needed to globalSelectedTickets since we want to keep the original selection as-is
+    // Auto-scroll to cloned items after state update
+    setTimeout(() => {
+      scrollToClonedItems(clonedTicketsByMatch);
+    }, 200); // Increased timeout for better reliability
 
-    console.log("🔍 Keeping original selection only:", globalSelectedTickets);
+    console.log(
+      "Cloned tickets, keeping original selection:",
+      globalSelectedTickets
+    );
   }, [globalSelectedTickets, getAllTicketsFromMatches]);
+
+  // NEW: Enhanced function to scroll to cloned items
+  const scrollToClonedItems = useCallback(
+    (clonedTicketsByMatch) => {
+      Object.keys(clonedTicketsByMatch).forEach((matchIndex) => {
+        const scrollContainer = matchScrollRefsRef.current[matchIndex];
+
+        if (!scrollContainer) {
+          console.warn(`Scroll container not found for match ${matchIndex}`);
+          return;
+        }
+
+        // Ensure the match accordion is expanded first
+        const isCollapsed = collapsedMatches[matchIndex] !== false;
+        if (isCollapsed) {
+          console.log(`Expanding collapsed match ${matchIndex}`);
+          // Expand the accordion first
+          setCollapsedMatches((prev) => ({
+            ...prev,
+            [matchIndex]: false,
+          }));
+
+          // Wait for accordion animation to complete, then scroll
+          setTimeout(() => {
+            scrollToBottomAndHighlight(
+              scrollContainer,
+              matchIndex,
+              clonedTicketsByMatch[matchIndex]
+            );
+          }, 400); // Increased timeout for accordion animation
+        } else {
+          // Already expanded, scroll immediately
+          scrollToBottomAndHighlight(
+            scrollContainer,
+            matchIndex,
+            clonedTicketsByMatch[matchIndex]
+          );
+        }
+      });
+    },
+    [collapsedMatches]
+  );
+
+  // Helper function to scroll to bottom and highlight cloned items
+  const scrollToBottomAndHighlight = useCallback(
+    (scrollContainer, matchIndex, clonedTickets) => {
+      if (!scrollContainer) return;
+
+      console.log(`Scrolling to bottom for match ${matchIndex}`);
+
+      // Scroll to bottom smoothly
+      scrollContainer.scrollTo({
+        top: scrollContainer.scrollHeight,
+        behavior: "smooth",
+      });
+
+      // Show success message
+      const clonedCount = clonedTickets.length;
+      toast.success(
+        `${clonedCount} ticket${
+          clonedCount > 1 ? "s" : ""
+        } cloned and scrolled to bottom`
+      );
+
+      // After scrolling, highlight the cloned items
+      setTimeout(() => {
+        highlightClonedItems(matchIndex, clonedTickets);
+      }, 600); // Wait for smooth scroll to complete
+    },
+    []
+  );
+
+  const highlightClonedItems = useCallback(
+    (matchIndex, clonedTickets) => {
+      const scrollContainer = matchScrollRefsRef.current[matchIndex];
+      if (!scrollContainer) return;
+
+      // Find all table rows in this match's container
+      const tableRows = scrollContainer.querySelectorAll("tbody tr");
+
+      // Get tickets for this match to find the newly cloned ones
+      const matchTickets = ticketsByMatch[matchIndex]?.tickets || [];
+
+      console.log(
+        `Highlighting ${clonedTickets.length} cloned items in match ${matchIndex}`
+      );
+
+      // Highlight newly cloned items (they should be at the end)
+      const startIndex = matchTickets.length - clonedTickets.length;
+
+      clonedTickets.forEach((clonedTicket, index) => {
+        const rowIndex = startIndex + index;
+        const row = tableRows[rowIndex];
+
+        if (row) {
+          // Add highlight classes with staggered animation
+          setTimeout(() => {
+            row.classList.add("clone-highlight");
+            row.style.transform = "scale(1.02)";
+            row.style.transition = "all 0.3s ease";
+
+            // Add pulsing effect
+            row.classList.add("animate-pulse");
+
+            // Remove highlight after animation
+            setTimeout(() => {
+              row.classList.remove("clone-highlight", "animate-pulse");
+              row.style.transform = "scale(1)";
+
+              // Remove style after transition
+              setTimeout(() => {
+                row.style.transform = "";
+                row.style.transition = "";
+              }, 300);
+            }, 2500);
+          }, index * 100); // Stagger the highlighting
+        }
+      });
+    },
+    [ticketsByMatch]
+  );
 
   // NEW: Function to construct FormData for cloned tickets (similar to AddInventory)
   const constructFormDataForClonedTickets = useCallback(
@@ -3334,7 +3470,7 @@ const TicketsPage = (props) => {
   // Update your renderMatchTables function to use match-specific headers
   const renderMatchTables = useCallback(() => {
     return Object.entries(matchesData).map(([matchIndex, matchData]) => {
-      const isCollapsed = collapsedMatches[matchIndex] !== false; // Default to collapsed
+      const isCollapsed = collapsedMatches[matchIndex] !== false;
       const isLoading = matchLoadingStates[matchIndex] || false;
       const ticketsData = ticketsByMatch[matchIndex];
       const hasTickets =
@@ -3394,11 +3530,9 @@ const TicketsPage = (props) => {
             pendingEdits={pendingEdits}
             onConfirmEdit={handleConfirmEdit}
             onCancelEdit={handleCancelEdit}
-            // NEW: Props for lazy loading
             defaultOpen={!isCollapsed}
             onToggleCollapse={() => handleAccordionToggle(matchIndex)}
             isLoading={isLoading}
-            // NEW: Props for infinite scroll/pagination
             onLoadMore={
               hasTickets ? () => loadMoreTicketsForMatch(matchIndex) : undefined
             }
@@ -3406,6 +3540,8 @@ const TicketsPage = (props) => {
               matchTicketPagination[matchIndex]?.current_page <
               matchTicketPagination[matchIndex]?.last_page
             }
+            // NEW: Pass scroll ref setter
+            setScrollRef={(element) => setMatchScrollRef(matchIndex, element)}
           />
         </div>
       );
@@ -3432,6 +3568,7 @@ const TicketsPage = (props) => {
     handleCancelEdit,
     handleAccordionToggle,
     loadMoreTicketsForMatch,
+    setMatchScrollRef,
   ]);
 
   const handleCheckBoxChange = async (key, value) => {

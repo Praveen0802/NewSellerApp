@@ -41,6 +41,7 @@ const CommonInventoryTable = ({
   matchDetails,
   isEditMode = false,
   editingRowIndex = null,
+  setScrollRef,
   totalTickets = 0,
   // New props for different modes
   mode = "single", // "single" for AddInventory, "multiple" for TicketsPage
@@ -100,6 +101,19 @@ const CommonInventoryTable = ({
 
   // NEW: Ref for infinite scroll detection
   const loadMoreTriggerRef = useRef(null);
+
+  useEffect(() => {
+    if (setScrollRef && contentRef.current) {
+      setScrollRef(contentRef.current);
+    }
+  }, [setScrollRef]);
+
+  // Update the ref when content changes or accordion state changes
+  useEffect(() => {
+    if (setScrollRef && contentRef.current && !isCollapsed) {
+      setScrollRef(contentRef.current);
+    }
+  }, [setScrollRef, isCollapsed, inventoryData]);
 
   // Function to check if row has pending edits
   const hasPendingEdits = useCallback(
@@ -200,10 +214,13 @@ const CommonInventoryTable = ({
         if (contentRef.current) {
           const height = contentRef.current.scrollHeight;
           setContentHeight(height);
+          // Update scroll ref when accordion opens
+          if (setScrollRef) {
+            setScrollRef(contentRef.current);
+          }
         }
       }, 0);
 
-      // NEW: Trigger onToggleCollapse for lazy loading
       if (onToggleCollapse) {
         onToggleCollapse(matchIndex);
       }
@@ -223,17 +240,25 @@ const CommonInventoryTable = ({
       setIsAnimating(false);
       if (!isCollapsed) {
         setContentHeight("auto");
+        // Ensure scroll ref is set after animation completes
+        if (setScrollRef && contentRef.current) {
+          setScrollRef(contentRef.current);
+        }
       }
     }, 300);
-  }, [isCollapsed, isAnimating, onToggleCollapse, matchIndex]);
+  }, [isCollapsed, isAnimating, onToggleCollapse, matchIndex, setScrollRef]);
 
-  // Effect to calculate content height when data changes
+  // Effect to calculate content height when data changes and update scroll ref
   useEffect(() => {
     if (!isCollapsed && contentRef.current) {
       const height = contentRef.current.scrollHeight;
       setContentHeight(height);
+      // Update scroll ref when data changes
+      if (setScrollRef) {
+        setScrollRef(contentRef.current);
+      }
     }
-  }, [inventoryData, isCollapsed]);
+  }, [inventoryData, isCollapsed, setScrollRef]);
 
   // NEW: Intersection Observer for infinite scroll
   useEffect(() => {
@@ -1131,7 +1156,7 @@ const CommonInventoryTable = ({
                               : [...selectedRows, rowIndex];
                             setSelectedRows(newSelectedRows);
                           }}
-                          style={{ height: '48px', maxHeight: '48px' }}
+                          style={{ height: "48px", maxHeight: "48px" }}
                         >
                           <td
                             className={`${
@@ -1536,6 +1561,22 @@ const CommonInventoryTable = ({
           filters={filters}
         />
       )}
+      <style jsx global>{`
+        .clone-highlight {
+          background-color: #fef3c7 !important;
+          border-left: 4px solid #f59e0b !important;
+          box-shadow: 0 0 10px rgba(245, 158, 11, 0.3) !important;
+          transition: all 0.3s ease !important;
+        }
+
+        .clone-highlight:hover {
+          background-color: #fde68a !important;
+        }
+
+        .clone-highlight.animate-pulse {
+          animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+      `}</style>
     </div>
   );
 };
