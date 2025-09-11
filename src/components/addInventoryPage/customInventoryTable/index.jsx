@@ -307,6 +307,7 @@ const CommonInventoryTable = ({
     getStickyColumnsForRow || getDefaultStickyColumnsForRow;
 
   // OPTIMIZED: fetchDynamicOptions function with caching
+  // OPTIMIZED: fetchDynamicOptions function with caching and using filters data
   const fetchDynamicOptions = useCallback(
     async (row, header) => {
       if (!header.dynamicOptions) return;
@@ -336,21 +337,23 @@ const CommonInventoryTable = ({
           setFetchedOptionsCache((prev) => new Set([...prev, cacheKey]));
 
           try {
-            const options = await fetchBlockDetails("", {
-              match_id: matchId,
-              category_id: categoryId,
-            }).then((res) =>
-              res && Array.isArray(res)
-                ? res.map((item) => ({ label: item.block_id, value: item.id }))
-                : []
-            );
+            // UPDATED: Use block_details from filters instead of API call
+            let options = [];
+
+            // Get block_details from filters for this specific category
+            if (filters?.block_details && filters.block_details[categoryId]) {
+              options = filters.block_details[categoryId].map((item) => ({
+                label: item.block_id,
+                value: item.id,
+              }));
+            }
 
             setDynamicOptions((prev) => ({
               ...prev,
               [cacheKey]: { matchId, categoryId, options },
             }));
           } catch (error) {
-            console.error("Error fetching dynamic options:", error);
+            console.error("Error processing dynamic options:", error);
             // Remove from cache on error so it can be retried
             setFetchedOptionsCache((prev) => {
               const newSet = new Set(prev);
@@ -363,7 +366,7 @@ const CommonInventoryTable = ({
           break;
       }
     },
-    [dynamicOptions, fetchedOptionsCache]
+    [dynamicOptions, fetchedOptionsCache, filters]
   );
 
   // OPTIMIZED: Effect to fetch dynamic options only when accordion is open and data is available
@@ -1003,7 +1006,7 @@ const CommonInventoryTable = ({
       {/* Animated Table Content Container */}
       <div
         ref={contentRef}
-        className="overflow-hidden transition-all duration-300 ease-in-out"
+        className="transition-all max-h-[500px] overflow-auto hideScrollbar duration-300 ease-in-out"
         style={{
           height: isCollapsed
             ? 0
@@ -1033,7 +1036,7 @@ const CommonInventoryTable = ({
         ) : (
           /* Table Content */
           <div
-            className="w-full bg-white relative"
+            className="w-full bg-white relative "
             style={{ overflow: "visible" }}
           >
             {/* Sticky Left Column for Checkbox */}
