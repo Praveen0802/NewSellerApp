@@ -620,6 +620,7 @@ export const sendResetRequest = async (data) => {
     });
     return response?.data?.success ? response?.data?.data : {};
   } catch (error) {
+    return error?.response?.data;
     console.log("ERROR in sendResetRequest", error);
   }
 };

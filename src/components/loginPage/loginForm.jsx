@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 import Button from "../commonComponents/button";
 import FloatingLabelInput from "../floatinginputFields";
+import { toast } from "react-toastify";
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({
@@ -67,6 +68,20 @@ const LoginForm = () => {
         // Handle forgot password request
         try {
           const response = await sendResetRequest({ email: formData?.email });
+          if (!response?.success) {
+            toast.error(
+               response?.message?.email?.[0] ||
+                "Failed to send reset request. Please try again."
+            );
+            setErrors({
+              email:
+                response?.message?.email?.[0] ||
+                "Failed to send reset request. Please try again.",
+              password: "",
+            });
+             setLoader(false);
+             return
+          }
           setResetRequestSent(true);
           setLoader(false);
         } catch (error) {
