@@ -336,35 +336,33 @@ const CommonInventoryTable = ({
   const fetchDynamicOptions = useCallback(
     async (row, header) => {
       if (!header.dynamicOptions) return;
-
+  
       switch (header.key) {
         case "block":
           const matchId = row.rawTicketData?.match_id;
           const categoryId = row.ticket_category_id;
-
+  
           if (!matchId || !categoryId) {
             return;
           }
-
-          // Create a unique cache key for this combination
+  
+          // Use consistent cache key format that matches what's used in renderEditableCell
           const cacheKey = `${header.key}-${matchId}-${categoryId}`;
-
+  
           // Check if we already have this data or are currently fetching it
           if (
             fetchedOptionsCache.has(cacheKey) ||
-            (dynamicOptions?.block?.categoryId === categoryId &&
-              dynamicOptions?.block?.matchId === matchId)
+            dynamicOptions[cacheKey]?.options
           ) {
             return;
           }
-
+  
           // Mark as being fetched to prevent duplicate calls
           setFetchedOptionsCache((prev) => new Set([...prev, cacheKey]));
-
+  
           try {
-            // UPDATED: Use block_details from filters instead of API call
             let options = [];
-
+  
             // Get block_details from filters for this specific category
             if (filters?.block_details && filters.block_details[categoryId]) {
               options = filters.block_details[categoryId].map((item) => ({
@@ -372,10 +370,15 @@ const CommonInventoryTable = ({
                 value: item.id,
               }));
             }
-
+  
+            // Store with consistent structure
             setDynamicOptions((prev) => ({
               ...prev,
-              [cacheKey]: { matchId, categoryId, options },
+              [cacheKey]: { 
+                matchId, 
+                categoryId, 
+                options 
+              },
             }));
           } catch (error) {
             console.error("Error processing dynamic options:", error);
@@ -617,10 +620,14 @@ const CommonInventoryTable = ({
 
     const fieldKey = `${header?.key}-${row?.rawTicketData?.match_id}-${row?.ticket_category_id}`;
 
-    const fetchOptions = () =>
-      (header.dynamicOptions
-        ? dynamicOptions[fieldKey]?.options
-        : header.options) || [];
+    const fetchOptions = () => {
+      if (header.dynamicOptions) {
+        // Use the same cache key format as in fetchDynamicOptions
+        const fieldKey = `${header.key}-${row?.rawTicketData?.match_id}-${row?.ticket_category_id}`;
+        return dynamicOptions[fieldKey]?.options || [];
+      }
+      return header.options || [];
+    };
 
     if (header.type === "multiselect") {
       return (
