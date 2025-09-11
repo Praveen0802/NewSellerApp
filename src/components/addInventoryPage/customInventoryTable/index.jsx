@@ -1131,10 +1131,11 @@ const CommonInventoryTable = ({
                               : [...selectedRows, rowIndex];
                             setSelectedRows(newSelectedRows);
                           }}
+                          style={{ height: '48px', maxHeight: '48px' }}
                         >
                           <td
                             className={`${
-                              isMobile ? "py-1.5 px-2" : "py-2 px-3"
+                              isMobile ? "py-1.5 px-2" : ""
                             } text-center whitespace-nowrap border-r border-[#DADBE5]`}
                           >
                             <div className="flex justify-center items-center">
@@ -1235,8 +1236,8 @@ const CommonInventoryTable = ({
                               key={`${rowIndex}-${header.key}`}
                               className={`${
                                 isMobile
-                                  ? "py-1.5 px-2 text-[10px]"
-                                  : "py-2 px-3 text-xs"
+                                  ? "py-1.5 px-2 h-[48px] text-[10px]"
+                                  : "py-2 px-3 h-[48px] text-xs"
                               } whitespace-nowrap ${
                                 header?.increasedWidth
                               }  overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
