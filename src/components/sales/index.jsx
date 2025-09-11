@@ -21,8 +21,8 @@ import {
   getSalesCount,
   getSalesTicketDetails,
   getTicketTypes,
-  getFieldSettings,          // added
-  saveFieldSettings,         // added
+  getFieldSettings, // added
+  saveFieldSettings, // added
 } from "@/utils/apiHandler/request";
 import { Clock, Eye, Hand, Upload } from "lucide-react";
 import { inventoryLog } from "@/data/testOrderDetails";
@@ -39,6 +39,7 @@ import { useRouter } from "next/router";
 
 const SalesPage = (props) => {
   const { profile, response = {} } = props;
+  
   const { tournamentList } = response;
   const tournamentOptions = tournamentList?.map((item) => ({
     value: item.tournament_id,
@@ -308,9 +309,7 @@ const SalesPage = (props) => {
     const visibleSet = new Set();
 
     columnList.forEach((item) => {
-      const key =
-        headerNameToKeyMap[normalize(item?.name)] ||
-        null;
+      const key = headerNameToKeyMap[normalize(item?.name)] || null;
       if (key && !seen.has(key)) {
         newOrder.push(key);
         if (item?.checked) visibleSet.add(key);
@@ -337,7 +336,12 @@ const SalesPage = (props) => {
     });
 
     salesApiInitRef.current = true;
-  }, [fieldSettings?.salesTableColumn, allHeaders, headerNameToKeyMap, normalize]);
+  }, [
+    fieldSettings?.salesTableColumn,
+    allHeaders,
+    headerNameToKeyMap,
+    normalize,
+  ]);
 
   // Persist column settings to API (salesTableColumn)
   const persistSalesColumnSettings = useCallback(
@@ -369,7 +373,14 @@ const SalesPage = (props) => {
         console.error("Failed to save salesTableColumn", e);
       }
     },
-    [visibleColumns, orderedColumns, allHeaders, fieldSettings, headerNameToKeyMap, normalize]
+    [
+      visibleColumns,
+      orderedColumns,
+      allHeaders,
+      fieldSettings,
+      headerNameToKeyMap,
+      normalize,
+    ]
   );
 
   // NEW: Handle columns reorder -> update state and persist
@@ -412,9 +423,10 @@ const SalesPage = (props) => {
 
   // Filter headers based on visibility with persisted order
   const headers = useMemo(() => {
-    const desiredOrder = orderedColumns && orderedColumns.length
-      ? orderedColumns
-      : allHeaders.map((h) => h.key);
+    const desiredOrder =
+      orderedColumns && orderedColumns.length
+        ? orderedColumns
+        : allHeaders.map((h) => h.key);
     return desiredOrder
       .filter((key) => visibleColumns[key])
       .map((key) => allHeaders.find((h) => h.key === key))
@@ -841,7 +853,7 @@ const SalesPage = (props) => {
 
   const columnHeadersMap = {
     order_id: "Order Id",
-    order_date: "Order Date", 
+    order_date: "Order Date",
     order_value: "Order Value",
     event: "Event",
     venue: "Venue",
@@ -857,7 +869,7 @@ const SalesPage = (props) => {
     row: "Row",
     days_to_event: "Days to Event",
     tournament_id: "Tournament ID",
-    match_id: "Match ID"
+    match_id: "Match ID",
   };
 
   // Helper function to get amount by status
@@ -1016,10 +1028,9 @@ const SalesPage = (props) => {
         name: "ticket_in_hand",
         label: "Tickets In Hand",
         value: !!filtersApplied?.ticket_in_hand,
-        beforeIcon: <Hand className="size-4"/>,
+        beforeIcon: <Hand className="size-4" />,
         parentClassName: " !w-[15%] max-sm:!w-full",
-        className:
-          "!py-[3px]  w-full text-xs sm:text-[10px] lg:text-xs",
+        className: "!py-[3px]  w-full text-xs sm:text-[10px] lg:text-xs",
         labelClassName:
           "!text-[11px] sm:!text-[10px] lg:!text-[11px] !text-[#7D82A4] font-medium",
         hideFromTable: true,
@@ -1101,7 +1112,8 @@ const SalesPage = (props) => {
 
     salesFilterList.forEach((item) => {
       const norm = normalize(item?.name);
-      let match = byNormLabel[norm] || byNormLabel[normalize(toSingular(item?.name))];
+      let match =
+        byNormLabel[norm] || byNormLabel[normalize(toSingular(item?.name))];
       if (!match) {
         // try find by value/name key directly when labels diverge
         const found = baseList.find((f) => normalize(f.name) === norm);
@@ -1144,9 +1156,7 @@ const SalesPage = (props) => {
           return {
             id: original?.id || idx + 1,
             name: original?.name || label,
-            checked: activeFiltersList
-              ? activeFiltersList.includes(key)
-              : true,
+            checked: activeFiltersList ? activeFiltersList.includes(key) : true,
           };
         });
 
@@ -1543,7 +1553,7 @@ const SalesPage = (props) => {
     label: c?.code,
     value: c?.code,
   }));
-console.log(filtersApplied,'filtersAppliedfiltersApplied')
+  console.log(filtersApplied, "filtersAppliedfiltersApplied");
   return (
     <div className="min-h-screen bg-gray-50">
       <TabbedLayout
@@ -1571,7 +1581,11 @@ console.log(filtersApplied,'filtersAppliedfiltersApplied')
         showSelectedFilterPills={true}
         headerV2ClassName="mb-4"
         showTabFullWidth={true}
-        currentFilterValues={{ ...filtersApplied, ticket_in_hand: !!filtersApplied?.ticket_in_hand, order_status: "" }}
+        currentFilterValues={{
+          ...filtersApplied,
+          ticket_in_hand: !!filtersApplied?.ticket_in_hand,
+          order_status: "",
+        }}
         loading={pageLoader}
         excludedKeys={[
           "currency",
