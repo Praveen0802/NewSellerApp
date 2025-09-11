@@ -98,6 +98,7 @@ export const API_ROUTES = {
   GET_LINKED_CARDS: "/settings/lmt-pay/linked-cards",
   REMOVE_SAVED_CARDS: "/settings/lmt-pay/remove-card",
   ADD_SAVED_CARDS: "/settings/lmt-pay/add-card",
+  GET_MATCH_TICKETS: "/my-listings/get-match-tickets",
   PAYMENT_CONFIG: `/settings/lmt-pay/payment-config`,
   REFERRAL_BOOKINGS: `/settings/referral-bookings`,
   GET_CURRENCY: "/currencies",

@@ -42,8 +42,9 @@ import {
   saveListing,
   saveBulkListing,
   updatePublishApiCall,
-   getFieldSettings,
+  getFieldSettings,
   saveFieldSettings,
+  getMatchTickets,
 } from "@/utils/apiHandler/request";
 import UploadTickets from "../ModalComponents/uploadTickets";
 import InventoryLogsInfo from "../inventoryLogsInfo";
@@ -421,7 +422,8 @@ const Pagination = ({
 
 const TicketsPage = (props) => {
   const { success = "", response } = props;
-  // Memoize the overview data to prevent unnecessary re-renders
+
+  console.log(response, "responseresponse");
   const overViewData = useMemo(
     () => response?.overview || {},
     [response?.overview]
@@ -455,83 +457,88 @@ const TicketsPage = (props) => {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  // MAIN STATE: Using ticketsByMatch instead of ticketsData
-  const [ticketsByMatch, setTicketsByMatch] = useState({});
+  // UPDATED: Main state structure for lazy loading
+  const [matchesData, setMatchesData] = useState({}); // Match overview data
+  const [ticketsByMatch, setTicketsByMatch] = useState({}); // Actual ticket data
+  const [matchLoadingStates, setMatchLoadingStates] = useState({}); // Loading states per match
+  const [matchTicketPagination, setMatchTicketPagination] = useState({}); // Pagination per match
 
-    const [fieldSettings, setFieldSettings] = useState(null);
-    const ticketsApiInitRef = useRef(false);
-    const ticketsColumnApiInitRef = useRef(false);
-  
-    // Load field settings on component mount
-    useEffect(() => {
-      const loadSettings = async () => {
-        try {
-          const res = await getFieldSettings("");
-          setFieldSettings(res?.field_settings || null);
-        } catch (e) {
-          console.error("Failed to load field settings", e);
-          setFieldSettings(null);
-        }
-      };
-      loadSettings();
-    }, []);
-  
-    // Normalize helper for robust name matching
-    const normalize = useCallback((str) => {
-      return (str || "")
-        .toString()
-        .toLowerCase()
-        .trim()
-        .replace(/[\s/]+/g, " ")
-        .replace(/[^a-z0-9]+/g, "_")
-        .replace(/_+/g, "_")
-        .replace(/^_+|_+$/g, "");
-    }, []);
-  
-    // Map API filter names to internal keys
-    const filterApiNameToKey = useMemo(() => ({
+  const [fieldSettings, setFieldSettings] = useState(null);
+  const ticketsApiInitRef = useRef(false);
+  const ticketsColumnApiInitRef = useRef(false);
+
+  // Load field settings on component mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const res = await getFieldSettings("");
+        setFieldSettings(res?.field_settings || null);
+      } catch (e) {
+        console.error("Failed to load field settings", e);
+        setFieldSettings(null);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  // Normalize helper for robust name matching
+  const normalize = useCallback((str) => {
+    return (str || "")
+      .toString()
+      .toLowerCase()
+      .trim()
+      .replace(/[\s/]+/g, " ")
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }, []);
+
+  // Map API filter names to internal keys
+  const filterApiNameToKey = useMemo(
+    () => ({
       "team members": "team_member",
       "event date": "eventDate",
-      "ticket type": "ticket_type", 
-      "tournament": "tournament",
-      "category": "category",
-    }), []);
-  
-    // Map API column names to internal keys
-    const columnApiNameToKey = useMemo(() => ({
+      "ticket type": "ticket_type",
+      tournament: "tournament",
+      category: "category",
+    }),
+    []
+  );
+
+  // Map API column names to internal keys
+  const columnApiNameToKey = useMemo(
+    () => ({
       "listing id": "s_no",
       "ticket type": "ticket_type_id",
       "seating category": "ticket_category_id",
       "section/block": "block",
       "section / block": "block",
       "fan area": "home_town",
-      "row": "row",
-      "quantity": "quantity",
-      "sold": "sold_count",
+      row: "row",
+      quantity: "quantity",
+      sold: "sold_count",
       "face value": "web_price",
-      "price": "price",
+      price: "price",
       "listing note": "listing_note",
       "first seat": "first_seat",
       "date to ship": "ship_date",
-      "date_to_ship": "ship_date",
+      date_to_ship: "ship_date",
       "split type": "split_type_id",
-      "status": "status",
+      status: "status",
       "listed date": "sell_date",
-    }), []);
+    }),
+    []
+  );
 
-    // Create enhanced filter config with API integration
-  
+  // Create enhanced filter config with API integration
 
   // Mock data based on your JSON structure
-  const mockListingHistory = useMemo(
-    () => {
-      const raw = listingHistoryData?.data ?? listingHistoryData ?? [];
-      if (Array.isArray(raw)) return raw;
-      if (raw && typeof raw === "object") return Object.values(raw);
-      return [];
-    },
-    [listingHistoryData]
-  );
+  const mockListingHistory = useMemo(() => {
+    const raw = listingHistoryData?.data ?? listingHistoryData ?? [];
+    if (Array.isArray(raw)) return raw;
+    if (raw && typeof raw === "object") return Object.values(raw);
+    return [];
+  }, [listingHistoryData]);
 
   // Update pagination info when data changes
   useEffect(() => {
@@ -548,6 +555,7 @@ const TicketsPage = (props) => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  // ENHANCED: Global selection state
   // ENHANCED: Global selection state
   const [globalSelectedTickets, setGlobalSelectedTickets] = useState([]);
   const [globalEditingTickets, setGlobalEditingTickets] = useState([]);
@@ -570,73 +578,191 @@ const TicketsPage = (props) => {
     }
   }, [success]);
 
-  // Initialize tickets data from mock data - UPDATED FOR ticketsByMatch
+  // UPDATED: Initialize matches data from mock data (without tickets initially)
   useEffect(() => {
-    const ticketsByMatchObj = {};
+    const matchesDataObj = {};
 
     mockListingHistory.forEach((item, matchIndex) => {
       const matchInfo = item.match_info || {};
-      const tickets = item.tickets || [];
 
-      // In your ticketsPage useEffect where you transform tickets data:
-      const transformedTickets = Object.values(tickets).map((ticket, ticketIndex) => ({
-        id: `${matchIndex}-${ticketIndex}`,
-        uniqueId: `${matchIndex}_${ticketIndex}`,
-        s_no: ticket.s_no || "",
-        matchIndex: matchIndex,
-        ticketIndex: ticketIndex,
-        match_name: matchInfo.match_name || "",
-        venue: matchInfo.stadium_name || "",
-        tournament: matchInfo.tournament_name || "",
-        match_date: new Date(matchInfo.match_date).toLocaleDateString() || "",
-        match_time: matchInfo.match_time || "",
-        ticket_type: ticket.ticket_type || "",
-        ticket_type_id: ticket.ticket_type_id || "",
-        ticket_category: ticket.ticket_category || "",
-        ticket_category_id: ticket.ticket_category_id || "",
-        quantity: `${ticket.quantity}` || 0,
-
-        // FIX: Ensure price values are properly handled
-        price: ticket.price ? String(ticket.price) : "", // Convert to string
-        web_price: ticket.web_price ? String(ticket.web_price) : "", // Convert to string
-
-        price_type: ticket.price_type || "GBP",
-        currency_symbol: ticket.currency_symbol || "",
-        status:
-          ticket.status === 1
-            ? "Active"
-            : ticket.status === 2
-            ? "Sold"
-            : "Inactive",
-        sell_date: ticket.sell_date || "",
-        sold_count: `${ticket.sold_count}` || "0",
-        row: ticket.row || "",
-        block: ticket.ticket_block || "",
-        first_seat: ticket.first_seat || "",
-        home_town: ticket.home_town || "",
-        split_type: ticket.split?.name || "",
-        split_type_id: ticket.split?.id || "",
-        ship_date: ticket.ship_date || "",
-        ticket_in_hand: ticket.ticket_in_hand || false,
-        listing_note: ticket.listing_note?.map((note) => `${note.id}`),
-        rawTicketData: ticket,
-        rawMatchData: matchInfo,
-        isCloned: false, // Initialize as not cloned
-      }));
-
-      if (transformedTickets.length > 0) {
-        ticketsByMatchObj[matchIndex] = {
-          matchInfo,
-          tickets: transformedTickets,
-          filters: item.filter,
-        };
-      }
+      // Store only match info, no tickets initially
+      matchesDataObj[matchIndex] = {
+        matchInfo,
+        filters: item.filter || {},
+        hasTicketsLoaded: false, // Track if tickets are loaded
+      };
     });
 
-    setTicketsByMatch(ticketsByMatchObj);
+    setMatchesData(matchesDataObj);
+
+    // Clear any existing ticket data when matches change
+    setTicketsByMatch({});
+    setMatchLoadingStates({});
+    setMatchTicketPagination({});
   }, [mockListingHistory]);
 
-  // Helper function to get all tickets as flat array from ticketsByMatch
+  // NEW: Function to load tickets for a specific match
+  const loadMatchTickets = useCallback(
+    async (matchIndex, page = 1, perPage = 50) => {
+      const matchData = matchesData[matchIndex];
+      if (!matchData || !matchData.matchInfo?.m_id) {
+        console.error(`No match data found for index ${matchIndex}`);
+        return;
+      }
+
+      const matchId = matchData.matchInfo.m_id;
+
+      // Set loading state
+      setMatchLoadingStates((prev) => ({
+        ...prev,
+        [matchIndex]: true,
+      }));
+
+      try {
+        // Call the API to get tickets for this specific match
+        const ticketsResponse = await getMatchTickets("", {
+          match_id: matchId,
+          page: page,
+          per_page: perPage,
+          ...filtersApplied, // Include any active filters
+        });
+
+        if (ticketsResponse?.success && ticketsResponse?.data) {
+          const tickets = ticketsResponse.data.data || [];
+          const pagination = ticketsResponse.data.pagination || {};
+          const filters = ticketsResponse.data.filter || {};
+
+          // Transform tickets to match your existing format
+          const transformedTickets = tickets.map((ticket, ticketIndex) => ({
+            id: `${matchIndex}-${ticketIndex}`,
+            uniqueId: `${matchIndex}_${ticketIndex}`,
+            s_no: ticket.s_no || "",
+            matchIndex: matchIndex,
+            ticketIndex: ticketIndex,
+            match_name: matchData.matchInfo.match_name || "",
+            venue: matchData.matchInfo.stadium_name || "",
+            tournament: matchData.matchInfo.tournament_name || "",
+            match_date:
+              new Date(matchData.matchInfo.match_date).toLocaleDateString() ||
+              "",
+            match_time: matchData.matchInfo.match_time || "",
+            ticket_type: ticket.ticket_type || "",
+            ticket_type_id: ticket.ticket_type_id || "",
+            ticket_category: ticket.ticket_category || "",
+            ticket_category_id: ticket.ticket_category_id || "",
+            quantity: `${ticket.quantity}` || 0,
+            price: ticket.price ? String(ticket.price) : "",
+            web_price: ticket.web_price ? String(ticket.web_price) : "",
+            price_type: ticket.price_type || "GBP",
+            currency_symbol: ticket.currency_symbol || "",
+            status:
+              ticket.status === 1
+                ? "Active"
+                : ticket.status === 2
+                ? "Sold"
+                : "Inactive",
+            sell_date: ticket.sell_date || "",
+            sold_count: `${ticket.sold_count}` || "0",
+            row: ticket.row || "",
+            block: ticket.ticket_block || "",
+            first_seat: ticket.first_seat || "",
+            home_town: ticket.home_town || "",
+            split_type: ticket.split?.name || "",
+            split_type_id: ticket.split?.id || "",
+            ship_date: ticket.ship_date || "",
+            ticket_in_hand: ticket.ticket_in_hand || false,
+            listing_note: ticket.listing_note?.map((note) => `${note.id}`),
+            rawTicketData: ticket,
+            rawMatchData: matchData.matchInfo,
+            isCloned: false,
+          }));
+
+          // Update tickets data for this match
+          setTicketsByMatch((prev) => ({
+            ...prev,
+            [matchIndex]: {
+              matchInfo: matchData.matchInfo,
+              tickets:
+                page === 1
+                  ? transformedTickets
+                  : [
+                      ...(prev[matchIndex]?.tickets || []),
+                      ...transformedTickets,
+                    ],
+              filters: filters,
+            },
+          }));
+
+          // Update pagination info for this match
+          setMatchTicketPagination((prev) => ({
+            ...prev,
+            [matchIndex]: pagination,
+          }));
+
+          // Mark match as having tickets loaded
+          setMatchesData((prev) => ({
+            ...prev,
+            [matchIndex]: {
+              ...prev[matchIndex],
+              hasTicketsLoaded: true,
+            },
+          }));
+        } else {
+          console.error("Failed to load match tickets:", ticketsResponse);
+          toast.error(
+            `Failed to load tickets for ${matchData.matchInfo.match_name}`
+          );
+        }
+      } catch (error) {
+        console.error("Error loading match tickets:", error);
+        toast.error(
+          `Error loading tickets for ${matchData.matchInfo.match_name}`
+        );
+      } finally {
+        // Clear loading state
+        setMatchLoadingStates((prev) => ({
+          ...prev,
+          [matchIndex]: false,
+        }));
+      }
+    },
+    [matchesData, filtersApplied]
+  );
+
+  // NEW: Function to load more tickets (pagination)
+  const loadMoreTicketsForMatch = useCallback(
+    async (matchIndex) => {
+      const currentPagination = matchTicketPagination[matchIndex];
+      if (!currentPagination) return;
+
+      const nextPage = currentPagination.current_page + 1;
+      if (nextPage > currentPagination.last_page) return;
+
+      await loadMatchTickets(matchIndex, nextPage, currentPagination.per_page);
+    },
+    [matchTicketPagination, loadMatchTickets]
+  );
+
+  const handleAccordionToggle = useCallback(
+    async (matchIndex) => {
+      const matchData = matchesData[matchIndex];
+      console.log("iam hereeeee");
+      if (!matchData) return;
+      console.log("iam hereeeee22222");
+      // Toggle collapsed state
+      setCollapsedMatches((prev) => ({
+        ...prev,
+        [matchIndex]: !prev[matchIndex],
+      }));
+
+      // If expanding and tickets haven't been loaded yet, load them
+      // if (collapsedMatches[matchIndex] && !matchData.hasTicketsLoaded) {
+        await loadMatchTickets(matchIndex);
+      // }
+    },
+    [matchesData, collapsedMatches, loadMatchTickets]
+  );
+
   const getAllTicketsFromMatches = useCallback(() => {
     const allTickets = [];
     Object.values(ticketsByMatch).forEach((matchData) => {
@@ -645,7 +771,7 @@ const TicketsPage = (props) => {
     return allTickets;
   }, [ticketsByMatch]);
 
-  // NEW: Helper functions for cloned tickets
+  // NEW: Helper functions for cloned tickets (keeping existing logic)
   const getClonedTickets = useCallback(() => {
     const allTickets = getAllTicketsFromMatches();
     return allTickets.filter((ticket) => ticket.isCloned);
@@ -675,7 +801,7 @@ const TicketsPage = (props) => {
     return selectedClonedTickets.length > 0;
   }, [getSelectedClonedTickets]);
 
-  // ENHANCED: Global selection handlers - UPDATED FOR ticketsByMatch
+  // ENHANCED: Global selection handlers (keeping existing logic)
   const handleGlobalSelectAll = useCallback(() => {
     const allTickets = getAllTicketsFromMatches();
     const allTicketIds = allTickets.map((ticket) => ticket.uniqueId);
@@ -686,7 +812,7 @@ const TicketsPage = (props) => {
     setGlobalSelectedTickets([]);
   }, []);
 
-  // Handle select all for specific match - UPDATED FOR ticketsByMatch
+  // Handle select all for specific match
   const handleSelectAllForMatch = useCallback(
     (matchIndex) => {
       const matchData = ticketsByMatch[matchIndex];
@@ -694,7 +820,6 @@ const TicketsPage = (props) => {
 
       const matchTicketIds = matchData.tickets.map((ticket) => ticket.uniqueId);
 
-      // Remove existing selections for this match and add new ones
       setGlobalSelectedTickets((prevSelected) => {
         const filteredGlobalSelection = prevSelected.filter((uniqueId) => {
           const [ticketMatchIndex] = uniqueId.split("_");
@@ -706,7 +831,7 @@ const TicketsPage = (props) => {
     [ticketsByMatch]
   );
 
-  // Handle deselect all for specific match - UPDATED FOR ticketsByMatch
+  // Handle deselect all for specific match
   const handleDeselectAllForMatch = useCallback((matchIndex) => {
     setGlobalSelectedTickets((prevSelected) => {
       return prevSelected.filter((uniqueId) => {
@@ -716,7 +841,7 @@ const TicketsPage = (props) => {
     });
   }, []);
 
-  // Get selected rows for a specific match - UPDATED FOR ticketsByMatch
+  // Get selected rows for a specific match
   const getSelectedRowsForMatch = useCallback(
     (matchIndex) => {
       const selectedRows = [];
@@ -731,26 +856,17 @@ const TicketsPage = (props) => {
     [globalSelectedTickets]
   );
 
-  // Handle row selection for individual match tables - UPDATED FOR ticketsByMatch
+  // Handle row selection for individual match tables
   const handleSetSelectedRowsForMatch = useCallback(
     (matchIndex, newSelectedRows) => {
-      // Remove existing selections for this match
       setGlobalSelectedTickets((prevSelected) => {
         const filteredGlobalSelection = prevSelected.filter((uniqueId) => {
           const [ticketMatchIndex] = uniqueId.split("_");
           return parseInt(ticketMatchIndex) !== parseInt(matchIndex);
         });
 
-        // Add new selections for this match with correct format
         const newGlobalSelections = newSelectedRows.map(
-          (rowIndex) => `${matchIndex}_${rowIndex}` // Ensure correct format
-        );
-
-        console.log(
-          "🔍 New global selections for match",
-          matchIndex,
-          ":",
-          newGlobalSelections
+          (rowIndex) => `${matchIndex}_${rowIndex}`
         );
 
         return [...filteredGlobalSelection, ...newGlobalSelections];
@@ -758,7 +874,6 @@ const TicketsPage = (props) => {
     },
     []
   );
-
   // ENHANCED: Global bulk actions - UPDATED FOR ticketsByMatch
   const handleGlobalEdit = useCallback(() => {
     if (globalSelectedTickets.length === 0) {
@@ -1314,7 +1429,7 @@ const TicketsPage = (props) => {
     [isGlobalEditMode, globalEditingTickets]
   );
 
-const enhancedFilterConfig = useMemo(() => {
+  const enhancedFilterConfig = useMemo(() => {
     const baseConfig = {
       tickets: [
         {
@@ -1412,7 +1527,8 @@ const enhancedFilterConfig = useMemo(() => {
     apiFilterList.forEach((item) => {
       const normalizedName = normalize(item?.name);
       const key = filterApiNameToKey[normalizedName];
-      const match = baseConfig.tickets.find((f) => f.name === key) ||
+      const match =
+        baseConfig.tickets.find((f) => f.name === key) ||
         filterByNormLabel[normalizedName];
 
       if (match && !used.has(match.name)) {
@@ -1429,13 +1545,15 @@ const enhancedFilterConfig = useMemo(() => {
     });
 
     return { tickets: ordered };
-  }, [fieldSettings?.myListingTableFilter, filtersApplied, response, filterApiNameToKey, normalize]);
+  }, [
+    fieldSettings?.myListingTableFilter,
+    filtersApplied,
+    response,
+    filterApiNameToKey,
+    normalize,
+  ]);
 
-
-
-
-    // Enhanced handleColumnsReorder with persistence
-
+  // Enhanced handleColumnsReorder with persistence
 
   // NEW: Construct headers dynamically from filters - REMAINS SAME
   const constructHeadersFromListingHistory = useMemo(() => {
@@ -1903,9 +2021,6 @@ const enhancedFilterConfig = useMemo(() => {
     },
     [ticketsByMatch]
   );
-
-
-  
 
   // Enhanced updateCellValues function with better error handling
   const updateCellValues = async (updatedParams, id) => {
@@ -2412,7 +2527,7 @@ const enhancedFilterConfig = useMemo(() => {
   const handlePublishValueClick = async (rowData, rowIndex) => {
     const payload = {
       status: rowData?.status == "Active" ? 0 : 1,
-      ticket_id:rowData?.s_no
+      ticket_id: rowData?.s_no,
     };
     const data = await updatePublishApiCall("", payload);
     fetchData({ ...filtersApplied, page: currentPage });
@@ -2682,8 +2797,6 @@ const enhancedFilterConfig = useMemo(() => {
   );
 
   const [columnOrder, setColumnOrder] = useState([]);
-
-
 
   // Memoized function to get filtered headers in the correct order
   const getFilteredHeadersInOrder = useMemo(() => {
@@ -3144,8 +3257,6 @@ const enhancedFilterConfig = useMemo(() => {
     router.push("/add-listings");
   }, [router]);
 
-
-
   // Initialize column order when headers change
   useEffect(() => {
     if (
@@ -3222,15 +3333,18 @@ const enhancedFilterConfig = useMemo(() => {
   // Render match tables using ticketsByMatch
   // Update your renderMatchTables function to use match-specific headers
   const renderMatchTables = useCallback(() => {
-    return Object.entries(ticketsByMatch).map(([matchIndex, matchData]) => {
-      // Get headers specific to this match
-      const matchSpecificHeaders = getFilteredHeadersForMatch(matchIndex);
+    return Object.entries(matchesData).map(([matchIndex, matchData]) => {
+      const isCollapsed = collapsedMatches[matchIndex] !== false; // Default to collapsed
+      const isLoading = matchLoadingStates[matchIndex] || false;
+      const ticketsData = ticketsByMatch[matchIndex];
+      const hasTickets =
+        ticketsData && ticketsData.tickets && ticketsData.tickets.length > 0;
 
       return (
         <div key={`match-${matchIndex}`} className="not-last:mb-4">
           <CommonInventoryTable
-            inventoryData={matchData.tickets}
-            headers={matchSpecificHeaders} // Use match-specific headers
+            inventoryData={hasTickets ? ticketsData.tickets : []}
+            headers={hasTickets ? getFilteredHeadersForMatch(matchIndex) : []}
             selectedRows={getSelectedRowsForMatch(parseInt(matchIndex))}
             setSelectedRows={(newSelectedRows) =>
               handleSetSelectedRowsForMatch(
@@ -3254,16 +3368,16 @@ const enhancedFilterConfig = useMemo(() => {
               city_name: matchData.matchInfo?.city_name,
               match_id: matchData.matchInfo?.m_id,
               tournament_name: matchData.matchInfo?.tournament_name,
-              publishedTickets: `${matchData?.matchInfo?.published}`,
-              listingTickets: `${matchData?.matchInfo?.listings}`,
-              totalTickets: `${matchData?.matchInfo?.tickets}`,
-              unPublishedTickets: matchData?.matchInfo?.unpublished,
+              publishedTickets: `${matchData.matchInfo?.published || 0}`,
+              listingTickets: `${matchData.matchInfo?.listings || 0}`,
+              totalTickets: `${matchData.matchInfo?.tickets || 0}`,
+              unPublishedTickets: matchData.matchInfo?.unpublished || 0,
             }}
-            filters={matchData.filters}
+            filters={ticketsData?.filters || matchData.filters}
             isEditMode={isGlobalEditMode}
             editingRowIndex={
-              isGlobalEditMode
-                ? matchData.tickets
+              isGlobalEditMode && hasTickets
+                ? ticketsData.tickets
                     .map((_, index) =>
                       isTicketInEditMode(matchIndex, index) ? index : null
                     )
@@ -3277,17 +3391,32 @@ const enhancedFilterConfig = useMemo(() => {
             stickyHeaders={["", "", "", "", ""]}
             myListingPage={true}
             stickyColumnsWidth={160}
-            // Pass the pending edits and handlers
             pendingEdits={pendingEdits}
             onConfirmEdit={handleConfirmEdit}
             onCancelEdit={handleCancelEdit}
+            // NEW: Props for lazy loading
+            defaultOpen={!isCollapsed}
+            onToggleCollapse={() => handleAccordionToggle(matchIndex)}
+            isLoading={isLoading}
+            // NEW: Props for infinite scroll/pagination
+            onLoadMore={
+              hasTickets ? () => loadMoreTicketsForMatch(matchIndex) : undefined
+            }
+            hasMoreData={
+              matchTicketPagination[matchIndex]?.current_page <
+              matchTicketPagination[matchIndex]?.last_page
+            }
           />
         </div>
       );
     });
   }, [
+    matchesData,
+    collapsedMatches,
+    matchLoadingStates,
     ticketsByMatch,
-    getFilteredHeadersForMatch, // Add this dependency
+    matchTicketPagination,
+    getFilteredHeadersForMatch,
     getSelectedRowsForMatch,
     handleSetSelectedRowsForMatch,
     handleCellEdit,
@@ -3301,6 +3430,8 @@ const enhancedFilterConfig = useMemo(() => {
     pendingEdits,
     handleConfirmEdit,
     handleCancelEdit,
+    handleAccordionToggle,
+    loadMoreTicketsForMatch,
   ]);
 
   const handleCheckBoxChange = async (key, value) => {
@@ -3348,185 +3479,204 @@ const enhancedFilterConfig = useMemo(() => {
     ticket_in_hand: "Tickets In Hand",
   };
 
-    useEffect(() => {
-      if (ticketsColumnApiInitRef.current) return;
-      const columnList = fieldSettings?.myListingTableColumn;
-      if (!Array.isArray(columnList) || !columnList.length) return;
-  
-      const headerKeyMap = {};
-      constructHeadersFromListingHistory.forEach((h) => {
-        headerKeyMap[normalize(h.label)] = h.key;
+  useEffect(() => {
+    if (ticketsColumnApiInitRef.current) return;
+    const columnList = fieldSettings?.myListingTableColumn;
+    if (!Array.isArray(columnList) || !columnList.length) return;
+
+    const headerKeyMap = {};
+    constructHeadersFromListingHistory.forEach((h) => {
+      headerKeyMap[normalize(h.label)] = h.key;
+    });
+
+    const seen = new Set();
+    const newOrder = [];
+    const visibleSet = new Set();
+
+    columnList.forEach((item) => {
+      const normalizedName = normalize(item?.name);
+      const key =
+        columnApiNameToKey[normalizedName] || headerKeyMap[normalizedName];
+
+      if (key && !seen.has(key)) {
+        newOrder.push(key);
+        if (item?.checked) visibleSet.add(key);
+        seen.add(key);
+      }
+    });
+
+    // Append any headers not present in settings
+    constructHeadersFromListingHistory.forEach((h) => {
+      if (!seen.has(h.key)) {
+        newOrder.push(h.key);
+        visibleSet.add(h.key); // default to visible
+      }
+    });
+
+    // Update column order and visibility
+    setColumnOrder(newOrder);
+    setVisibleColumns((prev) => {
+      const updated = {};
+      newOrder.forEach((k) => {
+        updated[k] = visibleSet.has(k);
       });
-  
-      const seen = new Set();
-      const newOrder = [];
-      const visibleSet = new Set();
-  
-      columnList.forEach((item) => {
-        const normalizedName = normalize(item?.name);
-        const key = columnApiNameToKey[normalizedName] || 
-                   headerKeyMap[normalizedName];
-        
-        if (key && !seen.has(key)) {
-          newOrder.push(key);
-          if (item?.checked) visibleSet.add(key);
-          seen.add(key);
-        }
-      });
-  
-      // Append any headers not present in settings
-      constructHeadersFromListingHistory.forEach((h) => {
-        if (!seen.has(h.key)) {
-          newOrder.push(h.key);
-          visibleSet.add(h.key); // default to visible
-        }
-      });
-  
-      // Update column order and visibility
+      return updated;
+    });
+
+    ticketsColumnApiInitRef.current = true;
+  }, [
+    fieldSettings?.myListingTableColumn,
+    constructHeadersFromListingHistory,
+    columnApiNameToKey,
+    normalize,
+  ]);
+
+  // Persist column settings to API
+  const persistColumnSettings = useCallback(
+    async (visibleMap = visibleColumns, order = columnOrder) => {
+      try {
+        const labelMap = {};
+        constructHeadersFromListingHistory.forEach((h) => {
+          labelMap[h.key] = h.label;
+        });
+
+        const apiSource = fieldSettings?.myListingTableColumn || [];
+
+        const valueArray = order.map((key, idx) => {
+          const original = apiSource.find((item) => {
+            const normalizedName = normalize(item?.name);
+            return (
+              columnApiNameToKey[normalizedName] === key ||
+              constructHeadersFromListingHistory.find(
+                (h) => h.key === key && normalize(h.label) === normalizedName
+              )
+            );
+          });
+
+          return {
+            id: original?.id || idx + 1,
+            name: original?.name || labelMap[key] || key,
+            checked: !!visibleMap[key],
+          };
+        });
+
+        const payload = {
+          settings: [{ key: "myListingTableColumn", value: valueArray }],
+        };
+
+        await saveFieldSettings("", payload);
+      } catch (e) {
+        console.error("Failed to save myListingTableColumn", e);
+      }
+    },
+    [
+      visibleColumns,
+      columnOrder,
+      constructHeadersFromListingHistory,
+      fieldSettings,
+      columnApiNameToKey,
+      normalize,
+    ]
+  );
+
+  // Persist filter settings to API
+  const persistFilterSettings = useCallback(
+    async (activeFiltersList, orderedFiltersList) => {
+      try {
+        const apiSource = fieldSettings?.myListingTableFilter || [];
+        const labelMap = {};
+        enhancedFilterConfig.tickets.forEach((f) => {
+          labelMap[f.name] = f.label;
+        });
+
+        const finalOrder = orderedFiltersList?.length
+          ? orderedFiltersList
+          : enhancedFilterConfig.tickets.map((f) => f.name);
+
+        const valueArray = finalOrder.map((key, idx) => {
+          const label = labelMap[key] || key;
+          const original = apiSource.find((item) => {
+            const normalizedName = normalize(item?.name);
+            return (
+              filterApiNameToKey[normalizedName] === key ||
+              normalize(label) === normalizedName
+            );
+          });
+
+          return {
+            id: original?.id || idx + 1,
+            name: original?.name || label,
+            checked: activeFiltersList ? activeFiltersList.includes(key) : true,
+          };
+        });
+
+        const payload = {
+          settings: [{ key: "myListingTableFilter", value: valueArray }],
+        };
+
+        await saveFieldSettings("", payload);
+      } catch (e) {
+        console.error("Failed to save myListingTableFilter", e);
+      }
+    },
+    [
+      fieldSettings?.myListingTableFilter,
+      enhancedFilterConfig,
+      filterApiNameToKey,
+      normalize,
+    ]
+  );
+
+  // Enhanced handleColumnsReorder with persistence
+  const handleColumnsReorder = useCallback(
+    async (reorderedItems) => {
+      const newOrder = reorderedItems?.map((item) => item.key || item);
       setColumnOrder(newOrder);
+      // Persist after reordering
+      await persistColumnSettings(visibleColumns, newOrder);
+    },
+    [persistColumnSettings, visibleColumns]
+  );
+
+  // Enhanced handleColumnToggle with persistence
+  const handleColumnToggle = useCallback(
+    (columnKey) => {
       setVisibleColumns((prev) => {
-        const updated = {};
-        newOrder.forEach((k) => {
-          updated[k] = visibleSet.has(k);
-        });
-        return updated;
+        const next = { ...prev, [columnKey]: !prev[columnKey] };
+        // Persist after toggle
+        setTimeout(() => persistColumnSettings(next, columnOrder), 0);
+        return next;
       });
-  
-      ticketsColumnApiInitRef.current = true;
-    }, [fieldSettings?.myListingTableColumn, constructHeadersFromListingHistory, columnApiNameToKey, normalize]);
-  
-    // Persist column settings to API
-    const persistColumnSettings = useCallback(
-      async (visibleMap = visibleColumns, order = columnOrder) => {
-        try {
-          const labelMap = {};
-          constructHeadersFromListingHistory.forEach((h) => {
-            labelMap[h.key] = h.label;
-          });
-  
-          const apiSource = fieldSettings?.myListingTableColumn || [];
-  
-          const valueArray = order.map((key, idx) => {
-            const original = apiSource.find((item) => {
-              const normalizedName = normalize(item?.name);
-              return columnApiNameToKey[normalizedName] === key ||
-                     constructHeadersFromListingHistory.find(h => 
-                       h.key === key && normalize(h.label) === normalizedName
-                     );
-            });
-            
-            return {
-              id: original?.id || idx + 1,
-              name: original?.name || labelMap[key] || key,
-              checked: !!visibleMap[key],
-            };
-          });
-  
-          const payload = {
-            settings: [{ key: "myListingTableColumn", value: valueArray }],
-          };
-          
-          await saveFieldSettings("", payload);
-        } catch (e) {
-          console.error("Failed to save myListingTableColumn", e);
-        }
-      },
-      [visibleColumns, columnOrder, constructHeadersFromListingHistory, fieldSettings, columnApiNameToKey, normalize]
-    );
-  
-    // Persist filter settings to API
-    const persistFilterSettings = useCallback(
-      async (activeFiltersList, orderedFiltersList) => {
-        try {
-          const apiSource = fieldSettings?.myListingTableFilter || [];
-          const labelMap = {};
-          enhancedFilterConfig.tickets.forEach((f) => {
-            labelMap[f.name] = f.label;
-          });
-  
-          const finalOrder = orderedFiltersList?.length
-            ? orderedFiltersList
-            : enhancedFilterConfig.tickets.map((f) => f.name);
-  
-          const valueArray = finalOrder.map((key, idx) => {
-            const label = labelMap[key] || key;
-            const original = apiSource.find((item) => {
-              const normalizedName = normalize(item?.name);
-              return filterApiNameToKey[normalizedName] === key ||
-                     normalize(label) === normalizedName;
-            });
-            
-            return {
-              id: original?.id || idx + 1,
-              name: original?.name || label,
-              checked: activeFiltersList
-                ? activeFiltersList.includes(key)
-                : true,
-            };
-          });
-  
-          const payload = {
-            settings: [{ key: "myListingTableFilter", value: valueArray }],
-          };
-          
-          await saveFieldSettings("", payload);
-        } catch (e) {
-          console.error("Failed to save myListingTableFilter", e);
-        }
-      },
-      [fieldSettings?.myListingTableFilter, enhancedFilterConfig, filterApiNameToKey, normalize]
-    );
-  
-    // Enhanced handleColumnsReorder with persistence
-    const handleColumnsReorder = useCallback(
-      async (reorderedItems) => {
-        const newOrder = reorderedItems?.map((item) => item.key || item);
-        setColumnOrder(newOrder);
-        // Persist after reordering
-        await persistColumnSettings(visibleColumns, newOrder);
-      },
-      [persistColumnSettings, visibleColumns]
-    );
-  
-    // Enhanced handleColumnToggle with persistence
-    const handleColumnToggle = useCallback(
-      (columnKey) => {
-        setVisibleColumns((prev) => {
-          const next = { ...prev, [columnKey]: !prev[columnKey] };
-          // Persist after toggle
-          setTimeout(() => persistColumnSettings(next, columnOrder), 0);
-          return next;
-        });
-      },
-      [persistColumnSettings, columnOrder]
-    );
-  
-    // Filter reorder handler (if you need filter reordering)
-   const handleFiltersReorder = useCallback(
-  async (selectedTab, newOrder, reorderedItems) => {
-    console.log('selectedTab:', selectedTab); // "tickets"
-    console.log('newOrder:', newOrder); // array of keys
-    console.log('reorderedItems:', reorderedItems); // array of objects
-    
-    const orderToUse = newOrder; // Use newOrder directly since it's already computed
-    const activeKeys = reorderedItems
-      ?.filter((item) => item.isActive)
-      ?.map((item) => item.key) || [];
-    
-    await persistFilterSettings(activeKeys, orderToUse);
-  },
-  [persistFilterSettings]
-);
-  
-    // Filter toggle handler (if you need filter toggling)
-    const handleFilterToggle = useCallback(
-      async (tabKey, activeKeys, orderedKeys) => {
-        // TabbedLayout passes: (selectedTab, activeKeys, orderedKeys)
-        await persistFilterSettings(activeKeys, orderedKeys);
-      },
-      [persistFilterSettings]
-    );
-  
+    },
+    [persistColumnSettings, columnOrder]
+  );
+
+  // Filter reorder handler (if you need filter reordering)
+  const handleFiltersReorder = useCallback(
+    async (selectedTab, newOrder, reorderedItems) => {
+      console.log("selectedTab:", selectedTab); // "tickets"
+      console.log("newOrder:", newOrder); // array of keys
+      console.log("reorderedItems:", reorderedItems); // array of objects
+
+      const orderToUse = newOrder; // Use newOrder directly since it's already computed
+      const activeKeys =
+        reorderedItems
+          ?.filter((item) => item.isActive)
+          ?.map((item) => item.key) || [];
+
+      await persistFilterSettings(activeKeys, orderToUse);
+    },
+    [persistFilterSettings]
+  );
+
+  // Filter toggle handler (if you need filter toggling)
+  const handleFilterToggle = useCallback(
+    async (tabKey, activeKeys, orderedKeys) => {
+      // TabbedLayout passes: (selectedTab, activeKeys, orderedKeys)
+      await persistFilterSettings(activeKeys, orderedKeys);
+    },
+    [persistFilterSettings]
+  );
 
   return (
     <div className=" w-full max-h-[calc(100vh-100px)] overflow-auto relative ">
@@ -3535,10 +3685,10 @@ const enhancedFilterConfig = useMemo(() => {
           tabs={[]}
           initialTab="tickets"
           listItemsConfig={listItemsConfig}
-          filterConfig={enhancedFilterConfig} // Use enhanced config
+          filterConfig={enhancedFilterConfig}
           onTabChange={() => {}}
           customComponent={filterSearch}
-          onColumnToggle={handleColumnToggle} // Enhanced with persistence
+          onColumnToggle={handleColumnToggle}
           visibleColumns={visibleColumns}
           onFilterChange={handleFilterChange}
           currentFilterValues={{ ...filtersApplied, page: "" }}
@@ -3553,9 +3703,9 @@ const enhancedFilterConfig = useMemo(() => {
           isDraggableFilters={true}
           showColumnSearch={true}
           showFilterSearch={false}
-          onColumnsReorder={handleColumnsReorder} // Enhanced with persistence
-          onFiltersReorder={handleFiltersReorder} // Add if needed
-          onFilterToggle={handleFilterToggle} // Add if needed
+          onColumnsReorder={handleColumnsReorder}
+          onFiltersReorder={handleFiltersReorder}
+          onFilterToggle={handleFilterToggle}
           columnHeadersMap={allHeaders}
         />
 
@@ -3583,7 +3733,7 @@ const enhancedFilterConfig = useMemo(() => {
         <ShimmerLoader isMobile={isMobile} isSmallMobile={isSmallMobile} />
       ) : (
         <div className="m-4 md:m-6 pb-[100px]">
-          {Object.keys(ticketsByMatch).length > 0 ? (
+          {Object.keys(matchesData).length > 0 ? (
             renderMatchTables()
           ) : (
             <div className="bg-white rounded p-8 text-center">
@@ -3604,10 +3754,10 @@ const enhancedFilterConfig = useMemo(() => {
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No tickets found
+                  No matches found
                 </h3>
                 <p className="text-gray-500 mb-4">
-                  There are no tickets to display at the moment.
+                  There are no matches to display at the moment.
                 </p>
               </div>
             </div>
@@ -3615,7 +3765,7 @@ const enhancedFilterConfig = useMemo(() => {
         </div>
       )}
 
-      {/* UPDATED: Enhanced Bulk Action Bar with Clone Publishing */}
+      {/* UPDATED: Enhanced Bulk Action Bar */}
       {globalSelectedTickets.length > 0 && (
         <BulkActionBar
           selectedCount={globalSelectedTickets.length}
@@ -3628,14 +3778,13 @@ const enhancedFilterConfig = useMemo(() => {
           onPublishLive={() => {
             toast.info("Publish functionality not implemented for this page");
           }}
-          onPublishCloned={handlePublishClonedTickets} // NEW: Publish cloned tickets
+          onPublishCloned={handlePublishClonedTickets}
           onSaveEdit={handleGlobalSaveEdit}
           onCancelEdit={handleGlobalCancelEdit}
           loading={loader}
           disabled={globalSelectedTickets.length === 0}
           isEditMode={isGlobalEditMode}
           hidepublishLive={true}
-          // NEW: Props for clone functionality
           hasClonedTickets={getClonedTickets().length > 0}
           selectedClonedCount={getSelectedClonedTickets().length}
           areAllSelectedCloned={areAllSelectedTicketsCloned()}

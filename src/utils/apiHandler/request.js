@@ -1368,6 +1368,21 @@ export const addSavedCards = async (token, data, id) => {
   }
 };
 
+
+export const getMatchTickets = async (token, params) => {
+  try {
+    const response = await makeRequest({
+      url: `${API_ROUTES.GET_MATCH_TICKETS}`,
+      method: "GET",
+      ...(token && { token: token }),
+      ...(params && { params: params }),
+    });
+    return response?.data;
+  } catch (error) {
+    console.log("ERROR in getMatchTickets", error);
+  }
+}
+
 export const paymentConfig = async (token, data, id) => {
   try {
     const response = await makeRequest({

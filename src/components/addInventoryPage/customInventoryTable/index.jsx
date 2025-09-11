@@ -1,4 +1,4 @@
-// Fixed CommonInventoryTable.js - Mobile from v2, Desktop from v1
+// Updated CommonInventoryTable.js with lazy loading and infinite scroll support
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
@@ -57,10 +57,14 @@ const CommonInventoryTable = ({
   stickyColumnsWidth = 100,
   // Hide chevron down arrow
   hideChevronDown = false,
-  // NEW: Props for edit confirmation
+  // Props for edit confirmation
   pendingEdits = {}, // Object containing pending edits
   onConfirmEdit, // Function to handle confirm
   onCancelEdit, // Function to handle cancel
+  // NEW: Props for lazy loading and infinite scroll
+  isLoading = false, // Loading state for this specific match
+  onLoadMore, // Function to load more tickets
+  hasMoreData = false, // Whether there are more tickets to load
 }) => {
   const [hoveredRowIndex, setHoveredRowIndex] = useState(null);
   const [hasScrolledLeft, setHasScrolledLeft] = useState(false);
@@ -73,6 +77,9 @@ const CommonInventoryTable = ({
   const [isCollapsed, setIsCollapsed] = useState(defaultOpen ? false : true);
   const [confirmLoading, setConfirmLoading] = useState(false);
 
+  // NEW: Loading state for infinite scroll
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   // OPTIMIZED: Dynamic options state with better structure
   const [dynamicOptions, setDynamicOptions] = useState({});
 
@@ -80,7 +87,7 @@ const CommonInventoryTable = ({
   const [fetchedOptionsCache, setFetchedOptionsCache] = useState(new Set());
   const [isFetchingOptions, setIsFetchingOptions] = useState(new Set());
 
-  // NEW: Animation states for accordion
+  // Animation states for accordion
   const [isAnimating, setIsAnimating] = useState(false);
   const contentRef = useRef(null);
   const [contentHeight, setContentHeight] = useState(0);
@@ -91,7 +98,10 @@ const CommonInventoryTable = ({
   const mainTableRef = useRef(null);
   const stickyTableRef = useRef(null);
 
-  // NEW: Function to check if row has pending edits
+  // NEW: Ref for infinite scroll detection
+  const loadMoreTriggerRef = useRef(null);
+
+  // Function to check if row has pending edits
   const hasPendingEdits = useCallback(
     (matchIdx, rowIndex) => {
       const rowKey = `${matchIdx}_${rowIndex}`;
@@ -102,7 +112,7 @@ const CommonInventoryTable = ({
     [pendingEdits]
   );
 
-  // NEW: Dynamic sticky columns width calculation
+  // Dynamic sticky columns width calculation
   const calculateStickyWidth = useCallback(() => {
     // Check if any row has pending edits
     const hasAnyPendingEdits = inventoryData.some((_, rowIndex) =>
@@ -178,7 +188,7 @@ const CommonInventoryTable = ({
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  // Handle accordion toggle with smooth animation
+  // UPDATED: Handle accordion toggle with lazy loading integration
   const handleAccordionToggle = useCallback(() => {
     if (isAnimating) return;
 
@@ -192,6 +202,11 @@ const CommonInventoryTable = ({
           setContentHeight(height);
         }
       }, 0);
+
+      // NEW: Trigger onToggleCollapse for lazy loading
+      if (onToggleCollapse) {
+        onToggleCollapse(matchIndex);
+      }
     } else {
       if (contentRef.current) {
         setContentHeight(contentRef.current.scrollHeight);
@@ -210,7 +225,7 @@ const CommonInventoryTable = ({
         setContentHeight("auto");
       }
     }, 300);
-  }, [isCollapsed, isAnimating]);
+  }, [isCollapsed, isAnimating, onToggleCollapse, matchIndex]);
 
   // Effect to calculate content height when data changes
   useEffect(() => {
@@ -219,6 +234,38 @@ const CommonInventoryTable = ({
       setContentHeight(height);
     }
   }, [inventoryData, isCollapsed]);
+
+  // NEW: Intersection Observer for infinite scroll
+  useEffect(() => {
+    if (!hasMoreData || !onLoadMore || isLoadingMore) return;
+
+    const currentTrigger = loadMoreTriggerRef.current;
+    if (!currentTrigger) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && !isLoadingMore) {
+          setIsLoadingMore(true);
+          onLoadMore().finally(() => {
+            setIsLoadingMore(false);
+          });
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: "100px",
+      }
+    );
+
+    observer.observe(currentTrigger);
+
+    return () => {
+      if (currentTrigger) {
+        observer.unobserve(currentTrigger);
+      }
+    };
+  }, [hasMoreData, onLoadMore, isLoadingMore]);
 
   // Default sticky columns configuration for single mode
   const getDefaultStickyColumnsForRow = (rowData, rowIndex) => {
@@ -750,7 +797,7 @@ const CommonInventoryTable = ({
                 </div>
               </div>
             ) : (
-              // Desktop Layout - Restored from first document
+              // Desktop Layout
               <>
                 <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6">
                   {mode === "single" ? (
@@ -966,457 +1013,515 @@ const CommonInventoryTable = ({
           opacity: isCollapsed ? 0 : 1,
         }}
       >
-        {/* Table Content */}
-        <div
-          className="w-full bg-white relative"
-          style={{ overflow: "visible" }}
-        >
-          {/* Sticky Left Column for Checkbox */}
+        {/* NEW: Loading State Display */}
+        {isLoading && inventoryData.length === 0 ? (
+          <div className="flex items-center justify-center p-8 bg-white">
+            <div className="flex items-center space-x-2">
+              <Loader2 className="animate-spin h-5 w-5 text-blue-500" />
+              <span className="text-gray-600">Loading tickets...</span>
+            </div>
+          </div>
+        ) : inventoryData.length === 0 && !isLoading ? (
+          <div className="flex items-center justify-center p-8 bg-white">
+            <div className="text-center">
+              <div className="text-gray-500 mb-2">No tickets found</div>
+              <div className="text-sm text-gray-400">
+                This match has no tickets to display
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Table Content */
           <div
-            className={`absolute top-0 left-0 h-full bg-white border-r border-[#DADBE5] z-30 transition-shadow duration-200 ${
-              hasScrolledLeft ? "shadow-md" : ""
-            }`}
-            style={{ width: isMobile ? `40px` : `50px` }}
+            className="w-full bg-white relative"
+            style={{ overflow: "visible" }}
           >
-            <div className="h-full">
-              <table className="w-full h-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-[#DADBE5]">
-                    <th
-                      className={`${
-                        isMobile ? "px-2 py-2" : "px-3 py-3"
-                      } text-center text-[#7D82A4] font-medium whitespace-nowrap ${
-                        isMobile ? "text-[10px]" : "text-xs"
-                      } border-r border-[#DADBE5] ${
-                        isEditMode ? "cursor-not-allowed" : "cursor-pointer"
-                      }`}
-                      onClick={(e) => {
-                        if (isEditMode) return;
-
-                        // Prevent toggling if clicking directly on the checkbox
-                        if (e.target.type === "checkbox") return;
-
-                        // Use the same logic as the checkbox onChange
-                        if (selectedRows.length > 0) {
-                          handleDeselectAll();
-                        } else {
-                          handleSelectAll();
-                        }
-                      }}
-                    >
-                      <div className="flex justify-center items-center">
-                        <input
-                          type="checkbox"
-                          checked={
-                            selectedRows.length === inventoryData.length &&
-                            inventoryData.length > 0
-                          }
-                          disabled={isEditMode}
-                          onChange={
-                            selectedRows.length > 0
-                              ? handleDeselectAll
-                              : handleSelectAll
-                          }
-                          className={`${
-                            isMobile ? "w-3 h-3" : "w-4 h-4"
-                          } text-gray-600 accent-[#343432] border-[#DADBE5] rounded focus:ring-blue-500 ${
-                            isEditMode
-                              ? "cursor-not-allowed opacity-50"
-                              : "cursor-pointer"
-                          }`}
-                        />
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {inventoryData.map((row, rowIndex) => {
-                    const isSelected = selectedRows.includes(rowIndex);
-                    const isRowDisabled =
-                      isEditMode &&
-                      (Array.isArray(editingRowIndex)
-                        ? !editingRowIndex.includes(rowIndex)
-                        : editingRowIndex !== rowIndex);
-
-                    return (
-                      <tr
-                        key={`sticky-left-${row.id || rowIndex}`}
-                        className={`border-b border-[#DADBE5] transition-colors cursor-pointer ${
-                          isSelected
-                            ? "bg-[#EEF1FD]"
-                            : "bg-white hover:bg-gray-50"
-                        } ${
-                          isRowDisabled
-                            ? "opacity-60 bg-gray-50 cursor-not-allowed"
-                            : ""
+            {/* Sticky Left Column for Checkbox */}
+            <div
+              className={`absolute top-0 left-0 h-full bg-white border-r border-[#DADBE5] z-30 transition-shadow duration-200 ${
+                hasScrolledLeft ? "shadow-md" : ""
+              }`}
+              style={{ width: isMobile ? `40px` : `50px` }}
+            >
+              <div className="h-full">
+                <table className="w-full h-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-[#DADBE5]">
+                      <th
+                        className={`${
+                          isMobile ? "px-2 py-2" : "px-3 py-3"
+                        } text-center text-[#7D82A4] font-medium whitespace-nowrap ${
+                          isMobile ? "text-[10px]" : "text-xs"
+                        } border-r border-[#DADBE5] ${
+                          isEditMode ? "cursor-not-allowed" : "cursor-pointer"
                         }`}
                         onClick={(e) => {
-                          if (isRowDisabled) return;
+                          if (isEditMode) return;
 
                           // Prevent toggling if clicking directly on the checkbox
                           if (e.target.type === "checkbox") return;
 
-                          const newSelectedRows = isSelected
-                            ? selectedRows.filter((index) => index !== rowIndex)
-                            : [...selectedRows, rowIndex];
-                          setSelectedRows(newSelectedRows);
+                          // Use the same logic as the checkbox onChange
+                          if (selectedRows.length > 0) {
+                            handleDeselectAll();
+                          } else {
+                            handleSelectAll();
+                          }
                         }}
                       >
-                        <td
-                          className={`${
-                            isMobile ? "py-1.5 px-2" : "py-2 px-3"
-                          } text-center whitespace-nowrap border-r border-[#DADBE5]`}
-                        >
-                          <div className="flex justify-center items-center">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              disabled={isRowDisabled}
-                              onChange={(e) => {
-                                if (isRowDisabled) return;
-                                e.stopPropagation();
-                                const newSelectedRows = isSelected
-                                  ? selectedRows.filter(
-                                      (index) => index !== rowIndex
-                                    )
-                                  : [...selectedRows, rowIndex];
-                                setSelectedRows(newSelectedRows);
-                              }}
-                              className={`${
-                                isMobile ? "w-3 h-3" : "w-4 h-4"
-                              } accent-[#343432] border-[#DADBE5] rounded focus:ring-blue-500 ${
-                                isRowDisabled
-                                  ? "cursor-not-allowed opacity-50"
-                                  : "cursor-pointer"
-                              }`}
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Main scrollable table container */}
-          <div
-            ref={scrollContainerRef}
-            className="w-full overflow-x-auto hideScrollbar"
-            style={{
-              paddingLeft: isMobile ? `40px` : `50px`,
-              paddingRight: `${dynamicStickyWidth}px`,
-            }}
-          >
-            <table
-              ref={mainTableRef}
-              className="w-full border-none"
-              style={{
-                minWidth: isMobile ? "800px" : isTablet ? "1000px" : "1200px",
-              }}
-            >
-              <thead>
-                <tr className="bg-gray-50 border-b border-[#DADBE5]">
-                  {headers.map((header) => {
-                    const columnStyles = getColumnWidth(header);
-                    return (
-                      <th
-                        key={header.key}
-                        className={`${
-                          isMobile ? "px-2 py-2" : "px-3 py-3"
-                        } text-left text-[#7D82A4] font-medium whitespace-nowrap ${
-                          isMobile ? "text-[10px]" : "text-xs"
-                        }  border-r border-[#DADBE5]`}
-                        style={columnStyles}
-                      >
-                        <div className="flex justify-between items-center">
-                          <span className="truncate text-[#7D82A4]">
-                            {header.label}
-                          </span>
+                        <div className="flex justify-center items-center">
+                          <input
+                            type="checkbox"
+                            checked={
+                              selectedRows.length === inventoryData.length &&
+                              inventoryData.length > 0
+                            }
+                            disabled={isEditMode}
+                            onChange={
+                              selectedRows.length > 0
+                                ? handleDeselectAll
+                                : handleSelectAll
+                            }
+                            className={`${
+                              isMobile ? "w-3 h-3" : "w-4 h-4"
+                            } text-gray-600 accent-[#343432] border-[#DADBE5] rounded focus:ring-blue-500 ${
+                              isEditMode
+                                ? "cursor-not-allowed opacity-50"
+                                : "cursor-pointer"
+                            }`}
+                          />
                         </div>
                       </th>
-                    );
-                  })}
-                </tr>
-              </thead>
-              <tbody>
-                {inventoryData.map((row, rowIndex) => {
-                  const isSelected = selectedRows.includes(rowIndex);
-                  const isRowDisabled =
-                    isEditMode &&
-                    (Array.isArray(editingRowIndex)
-                      ? !editingRowIndex.includes(rowIndex)
-                      : editingRowIndex !== rowIndex);
-
-                  return (
-                    <tr
-                      key={row.id || rowIndex}
-                      className={`border-b border-[#DADBE5] transition-colors ${
-                        isSelected
-                          ? "bg-[#EEF1FD]"
-                          : "bg-white hover:bg-gray-50"
-                      } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
-                    >
-                      {headers.map((header) => {
-                        const columnStyles = getColumnWidth(header);
-                        return (
-                          <td
-                            key={`${rowIndex}-${header.key}`}
-                            className={`${
-                              isMobile
-                                ? "py-1.5 px-2 text-[10px]"
-                                : "py-2 px-3 text-xs"
-                            } whitespace-nowrap ${
-                              header?.increasedWidth
-                            }  overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
-                              isRowDisabled ? "bg-gray-50" : ""
-                            } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
-                            style={columnStyles}
-                          >
-                            {header.editable ? (
-                              renderEditableCell(
-                                row,
-                                header,
-                                rowIndex,
-                                true,
-                                isRowDisabled
-                              )
-                            ) : (
-                              <span
-                                className={`${header.className || ""} ${
-                                  isRowDisabled
-                                    ? "text-gray-400"
-                                    : "text-[#323A70]"
-                                }`}
-                              >
-                                {row[header.key]}
-                              </span>
-                            )}
-                          </td>
-                        );
-                      })}
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {inventoryData.map((row, rowIndex) => {
+                      const isSelected = selectedRows.includes(rowIndex);
+                      const isRowDisabled =
+                        isEditMode &&
+                        (Array.isArray(editingRowIndex)
+                          ? !editingRowIndex.includes(rowIndex)
+                          : editingRowIndex !== rowIndex);
 
-          {/* Sticky Right Column for Action Icons */}
-          <div
-            className={`absolute top-0 right-0 h-full bg-white border-l border-[#DADBE5] z-20 transition-shadow duration-200 ${
-              hasScrolled ? "shadow-md" : ""
-            }`}
-            style={{ width: `${dynamicStickyWidth}px` }}
-          >
-            <div className="h-full">
+                      return (
+                        <tr
+                          key={`sticky-left-${row.id || rowIndex}`}
+                          className={`border-b border-[#DADBE5] transition-colors cursor-pointer ${
+                            isSelected
+                              ? "bg-[#EEF1FD]"
+                              : "bg-white hover:bg-gray-50"
+                          } ${
+                            isRowDisabled
+                              ? "opacity-60 bg-gray-50 cursor-not-allowed"
+                              : ""
+                          }`}
+                          onClick={(e) => {
+                            if (isRowDisabled) return;
+
+                            // Prevent toggling if clicking directly on the checkbox
+                            if (e.target.type === "checkbox") return;
+
+                            const newSelectedRows = isSelected
+                              ? selectedRows.filter(
+                                  (index) => index !== rowIndex
+                                )
+                              : [...selectedRows, rowIndex];
+                            setSelectedRows(newSelectedRows);
+                          }}
+                        >
+                          <td
+                            className={`${
+                              isMobile ? "py-1.5 px-2" : "py-2 px-3"
+                            } text-center whitespace-nowrap border-r border-[#DADBE5]`}
+                          >
+                            <div className="flex justify-center items-center">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                disabled={isRowDisabled}
+                                onChange={(e) => {
+                                  if (isRowDisabled) return;
+                                  e.stopPropagation();
+                                  const newSelectedRows = isSelected
+                                    ? selectedRows.filter(
+                                        (index) => index !== rowIndex
+                                      )
+                                    : [...selectedRows, rowIndex];
+                                  setSelectedRows(newSelectedRows);
+                                }}
+                                className={`${
+                                  isMobile ? "w-3 h-3" : "w-4 h-4"
+                                } accent-[#343432] border-[#DADBE5] rounded focus:ring-blue-500 ${
+                                  isRowDisabled
+                                    ? "cursor-not-allowed opacity-50"
+                                    : "cursor-pointer"
+                                }`}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Main scrollable table container */}
+            <div
+              ref={scrollContainerRef}
+              className="w-full overflow-x-auto hideScrollbar"
+              style={{
+                paddingLeft: isMobile ? `40px` : `50px`,
+                paddingRight: `${dynamicStickyWidth}px`,
+              }}
+            >
               <table
-                ref={stickyTableRef}
-                className="w-full h-full border-collapse"
+                ref={mainTableRef}
+                className="w-full border-none"
+                style={{
+                  minWidth: isMobile ? "800px" : isTablet ? "1000px" : "1200px",
+                }}
               >
                 <thead>
                   <tr className="bg-gray-50 border-b border-[#DADBE5]">
-                    {/* Always show 4 headers for consistency */}
-                    {stickyHeaders.map((header, index) => (
-                      <th
-                        key={`sticky-header-${index}`}
-                        className={`${
-                          isMobile ? "py-1.5 px-1" : "py-2 px-2"
-                        } text-left text-[#7D82A4] ${
-                          isMobile ? "text-[10px]" : "text-xs"
-                        } whitespace-nowrap text-center`}
-                        style={{
-                          width: `${
-                            dynamicStickyWidth / stickyHeaders.length
-                          }px`,
-                          minWidth: `${
-                            dynamicStickyWidth / stickyHeaders.length
-                          }px`,
-                          maxWidth: `${
-                            dynamicStickyWidth / stickyHeaders.length
-                          }px`,
-                        }}
-                      >
-                        <div className="flex items-center justify-center">
-                          {!hideChevronDown &&
-                            index === stickyHeaders.length - 1 && (
-                              <div className="flex items-center justify-center">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    scrollLeft();
-                                  }}
-                                  disabled={!canScrollLeft}
-                                  className={`${
-                                    isMobile ? "p-0.5" : "p-1"
-                                  } rounded transition-colors ${
-                                    canScrollLeft
-                                      ? "text-[#7D82A4] hover:bg-gray-200 cursor-pointer"
-                                      : "text-gray-300 cursor-not-allowed"
-                                  }`}
-                                  title="Scroll Left"
-                                >
-                                  <ChevronRight
-                                    size={isMobile ? 12 : 14}
-                                    className="rotate-180"
-                                    color={canScrollLeft ? "" : "#B4B7CB"}
-                                  />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    scrollRight();
-                                  }}
-                                  disabled={!canScrollRight}
-                                  className={`${
-                                    isMobile ? "p-0.5" : "p-1"
-                                  } rounded transition-colors ${
-                                    canScrollRight
-                                      ? "text-[#7D82A4] hover:bg-gray-200 cursor-pointer"
-                                      : "text-gray-300 cursor-not-allowed"
-                                  }`}
-                                  title="Scroll Right"
-                                >
-                                  <ChevronRight
-                                    size={isMobile ? 12 : 14}
-                                    color={canScrollRight ? "" : "#B4B7CB"}
-                                  />
-                                </button>
-                              </div>
-                            )}
-                        </div>
-                      </th>
-                    ))}
+                    {headers.map((header) => {
+                      const columnStyles = getColumnWidth(header);
+                      return (
+                        <th
+                          key={header.key}
+                          className={`${
+                            isMobile ? "px-2 py-2" : "px-3 py-3"
+                          } text-left text-[#7D82A4] font-medium whitespace-nowrap ${
+                            isMobile ? "text-[10px]" : "text-xs"
+                          }  border-r border-[#DADBE5]`}
+                          style={columnStyles}
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="truncate text-[#7D82A4]">
+                              {header.label}
+                            </span>
+                          </div>
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody>
                   {inventoryData.map((row, rowIndex) => {
+                    const isSelected = selectedRows.includes(rowIndex);
                     const isRowDisabled =
                       isEditMode &&
                       (Array.isArray(editingRowIndex)
                         ? !editingRowIndex.includes(rowIndex)
                         : editingRowIndex !== rowIndex);
-                    const isSelected = selectedRows.includes(rowIndex);
-
-                    // Check if this specific row has pending edits
-                    const hasRowPendingEdits = hasPendingEdits(
-                      matchIndex,
-                      rowIndex
-                    );
-                    const isBulkEditMode =
-                      isEditMode &&
-                      (Array.isArray(editingRowIndex)
-                        ? editingRowIndex.length > 1
-                        : false);
-
-                    // Get sticky columns (always the original 4 columns)
-                    const stickyColumns = getStickyColumns(row, rowIndex);
 
                     return (
                       <tr
-                        key={`sticky-${row.id || rowIndex}`}
+                        key={row.id || rowIndex}
                         className={`border-b border-[#DADBE5] transition-colors ${
                           isSelected
                             ? "bg-[#EEF1FD]"
                             : "bg-white hover:bg-gray-50"
-                        } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""} `}
+                        } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""}`}
                       >
-                        {hasRowPendingEdits && !isBulkEditMode ? (
-                          // For rows with pending edits: show 2 columns with colspan=2 each (centered)
-                          <>
+                        {headers.map((header) => {
+                          const columnStyles = getColumnWidth(header);
+                          return (
                             <td
-                              colSpan={2}
+                              key={`${rowIndex}-${header.key}`}
                               className={`${
-                                isMobile ? " text-xs" : " text-sm"
-                              } align-middle text-left ${
-                                isRowDisabled ? "pointer-events-none" : ""
+                                isMobile
+                                  ? "py-1.5 px-2 text-[10px]"
+                                  : "py-2 px-3 text-xs"
+                              } whitespace-nowrap ${
+                                header?.increasedWidth
+                              }  overflow-hidden text-ellipsis align-middle border-r border-[#DADBE5] ${
+                                isRowDisabled ? "bg-gray-50" : ""
                               } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
+                              style={columnStyles}
                             >
-                              <div className="flex justify-end pr-2 items-center h-full">
-                                <div
-                                  onClick={() =>
-                                    onCancelEdit(matchIndex, rowIndex)
-                                  }
-                                  title="Cancel Changes"
+                              {header.editable ? (
+                                renderEditableCell(
+                                  row,
+                                  header,
+                                  rowIndex,
+                                  true,
+                                  isRowDisabled
+                                )
+                              ) : (
+                                <span
+                                  className={`${header.className || ""} ${
+                                    isRowDisabled
+                                      ? "text-gray-400"
+                                      : "text-[#323A70]"
+                                  }`}
                                 >
-                                  <Image
-                                    src={successWrong}
-                                    width={24}
-                                    height={24}
-                                    alt="cancel"
-                                    className="cursor-pointer  transition-colors"
-                                  />
-                                </div>
-                              </div>
+                                  {row[header.key]}
+                                </span>
+                              )}
                             </td>
-                            <td colSpan={2} className={``}>
-                              <div className="flex justify-start pl-2 items-center h-full">
-                                <div
-                                  className=""
-                                  onClick={async () => {
-                                    setConfirmLoading(true);
-                                    await onConfirmEdit(matchIndex, rowIndex);
-                                    setConfirmLoading(false);
-                                  }}
-                                  title="Confirm Changes"
-                                >
-                                  {confirmLoading ? (
-                                    <Loader2 className="animate-spin" />
-                                  ) : (
-                                    <Image
-                                      src={successTick}
-                                      width={24}
-                                      height={24}
-                                      alt="confirm"
-                                      className="cursor-pointer  transition-colors"
-                                    />
-                                  )}
-                                </div>
-                              </div>
-                            </td>
-                          </>
-                        ) : (
-                          // For normal rows: show original 4 columns
-                          stickyColumns.map((column, colIndex) => (
-                            <td
-                              key={`sticky-${rowIndex}-${colIndex}`}
-                              className={`${
-                                isMobile ? "py-1.5 text-xs" : "py-2 text-sm"
-                              } align-middle text-center ${
-                                colIndex < stickyColumns.length - 1
-                                  ? "border-r border-[#DADBE5]"
-                                  : ""
-                              } ${isRowDisabled ? "pointer-events-none" : ""} ${
-                                isSelected ? "bg-[#EEF1FD]" : ""
-                              } ${column.className || ""}`}
-                              style={{
-                                width: `${
-                                  dynamicStickyWidth / stickyColumns.length
-                                }px`,
-                                minWidth: `${
-                                  dynamicStickyWidth / stickyColumns.length
-                                }px`,
-                                maxWidth: `${
-                                  dynamicStickyWidth / stickyColumns.length
-                                }px`,
-                              }}
-                              onClick={column.onClick}
-                            >
-                              <div className="flex justify-center items-center h-full">
-                                {column.icon}
-                              </div>
-                            </td>
-                          ))
-                        )}
+                          );
+                        })}
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
+
+              {/* NEW: Infinite Scroll Trigger and Load More Button */}
+              {hasMoreData && (
+                <div className="w-full">
+                  {/* Invisible trigger for intersection observer */}
+                  <div ref={loadMoreTriggerRef} className="h-1 w-full" />
+
+                  {/* Loading indicator or load more button */}
+                  <div className="flex justify-center py-4">
+                    {isLoadingMore ? (
+                      <div className="flex items-center space-x-2">
+                        <Loader2 className="animate-spin h-5 w-5 text-blue-500" />
+                        <span className="text-gray-600">
+                          Loading more tickets...
+                        </span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          if (onLoadMore && !isLoadingMore) {
+                            setIsLoadingMore(true);
+                            onLoadMore().finally(() => {
+                              setIsLoadingMore(false);
+                            });
+                          }
+                        }}
+                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                        disabled={isLoadingMore}
+                      >
+                        Load More Tickets
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sticky Right Column for Action Icons */}
+            <div
+              className={`absolute top-0 right-0 h-full bg-white border-l border-[#DADBE5] z-20 transition-shadow duration-200 ${
+                hasScrolled ? "shadow-md" : ""
+              }`}
+              style={{ width: `${dynamicStickyWidth}px` }}
+            >
+              <div className="h-full">
+                <table
+                  ref={stickyTableRef}
+                  className="w-full h-full border-collapse"
+                >
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-[#DADBE5]">
+                      {/* Always show 4 headers for consistency */}
+                      {stickyHeaders.map((header, index) => (
+                        <th
+                          key={`sticky-header-${index}`}
+                          className={`${
+                            isMobile ? "py-1.5 px-1" : "py-2 px-2"
+                          } text-left text-[#7D82A4] ${
+                            isMobile ? "text-[10px]" : "text-xs"
+                          } whitespace-nowrap text-center`}
+                          style={{
+                            width: `${
+                              dynamicStickyWidth / stickyHeaders.length
+                            }px`,
+                            minWidth: `${
+                              dynamicStickyWidth / stickyHeaders.length
+                            }px`,
+                            maxWidth: `${
+                              dynamicStickyWidth / stickyHeaders.length
+                            }px`,
+                          }}
+                        >
+                          <div className="flex items-center justify-center">
+                            {!hideChevronDown &&
+                              index === stickyHeaders.length - 1 && (
+                                <div className="flex items-center justify-center">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      scrollLeft();
+                                    }}
+                                    disabled={!canScrollLeft}
+                                    className={`${
+                                      isMobile ? "p-0.5" : "p-1"
+                                    } rounded transition-colors ${
+                                      canScrollLeft
+                                        ? "text-[#7D82A4] hover:bg-gray-200 cursor-pointer"
+                                        : "text-gray-300 cursor-not-allowed"
+                                    }`}
+                                    title="Scroll Left"
+                                  >
+                                    <ChevronRight
+                                      size={isMobile ? 12 : 14}
+                                      className="rotate-180"
+                                      color={canScrollLeft ? "" : "#B4B7CB"}
+                                    />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      scrollRight();
+                                    }}
+                                    disabled={!canScrollRight}
+                                    className={`${
+                                      isMobile ? "p-0.5" : "p-1"
+                                    } rounded transition-colors ${
+                                      canScrollRight
+                                        ? "text-[#7D82A4] hover:bg-gray-200 cursor-pointer"
+                                        : "text-gray-300 cursor-not-allowed"
+                                    }`}
+                                    title="Scroll Right"
+                                  >
+                                    <ChevronRight
+                                      size={isMobile ? 12 : 14}
+                                      color={canScrollRight ? "" : "#B4B7CB"}
+                                    />
+                                  </button>
+                                </div>
+                              )}
+                          </div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {inventoryData.map((row, rowIndex) => {
+                      const isRowDisabled =
+                        isEditMode &&
+                        (Array.isArray(editingRowIndex)
+                          ? !editingRowIndex.includes(rowIndex)
+                          : editingRowIndex !== rowIndex);
+                      const isSelected = selectedRows.includes(rowIndex);
+
+                      // Check if this specific row has pending edits
+                      const hasRowPendingEdits = hasPendingEdits(
+                        matchIndex,
+                        rowIndex
+                      );
+                      const isBulkEditMode =
+                        isEditMode &&
+                        (Array.isArray(editingRowIndex)
+                          ? editingRowIndex.length > 1
+                          : false);
+
+                      // Get sticky columns (always the original 4 columns)
+                      const stickyColumns = getStickyColumns(row, rowIndex);
+
+                      return (
+                        <tr
+                          key={`sticky-${row.id || rowIndex}`}
+                          className={`border-b border-[#DADBE5] transition-colors ${
+                            isSelected
+                              ? "bg-[#EEF1FD]"
+                              : "bg-white hover:bg-gray-50"
+                          } ${isRowDisabled ? "opacity-60 bg-gray-50" : ""} `}
+                        >
+                          {hasRowPendingEdits && !isBulkEditMode ? (
+                            // For rows with pending edits: show 2 columns with colspan=2 each (centered)
+                            <>
+                              <td
+                                colSpan={2}
+                                className={`${
+                                  isMobile ? " text-xs" : " text-sm"
+                                } align-middle text-left ${
+                                  isRowDisabled ? "pointer-events-none" : ""
+                                } ${isSelected ? "bg-[#EEF1FD]" : ""}`}
+                              >
+                                <div className="flex justify-end pr-2 items-center h-full">
+                                  <div
+                                    onClick={() =>
+                                      onCancelEdit(matchIndex, rowIndex)
+                                    }
+                                    title="Cancel Changes"
+                                  >
+                                    <Image
+                                      src={successWrong}
+                                      width={24}
+                                      height={24}
+                                      alt="cancel"
+                                      className="cursor-pointer  transition-colors"
+                                    />
+                                  </div>
+                                </div>
+                              </td>
+                              <td colSpan={2} className={``}>
+                                <div className="flex justify-start pl-2 items-center h-full">
+                                  <div
+                                    className=""
+                                    onClick={async () => {
+                                      setConfirmLoading(true);
+                                      await onConfirmEdit(matchIndex, rowIndex);
+                                      setConfirmLoading(false);
+                                    }}
+                                    title="Confirm Changes"
+                                  >
+                                    {confirmLoading ? (
+                                      <Loader2 className="animate-spin" />
+                                    ) : (
+                                      <Image
+                                        src={successTick}
+                                        width={24}
+                                        height={24}
+                                        alt="confirm"
+                                        className="cursor-pointer  transition-colors"
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+                            </>
+                          ) : (
+                            // For normal rows: show original 4 columns
+                            stickyColumns.map((column, colIndex) => (
+                              <td
+                                key={`sticky-${rowIndex}-${colIndex}`}
+                                className={`${
+                                  isMobile ? "py-1.5 text-xs" : "py-2 text-sm"
+                                } align-middle text-center ${
+                                  colIndex < stickyColumns.length - 1
+                                    ? "border-r border-[#DADBE5]"
+                                    : ""
+                                } ${
+                                  isRowDisabled ? "pointer-events-none" : ""
+                                } ${isSelected ? "bg-[#EEF1FD]" : ""} ${
+                                  column.className || ""
+                                }`}
+                                style={{
+                                  width: `${
+                                    dynamicStickyWidth / stickyColumns.length
+                                  }px`,
+                                  minWidth: `${
+                                    dynamicStickyWidth / stickyColumns.length
+                                  }px`,
+                                  maxWidth: `${
+                                    dynamicStickyWidth / stickyColumns.length
+                                  }px`,
+                                }}
+                                onClick={column.onClick}
+                              >
+                                <div className="flex justify-center items-center h-full">
+                                  {column.icon}
+                                </div>
+                              </td>
+                            ))
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {showMarketPlaceModal && (
