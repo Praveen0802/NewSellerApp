@@ -1015,7 +1015,7 @@ const SalesPage = (props) => {
         type: "checkbox",
         name: "ticket_in_hand",
         label: "Tickets In Hand",
-        value: filtersApplied?.ticket_in_hand || false,
+        value: !!filtersApplied?.ticket_in_hand,
         beforeIcon: <Hand className="size-4"/>,
         parentClassName: " !w-[15%] max-sm:!w-full",
         className:
@@ -1086,29 +1086,40 @@ const SalesPage = (props) => {
       return filterConfig;
     }
 
-    // Build map from normalized label -> filter object
+    // Build maps for matching
     const byNormLabel = {};
+    const byName = {};
     baseList.forEach((f) => {
       byNormLabel[normalize(f.label)] = f;
+      byName[f.name] = f;
     });
 
-    // Order by API, include only checked ones first in API order
-    const orderedVisible = [];
+    const ordered = [];
     const used = new Set();
+
+    const toSingular = (s) => s?.replace(/s$/, "") || s;
+
     salesFilterList.forEach((item) => {
-      const match = byNormLabel[normalize(item?.name)];
-      if (match && item?.checked && !used.has(match.name)) {
-        orderedVisible.push(match);
+      const norm = normalize(item?.name);
+      let match = byNormLabel[norm] || byNormLabel[normalize(toSingular(item?.name))];
+      if (!match) {
+        // try find by value/name key directly when labels diverge
+        const found = baseList.find((f) => normalize(f.name) === norm);
+        if (found) match = found;
+      }
+      if (match && !used.has(match.name)) {
+        ordered.push({ ...match, checked: !!item?.checked });
         used.add(match.name);
       }
     });
 
-    // Append any base filters not present in settings (kept visible by default)
     baseList.forEach((f) => {
-      if (!used.has(f.name)) orderedVisible.push(f);
+      if (!used.has(f.name)) {
+        ordered.push({ ...f, checked: true });
+      }
     });
 
-    return { [profile]: orderedVisible };
+    return { [profile]: ordered };
   }, [filterConfig, profile, fieldSettings?.salesTableFilter, normalize]);
 
   // Persist filters (optional hooks if your UI exposes toggles/reorder)
@@ -1532,7 +1543,7 @@ const SalesPage = (props) => {
     label: c?.code,
     value: c?.code,
   }));
-
+console.log(filtersApplied,'filtersAppliedfiltersApplied')
   return (
     <div className="min-h-screen bg-gray-50">
       <TabbedLayout
@@ -1560,7 +1571,7 @@ const SalesPage = (props) => {
         showSelectedFilterPills={true}
         headerV2ClassName="mb-4"
         showTabFullWidth={true}
-        currentFilterValues={{ ...filtersApplied, order_status: "" }}
+        currentFilterValues={{ ...filtersApplied, ticket_in_hand: !!filtersApplied?.ticket_in_hand, order_status: "" }}
         loading={pageLoader}
         excludedKeys={[
           "currency",
@@ -1581,9 +1592,6 @@ const SalesPage = (props) => {
         scrollThreshold={100}
         onClearAllFilters={handleClearAllFilters}
         columnHeadersMap={columnHeadersMap}
-        // Optionally, if TabbedLayout supports these, they will persist filter settings:
-        // onFiltersReorder={(items)=>persistSalesFilterSettings(items.filter(i=>i.isActive).map(i=>i.key), items.map(i=>i.key))}
-        // onFilterToggle={(activeKeys, orderedKeys)=>persistSalesFilterSettings(activeKeys, orderedKeys)}
       />
       {showLogDetailsModal?.flag && (
         <InventoryLogsInfo

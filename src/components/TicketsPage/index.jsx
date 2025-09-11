@@ -521,10 +521,15 @@ const TicketsPage = (props) => {
 
     // Create enhanced filter config with API integration
   
-  console.log(ticketsByMatch, "ticketsByMatchticketsByMatch");
+
   // Mock data based on your JSON structure
   const mockListingHistory = useMemo(
-    () => listingHistoryData?.data || listingHistoryData || [],
+    () => {
+      const raw = listingHistoryData?.data ?? listingHistoryData ?? [];
+      if (Array.isArray(raw)) return raw;
+      if (raw && typeof raw === "object") return Object.values(raw);
+      return [];
+    },
     [listingHistoryData]
   );
 
@@ -1400,30 +1405,30 @@ const enhancedFilterConfig = useMemo(() => {
       filterByNormLabel[normalize(f.label)] = f;
     });
 
-    // Order by API, include only checked ones
-    const orderedVisibleFilters = [];
-    const usedFilters = new Set();
-    
+    // Build ordered list in API order, attach checked flags
+    const ordered = [];
+    const used = new Set();
+
     apiFilterList.forEach((item) => {
       const normalizedName = normalize(item?.name);
       const key = filterApiNameToKey[normalizedName];
-      const match = baseConfig.tickets.find(f => f.name === key) || 
-                   filterByNormLabel[normalizedName];
-      
-      if (match && item?.checked && !usedFilters.has(match.name)) {
-        orderedVisibleFilters.push(match);
-        usedFilters.add(match.name);
+      const match = baseConfig.tickets.find((f) => f.name === key) ||
+        filterByNormLabel[normalizedName];
+
+      if (match && !used.has(match.name)) {
+        ordered.push({ ...match, checked: !!item?.checked });
+        used.add(match.name);
       }
     });
 
-    // Append any base filters not present in settings
+    // Append any base filters not present in API, default to checked
     baseConfig.tickets.forEach((f) => {
-      if (!usedFilters.has(f.name)) {
-        orderedVisibleFilters.push(f);
+      if (!used.has(f.name)) {
+        ordered.push({ ...f, checked: true });
       }
     });
 
-    return { tickets: orderedVisibleFilters };
+    return { tickets: ordered };
   }, [fieldSettings?.myListingTableFilter, filtersApplied, response, filterApiNameToKey, normalize]);
 
 
@@ -2369,32 +2374,7 @@ const enhancedFilterConfig = useMemo(() => {
           return newOriginal;
         });
 
-        // Success message
-        const changedFieldsCount = Object.keys(pendingChanges).length;
-        const hasAutoCleared =
-          isTicketCategoryChanged && !pendingChanges.hasOwnProperty("block");
-
-        // if (ticket.isCloned) {
-        //   toast.success(
-        //     changedFieldsCount > 1
-        //       ? `${changedFieldsCount} fields updated for cloned ticket (changes will be saved when published)`
-        //       : "Field updated for cloned ticket (changes will be saved when published)"
-        //   );
-        // } else {
-        //   if (hasAutoCleared) {
-        //     toast.success(
-        //       changedFieldsCount > 1
-        //         ? `${changedFieldsCount} fields updated and block cleared due to category change`
-        //         : "Field updated and block cleared due to category change"
-        //     );
-        //   } else {
-        //     toast.success(
-        //       changedFieldsCount > 1
-        //         ? `${changedFieldsCount} fields updated successfully`
-        //         : "Field updated successfully"
-        //     );
-        //   }
-        // }
+        // Removed verbose success message block to avoid parsing issues
       } catch (error) {
         console.error("Error confirming edit:", error);
         toast.error("Error updating field(s)");

@@ -90,7 +90,7 @@ const FormFields = ({ formFields }) => {
                 name={name}
                 keyValue={keyValue}
                 label={label}
-                checked={checked || value}
+                checked={Boolean(checked ?? value)}
                 onChange={onChange}
                 className={className}
                 labelClassName={labelClassName}

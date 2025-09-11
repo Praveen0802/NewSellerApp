@@ -107,12 +107,13 @@ const TabbedLayout = ({
   // Ref for the scrollable container
   const scrollContainerRef = useRef(null);
 
-  // Initialize activeFilters with all filters checked by default
+  // Initialize activeFilters with all filters checked by default (respects optional `checked` flag)
   const [activeFilters, setActiveFilters] = useState(() => {
     const initialActiveFilters = new Set();
     if (filterConfig && filterConfig[initialTab || tabs[0]?.key]) {
       filterConfig[initialTab || tabs[0]?.key].forEach((filter) => {
-        initialActiveFilters.add(filter.name);
+        const isChecked = filter?.checked !== undefined ? !!filter.checked : true;
+        if (isChecked) initialActiveFilters.add(filter.name);
       });
     }
     return initialActiveFilters;
@@ -309,14 +310,32 @@ const TabbedLayout = ({
     setCheckboxValues(initialCheckboxes);
   }, [JSON.stringify(listItemsConfig)]);
 
-  // Update activeFilters when tab changes
+  // Update activeFilters when tab changes (respects optional `checked` flag)
   useEffect(() => {
     if (filterConfig && filterConfig[selectedTab]) {
       const newActiveFilters = new Set();
       filterConfig[selectedTab].forEach((filter) => {
-        newActiveFilters.add(filter.name);
+        const isChecked = filter?.checked !== undefined ? !!filter.checked : true;
+        if (isChecked) newActiveFilters.add(filter.name);
       });
       setActiveFilters(newActiveFilters);
+    }
+  }, [selectedTab, filterConfig]);
+
+  // Initialize/refresh orderedFilters from server-provided order
+  useEffect(() => {
+    if (filterConfig && filterConfig[selectedTab]) {
+      const serverOrder = filterConfig[selectedTab].map((f) => f.name);
+      setOrderedFilters((prev) => {
+        const prevOrder = prev[selectedTab] || [];
+        if (
+          !prevOrder.length ||
+          prevOrder.join(",") !== serverOrder.join(",")
+        ) {
+          return { ...prev, [selectedTab]: serverOrder };
+        }
+        return prev;
+      });
     }
   }, [selectedTab, filterConfig]);
 
