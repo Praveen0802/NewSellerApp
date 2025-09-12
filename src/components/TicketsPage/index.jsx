@@ -3875,24 +3875,24 @@ const TicketsPage = (props) => {
           onFilterToggle={handleFilterToggle}
           columnHeadersMap={allHeaders}
         />
+      </div>
 
-        <div className="border-[1px] border-[#E0E1EA]">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            itemsPerPage={itemsPerPage}
-            totalItems={totalItems}
-            onPageChange={handlePageChange}
-            onItemsPerPageChange={handleItemsPerPageChange}
-            activeFilters={filtersApplied}
-            filterConfig={filterConfig}
-            onFilterChange={handleFilterChange}
-            onClearAllFilters={handleClearAllFilters}
-            isMobile={isMobile}
-            isSmallMobile={isSmallMobile}
-            currentTab="tickets"
-          />
-        </div>
+      <div className="border-[1px] border-[#E0E1EA] sticky top-0 z-[999] bg-white">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          itemsPerPage={itemsPerPage}
+          totalItems={totalItems}
+          onPageChange={handlePageChange}
+          onItemsPerPageChange={handleItemsPerPageChange}
+          activeFilters={filtersApplied}
+          filterConfig={filterConfig}
+          onFilterChange={handleFilterChange}
+          onClearAllFilters={handleClearAllFilters}
+          isMobile={isMobile}
+          isSmallMobile={isSmallMobile}
+          currentTab="tickets"
+        />
       </div>
 
       {/* Main Content Area */}
