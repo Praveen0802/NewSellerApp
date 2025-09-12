@@ -737,7 +737,15 @@ const ListingsMarketplace = ({ show, onClose, matchInfo, filters }) => {
                                   }
                                 >
                                   {/* {item.price || "-"} */}
-                                  {item.price != null ? Number(item.price).toFixed(2) : "-"}
+                                  {/* {item.price != null ? Number(item.price).toFixed(2) : "-"} */}
+                                  {
+                                    item.price != null
+                                      ? new Intl.NumberFormat("en-US", {
+                                          minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2,
+                                        }).format(item.price)
+                                      : "-"
+                                  }
                                 </span>
                                 {item.flag === 1 && (
                                   <button

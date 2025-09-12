@@ -108,6 +108,30 @@ const CommonInventoryTable = ({
     }
   }, [setScrollRef]);
 
+  // NEW: Sync internal collapsed state when parent updates defaultOpen
+  useEffect(() => {
+    const shouldBeCollapsed = defaultOpen ? false : true;
+    if (shouldBeCollapsed !== isCollapsed) {
+      if (shouldBeCollapsed) {
+        // Collapse immediately
+        setContentHeight(0);
+        setIsCollapsed(true);
+      } else {
+        // Expand and recalc height
+        setIsCollapsed(false);
+        setTimeout(() => {
+          if (contentRef.current) {
+            const height = contentRef.current.scrollHeight;
+            setContentHeight(height);
+            if (setScrollRef) {
+              setScrollRef(contentRef.current);
+            }
+          }
+        }, 0);
+      }
+    }
+  }, [defaultOpen]);
+
   // Update the ref when content changes or accordion state changes
   useEffect(() => {
     if (setScrollRef && contentRef.current && !isCollapsed) {

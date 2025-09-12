@@ -599,6 +599,8 @@ const TicketsPage = (props) => {
     setTicketsByMatch({});
     setMatchLoadingStates({});
     setMatchTicketPagination({});
+    // Also reset any open accordions when the list of matches changes
+    setCollapsedMatches({});
   }, [mockListingHistory]);
 
   // NEW: Function to load tickets for a specific match
@@ -3182,6 +3184,8 @@ const TicketsPage = (props) => {
 
   // Unified data fetching function
   const fetchData = async (filters) => {
+    // Close all accordions when filters/data are about to refresh
+    setCollapsedMatches({});
     setIsLoading(true);
     try {
       const handleApiCall = await getMyListingHistory("", filters);
@@ -3381,6 +3385,8 @@ const TicketsPage = (props) => {
           showDelete={true}
           deleteFunction={async () => {
             setSearchValue("");
+            // Close all accordions when clearing the search filter
+            setCollapsedMatches({});
             await fetchData({ ...filtersApplied, match_id: "" });
             setShowSearchDropdown(false);
             setHasSearched(false);
@@ -3402,12 +3408,15 @@ const TicketsPage = (props) => {
     handleSearchedEventClick,
     filtersApplied,
     fetchData,
+    setCollapsedMatches,
   ]);
 
   const handleClearAllFilters = useCallback(() => {
     const clearedFilters = { page: 1 };
+    // Reset accordion states when all filters are cleared
+    setCollapsedMatches({});
     fetchData(clearedFilters);
-  }, [fetchData]);
+  }, [fetchData, setCollapsedMatches]);
 
   const router = useRouter();
   const handleAddInventory = useCallback(() => {
