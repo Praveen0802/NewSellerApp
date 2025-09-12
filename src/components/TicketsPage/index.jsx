@@ -1773,7 +1773,7 @@ const TicketsPage = (props) => {
       {
         key: "sold_count",
         label: "Sold",
-        increasedWidth: "!w-[100px] !min-w-[100px] bg-gray-50",
+        increasedWidth: "!w-[70px] !min-w-[70px] bg-gray-50",
         editable: false,
         type: "number",
       },
@@ -2010,7 +2010,7 @@ const TicketsPage = (props) => {
         {
           key: "sold_count",
           label: "Sold",
-          increasedWidth: "!w-[100px] !min-w-[100px] bg-gray-100",
+          increasedWidth: "!w-[70px] !min-w-[70px] bg-gray-100",
           editable: false,
           type: "number",
         },
