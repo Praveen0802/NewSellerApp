@@ -1310,7 +1310,10 @@ const TicketsPage = (props) => {
           `data[${index}][ticket_category]`,
           ticket.ticket_category_id || ""
         );
-        formData.append(`data[${index}][ticket_block]`, ticket.block || "");
+        formData.append(
+          `data[${index}][ticket_block]`,
+          Number(ticket.block) || ""
+        );
         formData.append(
           `data[${index}][add_price_addlist]`,
           ticket.price || ""
@@ -1477,14 +1480,21 @@ const TicketsPage = (props) => {
     try {
       // Construct FormData for cloned tickets
       const formData = constructFormDataForClonedTickets(selectedClonedTickets);
-
+      let response = "";
       // Use appropriate API based on count (same as AddInventory)
       if (selectedClonedTickets.length > 1) {
-        await saveBulkListing("", formData);
+        response = await saveBulkListing("", formData);
       } else {
-        await saveListing("", formData);
+        response = await saveListing("", formData);
       }
 
+      if (response?.status !== 200) {
+        toast.error(
+          response?.data?.message || "Error publishing cloned tickets"
+        );
+        return;
+      }
+      
       // Remove cloned tickets from state after successful publish
       setTicketsByMatch((prevData) => {
         const newData = { ...prevData };
@@ -1535,6 +1545,16 @@ const TicketsPage = (props) => {
         return newData;
       });
 
+      // RESET ALL ACCORDIONS TO COLLAPSED STATE AFTER PUBLISHING
+      setCollapsedMatches((prevCollapsed) => {
+        const newCollapsed = {};
+        // Set all existing matches to collapsed (true)
+        Object.keys(matchesData).forEach((matchIndex) => {
+          newCollapsed[matchIndex] = true;
+        });
+        return newCollapsed;
+      });
+
       setGlobalSelectedTickets([]);
       toast.success(
         `${selectedClonedTickets.length} cloned ticket(s) published successfully`
@@ -1554,6 +1574,7 @@ const TicketsPage = (props) => {
     areAllSelectedTicketsCloned,
     constructFormDataForClonedTickets,
     filtersApplied,
+    matchesData, // Add this dependency
   ]);
 
   // Check if a specific ticket is in edit mode - UPDATED FOR ticketsByMatch
