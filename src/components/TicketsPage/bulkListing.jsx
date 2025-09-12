@@ -37,7 +37,7 @@ const BulkListings = (props) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [filtersApplied, setFiltersApplied] = useState({
     venue: filters?.venue,
-    searchValue: filters?.query || "",
+    query: filters?.query || "",
   });
   const [eventDate, setEventDate] = useState("");
   const [eventsData, setEventsData] = useState(
@@ -169,10 +169,9 @@ const BulkListings = (props) => {
 
   // Effect for debounced search
   useEffect(() => {
-    if (
-      debouncedSearchValue !== undefined &&
-      debouncedSearchValue !== filtersApplied.searchValue
-    ) {
+    if (debouncedSearchValue === undefined) return;
+    // Fetch whenever the debounced search changes, including when cleared
+    if (debouncedSearchValue !== filtersApplied.query) {
       const params = {
         ...filtersApplied,
         query: debouncedSearchValue,
@@ -182,9 +181,7 @@ const BulkListings = (props) => {
         ...prev,
         query: debouncedSearchValue,
       }));
-      if (debouncedSearchValue || Object.keys(filtersApplied).length > 0) {
-        fetchApiCall(params);
-      }
+      fetchApiCall(params);
     }
   }, [debouncedSearchValue]);
 
@@ -246,6 +243,16 @@ const BulkListings = (props) => {
   const handleSearchChange = (e) => {
     const value = e?.target?.value;
     setSearchValue(value);
+    // If search is cleared, immediately refetch full list (without waiting for debounce)
+    if (!value || value.trim() === "") {
+      const params = {
+        ...filtersApplied,
+        query: "",
+        page: 1,
+      };
+      setFiltersApplied((prev) => ({ ...prev, query: "" }));
+      fetchApiCall(params);
+    }
   };
 
   const handleSelectChange = async (value, key) => {
@@ -269,10 +276,11 @@ const BulkListings = (props) => {
   };
 
   const clearAllFilters = () => {
-    setFiltersApplied({});
+    setFiltersApplied({ query: "" });
     setSearchValue("");
     setEventDate("");
-    setEventsData(response?.bulkListingData?.value?.events);
+    // Refetch from API to ensure fresh list
+    fetchApiCall({ page: 1 });
   };
 
   function convertDateFormat(dateString) {
@@ -538,7 +546,7 @@ const BulkListings = (props) => {
                 value={searchValue}
                 type="text"
                 onChange={handleSearchChange}
-                label="Search by Tournament, Event, Venue"
+                label="Search by Event, Venue"
                 parentClassName=""
                 className={"!py-[7px] !px-[12px] !text-[#323A70] !text-[14px] "}
                 paddingClassName=""

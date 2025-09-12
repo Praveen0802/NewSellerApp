@@ -222,7 +222,7 @@ const PurchaseFolder = (props) => {
     setSelectedMatch(value);
     const params = {
       ...filtersApplied,
-      match_name: value,
+      searchParam: value,
       page: 1,
     };
     fetchAPiDetails(params);
@@ -486,6 +486,9 @@ const PurchaseFolder = (props) => {
         setSelectedTicketStatus("");
       } else if (key == "booking_status") {
         setSelectedBookingStatus("");
+      } else if (key == "searchParam" || key == "selectedMatch") {
+        // Clear the search input when its chip is cleared
+        setSelectedMatch("");
       }
       updatedParams = {
         [key]: "",
@@ -581,7 +584,13 @@ const PurchaseFolder = (props) => {
                   return (
                     <ClearChip
                       key={index}
-                      text={key}
+                      text={
+                        key === "searchParam"
+                          ? (/^\d+$/.test(String(value).trim())
+                              ? "Booking No"
+                              : "Event")
+                          : key
+                      }
                       value={
                         key == "booking_status"
                           ? `${getStatusLabel(value)}`
